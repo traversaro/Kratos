@@ -577,6 +577,14 @@ protected:
         const bool IsAllInside = false
         );
 
+    /**
+     * @brief This method checks if the center of the geometry is inside the slave geometry (to prevent convex geometries)
+     * @param AuxiliarCenterLocalCoordinates These are the local coordinates corresponding to the center
+     * @return True if is inside false otherwise
+     */
+
+    static inline bool CheckCenterIsInside(const array_1d<double, 2>& AuxiliarCenterLocalCoordinates);
+
     ///@}
     ///@name Protected  Access
     ///@{

@@ -939,11 +939,7 @@ inline bool ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::TriangleInt
 
     // We compose the triangles
     const SizeType list_size = PointList.size();
-    if (list_size >  2) { // Technically the minimum is three, just in case I consider 2
-        const std::vector<IndexType> index_vector = ComputeAnglesIndexes(PointList);
-
-        ConditionsPointsSlave.resize((list_size - 2));
-
+    if (list_size >  2) {
         // We recover this point to the triangle plane and compute the local coordinates
         for (IndexType i_point_list = 0; i_point_list < PointList.size(); ++i_point_list) {
             MortarUtilities::RotatePoint(PointList[i_point_list], RefCenter, SlaveTangentXi, SlaveTangentEta, true);
@@ -952,16 +948,40 @@ inline bool ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::TriangleInt
             PointList[i_point_list].Coordinates() = local_point.Coordinates();
         }
 
+        // We will check if the triangle is inside the slave geometry, so we will compute an auxiliar shape function
+        array_1d<double, 2> auxiliar_center_local_coords;
+
+        // We compute the angles between the nodes
+        const std::vector<IndexType> index_vector = ComputeAnglesIndexes(PointList);
+
+        // We resize the array of points of the decomposed triangles
+        ConditionsPointsSlave.resize((list_size - 2));
+
+        IndexType aux_elem_index = 0;
         for (IndexType elem = 0; elem < list_size - 2; ++elem) { // NOTE: We always have two points less that the number of nodes
             ArrayTriangleType points_locals;
 
+            // We compute if the center is inside the slave geometry
+            auxiliar_center_local_coords[0] = 1.0/3.0 * (PointList[0].X() + PointList[index_vector[elem] + 1].X() + PointList[index_vector[elem + 1] + 1].X());
+            auxiliar_center_local_coords[1] = 1.0/3.0 * (PointList[0].Y() + PointList[index_vector[elem] + 1].Y() + PointList[index_vector[elem + 1] + 1].Y());
+            const bool center_is_inside = CheckCenterIsInside(auxiliar_center_local_coords);
+            if (!center_is_inside) {
+                ConditionsPointsSlave.erase(ConditionsPointsSlave.begin() + aux_elem_index);
+                continue; // We skip this triangle
+            }
+
+            // We check if the triangle is inverted (replace )
             const bool inverted_triangle = (FastTriagleCheck2D(PointList[0],  PointList[index_vector[elem] + 1], PointList[index_vector[elem + 1] + 1]) < 0.0);
 
             points_locals[(inverted_triangle == false) ? 0 : 2] = PointList[0];
             points_locals[1] = PointList[index_vector[elem + 0] + 1];
             points_locals[(inverted_triangle) ? 0 : 2] = PointList[index_vector[elem + 1] + 1];
 
-            ConditionsPointsSlave[elem] = points_locals;
+            // We add the triangle to the vector
+            ConditionsPointsSlave[aux_elem_index] = points_locals;
+
+            // We update the auxiliar index
+            ++aux_elem_index;
         }
 
         if (ConditionsPointsSlave.size() > 0)
@@ -974,6 +994,31 @@ inline bool ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::TriangleInt
     }
 
     ConditionsPointsSlave.clear();
+    return false;
+}
+
+/***********************************************************************************/
+/***********************************************************************************/
+
+template <unsigned int TDim, unsigned int TNumNodes, bool TBelong>
+inline bool ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::CheckCenterIsInside(const array_1d<double, 2>& AuxiliarCenterLocalCoordinates)
+{
+    if (TNumNodes == 3) {
+        if ( (AuxiliarCenterLocalCoordinates[0] >= (0.0-ZeroTolerance)) && (AuxiliarCenterLocalCoordinates[0] <= (1.0+ZeroTolerance)) ) {
+            if ( (AuxiliarCenterLocalCoordinates[1] >= (0.0-ZeroTolerance)) && (AuxiliarCenterLocalCoordinates[1] <= (1.0+ZeroTolerance)) ) {
+                if ( (AuxiliarCenterLocalCoordinates[0] + AuxiliarCenterLocalCoordinates[1]) <= (1.0+ZeroTolerance) ) {
+                    return true;
+                }
+            }
+        }
+    } if (TNumNodes == 4) {
+        if ( std::abs(AuxiliarCenterLocalCoordinates[0]) <= (1.0+ZeroTolerance) ) {
+            if ( std::abs(AuxiliarCenterLocalCoordinates[1]) <= (1.0+ZeroTolerance) ) {
+                return true;
+            }
+        }
+    }
+
     return false;
 }
 
