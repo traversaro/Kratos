@@ -842,7 +842,10 @@ inline void ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::CheckInside
 /***********************************************************************************/
 
 template <unsigned int TDim, unsigned int TNumNodes, bool TBelong>
-inline std::vector<std::size_t> ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::ComputeAnglesIndexes(PointListType& PointList) const
+inline std::vector<std::size_t> ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::ComputeAnglesIndexes(
+    PointListType& PointList,
+    const array_1d<double, 3>& Normal
+    ) const
 {
     const SizeType list_size = PointList.size();
 
@@ -852,14 +855,15 @@ inline std::vector<std::size_t> ExactMortarIntegrationUtility<TDim, TNumNodes, T
     array_1d<double, 3> v = PointList[1].Coordinates() - ref_point_coordinates;
 
     v /= norm_2(v);
-    array_1d<double, 3> n = GetNormalVector2D(v);
+    array_1d<double, 3> n;
+    MathUtils<double>::CrossProduct( n, Normal, v);
 
     for (IndexType elem = 1; elem < list_size; ++elem) {
         angles[elem - 1] = AnglePoints(PointList[0], PointList[elem], v, n);
         if (angles[elem - 1] < 0.0) {
             v = PointList[elem].Coordinates() - ref_point_coordinates;
             v /= norm_2(v);
-            n = GetNormalVector2D(v);
+            MathUtils<double>::CrossProduct( n, Normal, v);
             for (IndexType aux_elem = 0; aux_elem <= (elem - 1); ++aux_elem)
                 angles[aux_elem] -= angles[elem - 1];
         }
@@ -925,8 +929,8 @@ inline bool ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::TriangleInt
     ConditionArrayListType& ConditionsPointsSlave,
     PointListType& PointList,
     TGeometryType& OriginalSlaveGeometry,
-    GeometryPointType& Geometry1,
-    GeometryPointType& Geometry2,
+    GeometryPointType& SlaveGeometry,
+    GeometryPointType& MasterGeometry,
     const array_1d<double, 3>& SlaveTangentXi,
     const array_1d<double, 3>& SlaveTangentEta,
     const PointType& RefCenter,
@@ -935,7 +939,7 @@ inline bool ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::TriangleInt
 {
     // We do the clipping
     if (IsAllInside == false)
-        ComputeClippingIntersections(PointList, Geometry1, Geometry2, RefCenter);
+        ComputeClippingIntersections(PointList, SlaveGeometry, MasterGeometry, RefCenter);
 
     // We compose the triangles
     const SizeType list_size = PointList.size();
@@ -952,7 +956,10 @@ inline bool ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::TriangleInt
         array_1d<double, 2> auxiliar_center_local_coords;
 
         // We compute the angles between the nodes
-        const std::vector<IndexType> index_vector = ComputeAnglesIndexes(PointList);
+        PointType local_point;
+        SlaveGeometry.PointLocalCoordinates(local_point, SlaveGeometry.Center());
+        const array_1d<double, 3>& normal = SlaveGeometry.UnitNormal(local_point);
+        const std::vector<IndexType> index_vector = ComputeAnglesIndexes(PointList, normal);
 
         // We resize the array of points of the decomposed triangles
         ConditionsPointsSlave.resize((list_size - 2));
@@ -970,12 +977,9 @@ inline bool ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::TriangleInt
                 continue; // We skip this triangle
             }
 
-            // We check if the triangle is inverted (replace )
-            const bool inverted_triangle = (FastTriagleCheck2D(PointList[0],  PointList[index_vector[elem] + 1], PointList[index_vector[elem + 1] + 1]) < 0.0);
-
-            points_locals[(inverted_triangle == false) ? 0 : 2] = PointList[0];
+            points_locals[0] = PointList[0];
             points_locals[1] = PointList[index_vector[elem + 0] + 1];
-            points_locals[(inverted_triangle) ? 0 : 2] = PointList[index_vector[elem + 1] + 1];
+            points_locals[2] = PointList[index_vector[elem + 1] + 1];
 
             // We add the triangle to the vector
             ConditionsPointsSlave[aux_elem_index] = points_locals;

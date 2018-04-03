@@ -411,22 +411,6 @@ protected:
     }
 
     /**
-     * @brief This function calculates in 2D the normal vector to a given one
-     * @param v The vector to compute the normal
-     * @return n The normal vector
-     */
-    static inline array_1d<double, 3> GetNormalVector2D(const array_1d<double, 3>& v)
-    {
-        array_1d<double, 3> n;
-
-        n[0] = -v[1];
-        n[1] = v[0];
-        n[2] = 0.0;
-
-        return n;
-    }
-
-    /**
      * @brief This function calculates in 2D the angle between two points
      * @param PointOrig1 The points from the origin geometry
      * @param PointOrig2 The points in the destination geometry
@@ -465,33 +449,6 @@ protected:
 //         const double tolerance = ZeroTolerance; // NOTE: Giving some problems, too tight
         const double tolerance = 1.0e-15;
         return (norm_2(PointDest.Coordinates() - PointOrig.Coordinates()) < tolerance) ? true : false;
-    }
-
-    /**
-     * @brief This functions calculates the determinant of a 2D triangle (using points) to check if invert the order
-     * @param PointOrig1 First point
-     * @param PointOrig2 Second point
-     * @param PointOrig3 Third point
-     * @return The DetJ
-     */
-    static inline double FastTriagleCheck2D(
-        const PointType& PointOrig1,
-        const PointType& PointOrig2,
-        const PointType& PointOrig3
-        )
-    {
-        const double x10 = PointOrig2.X() - PointOrig1.X();
-        const double y10 = PointOrig2.Y() - PointOrig1.Y();
-
-        const double x20 = PointOrig3.X() - PointOrig1.X();
-        const double y20 = PointOrig3.Y() - PointOrig1.Y();
-
-        //Jacobian is calculated:
-        //  |dx/dxi  dx/deta|	|x1-x0   x2-x0|
-        //J=|	            |=	|	          |
-        //  |dy/dxi  dy/deta|	|y1-y0   y2-y0|
-
-        return x10 * y20 - y10 * x20;
     }
 
     /**
@@ -535,8 +492,12 @@ protected:
     /**
      * @brief This function computes the angles indexes
      * @param PointList The intersection points
+     * @param Normal The normal vector
      */
-    inline std::vector<std::size_t> ComputeAnglesIndexes(PointListType& PointList) const;
+    inline std::vector<std::size_t> ComputeAnglesIndexes(
+        PointListType& PointList,
+        const array_1d<double, 3>& Normal
+        ) const;
 
     /**
      * @brief This function computes the angles indexes
@@ -556,8 +517,8 @@ protected:
      * @brief This function calculates the triangles intersections (this is a module, that can be used directly in the respective function)
      * @param ConditionsPointsSlave The final solution vector, containing all the nodes
      * @param PointList The intersection points
-     * @param Geometry1 The first geometry studied (projected)
-     * @param Geometry2 The second geometry studied (projected)
+     * @param SlaveGeometry The first (slave) geometry studied (projected)
+     * @param MasterGeometry The second (master) geometry studied (projected)
      * @param SlaveTangentXi The first vector used as base to rotate
      * @param SlaveTangentEta The second vector used as base to rotate
      * @param RefCenter The reference point to rotate
@@ -569,8 +530,8 @@ protected:
         ConditionArrayListType& ConditionsPointsSlave,
         PointListType& PointList,
         TGeometryType& OriginalSlaveGeometry,
-        GeometryPointType& Geometry1,
-        GeometryPointType& Geometry2,
+        GeometryPointType& SlaveGeometry,
+        GeometryPointType& MasterGeometry,
         const array_1d<double, 3>& SlaveTangentXi,
         const array_1d<double, 3>& SlaveTangentEta,
         const PointType& RefCenter,
