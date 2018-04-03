@@ -14,6 +14,11 @@
 // System includes
 
 // External includes
+#ifdef INCLUDE_FAST_POLY2TRI
+#define MPE_POLY2TRI_IMPLEMENTATION
+#define MPE_POLY2TRI_USE_DOUBLE
+#include "../external_libraries/fast_poly2tri/MPE_fastpoly2tri.h"
+#endif
 
 // Project includes
 #include "utilities/exact_mortar_segmentation_utility.h"
@@ -966,34 +971,98 @@ inline bool ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::TriangleInt
         const array_1d<double, 3>& normal = SlaveGeometry.UnitNormal(local_point);
         const std::vector<IndexType> index_vector = ComputeAnglesIndexes(PointList, normal);
 
+    #ifdef INCLUDE_FAST_POLY2TRI
+        KRATOS_ERROR << "FINISH THIS" << std::endl;
+
+//         // The maximum number of points you expect to need
+//         // This value is used by the library to calculate
+//         // working memory required
+//         std::size_t max_point_count = list_size
+//
+//         // Request how much memory (in bytes) you should
+//         // allocate for the library
+//         std::size_t memory_required = MPE_PolyMemoryRequired(max_point_count);
+//
+//         // Allocate a void* memory block of size memory_required
+//         // IMPORTANT: The memory must be zero initialized
+//         void* memory = calloc(memory_required, 1);
+//
+//         // Initialize the poly context by passing the memory pointer,
+//         // and max number of points from before
+//         MPEPolyContext poly_context;
+//         if (MPE_PolyInitContext(&poly_context, memory, max_point_count)) {
+//             // Populate the points of the polyline for the shape
+//             for(IndexType i_point = 0; i_point < list_size; i_point++) {
+//                 MPEPolyPoint* point = MPE_PolyPushPoint(&poly_context);
+//                 point->X = PointList[i_point].X();
+//                 point->Y = PointList[i_point].Y();
+//             }
+//
+//             // IMPORTANT: Both push functions perform no validation other
+//             // than an assert for bounds checking. You must make sure your
+//             // point data is correct:
+//             //  - Duplicate points are not supported
+//             //  - Bounds checking is not implemented other than debug asserts
+//
+//             // Add the polyline for the edge. This will consume all points added so far.
+//             MPE_PolyAddEdge(&poly_context);
+//
+//             // Triangulate the shape
+//             MPE_PolyTriangulate(&poly_context);
+//
+//             // The resulting triangles can be used like so
+//             for (IndexType triangle_index = 0; triangle_index < poly_context.TriangleCount; ++triangle_index) {
+//                 MPEPolyTriangle* triangle = PolyContext.Triangles[triangle_index];
+//                 MPEPolyPoint* point_A = triangle->Points[0];
+//                 MPEPolyPoint* point_B = triangle->Points[1];
+//                 MPEPolyPoint* point_C = triangle->Points[2];
+//
+//                 ArrayTriangleType points_locals;
+//
+//                 points_locals[0].X() = point_A->X;
+//                 points_locals[0].Y() = point_A->Y;
+//                 points_locals[1].X() = point_B->X;
+//                 points_locals[1].Y() = point_B->Y;
+//                 points_locals[2].X() = point_C->X;
+//                 points_locals[2].Y() = point_C->Y;
+//
+//                 // We add the triangle to the vector
+//                 ConditionsPointsSlave.push_back(points_locals);
+//             }
+        }
+    #else
         // We resize the array of points of the decomposed triangles
         ConditionsPointsSlave.resize((list_size - 2));
 
         IndexType aux_elem_index = 0;
         for (IndexType elem = 0; elem < list_size - 2; ++elem) { // NOTE: We always have two points less that the number of nodes
-            ArrayTriangleType points_locals;
+            ArrayTriangleType points_locals_slave, points_locals_master;
+
+            points_locals_slave[0] = PointList[0];
+            points_locals_slave[1] = PointList[index_vector[elem + 0] + 1];
+            points_locals_slave[2] = PointList[index_vector[elem + 1] + 1];
+            points_locals_master[0] = aux_master_point_list[0];
+            points_locals_master[1] = aux_master_point_list[index_vector[elem + 0] + 1];
+            points_locals_master[2] = aux_master_point_list[index_vector[elem + 1] + 1];
 
             // We compute if the center is inside the slave geometry
-            auxiliar_slave_center_local_coords[0] = 1.0/3.0 * (PointList[0].X() + PointList[index_vector[elem] + 1].X() + PointList[index_vector[elem + 1] + 1].X());
-            auxiliar_slave_center_local_coords[1] = 1.0/3.0 * (PointList[0].Y() + PointList[index_vector[elem] + 1].Y() + PointList[index_vector[elem + 1] + 1].Y());
-            auxiliar_master_center_local_coords[0] = 1.0/3.0 * (aux_master_point_list[0].X() + aux_master_point_list[index_vector[elem] + 1].X() + aux_master_point_list[index_vector[elem + 1] + 1].X());
-            auxiliar_master_center_local_coords[1] = 1.0/3.0 * (aux_master_point_list[0].Y() + aux_master_point_list[index_vector[elem] + 1].Y() + aux_master_point_list[index_vector[elem + 1] + 1].Y());
+            auxiliar_slave_center_local_coords[0] = 1.0/3.0 * (points_locals_slave[0].X() + points_locals_slave[1].X() + points_locals_slave[2].X());
+            auxiliar_slave_center_local_coords[1] = 1.0/3.0 * (points_locals_slave[0].Y() + points_locals_slave[1].Y() + points_locals_slave[2].Y());
+            auxiliar_master_center_local_coords[0] = 1.0/3.0 * (points_locals_master[0].X() + points_locals_master[1].X() + points_locals_master[2].X());
+            auxiliar_master_center_local_coords[1] = 1.0/3.0 * (points_locals_master[0].Y() + points_locals_master[1].Y() + points_locals_master[2].Y());
             const bool center_is_inside = CheckCenterIsInside(auxiliar_slave_center_local_coords) && CheckCenterIsInside(auxiliar_master_center_local_coords);
             if (!center_is_inside) {
                 ConditionsPointsSlave.erase(ConditionsPointsSlave.begin() + aux_elem_index);
                 continue; // We skip this triangle
             }
 
-            points_locals[0] = PointList[0];
-            points_locals[1] = PointList[index_vector[elem + 0] + 1];
-            points_locals[2] = PointList[index_vector[elem + 1] + 1];
-
             // We add the triangle to the vector
-            ConditionsPointsSlave[aux_elem_index] = points_locals;
+            ConditionsPointsSlave[aux_elem_index] = points_locals_slave;
 
             // We update the auxiliar index
             ++aux_elem_index;
         }
+    #endif
 
         if (ConditionsPointsSlave.size() > 0)
             return true;

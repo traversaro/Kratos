@@ -334,7 +334,11 @@ else( ZLIB_FOUND )
   include_directories( ${CMAKE_BINARY_DIR}/external_libraries/zlib )
   set( ZLIB_LIBRARIES zlib )
 endif( ZLIB_FOUND )
-  
+
+# fast-poly2tri library
+if(${INCLUDE_FAST_POLY2TRI} MATCHES ON)
+    add_definitions( -DINCLUDE_FAST_POLY2TRI )
+endif(${INCLUDE_FAST_POLY2TRI} MATCHES ON)
 
 ##echo user options
 message( " ")
