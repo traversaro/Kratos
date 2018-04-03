@@ -944,19 +944,24 @@ inline bool ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::TriangleInt
     // We compose the triangles
     const SizeType list_size = PointList.size();
     if (list_size >  2) {
+
+        // Declaring auxiliar local point
+        PointType local_point;
+        PointListType aux_master_point_list(list_size);
+
         // We recover this point to the triangle plane and compute the local coordinates
         for (IndexType i_point_list = 0; i_point_list < PointList.size(); ++i_point_list) {
+            MasterGeometry.PointLocalCoordinates(local_point, PointList[i_point_list].Coordinates());
+            aux_master_point_list[i_point_list].Coordinates() = local_point.Coordinates();
             MortarUtilities::RotatePoint(PointList[i_point_list], RefCenter, SlaveTangentXi, SlaveTangentEta, true);
-            PointType local_point;
             OriginalSlaveGeometry.PointLocalCoordinates(local_point, PointList[i_point_list].Coordinates());
             PointList[i_point_list].Coordinates() = local_point.Coordinates();
         }
 
         // We will check if the triangle is inside the slave geometry, so we will compute an auxiliar shape function
-        array_1d<double, 2> auxiliar_center_local_coords;
+        array_1d<double, 2> auxiliar_slave_center_local_coords, auxiliar_master_center_local_coords;
 
         // We compute the angles between the nodes
-        PointType local_point;
         SlaveGeometry.PointLocalCoordinates(local_point, SlaveGeometry.Center());
         const array_1d<double, 3>& normal = SlaveGeometry.UnitNormal(local_point);
         const std::vector<IndexType> index_vector = ComputeAnglesIndexes(PointList, normal);
@@ -969,9 +974,11 @@ inline bool ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::TriangleInt
             ArrayTriangleType points_locals;
 
             // We compute if the center is inside the slave geometry
-            auxiliar_center_local_coords[0] = 1.0/3.0 * (PointList[0].X() + PointList[index_vector[elem] + 1].X() + PointList[index_vector[elem + 1] + 1].X());
-            auxiliar_center_local_coords[1] = 1.0/3.0 * (PointList[0].Y() + PointList[index_vector[elem] + 1].Y() + PointList[index_vector[elem + 1] + 1].Y());
-            const bool center_is_inside = CheckCenterIsInside(auxiliar_center_local_coords);
+            auxiliar_slave_center_local_coords[0] = 1.0/3.0 * (PointList[0].X() + PointList[index_vector[elem] + 1].X() + PointList[index_vector[elem + 1] + 1].X());
+            auxiliar_slave_center_local_coords[1] = 1.0/3.0 * (PointList[0].Y() + PointList[index_vector[elem] + 1].Y() + PointList[index_vector[elem + 1] + 1].Y());
+            auxiliar_master_center_local_coords[0] = 1.0/3.0 * (aux_master_point_list[0].X() + aux_master_point_list[index_vector[elem] + 1].X() + aux_master_point_list[index_vector[elem + 1] + 1].X());
+            auxiliar_master_center_local_coords[1] = 1.0/3.0 * (aux_master_point_list[0].Y() + aux_master_point_list[index_vector[elem] + 1].Y() + aux_master_point_list[index_vector[elem + 1] + 1].Y());
+            const bool center_is_inside = CheckCenterIsInside(auxiliar_slave_center_local_coords) && CheckCenterIsInside(auxiliar_master_center_local_coords);
             if (!center_is_inside) {
                 ConditionsPointsSlave.erase(ConditionsPointsSlave.begin() + aux_elem_index);
                 continue; // We skip this triangle
