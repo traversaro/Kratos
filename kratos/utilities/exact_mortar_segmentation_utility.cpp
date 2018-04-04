@@ -1026,6 +1026,12 @@ inline bool ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::TriangleInt
                 ConditionsPointsSlave.push_back(points_locals);
             }
         }
+
+        // We release memory
+//         free(memory);
+//         memory = NULL;
+        free(poly_context.Memory);
+        poly_context.Memory = NULL;
     #else
         // We resize the array of points of the decomposed triangles
         ConditionsPointsSlave.resize((list_size - 2));
