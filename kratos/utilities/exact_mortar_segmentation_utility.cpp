@@ -972,63 +972,59 @@ inline bool ExactMortarIntegrationUtility<TDim, TNumNodes, TBelong>::TriangleInt
         const std::vector<IndexType> index_vector = ComputeAnglesIndexes(PointList, normal);
 
     #ifdef INCLUDE_FAST_POLY2TRI
-        KRATOS_ERROR << "FINISH THIS" << std::endl;
+        // The maximum number of points you expect to need
+        // This value is used by the library to calculate
+        // working memory required
+        std::size_t max_point_count = list_size;
 
-//         // The maximum number of points you expect to need
-//         // This value is used by the library to calculate
-//         // working memory required
-//         std::size_t max_point_count = list_size
-//
-//         // Request how much memory (in bytes) you should
-//         // allocate for the library
-//         std::size_t memory_required = MPE_PolyMemoryRequired(max_point_count);
-//
-//         // Allocate a void* memory block of size memory_required
-//         // IMPORTANT: The memory must be zero initialized
-//         void* memory = calloc(memory_required, 1);
-//
-//         // Initialize the poly context by passing the memory pointer,
-//         // and max number of points from before
-//         MPEPolyContext poly_context;
-//         if (MPE_PolyInitContext(&poly_context, memory, max_point_count)) {
-//             // Populate the points of the polyline for the shape
-//             for(IndexType i_point = 0; i_point < list_size; i_point++) {
-//                 MPEPolyPoint* point = MPE_PolyPushPoint(&poly_context);
-//                 point->X = PointList[i_point].X();
-//                 point->Y = PointList[i_point].Y();
-//             }
-//
-//             // IMPORTANT: Both push functions perform no validation other
-//             // than an assert for bounds checking. You must make sure your
-//             // point data is correct:
-//             //  - Duplicate points are not supported
-//             //  - Bounds checking is not implemented other than debug asserts
-//
-//             // Add the polyline for the edge. This will consume all points added so far.
-//             MPE_PolyAddEdge(&poly_context);
-//
-//             // Triangulate the shape
-//             MPE_PolyTriangulate(&poly_context);
-//
-//             // The resulting triangles can be used like so
-//             for (IndexType triangle_index = 0; triangle_index < poly_context.TriangleCount; ++triangle_index) {
-//                 MPEPolyTriangle* triangle = PolyContext.Triangles[triangle_index];
-//                 MPEPolyPoint* point_A = triangle->Points[0];
-//                 MPEPolyPoint* point_B = triangle->Points[1];
-//                 MPEPolyPoint* point_C = triangle->Points[2];
-//
-//                 ArrayTriangleType points_locals;
-//
-//                 points_locals[0].X() = point_A->X;
-//                 points_locals[0].Y() = point_A->Y;
-//                 points_locals[1].X() = point_B->X;
-//                 points_locals[1].Y() = point_B->Y;
-//                 points_locals[2].X() = point_C->X;
-//                 points_locals[2].Y() = point_C->Y;
-//
-//                 // We add the triangle to the vector
-//                 ConditionsPointsSlave.push_back(points_locals);
-//             }
+        // Request how much memory (in bytes) you should
+        // allocate for the library
+        const std::size_t memory_required = MPE_PolyMemoryRequired(max_point_count);
+
+        // Allocate a void* memory block of size memory_required
+        // IMPORTANT: The memory must be zero initialized
+        void* memory = calloc(memory_required, 1);
+
+        // Initialize the poly context by passing the memory pointer,
+        // and max number of points from before
+        MPEPolyContext poly_context;
+        if (MPE_PolyInitContext(&poly_context, memory, max_point_count)) {
+            // Populate the points of the polyline for the shape
+            for(IndexType i_point = 0; i_point < list_size; i_point++) {
+                MPEPolyPoint* point = MPE_PolyPushPoint(&poly_context);
+                point->X = PointList[i_point].X();
+                point->Y = PointList[i_point].Y();
+                point->ID = i_point;
+            }
+
+            // IMPORTANT: Both push functions perform no validation other
+            // than an assert for bounds checking. You must make sure your
+            // point data is correct:
+            //  - Duplicate points are not supported
+            //  - Bounds checking is not implemented other than debug asserts
+
+            // Add the polyline for the edge. This will consume all points added so far.
+            MPE_PolyAddEdge(&poly_context);
+
+            // Triangulate the shape
+            MPE_PolyTriangulate(&poly_context);
+
+            // The resulting triangles can be used like so
+            for (IndexType triangle_index = 0; triangle_index < poly_context.TriangleCount; ++triangle_index) {
+                MPEPolyTriangle* triangle = poly_context.Triangles[triangle_index];
+                MPEPolyPoint* point_A = triangle->Points[0];
+                MPEPolyPoint* point_B = triangle->Points[1];
+                MPEPolyPoint* point_C = triangle->Points[2];
+
+                ArrayTriangleType points_locals;
+
+                points_locals[0] = PointList[point_A->ID];
+                points_locals[1] = PointList[point_B->ID];
+                points_locals[2] = PointList[point_C->ID];
+
+                // We add the triangle to the vector
+                ConditionsPointsSlave.push_back(points_locals);
+            }
         }
     #else
         // We resize the array of points of the decomposed triangles

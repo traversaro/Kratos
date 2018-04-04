@@ -194,6 +194,7 @@ typedef struct MPEPolyPoint
   struct MPEPolyEdge* FirstEdge;
   poly_float X;
   poly_float Y;
+  uxx ID;
 } MPEPolyPoint;
 
 typedef struct MPEPolyTriangle
