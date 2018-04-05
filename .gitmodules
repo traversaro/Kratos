@@ -1,3 +1,6 @@
 [submodule "applications/PfemApplication/external_modules/tetgen"]
 	path = applications/PfemApplication/external_modules/tetgen
 	url = https://github.com/PFEM/tetgen.git
+[submodule "applications/PETScApplication/custom_modules/PETSc"]
+	path = applications/PETScApplication/custom_modules/PETSc
+	url = https://bitbucket.org/petsc/petsc.git
