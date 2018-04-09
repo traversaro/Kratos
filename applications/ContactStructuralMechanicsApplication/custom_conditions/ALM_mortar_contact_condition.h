@@ -76,7 +76,7 @@ namespace Kratos
  * Popp, Alexander: Mortar Methods for Computational Contact Mechanics and General Interface Problems, Technische Universität München, jul 2012
  * @author Vicente Mataix Ferrandiz
  */
-template< unsigned int TDim, unsigned int TNumNodes, FrictionalCase TFrictional, bool TNormalVariation>
+template< std::size_t TDim, std::size_t TNumNodes, FrictionalCase TFrictional, bool TNormalVariation>
 class KRATOS_API(CONTACT_STRUCTURAL_MECHANICS_APPLICATION) AugmentedLagrangianMethodMortarContactCondition
     : public PairedCondition
 {
@@ -119,7 +119,7 @@ public:
 
     typedef typename std::conditional<TFrictional == FrictionalCase::FRICTIONAL, DerivativeDataFrictional<TDim, TNumNodes, TNormalVariation>, DerivativeData<TDim, TNumNodes, TNormalVariation> >::type DerivativeDataType;
 
-    static constexpr unsigned int MatrixSize = (TFrictional == FrictionalCase::FRICTIONLESS) ? TDim * (TNumNodes + TNumNodes) + TNumNodes : TDim * (TNumNodes + TNumNodes + TNumNodes);
+    static constexpr IndexType MatrixSize = (TFrictional == FrictionalCase::FRICTIONLESS) ? TDim * (TNumNodes + TNumNodes) + TNumNodes : TDim * (TNumNodes + TNumNodes + TNumNodes);
 
     static constexpr bool IsFrictional  = (TFrictional == FrictionalCase::FRICTIONAL) ? true: false;
 
@@ -430,7 +430,7 @@ protected:
 
     IntegrationMethod mThisIntegrationMethod; /// Integration order of the element
 
-    unsigned int mIntegrationOrder;           /// The integration order to consider
+    IndexType mIntegrationOrder;           /// The integration order to consider
 
     ///@}
     ///@name Protected Operators
@@ -517,7 +517,7 @@ protected:
         Matrix& rLocalLHS,
         const MortarConditionMatrices& rMortarConditionMatrices,
         const DerivativeDataType& rDerivativeData,
-        const unsigned int rActiveInactive,
+        const IndexType rActiveInactive,
         const ProcessInfo& rCurrentProcessInfo
         );
 
@@ -532,7 +532,7 @@ protected:
         Vector& rLocalRHS,
         const MortarConditionMatrices& rMortarConditionMatrices,
         const DerivativeDataType& rDerivativeData,
-        const unsigned int rActiveInactive,
+        const IndexType rActiveInactive,
         const ProcessInfo& rCurrentProcessInfo
         );
 
@@ -558,7 +558,7 @@ protected:
      * @param CurrentGeometry The geometry containing the nodes that are needed to be checked as active or inactive
      * @return The integer that can be used to identify the case to compute
      */
-    virtual unsigned int GetActiveInactiveValue(GeometryType& CurrentGeometry) const
+    virtual IndexType GetActiveInactiveValue(GeometryType& CurrentGeometry) const
     {
         KRATOS_ERROR << "You are calling to the base class method GetActiveInactiveValue, you are evil, and your seed must be eradicated from the face of the earth" << std::endl;
 
