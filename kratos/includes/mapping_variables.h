@@ -55,6 +55,78 @@ namespace Kratos
 ///@{
     
     /**
+     * @class IndexDatabase
+     * @ingroup KratosCore
+     * @brief Base class to derive common methods
+     * @author Vicente Mataix Ferrandiz
+    */
+    class IndexDatabase
+    {
+    public:
+        ///@name Type Definitions
+        ///@{
+        /// Counted pointer of IndexDatabase
+        KRATOS_CLASS_POINTER_DEFINITION( IndexDatabase );
+
+        ///@}
+        ///@name Life Cycle
+        ///@{
+
+        /// Default constructors
+        IndexDatabase(){}
+
+        /// Destructor
+        virtual ~IndexDatabase(){}
+
+        ///@}
+        ///@name Operators
+        ///@{
+
+        ///@}
+        ///@name Operations
+        ///@{
+
+       /**
+        * @brief It checks if an ID exists in the map
+        * @param IndexOrigin The condition ID to remove
+        * @return If the ID already exists or not
+        */
+        virtual bool Has(const IndexType IndexOrigin) {return false;}
+
+       /**
+        * @brief It adds a new ID to the map
+        * @param IndexOrigin The condition ID to remove
+        * @param IndexNewEntity The new created entity ID
+        */
+        virtual void AddId(
+            const IndexType IndexOrigin,
+            const IndexType IndexNewEntity = 0
+            ) {}
+
+       /**
+        * @brief It removes one particular pair from the map
+        * @param IndexOrigin The condition ID to remove
+        */
+        virtual void RemoveId(const IndexType IndexOrigin) {}
+
+        /**
+        * @brief It returns the new created entity ID
+        * @param IndexOrigin The condition ID to remove
+        * @return The new created entity ID
+        */
+        virtual IndexType GetNewEntityId(const IndexType IndexOrigin) {return 0;}
+
+        /**
+         * @brief Turn back information as a string.
+         */
+        virtual std::string Info() const {return "IndexDatabase";}
+
+        virtual void save( Serializer& rSerializer ) const {}
+
+        virtual void load( Serializer& rSerializer ) {}
+    }; // Class IndexDatabase
+
+    /**
      * @class IndexSet
      * @ingroup KratosCore
      * @brief Custom unordered set container to be used by the mapper
@@ -62,7 +134,7 @@ namespace Kratos
      * @author Vicente Mataix Ferrandiz
     */
     class IndexSet
-        : public std::unordered_set<IndexType>
+        : public std::unordered_set<IndexType>, public IndexDatabase
     {
     public:
         ///@name Type Definitions
@@ -95,7 +167,7 @@ namespace Kratos
         * @param IndexOrigin The condition ID to remove
         * @return If the ID already exists or not
         */
-        bool Has(const IndexType IndexOrigin)
+        bool Has(const IndexType IndexOrigin) override
         {
             BaseType::iterator set = find(IndexOrigin);
             if(set != end())
@@ -107,8 +179,12 @@ namespace Kratos
         /**
         * @brief It adds a new ID to the map
         * @param IndexOrigin The condition ID to remove
+        * @param IndexNewEntity The new created entity ID
         */
-        void AddId(const IndexType IndexOrigin)
+        void AddId(
+            const IndexType IndexOrigin,
+            const IndexType IndexNewEntity = 0
+            ) override
         {
             insert({IndexOrigin});
         }
@@ -117,7 +193,7 @@ namespace Kratos
         * @brief It removes one particular pair from the map
         * @param IndexOrigin The condition ID to remove
         */
-        void RemoveId(const IndexType IndexOrigin)
+        void RemoveId(const IndexType IndexOrigin) override
         {
             BaseType::iterator set = find(IndexOrigin);
             if(set != end())
@@ -127,7 +203,7 @@ namespace Kratos
         /**
          * @brief Turn back information as a string.
          */
-        std::string Info() const //override
+        std::string Info() const override
         {
             std::stringstream buffer;
             for ( auto it = begin(); it != end(); ++it )
@@ -145,6 +221,7 @@ namespace Kratos
             // TODO: Fill if necessary
         }
     }; // Class IndexSet
+
     /**
      * @class IndexMap
      * @ingroup KratosCore
@@ -153,7 +230,7 @@ namespace Kratos
      * @author Vicente Mataix Ferrandiz
     */
     class IndexMap
-        : public std::unordered_map<IndexType, IndexType>
+        : public std::unordered_map<IndexType, IndexType>, public IndexDatabase
     {
     public:
         ///@name Type Definitions
@@ -186,7 +263,7 @@ namespace Kratos
         * @param IndexOrigin The condition ID to remove
         * @return If the ID already exists or not
         */     
-        bool Has(const IndexType IndexOrigin)
+        bool Has(const IndexType IndexOrigin) override
         {
             BaseType::iterator map = find(IndexOrigin);
             if(map != end())
@@ -203,7 +280,7 @@ namespace Kratos
         void AddId(
             const IndexType IndexOrigin,
             const IndexType IndexNewEntity = 0
-            )
+            ) override
         {
             insert({IndexOrigin, IndexNewEntity});
         }
@@ -212,7 +289,7 @@ namespace Kratos
         * @brief It removes one particular pair from the map
         * @param IndexOrigin The condition ID to remove
         */     
-        void RemoveId(const IndexType IndexOrigin)
+        void RemoveId(const IndexType IndexOrigin) override
         {
             BaseType::iterator map = find(IndexOrigin);
             if(map != end())
@@ -224,7 +301,7 @@ namespace Kratos
         * @param IndexOrigin The condition ID to remove
         * @return The new created entity ID
         */
-        IndexType GetNewEntityId(const IndexType IndexOrigin)
+        IndexType GetNewEntityId(const IndexType IndexOrigin) override
         {
             BaseType::iterator map = find(IndexOrigin);
             if(map != end())
@@ -236,7 +313,7 @@ namespace Kratos
         /**
          * @brief Turn back information as a string.
          */
-        std::string Info() const //override
+        std::string Info() const override
         {
             std::stringstream buffer;
             for ( auto it = begin(); it != end(); ++it )
@@ -244,12 +321,12 @@ namespace Kratos
             return buffer.str();
         }
         
-        void save( Serializer& rSerializer ) const
+        void save( Serializer& rSerializer ) const override
         {
             // TODO: Fill if necessary
         }
 
-        void load( Serializer& rSerializer )
+        void load( Serializer& rSerializer ) override
         {
             // TODO: Fill if necessary
         }
