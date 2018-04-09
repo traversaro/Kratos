@@ -57,7 +57,7 @@ namespace Kratos
  * Popp, Alexander: Mortar Methods for Computational Contact Mechanics and General Interface Problems, Technische Universität München, jul 2012
  * @author Vicente Mataix Ferrandiz
  */
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 class KRATOS_API(CONTACT_STRUCTURAL_MECHANICS_APPLICATION) DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition
     : public AugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim, TNumNodes, TNormalVariation>
 {
@@ -104,7 +104,7 @@ public:
 
     typedef DerivativeData<TDim, TNumNodes, TNormalVariation>                               DerivativeDataType;
 
-    static constexpr std::size_t MatrixSize = TDim * (TNumNodes + TNumNodes) + 2 * TNumNodes;
+    static constexpr unsigned int MatrixSize = TDim * (TNumNodes + TNumNodes) + 2 * TNumNodes;
 
     ///@}
     ///@name Life Cycle
@@ -289,7 +289,8 @@ protected:
         Matrix& rLocalLHS,
         const MortarConditionMatrices& rMortarConditionMatrices,
         const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
+        const unsigned int rActiveInactive,
+        const ProcessInfo& rCurrentProcessInfo
         ) override;
 
     /**
@@ -304,7 +305,8 @@ protected:
         Vector& rLocalRHS,
         const MortarConditionMatrices& rMortarConditionMatrices,
         const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
+        const unsigned int rActiveInactive,
+        const ProcessInfo& rCurrentProcessInfo
         ) override;
 
     /**
@@ -319,7 +321,7 @@ protected:
         Matrix& rLocalLHS,
         const MortarConditionMatrices& rMortarConditionMatrices,
         const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
+        const unsigned int rActiveInactive
         );
 
     /**
@@ -334,7 +336,7 @@ protected:
         Vector& rLocalRHS,
         const MortarConditionMatrices& rMortarConditionMatrices,
         const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
+        const unsigned int rActiveInactive
         );
 
     /**
@@ -371,10 +373,10 @@ protected:
      * @return The integer that can be used to identify the case to compute
      */
 
-    IndexType GetActiveInactiveValue(GeometryType& CurrentGeometry) const override
+    unsigned int GetActiveInactiveValue(GeometryType& CurrentGeometry) const override
     {
-        IndexType value = 0;
-        for (IndexType i_node = 0; i_node < TNumNodes; ++i_node)
+        unsigned int value = 0;
+        for (unsigned int i_node = 0; i_node < TNumNodes; ++i_node)
             if (CurrentGeometry[i_node].Is(ACTIVE) == true)
                 value += 1 << i_node;
 

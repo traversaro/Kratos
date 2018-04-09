@@ -22,7 +22,7 @@ namespace Kratos
 /************************************* OPERATIONS **********************************/
 /***********************************************************************************/
 
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 Condition::Pointer DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumNodes,TNormalVariation>::Create( 
     IndexType NewId,
     NodesArrayType const& rThisNodes,
@@ -34,7 +34,7 @@ Condition::Pointer DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondi
 /***********************************************************************************/
 /***********************************************************************************/
 
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 Condition::Pointer DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumNodes,TNormalVariation>::Create(
     IndexType NewId,
     GeometryPointerType pGeom,
@@ -46,7 +46,7 @@ Condition::Pointer DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondi
 /***********************************************************************************/
 /***********************************************************************************/
 
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 Condition::Pointer DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumNodes,TNormalVariation>::Create(
     IndexType NewId,
     GeometryPointerType pGeom,
@@ -59,19 +59,20 @@ Condition::Pointer DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondi
 /************************************* DESTRUCTOR **********************************/
 /***********************************************************************************/
 
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumNodes, TNormalVariation>::~DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition( )
 = default;
 
 /***********************************************************************************/
 /***********************************************************************************/
 
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumNodes,TNormalVariation>::CalculateLocalLHS(
     Matrix& rLocalLHS, 
     const MortarConditionMatrices& rMortarConditionMatrices,
     const DerivativeDataType& rDerivativeData,
-    const IndexType rActiveInactive
+    const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
     ) 
 {
     BaseType::CalculateLocalLHS(rLocalLHS, rMortarConditionMatrices, rDerivativeData, rActiveInactive);
@@ -96,12 +97,13 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNum
 /***********************************************************************************/
 /***********************************************************************************/
 
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumNodes,TNormalVariation>::CalculateLocalRHS(
     Vector& rLocalRHS, 
     const MortarConditionMatrices& rMortarConditionMatrices,
     const DerivativeDataType& rDerivativeData,
-    const IndexType rActiveInactive
+    const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
     ) 
 {
     BaseType::CalculateLocalRHS(rLocalRHS, rMortarConditionMatrices, rDerivativeData, rActiveInactive);
@@ -120,17 +122,14 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNum
 /***************************** BEGIN AD REPLACEMENT ********************************/
 /***********************************************************************************/
 
-
-/***********************************************************************************/
-/***********************************************************************************/
-
 template<>
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<2,2, false>::CalculateLocalLHS(
-        Matrix& rLocalLHS,
-        const MortarConditionMatrices& rMortarConditionMatrices,
-        const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
-        )
+	Matrix& rLocalLHS,
+	const MortarConditionMatrices& rMortarConditionMatrices,
+	const DerivativeDataType& rDerivativeData,
+	const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
+	)
 {
     // Initialize values
     // const bounded_matrix<double, 2, 2>& u1 = rDerivativeData.u1;
@@ -138,8 +137,8 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<2,2, fals
     // const bounded_matrix<double, 2, 2>& X1 = rDerivativeData.X1;
     // const bounded_matrix<double, 2, 2>& X2 = rDerivativeData.X2;
     
-    const array_1d<double, 2>& LMSlaveNormal = MortarUtilities::GetVariableVector<2>(this->GetGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
-    const array_1d<double, 2>& LMMasterNormal = MortarUtilities::GetVariableVector<2>(this->GetPairedGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
+    const array_1d<double, 2>& LMSlaveNormal = MortarUtilities::GetVariableVector<2>(this->GetGeometry(), NORMAL_CONTACT_STRESS, 0);
+    const array_1d<double, 2>& LMMasterNormal = MortarUtilities::GetVariableVector<2>(this->GetPairedGeometry(), NORMAL_CONTACT_STRESS, 0);
 
     // The ALM parameters
     const double ScaleFactor = rDerivativeData.ScaleFactor;
@@ -241,11 +240,12 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<2,2, fals
 
 template<>
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,3, false>::CalculateLocalLHS(
-        Matrix& rLocalLHS,
-        const MortarConditionMatrices& rMortarConditionMatrices,
-        const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
-        )
+	Matrix& rLocalLHS,
+	const MortarConditionMatrices& rMortarConditionMatrices,
+	const DerivativeDataType& rDerivativeData,
+	const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
+	)
 {
     // Initialize values
     // const bounded_matrix<double, 3, 3>& u1 = rDerivativeData.u1;
@@ -253,8 +253,8 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,3, fals
     // const bounded_matrix<double, 3, 3>& X1 = rDerivativeData.X1;
     // const bounded_matrix<double, 3, 3>& X2 = rDerivativeData.X2;
     
-    const array_1d<double, 3>& LMSlaveNormal = MortarUtilities::GetVariableVector<3>(this->GetGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
-    const array_1d<double, 3>& LMMasterNormal = MortarUtilities::GetVariableVector<3>(this->GetPairedGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
+    const array_1d<double, 3>& LMSlaveNormal = MortarUtilities::GetVariableVector<3>(this->GetGeometry(), NORMAL_CONTACT_STRESS, 0);
+    const array_1d<double, 3>& LMMasterNormal = MortarUtilities::GetVariableVector<3>(this->GetPairedGeometry(), NORMAL_CONTACT_STRESS, 0);
 
     // The ALM parameters
     const double ScaleFactor = rDerivativeData.ScaleFactor;
@@ -668,11 +668,12 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,3, fals
 
 template<>
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,4, false>::CalculateLocalLHS(
-        Matrix& rLocalLHS,
-        const MortarConditionMatrices& rMortarConditionMatrices,
-        const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
-        )
+	Matrix& rLocalLHS,
+	const MortarConditionMatrices& rMortarConditionMatrices,
+	const DerivativeDataType& rDerivativeData,
+	const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
+	)
 {
     // Initialize values
     // const bounded_matrix<double, 4, 3>& u1 = rDerivativeData.u1;
@@ -680,8 +681,8 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,4, fals
     // const bounded_matrix<double, 4, 3>& X1 = rDerivativeData.X1;
     // const bounded_matrix<double, 4, 3>& X2 = rDerivativeData.X2;
     
-    const array_1d<double, 4>& LMSlaveNormal = MortarUtilities::GetVariableVector<4>(this->GetGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
-    const array_1d<double, 4>& LMMasterNormal = MortarUtilities::GetVariableVector<4>(this->GetPairedGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
+    const array_1d<double, 4>& LMSlaveNormal = MortarUtilities::GetVariableVector<4>(this->GetGeometry(), NORMAL_CONTACT_STRESS, 0);
+    const array_1d<double, 4>& LMMasterNormal = MortarUtilities::GetVariableVector<4>(this->GetPairedGeometry(), NORMAL_CONTACT_STRESS, 0);
 
     // The ALM parameters
     const double ScaleFactor = rDerivativeData.ScaleFactor;
@@ -2047,11 +2048,12 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,4, fals
 
 template<>
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<2,2, true>::CalculateLocalLHS(
-        Matrix& rLocalLHS,
-        const MortarConditionMatrices& rMortarConditionMatrices,
-        const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
-        )
+	Matrix& rLocalLHS,
+	const MortarConditionMatrices& rMortarConditionMatrices,
+	const DerivativeDataType& rDerivativeData,
+	const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
+	)
 {
     // Initialize values
     // const bounded_matrix<double, 2, 2>& u1 = rDerivativeData.u1;
@@ -2059,8 +2061,8 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<2,2, true
     // const bounded_matrix<double, 2, 2>& X1 = rDerivativeData.X1;
     // const bounded_matrix<double, 2, 2>& X2 = rDerivativeData.X2;
     
-    const array_1d<double, 2>& LMSlaveNormal = MortarUtilities::GetVariableVector<2>(this->GetGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
-    const array_1d<double, 2>& LMMasterNormal = MortarUtilities::GetVariableVector<2>(this->GetPairedGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
+    const array_1d<double, 2>& LMSlaveNormal = MortarUtilities::GetVariableVector<2>(this->GetGeometry(), NORMAL_CONTACT_STRESS, 0);
+    const array_1d<double, 2>& LMMasterNormal = MortarUtilities::GetVariableVector<2>(this->GetPairedGeometry(), NORMAL_CONTACT_STRESS, 0);
 
     // The ALM parameters
     const double ScaleFactor = rDerivativeData.ScaleFactor;
@@ -2162,11 +2164,12 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<2,2, true
 
 template<>
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,3, true>::CalculateLocalLHS(
-        Matrix& rLocalLHS,
-        const MortarConditionMatrices& rMortarConditionMatrices,
-        const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
-        )
+	Matrix& rLocalLHS,
+	const MortarConditionMatrices& rMortarConditionMatrices,
+	const DerivativeDataType& rDerivativeData,
+	const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
+	)
 {
     // Initialize values
     // const bounded_matrix<double, 3, 3>& u1 = rDerivativeData.u1;
@@ -2174,8 +2177,8 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,3, true
     // const bounded_matrix<double, 3, 3>& X1 = rDerivativeData.X1;
     // const bounded_matrix<double, 3, 3>& X2 = rDerivativeData.X2;
     
-    const array_1d<double, 3>& LMSlaveNormal = MortarUtilities::GetVariableVector<3>(this->GetGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
-    const array_1d<double, 3>& LMMasterNormal = MortarUtilities::GetVariableVector<3>(this->GetPairedGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
+    const array_1d<double, 3>& LMSlaveNormal = MortarUtilities::GetVariableVector<3>(this->GetGeometry(), NORMAL_CONTACT_STRESS, 0);
+    const array_1d<double, 3>& LMMasterNormal = MortarUtilities::GetVariableVector<3>(this->GetPairedGeometry(), NORMAL_CONTACT_STRESS, 0);
 
     // The ALM parameters
     const double ScaleFactor = rDerivativeData.ScaleFactor;
@@ -2589,11 +2592,12 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,3, true
 
 template<>
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,4, true>::CalculateLocalLHS(
-        Matrix& rLocalLHS,
-        const MortarConditionMatrices& rMortarConditionMatrices,
-        const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
-        )
+	Matrix& rLocalLHS,
+	const MortarConditionMatrices& rMortarConditionMatrices,
+	const DerivativeDataType& rDerivativeData,
+	const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
+	)
 {
     // Initialize values
     // const bounded_matrix<double, 4, 3>& u1 = rDerivativeData.u1;
@@ -2601,8 +2605,8 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,4, true
     // const bounded_matrix<double, 4, 3>& X1 = rDerivativeData.X1;
     // const bounded_matrix<double, 4, 3>& X2 = rDerivativeData.X2;
     
-    const array_1d<double, 4>& LMSlaveNormal = MortarUtilities::GetVariableVector<4>(this->GetGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
-    const array_1d<double, 4>& LMMasterNormal = MortarUtilities::GetVariableVector<4>(this->GetPairedGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
+    const array_1d<double, 4>& LMSlaveNormal = MortarUtilities::GetVariableVector<4>(this->GetGeometry(), NORMAL_CONTACT_STRESS, 0);
+    const array_1d<double, 4>& LMMasterNormal = MortarUtilities::GetVariableVector<4>(this->GetPairedGeometry(), NORMAL_CONTACT_STRESS, 0);
 
     // The ALM parameters
     const double ScaleFactor = rDerivativeData.ScaleFactor;
@@ -3976,11 +3980,12 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,4, true
 
 template<>
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<2,2, false>::CalculateLocalRHS(
-        Vector& rLocalRHS,
-        const MortarConditionMatrices& rMortarConditionMatrices,
-        const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
-        )
+	Vector& rLocalRHS,
+	const MortarConditionMatrices& rMortarConditionMatrices,
+	const DerivativeDataType& rDerivativeData,
+	const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
+	)
 {
     // Initialize values
     // const bounded_matrix<double, 2, 2>& u1 = rDerivativeData.u1;
@@ -3988,8 +3993,8 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<2,2, fals
     // const bounded_matrix<double, 2, 2>& X1 = rDerivativeData.X1;
     // const bounded_matrix<double, 2, 2>& X2 = rDerivativeData.X2;
     
-    const array_1d<double, 2>& LMSlaveNormal = MortarUtilities::GetVariableVector<2>(this->GetGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
-    const array_1d<double, 2>& LMMasterNormal = MortarUtilities::GetVariableVector<2>(this->GetPairedGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
+    const array_1d<double, 2>& LMSlaveNormal = MortarUtilities::GetVariableVector<2>(this->GetGeometry(), NORMAL_CONTACT_STRESS, 0);
+    const array_1d<double, 2>& LMMasterNormal = MortarUtilities::GetVariableVector<2>(this->GetPairedGeometry(), NORMAL_CONTACT_STRESS, 0);
 
     // The ALM parameters
     const double ScaleFactor = rDerivativeData.ScaleFactor;
@@ -4040,11 +4045,12 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<2,2, fals
 
 template<>
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,3, false>::CalculateLocalRHS(
-        Vector& rLocalRHS,
-        const MortarConditionMatrices& rMortarConditionMatrices,
-        const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
-        )
+	Vector& rLocalRHS,
+	const MortarConditionMatrices& rMortarConditionMatrices,
+	const DerivativeDataType& rDerivativeData,
+	const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
+	)
 {
     // Initialize values
     // const bounded_matrix<double, 3, 3>& u1 = rDerivativeData.u1;
@@ -4052,8 +4058,8 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,3, fals
     // const bounded_matrix<double, 3, 3>& X1 = rDerivativeData.X1;
     // const bounded_matrix<double, 3, 3>& X2 = rDerivativeData.X2;
     
-    const array_1d<double, 3>& LMSlaveNormal = MortarUtilities::GetVariableVector<3>(this->GetGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
-    const array_1d<double, 3>& LMMasterNormal = MortarUtilities::GetVariableVector<3>(this->GetPairedGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
+    const array_1d<double, 3>& LMSlaveNormal = MortarUtilities::GetVariableVector<3>(this->GetGeometry(), NORMAL_CONTACT_STRESS, 0);
+    const array_1d<double, 3>& LMMasterNormal = MortarUtilities::GetVariableVector<3>(this->GetPairedGeometry(), NORMAL_CONTACT_STRESS, 0);
 
     // The ALM parameters
     const double ScaleFactor = rDerivativeData.ScaleFactor;
@@ -4176,11 +4182,12 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,3, fals
 
 template<>
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,4, false>::CalculateLocalRHS(
-        Vector& rLocalRHS,
-        const MortarConditionMatrices& rMortarConditionMatrices,
-        const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
-        )
+	Vector& rLocalRHS,
+	const MortarConditionMatrices& rMortarConditionMatrices,
+	const DerivativeDataType& rDerivativeData,
+	const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
+	)
 {
     // Initialize values
     // const bounded_matrix<double, 4, 3>& u1 = rDerivativeData.u1;
@@ -4188,8 +4195,8 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,4, fals
     // const bounded_matrix<double, 4, 3>& X1 = rDerivativeData.X1;
     // const bounded_matrix<double, 4, 3>& X2 = rDerivativeData.X2;
     
-    const array_1d<double, 4>& LMSlaveNormal = MortarUtilities::GetVariableVector<4>(this->GetGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
-    const array_1d<double, 4>& LMMasterNormal = MortarUtilities::GetVariableVector<4>(this->GetPairedGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
+    const array_1d<double, 4>& LMSlaveNormal = MortarUtilities::GetVariableVector<4>(this->GetGeometry(), NORMAL_CONTACT_STRESS, 0);
+    const array_1d<double, 4>& LMMasterNormal = MortarUtilities::GetVariableVector<4>(this->GetPairedGeometry(), NORMAL_CONTACT_STRESS, 0);
 
     // The ALM parameters
     const double ScaleFactor = rDerivativeData.ScaleFactor;
@@ -4528,11 +4535,12 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,4, fals
 
 template<>
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<2,2, true>::CalculateLocalRHS(
-        Vector& rLocalRHS,
-        const MortarConditionMatrices& rMortarConditionMatrices,
-        const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
-        )
+	Vector& rLocalRHS,
+	const MortarConditionMatrices& rMortarConditionMatrices,
+	const DerivativeDataType& rDerivativeData,
+	const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
+	)
 {
     // Initialize values
     // const bounded_matrix<double, 2, 2>& u1 = rDerivativeData.u1;
@@ -4540,8 +4548,8 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<2,2, true
     // const bounded_matrix<double, 2, 2>& X1 = rDerivativeData.X1;
     // const bounded_matrix<double, 2, 2>& X2 = rDerivativeData.X2;
     
-    const array_1d<double, 2>& LMSlaveNormal = MortarUtilities::GetVariableVector<2>(this->GetGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
-    const array_1d<double, 2>& LMMasterNormal = MortarUtilities::GetVariableVector<2>(this->GetPairedGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
+    const array_1d<double, 2>& LMSlaveNormal = MortarUtilities::GetVariableVector<2>(this->GetGeometry(), NORMAL_CONTACT_STRESS, 0);
+    const array_1d<double, 2>& LMMasterNormal = MortarUtilities::GetVariableVector<2>(this->GetPairedGeometry(), NORMAL_CONTACT_STRESS, 0);
 
     // The ALM parameters
     const double ScaleFactor = rDerivativeData.ScaleFactor;
@@ -4592,11 +4600,12 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<2,2, true
 
 template<>
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,3, true>::CalculateLocalRHS(
-        Vector& rLocalRHS,
-        const MortarConditionMatrices& rMortarConditionMatrices,
-        const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
-        )
+	Vector& rLocalRHS,
+	const MortarConditionMatrices& rMortarConditionMatrices,
+	const DerivativeDataType& rDerivativeData,
+	const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
+	)
 {
     // Initialize values
     // const bounded_matrix<double, 3, 3>& u1 = rDerivativeData.u1;
@@ -4604,8 +4613,8 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,3, true
     // const bounded_matrix<double, 3, 3>& X1 = rDerivativeData.X1;
     // const bounded_matrix<double, 3, 3>& X2 = rDerivativeData.X2;
     
-    const array_1d<double, 3>& LMSlaveNormal = MortarUtilities::GetVariableVector<3>(this->GetGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
-    const array_1d<double, 3>& LMMasterNormal = MortarUtilities::GetVariableVector<3>(this->GetPairedGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
+    const array_1d<double, 3>& LMSlaveNormal = MortarUtilities::GetVariableVector<3>(this->GetGeometry(), NORMAL_CONTACT_STRESS, 0);
+    const array_1d<double, 3>& LMMasterNormal = MortarUtilities::GetVariableVector<3>(this->GetPairedGeometry(), NORMAL_CONTACT_STRESS, 0);
 
     // The ALM parameters
     const double ScaleFactor = rDerivativeData.ScaleFactor;
@@ -4728,11 +4737,12 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,3, true
 
 template<>
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,4, true>::CalculateLocalRHS(
-        Vector& rLocalRHS,
-        const MortarConditionMatrices& rMortarConditionMatrices,
-        const DerivativeDataType& rDerivativeData,
-        const IndexType rActiveInactive
-        )
+	Vector& rLocalRHS,
+	const MortarConditionMatrices& rMortarConditionMatrices,
+	const DerivativeDataType& rDerivativeData,
+	const unsigned int rActiveInactive,
+    const ProcessInfo& rCurrentProcessInfo
+	)
 {
     // Initialize values
     // const bounded_matrix<double, 4, 3>& u1 = rDerivativeData.u1;
@@ -4740,8 +4750,8 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,4, true
     // const bounded_matrix<double, 4, 3>& X1 = rDerivativeData.X1;
     // const bounded_matrix<double, 4, 3>& X2 = rDerivativeData.X2;
     
-    const array_1d<double, 4>& LMSlaveNormal = MortarUtilities::GetVariableVector<4>(this->GetGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
-    const array_1d<double, 4>& LMMasterNormal = MortarUtilities::GetVariableVector<4>(this->GetPairedGeometry(), LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, 0);
+    const array_1d<double, 4>& LMSlaveNormal = MortarUtilities::GetVariableVector<4>(this->GetGeometry(), NORMAL_CONTACT_STRESS, 0);
+    const array_1d<double, 4>& LMMasterNormal = MortarUtilities::GetVariableVector<4>(this->GetPairedGeometry(), NORMAL_CONTACT_STRESS, 0);
 
     // The ALM parameters
     const double ScaleFactor = rDerivativeData.ScaleFactor;
@@ -5079,7 +5089,7 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<3,4, true
 /****************************** END AD REPLACEMENT *********************************/
 /***********************************************************************************/
 
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumNodes,TNormalVariation>::EquationIdVector(
     EquationIdVectorType& rResult,
     ProcessInfo& rCurrentProcessInfo 
@@ -5090,13 +5100,13 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNum
     if (rResult.size() != MatrixSize)
         rResult.resize( MatrixSize, false );
     
-    IndexType index = 0;
+    unsigned int index = 0;
     
     /* ORDER - [ MASTER, SLAVE, LAMBDA ] */
     GeometryType& current_master = this->GetPairedGeometry();
     
     // Master Nodes Displacement Equation IDs
-    for ( IndexType i_master = 0; i_master < TNumNodes; ++i_master ) { // NOTE: Assuming same number of nodes for master and slave
+    for ( unsigned int i_master = 0; i_master < TNumNodes; ++i_master ) { // NOTE: Assuming same number of nodes for master and slave
         NodeType& master_node = current_master[i_master];
         rResult[index++] = master_node.GetDof( DISPLACEMENT_X ).EquationId( );
         rResult[index++] = master_node.GetDof( DISPLACEMENT_Y ).EquationId( );
@@ -5104,7 +5114,7 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNum
     }
 
     // Slave Nodes Displacement Equation IDs
-    for ( IndexType i_slave = 0; i_slave < TNumNodes; ++i_slave ) {
+    for ( unsigned int i_slave = 0; i_slave < TNumNodes; ++i_slave ) {
         NodeType& slave_node = this->GetGeometry()[ i_slave ];
         rResult[index++] = slave_node.GetDof( DISPLACEMENT_X ).EquationId( );
         rResult[index++] = slave_node.GetDof( DISPLACEMENT_Y ).EquationId( );
@@ -5112,15 +5122,15 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNum
     }
 
     // Slave Nodes  Lambda Equation IDs
-    for ( IndexType i_slave = 0; i_slave < TNumNodes; ++i_slave ) {
+    for ( unsigned int i_slave = 0; i_slave < TNumNodes; ++i_slave ) {
         NodeType& slave_node = this->GetGeometry()[ i_slave ];
-        rResult[index++] = slave_node.GetDof( LAGRANGE_MULTIPLIER_CONTACT_PRESSURE ).EquationId( );
+        rResult[index++] = slave_node.GetDof( NORMAL_CONTACT_STRESS ).EquationId( );
     }
     
     // Master Nodes  Lambda Equation IDs
-    for ( IndexType i_master = 0; i_master < TNumNodes; ++i_master ) {
+    for ( unsigned int i_master = 0; i_master < TNumNodes; ++i_master ) {
         NodeType& master_node = current_master[i_master];
-        rResult[index++] = master_node.GetDof( LAGRANGE_MULTIPLIER_CONTACT_PRESSURE ).EquationId( );
+        rResult[index++] = master_node.GetDof( NORMAL_CONTACT_STRESS ).EquationId( );
     }
     
     KRATOS_CATCH( "" );
@@ -5129,7 +5139,7 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNum
 /***********************************************************************************/
 /***********************************************************************************/
 
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumNodes,TNormalVariation>::GetDofList(
     DofsVectorType& rConditionalDofList,
     ProcessInfo& rCurrentProcessInfo 
@@ -5140,13 +5150,13 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNum
     if (rConditionalDofList.size() != MatrixSize)
         rConditionalDofList.resize( MatrixSize );
     
-    IndexType index = 0;
+    unsigned int index = 0;
     
     /* ORDER - [ MASTER, SLAVE, LAMBDA ] */
     GeometryType& current_master = this->GetPairedGeometry();;
 
     // Master Nodes Displacement Equation IDs
-    for ( IndexType i_master = 0; i_master < TNumNodes; ++i_master ) { // NOTE: Assuming same number of nodes for master and slave
+    for ( unsigned int i_master = 0; i_master < TNumNodes; ++i_master ) { // NOTE: Assuming same number of nodes for master and slave
         NodeType& master_node = current_master[i_master];
         rConditionalDofList[index++] = master_node.pGetDof( DISPLACEMENT_X );
         rConditionalDofList[index++] = master_node.pGetDof( DISPLACEMENT_Y );
@@ -5154,7 +5164,7 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNum
     }
 
     // Slave Nodes Displacement Equation IDs
-    for ( IndexType i_slave = 0; i_slave < TNumNodes; ++i_slave ) {
+    for ( unsigned int i_slave = 0; i_slave < TNumNodes; ++i_slave ) {
         NodeType& slave_node = this->GetGeometry()[ i_slave ];
         rConditionalDofList[index++] = slave_node.pGetDof( DISPLACEMENT_X );
         rConditionalDofList[index++] = slave_node.pGetDof( DISPLACEMENT_Y );
@@ -5162,15 +5172,15 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNum
     }
 
     // Slave Nodes Lambda Equation IDs
-    for ( IndexType i_slave = 0; i_slave < TNumNodes; ++i_slave )  {
+    for ( unsigned int i_slave = 0; i_slave < TNumNodes; ++i_slave )  {
         NodeType& slave_node = this->GetGeometry()[ i_slave ];
-        rConditionalDofList[index++] = slave_node.pGetDof( LAGRANGE_MULTIPLIER_CONTACT_PRESSURE );
+        rConditionalDofList[index++] = slave_node.pGetDof( NORMAL_CONTACT_STRESS );
     }
     
     // Master Nodes Lambda Equation IDs
-    for ( IndexType i_master = 0; i_master < TNumNodes; ++i_master ) { 
+    for ( unsigned int i_master = 0; i_master < TNumNodes; ++i_master ) { 
         NodeType& master_node = current_master[i_master];
-        rConditionalDofList[index++] = master_node.pGetDof( LAGRANGE_MULTIPLIER_CONTACT_PRESSURE );
+        rConditionalDofList[index++] = master_node.pGetDof( NORMAL_CONTACT_STRESS );
     }
     
     KRATOS_CATCH( "" );
@@ -5179,7 +5189,7 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNum
 /***********************************************************************************/
 /***********************************************************************************/
 
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 int DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumNodes,TNormalVariation>::Check( const ProcessInfo& rCurrentProcessInfo )
 {
     KRATOS_TRY
@@ -5190,15 +5200,15 @@ int DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumN
 
     // Check that all required variables have been registered
     KRATOS_CHECK_VARIABLE_KEY(NORMAL)
-    KRATOS_CHECK_VARIABLE_KEY(LAGRANGE_MULTIPLIER_CONTACT_PRESSURE)
+    KRATOS_CHECK_VARIABLE_KEY(NORMAL_CONTACT_STRESS)
 
     // Check that the element's nodes contain all required SolutionStepData and Degrees of freedom
-    for ( IndexType i = 0; i < TNumNodes; ++i ) {
+    for ( unsigned int i = 0; i < TNumNodes; ++i ) {
         Node<3> &rnode = this->GetGeometry()[i];
         KRATOS_CHECK_VARIABLE_IN_NODAL_DATA(NORMAL,rnode)
-        KRATOS_CHECK_VARIABLE_IN_NODAL_DATA(LAGRANGE_MULTIPLIER_CONTACT_PRESSURE,rnode)
+        KRATOS_CHECK_VARIABLE_IN_NODAL_DATA(NORMAL_CONTACT_STRESS,rnode)
 
-        KRATOS_CHECK_DOF_IN_NODE(LAGRANGE_MULTIPLIER_CONTACT_PRESSURE, rnode)
+        KRATOS_CHECK_DOF_IN_NODE(NORMAL_CONTACT_STRESS, rnode)
     }
 
     return ierr;
@@ -5209,7 +5219,7 @@ int DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumN
 /***********************************************************************************/
 /***********************************************************************************/
 
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumNodes,TNormalVariation>::ResizeLHS(MatrixType& rLeftHandSideMatrix)
 {
     // Resizing as needed the LHS
@@ -5220,7 +5230,7 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNum
 /***********************************************************************************/
 /***********************************************************************************/
 
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumNodes,TNormalVariation>::ResizeRHS(VectorType& rRightHandSideVector)
 {
     // Resizing as needed the RHS
@@ -5231,7 +5241,7 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNum
 /***********************************************************************************/
 /***********************************************************************************/
 
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumNodes,TNormalVariation>::ZeroLHS(MatrixType& rLeftHandSideMatrix)
 {
     rLeftHandSideMatrix = ZeroMatrix( MatrixSize, MatrixSize );
@@ -5240,7 +5250,7 @@ void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNum
 /***********************************************************************************/
 /***********************************************************************************/
 
-template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+template< unsigned int TDim, unsigned int TNumNodes, bool TNormalVariation >
 void DoubleAugmentedLagrangianMethodFrictionlessMortarContactCondition<TDim,TNumNodes,TNormalVariation>::ZeroRHS(VectorType& rRightHandSideVector)
 {
     rRightHandSideVector = ZeroVector( MatrixSize );
