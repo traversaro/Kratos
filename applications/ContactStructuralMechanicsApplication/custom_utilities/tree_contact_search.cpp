@@ -10,6 +10,7 @@
 //
 
 // System includes
+#include <algorithm>
 
 // External includes
 
@@ -321,10 +322,10 @@ void TreeContactSearch<TDim, TNumNodes>::UpdateMortarConditions()
     const bool dynamic = mThisParameters["dynamic_search"].GetBool() ? mrMainModelPart.NodesBegin()->SolutionStepsDataHas(VELOCITY_X) : false;
 
     // Some auxiliar values
-    const IndexType allocation_size = mThisParameters["allocation_size"].GetInt();           // Allocation size for the vectors and max number of potential results
+    const IndexType allocation_size = mThisParameters["allocation_size"].GetInt();              // Allocation size for the vectors and max number of potential results
     const double search_factor = mThisParameters["search_factor"].GetDouble();                  // The search factor to be considered
     SearchTreeType type_search = ConvertSearchTree(mThisParameters["type_search"].GetString()); // The search tree considered
-    IndexType bucket_size = mThisParameters["bucket_size"].GetInt();                         // Bucket size for kd-tree
+    IndexType bucket_size = mThisParameters["bucket_size"].GetInt();                            // Bucket size for kd-tree
 
     // Create a tree
     // It will use a copy of mNodeList (a std::vector which contains pointers)
@@ -400,17 +401,17 @@ void TreeContactSearch<TDim, TNumNodes>::UpdateMortarConditions()
 //                 KRATOS_INFO("Check search") << "The search is properly done" << std::endl;
             #endif
 
-                IndexSet::Pointer indexes_set = it_cond->GetValue(INDEX_SET);
+                IndexSet::Pointer p_indexes_set = it_cond->GetValue(INDEX_SET);
 
                 // If not active we check if can be potentially in contact
                 if (mCheckGap == CheckGap::MappingCheck) {
                     for (IndexType i_point = 0; i_point < number_points_found; ++i_point ) {
                         Condition::Pointer p_cond_master = points_found[i_point]->GetCondition();
-                        const CheckResult condition_checked_right = CheckCondition(indexes_set, (*it_cond.base()), p_cond_master, mInvertedSearch);
-                        if (condition_checked_right == CheckResult::OK) indexes_set->AddId(p_cond_master->Id());
+                        const CheckResult condition_checked_right = CheckCondition(p_indexes_set, (*it_cond.base()), p_cond_master, mInvertedSearch);
+                        if (condition_checked_right == CheckResult::OK) p_indexes_set->AddId(p_cond_master->Id());
                     }
                 } else
-                    AddPotentialPairing(computing_rcontact_model_part, condition_id, (*it_cond.base()), points_found, number_points_found, indexes_set);
+                    AddPotentialPairing(computing_rcontact_model_part, condition_id, (*it_cond.base()), points_found, number_points_found, p_indexes_set);
             }
         }
     }
@@ -431,8 +432,10 @@ void TreeContactSearch<TDim, TNumNodes>::UpdateMortarConditions()
             if (mrMainModelPart.NodesBegin()->SolutionStepsDataHas(VELOCITY_X)) {
                 NodesArrayType& nodes_array = mrMainModelPart.GetSubModelPart("Contact").Nodes();
                 #pragma omp parallel for
-                for(int i = 0; i < static_cast<int>(nodes_array.size()); ++i)
-                    noalias((nodes_array.begin() + i)->Coordinates()) -= (nodes_array.begin() + i)->GetValue(DELTA_COORDINATES);
+                for(int i = 0; i < static_cast<int>(nodes_array.size()); ++i) {
+                    auto it_node = nodes_array.begin() + i;
+                    noalias(it_node->Coordinates()) -= it_node->GetValue(DELTA_COORDINATES);
+                }
             }
         }
         // We compute the weighted reaction
@@ -455,6 +458,8 @@ void TreeContactSearch<TDim, TNumNodes>::AddPairing(
         ++rConditionId;
         Condition::Pointer p_auxiliar_condition = rComputingModelPart.CreateNewCondition(mConditionName, rConditionId, pCondSlave->GetGeometry(), pCondSlave->pGetProperties());
         // We set the geometrical values
+        Kratos::shared_ptr<std::pair<IndexType, IndexType>> p_index_pair = Kratos::make_shared<std::pair<IndexType, IndexType>>(pCondSlave->Id(), pCondMaster->Id());
+        p_auxiliar_condition->SetValue(CONDITION_PAIR, p_index_pair);
         p_auxiliar_condition->SetValue(PAIRED_GEOMETRY, pCondMaster->pGetGeometry());
         p_auxiliar_condition->SetValue(NORMAL, pCondSlave->GetValue(NORMAL));
         p_auxiliar_condition->SetValue(PAIRED_NORMAL, pCondMaster->GetValue(NORMAL));
@@ -463,14 +468,16 @@ void TreeContactSearch<TDim, TNumNodes>::AddPairing(
         p_auxiliar_condition->Initialize();
         if (mThisParameters["double_formulation"].GetBool()) {
             ++rConditionId;
-            Condition::Pointer p_auxiliar_condition = rComputingModelPart.CreateNewCondition(mConditionName, rConditionId, pCondMaster->GetGeometry(), pCondMaster->pGetProperties());
+            Condition::Pointer p_double_auxiliar_condition = rComputingModelPart.CreateNewCondition(mConditionName, rConditionId, pCondMaster->GetGeometry(), pCondMaster->pGetProperties());
             // We set the geometrical values
-            p_auxiliar_condition->SetValue(PAIRED_GEOMETRY, pCondSlave->pGetGeometry());
-            p_auxiliar_condition->SetValue(NORMAL, pCondMaster->GetValue(NORMAL));
-            p_auxiliar_condition->SetValue(PAIRED_NORMAL, pCondSlave->GetValue(NORMAL));
+            Kratos::shared_ptr<std::pair<IndexType, IndexType>> p_double_index_pair = Kratos::make_shared<std::pair<IndexType, IndexType>>(pCondMaster->Id(), pCondSlave->Id());
+            p_double_auxiliar_condition->SetValue(CONDITION_PAIR, p_double_index_pair);
+            p_double_auxiliar_condition->SetValue(PAIRED_GEOMETRY, pCondSlave->pGetGeometry());
+            p_double_auxiliar_condition->SetValue(NORMAL, pCondMaster->GetValue(NORMAL));
+            p_double_auxiliar_condition->SetValue(PAIRED_NORMAL, pCondSlave->GetValue(NORMAL));
             // We activate the condition and initialize it
-            p_auxiliar_condition->Set(ACTIVE, true);
-            p_auxiliar_condition->Initialize();
+            p_double_auxiliar_condition->Set(ACTIVE, true);
+            p_double_auxiliar_condition->Initialize();
         }
     }
 }
@@ -682,7 +689,7 @@ inline double TreeContactSearch<TDim, TNumNodes>::GetMeanNodalH()
 
 template<std::size_t TDim, std::size_t TNumNodes>
 inline typename TreeContactSearch<TDim, TNumNodes>::CheckResult TreeContactSearch<TDim, TNumNodes>::CheckCondition(
-    IndexSet::Pointer IndexesSet,
+    IndexSet::Pointer pIndexesSet,
     const Condition::Pointer pCond1,
     const Condition::Pointer pCond2,
     const bool InvertedSearch
@@ -701,13 +708,13 @@ inline typename TreeContactSearch<TDim, TNumNodes>::CheckResult TreeContactSearc
 
     // Otherwise will not be necessary to check
     if (!mPredefinedMasterSlave || pCond2->Is(SLAVE) == !InvertedSearch) {
-        auto& indexes_set_2 = pCond2->GetValue(INDEX_SET);
-        if (indexes_set_2->find(index_1) != indexes_set_2->end())
+        auto p_indexes_set_2 = pCond2->GetValue(INDEX_SET);
+        if (p_indexes_set_2->find(index_1) != p_indexes_set_2->end())
             return CheckResult::Fail;
     }
 
     // To avoid to repeat twice the same condition
-    if (IndexesSet->find(index_2) != IndexesSet->end())
+    if (pIndexesSet->find(index_2) != pIndexesSet->end())
         return CheckResult::AlreadyInTheMap;
 
     return CheckResult::OK;
@@ -733,10 +740,10 @@ inline void TreeContactSearch<TDim, TNumNodes>::NotPredefinedMasterSlave(ModelPa
         #pragma omp for
         for(int i = 0; i < num_conditions; ++i) {
             auto it_cond = conditions_array.begin() + i;
-            IndexSet::Pointer indexes_set = it_cond->GetValue(INDEX_SET);
-            if (indexes_set->size() > 0) {
+            IndexSet::Pointer p_indexes_set = it_cond->GetValue(INDEX_SET);
+            if (p_indexes_set->size() > 0) {
                 it_cond->Set(SLAVE, true);
-                for (auto& i_pair : *indexes_set) {
+                for (auto& i_pair : *p_indexes_set) {
                     master_conditions_ids_buffer.push_back(i_pair);
                 }
             }
@@ -1430,8 +1437,8 @@ inline void TreeContactSearch<TDim, TNumNodes>::CreateAuxiliarConditions(
     for(IndexType i = 0; i < conditions_array.size(); ++i) {
         auto it_cond = conditions_array.begin() + i;
         if (it_cond->Is(SLAVE) == !mInvertedSearch) {
-            IndexSet::Pointer indexes_set = it_cond->GetValue(INDEX_SET);
-            for (auto it_pair = indexes_set->begin(); it_pair != indexes_set->end(); ++it_pair ) {
+            IndexSet::Pointer p_indexes_set = it_cond->GetValue(INDEX_SET);
+            for (auto it_pair = p_indexes_set->begin(); it_pair != p_indexes_set->end(); ++it_pair ) {
                 Condition::Pointer p_cond_master = mrMainModelPart.pGetCondition(*it_pair); // MASTER
                 AddPairing(rComputingModelPart, rConditionId, (*it_cond.base()), p_cond_master);
             }
@@ -1469,24 +1476,57 @@ void TreeContactSearch<TDim, TNumNodes>::ResetContactOperators()
     for(int i = 0; i < static_cast<int>(conditions_array.size()); ++i) {
         auto it_cond = conditions_array.begin() + i;
         if (it_cond->Is(SLAVE) == !mInvertedSearch) {
-            auto& condition_pointers = it_cond->GetValue(INDEX_SET);
+            auto& p_indexes_set = it_cond->GetValue(INDEX_SET);
 
-            if (condition_pointers != nullptr) {
-                condition_pointers->clear();
-//                     condition_pointers->reserve(mAllocationSize);
+            if (p_indexes_set != nullptr) {
+                p_indexes_set->clear();
+//                 p_indexes_set->reserve(mAllocationSize);
             }
         }
     }
 
+    // We remove the (just) the inactive conditions
     ModelPart& computing_rcontact_model_part = mrMainModelPart.GetSubModelPart("ComputingContact");
     ConditionsArrayType& computing_conditions_array = computing_rcontact_model_part.Conditions();
     const int num_computing_conditions = static_cast<int>(computing_conditions_array.size());
 
     #pragma omp parallel for
-    for(int i = 0; i < num_computing_conditions; ++i)
-        (computing_conditions_array.begin() + i)->Set(TO_ERASE, true);
+    for(int i = 0; i < num_computing_conditions; ++i) {
+        auto it_cond = computing_conditions_array.begin() + i;
+//         if (it_cond->IsNot(ACTIVE))
+            it_cond->Set(TO_ERASE, true);
+    }
 
     mrMainModelPart.RemoveConditionsFromAllLevels(TO_ERASE);
+
+//     // Now we create a list of the active condtions
+//     std::unordered_map<IndexType, std::vector<IndexType>> active_cond_map;
+//     for(IndexType i = 0; i < computing_conditions_array.size(); ++i) {
+//         auto it_cond = computing_conditions_array.begin() + i;
+//         if (it_cond->Is(ACTIVE)) {
+//             Kratos::shared_ptr<std::pair<IndexType, IndexType>> p_index_pair = it_cond->GetValue(CONDITION_PAIR);
+//             if (active_cond_map.find(p_index_pair->first) != active_cond_map.end()) {
+//                 active_cond_map[p_index_pair->first].push_back(p_index_pair->second);
+//             } else {
+//                 std::vector<IndexType> aux_index_vector(1);
+//                 aux_index_vector[0] = p_index_pair->second;
+//                 std::pair<IndexType, std::vector<IndexType>> aux_pair(p_index_pair->first, aux_index_vector);
+//                 active_cond_map.insert(aux_pair);
+//             }
+//         }
+//     }
+//
+//     // We interate over the map
+//     #pragma omp parallel for
+//     for (int i_pair = 0; i_pair < static_cast<int>(active_cond_map.size()); ++i_pair) {
+//         auto it_pair = active_cond_map.begin();
+//         std::advance(it_pair, i_pair);
+//         Condition::Pointer pcond = mrMainModelPart.pGetCondition(it_pair->first);
+//         auto& p_indexes_set = pcond->GetValue(INDEX_SET);
+// //         std::sort((it_pair->second).begin(), (it_pair->second).end());
+//         for (auto id : it_pair->second)
+//             p_indexes_set->AddId(id);
+//     }
 }
 
 /***********************************************************************************/

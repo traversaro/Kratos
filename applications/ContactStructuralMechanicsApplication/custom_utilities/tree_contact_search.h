@@ -323,13 +323,14 @@ private:
     
     /**
      * @brief It check the conditions if they are correctly detected
-     * @return ConditionPointers1: A vector containing the pointers to the conditions 
+     * @param pIndexesSet Set containing the ids to the conditions
      * @param pCond1 The pointer to the condition in the destination model part
      * @param pCond2 The pointer to the condition in the destination model part  
      * @param InvertedSearch If the search is inverted
+     * @return If OK or Fail on the check
      */
     inline CheckResult CheckCondition(
-        IndexSet::Pointer IndexesSet,
+        IndexSet::Pointer pIndexesSet,
         const Condition::Pointer pCond1,
         const Condition::Pointer pCond2,
         const bool InvertedSearch = false
