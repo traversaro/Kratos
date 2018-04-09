@@ -15,6 +15,7 @@
 
 // System includes
 #include <unordered_set>
+#include <unordered_map>
 
 // External includes
 
@@ -53,19 +54,24 @@ namespace Kratos
 ///@name Kratos Classes
 ///@{
     
-    /** @brief Custom Point container to be used by the mapper
+    /**
+     * @class IndexSet
+     * @ingroup KratosCore
+     * @brief Custom unordered set container to be used by the mapper
+     * @details Contains a set of IDs of paired conditions
+     * @author Vicente Mataix Ferrandiz
     */
-    class IndexSet : public std::unordered_set<IndexType>
+    class IndexSet
+        : public std::unordered_set<IndexType>
     {
     public:
-
         ///@name Type Definitions
         ///@{
         /// Counted pointer of IndexSet
         KRATOS_CLASS_POINTER_DEFINITION( IndexSet );
 
         typedef std::unordered_set<IndexType> BaseType;
-        
+
         ///@}
         ///@name Life Cycle
         ///@{
@@ -79,57 +85,162 @@ namespace Kratos
         ///@}
         ///@name Operators
         ///@{
-        
+
         ///@}
         ///@name Operations
         ///@{
-        
+
         /**
-        * It checks if an ID exists in the map
+        * @brief It checks if an ID exists in the map
         * @param IndexOrigin The condition ID to remove
         * @return If the ID already exists or not
-        */     
+        */
         bool Has(const IndexType IndexOrigin)
         {
             BaseType::iterator set = find(IndexOrigin);
             if(set != end())
-            {
                 return true;
-            }
-            
+
             return false;
         }
-        
+
         /**
-        * It adds a new ID to the map
+        * @brief It adds a new ID to the map
         * @param IndexOrigin The condition ID to remove
-        */     
+        */
         void AddId(const IndexType IndexOrigin)
         {
             insert({IndexOrigin});
         }
-        
+
         /**
-        * It removes one particular pair from the map
+        * @brief It removes one particular pair from the map
         * @param IndexOrigin The condition ID to remove
-        */     
+        */
         void RemoveId(const IndexType IndexOrigin)
         {
             BaseType::iterator set = find(IndexOrigin);
             if(set != end())
-            {
                 erase(set);
-            }
         }
 
         /**
-         * Turn back information as a string.
+         * @brief Turn back information as a string.
          */
         std::string Info() const //override
         {
             std::stringstream buffer;
             for ( auto it = begin(); it != end(); ++it )
                 buffer << "The condition " << *it << std::endl;
+            return buffer.str();
+        }
+
+        void save( Serializer& rSerializer ) const
+        {
+            // TODO: Fill if necessary
+        }
+
+        void load( Serializer& rSerializer )
+        {
+            // TODO: Fill if necessary
+        }
+    }; // Class IndexSet
+    /**
+     * @class IndexMap
+     * @ingroup KratosCore
+     * @brief Custom unordered map container to be used by the mapper
+     * @details Contains a map of IDs of paired conditions, and the new created condition
+     * @author Vicente Mataix Ferrandiz
+    */
+    class IndexMap
+        : public std::unordered_map<IndexType, IndexType>
+    {
+    public:
+        ///@name Type Definitions
+        ///@{
+        /// Counted pointer of IndexMap
+        KRATOS_CLASS_POINTER_DEFINITION( IndexMap );
+
+        typedef std::unordered_map<IndexType, IndexType> BaseType;
+        
+        ///@}
+        ///@name Life Cycle
+        ///@{
+
+        /// Default constructors
+        IndexMap(){}
+
+        /// Destructor
+        virtual ~IndexMap(){}
+
+        ///@}
+        ///@name Operators
+        ///@{
+        
+        ///@}
+        ///@name Operations
+        ///@{
+        
+        /**
+        * @brief It checks if an ID exists in the map
+        * @param IndexOrigin The condition ID to remove
+        * @return If the ID already exists or not
+        */     
+        bool Has(const IndexType IndexOrigin)
+        {
+            BaseType::iterator map = find(IndexOrigin);
+            if(map != end())
+                return true;
+            
+            return false;
+        }
+        
+        /**
+        * @brief It adds a new ID to the map
+        * @param IndexOrigin The condition ID to remove
+        * @param IndexNewEntity The new created entity ID
+        */     
+        void AddId(
+            const IndexType IndexOrigin,
+            const IndexType IndexNewEntity = 0
+            )
+        {
+            insert({IndexOrigin, IndexNewEntity});
+        }
+        
+        /**
+        * @brief It removes one particular pair from the map
+        * @param IndexOrigin The condition ID to remove
+        */     
+        void RemoveId(const IndexType IndexOrigin)
+        {
+            BaseType::iterator map = find(IndexOrigin);
+            if(map != end())
+                erase(map);
+        }
+
+        /**
+        * @brief It returns the new created entity ID
+        * @param IndexOrigin The condition ID to remove
+        * @return The new created entity ID
+        */
+        IndexType GetNewEntityId(const IndexType IndexOrigin)
+        {
+            BaseType::iterator map = find(IndexOrigin);
+            if(map != end())
+                return map->second;
+
+            return 0;
+        }
+
+        /**
+         * @brief Turn back information as a string.
+         */
+        std::string Info() const //override
+        {
+            std::stringstream buffer;
+            for ( auto it = begin(); it != end(); ++it )
+                buffer << "The condition " << it->first << " related with the new condition " << it->second << std::endl;
             return buffer.str();
         }
         
@@ -142,71 +253,10 @@ namespace Kratos
         {
             // TODO: Fill if necessary
         }
-        
-    protected:
-
-        ///@name Protected static Member Variables
-        ///@{
-
-        ///@}
-        ///@name Protected member Variables
-        ///@{
-        
-        ///@}
-        ///@name Protected Operators
-        ///@{
-
-        ///@}
-        ///@name Protected Operations
-        ///@{
-
-        ///@}
-        ///@name Protected  Access
-        ///@{
-
-        ///@}
-        ///@name Protected Inquiry
-        ///@{
-
-        ///@}
-        ///@name Protected LifeCycle
-        ///@{
-        ///@}
-
-    private:
-        ///@name Static Member Variables
-        ///@{
-        ///@}
-        ///@name Member Variables
-        ///@{
-
-        ///@}
-        ///@name Private Operators
-        ///@{
-
-        ///@}
-        ///@name Private Operations
-        ///@{
-
-        ///@}
-        ///@name Private  Access
-        ///@{
-        ///@}
-
-        ///@}
-        ///@name Serialization
-        ///@{
-
-        ///@name Private Inquiry
-        ///@{
-        ///@}
-
-        ///@name Unaccessible methods
-        ///@{
-        ///@}
-    }; // Class IndexSet 
+    }; // Class IndexMap
     
-    KRATOS_DEFINE_VARIABLE( IndexSet::Pointer, INDEX_SET )         // An unordened map of which contains the indexes with the paired 
+    KRATOS_DEFINE_VARIABLE( IndexSet::Pointer, INDEX_SET )         // An unordened set of which contains the indexes with the paired
+    KRATOS_DEFINE_VARIABLE( IndexMap::Pointer, INDEX_MAP )         // An unordened map of which contains the indexes with the paired
     KRATOS_DEFINE_VARIABLE( double, TANGENT_FACTOR )               // The factor between the tangent and normal behaviour
 
 } // namespace Kratos
