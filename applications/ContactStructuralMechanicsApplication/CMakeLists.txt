@@ -35,6 +35,9 @@ set( KRATOS_CONTACT_STRUCTURAL_MECHANICS_APPLICATION_SOURCES
 
   ## EXTERNAL LIBRARIES
 
+  ## FRICTIONAL LAWS
+  ${CMAKE_CURRENT_SOURCE_DIR}/custom_frictional_laws/base_frictional_law.cpp
+
   ## CONDITIONS
   # Mortar condition
   ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/paired_condition.cpp # Mesh tying
