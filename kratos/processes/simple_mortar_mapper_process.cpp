@@ -648,6 +648,10 @@ void SimpleMortarMapperProcess<TDim, TNumNodes, TVarType, THistOrigin, THistDest
             }
         }
 
+        // We remove the not used conditions
+        ModelPart& root_model_part = mOriginModelPart.GetRootModelPart();
+        root_model_part.RemoveConditionsFromAllLevels(TO_ERASE);
+
         NodesArrayType& nodes_array = mDestinationModelPart.Nodes();
         const int num_nodes = static_cast<int>(nodes_array.size());
 
@@ -677,8 +681,7 @@ void SimpleMortarMapperProcess<TDim, TNumNodes, TVarType, THistOrigin, THistDest
             }
             norm_bi[i_size] = residual_norm[i_size];
             if (mEchoLevel > 0)
-                KRATOS_INFO("Mortar mapper ")  << "Iteration: " << iteration + 1 << "\tRESISUAL::\tABS: " << residual_norm[i_size] << "\tRELATIVE: " << residual_norm[i_size]/norm_b0[i_size] << "\tINCREMENT: " << increment_residual_norm
-                          << std::endl;
+                KRATOS_INFO("Mortar mapper ")  << "Iteration: " << iteration + 1 << "\tRESISUAL::\tABS: " << residual_norm[i_size] << "\tRELATIVE: " << residual_norm[i_size]/norm_b0[i_size] << "\tINCREMENT: " << increment_residual_norm << std::endl;
         }
 
         iteration += 1;
@@ -759,6 +762,10 @@ void SimpleMortarMapperProcess<TDim, TNumNodes, TVarType, THistOrigin, THistDest
                 PerformMortarOperations<IndexSet, true>(A, b, inverse_conectivity_database, p_indexes_pairs, it_cond, integration_utility, this_kinematic_variables, this_mortar_operators, iteration);
             }
         }
+
+        // We remove the not used conditions
+        ModelPart& root_model_part = mOriginModelPart.GetRootModelPart();
+        root_model_part.RemoveConditionsFromAllLevels(TO_ERASE);
 
         // Finally we solve the system
         for (IndexType i_size = 0; i_size < variable_size; ++i_size) {

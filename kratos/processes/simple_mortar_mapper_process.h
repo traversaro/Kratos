@@ -606,11 +606,14 @@ private:
         const IndexType Iteration
         )
     {
+        // The root model part
+        ModelPart& root_model_part = mOriginModelPart.GetRootModelPart();
+
         // Getting the auxiliar variable
         TVarType aux_variable = MortarUtilities::GetAuxiliarVariable<TVarType>();
 
         // Indexes of the pair to be removed
-        std::vector<IndexType> indexes_to_remove;
+        std::vector<IndexType> indexes_to_remove, conditions_to_erase;
 
         // Geometrical values
         const array_1d<double, 3>& slave_normal = itCond->GetValue(NORMAL);
@@ -674,13 +677,21 @@ private:
                     const SizeType variable_size = MortarUtilities::SizeToCompute<TDim, TVarType>();
                     AssembleRHS(b, variable_size, residual_matrix, slave_geometry, InverseConectivityDatabase);
                 }
-            } else {
+            } else { // NOTE: The condition considered maybe is to tight
                 indexes_to_remove.push_back(master_id);
+                const IndexType other_id = pIndexesPairs->GetOtherId(it_pair);
+                if (std::is_same<TClassType, IndexMap>::value && other_id != 0) {
+                    conditions_to_erase.push_back(other_id);
+                }
             }
         }
 
         // Clear indexes
         for (IndexType i_to_remove = 0; i_to_remove < indexes_to_remove.size(); ++i_to_remove) {
+            for (auto& id : conditions_to_erase ) {
+                Condition::Pointer p_cond = root_model_part.pGetCondition(id);
+                p_cond->Set(TO_ERASE, true);
+            }
             pIndexesPairs->RemoveId(indexes_to_remove[i_to_remove]);
         }
     }

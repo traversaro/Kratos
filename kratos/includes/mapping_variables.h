@@ -242,14 +242,14 @@ namespace Kratos
             return buffer.str();
         }
 
-        void save( Serializer& rSerializer ) const
+        void save( Serializer& rSerializer ) const override
         {
-            // TODO: Fill if necessary
+//             KRATOS_SERIALIZE_SAVE_BASE_CLASS( rSerializer, BaseType );
         }
 
-        void load( Serializer& rSerializer )
+        void load( Serializer& rSerializer ) override
         {
-            // TODO: Fill if necessary
+//             KRATOS_SERIALIZE_LOAD_BASE_CLASS( rSerializer, BaseType );
         }
     }; // Class IndexSet
 
@@ -390,12 +390,12 @@ namespace Kratos
         
         void save( Serializer& rSerializer ) const override
         {
-            // TODO: Fill if necessary
+//             KRATOS_SERIALIZE_SAVE_BASE_CLASS( rSerializer, BaseType );
         }
 
         void load( Serializer& rSerializer ) override
         {
-            // TODO: Fill if necessary
+//             KRATOS_SERIALIZE_LOAD_BASE_CLASS( rSerializer, BaseType );
         }
     }; // Class IndexMap
     
