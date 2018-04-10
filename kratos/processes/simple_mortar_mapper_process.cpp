@@ -639,13 +639,13 @@ void SimpleMortarMapperProcess<TDim, TNumNodes, TVarType, THistOrigin, THistDest
         for(int i = 0; i < num_conditions; ++i) {
             auto it_cond = conditions_array.begin() + i;
 
-//             if (it_cond->Has( INDEX_MAP )) {
-//                 IndexMap::Pointer p_indexes_pairs = it_cond->GetValue( INDEX_MAP ); // These are the master conditions
-//                 PerformMortarOperations<IndexMap>(A, b, inverse_conectivity_database, p_indexes_pairs, it_cond, integration_utility, this_kinematic_variables, this_mortar_operators, iteration);
-//             } else {
+            if (it_cond->Has( INDEX_MAP )) {
+                IndexMap::Pointer p_indexes_pairs = it_cond->GetValue( INDEX_MAP ); // These are the master conditions
+                PerformMortarOperations<IndexMap>(A, b, inverse_conectivity_database, p_indexes_pairs, it_cond, integration_utility, this_kinematic_variables, this_mortar_operators, iteration);
+            } else {
                 IndexSet::Pointer p_indexes_pairs = it_cond->GetValue( INDEX_SET ); // These are the master conditions
                 PerformMortarOperations<IndexSet>(A, b, inverse_conectivity_database, p_indexes_pairs, it_cond, integration_utility, this_kinematic_variables, this_mortar_operators, iteration);
-//             }
+            }
         }
 
         NodesArrayType& nodes_array = mDestinationModelPart.Nodes();
@@ -751,13 +751,13 @@ void SimpleMortarMapperProcess<TDim, TNumNodes, TVarType, THistOrigin, THistDest
         #pragma omp parallel for firstprivate(this_kinematic_variables, this_mortar_operators, integration_utility)
         for(int i = 0; i < num_conditions; ++i) {
             auto it_cond = conditions_array.begin() + i;
-//             if (it_cond->Has( INDEX_MAP )) {
-//                 IndexMap::Pointer p_indexes_pairs = it_cond->GetValue( INDEX_MAP ); // These are the master conditions
-//                 PerformMortarOperations<IndexMap, true>(A, b, inverse_conectivity_database, p_indexes_pairs, it_cond, integration_utility, this_kinematic_variables, this_mortar_operators, iteration);
-//             } else {
+            if (it_cond->Has( INDEX_MAP )) {
+                IndexMap::Pointer p_indexes_pairs = it_cond->GetValue( INDEX_MAP ); // These are the master conditions
+                PerformMortarOperations<IndexMap, true>(A, b, inverse_conectivity_database, p_indexes_pairs, it_cond, integration_utility, this_kinematic_variables, this_mortar_operators, iteration);
+            } else {
                 IndexSet::Pointer p_indexes_pairs = it_cond->GetValue( INDEX_SET ); // These are the master conditions
                 PerformMortarOperations<IndexSet, true>(A, b, inverse_conectivity_database, p_indexes_pairs, it_cond, integration_utility, this_kinematic_variables, this_mortar_operators, iteration);
-//             }
+            }
         }
 
         // Finally we solve the system

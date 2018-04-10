@@ -617,7 +617,8 @@ private:
         GeometryType& slave_geometry = itCond->GetGeometry();
 
         for (auto it_pair = pIndexesSet->begin(); it_pair != pIndexesSet->end(); ++it_pair ) {
-            Condition::Pointer p_cond_master = mOriginModelPart.pGetCondition(*it_pair); // MASTER
+            const IndexType master_id = pIndexesSet->GetId(it_pair);
+            Condition::Pointer p_cond_master = mOriginModelPart.pGetCondition(master_id); // MASTER
             const array_1d<double, 3>& master_normal = p_cond_master->GetValue(NORMAL);
             GeometryType& master_geometry = p_cond_master->GetGeometry();
 
@@ -674,7 +675,7 @@ private:
                     AssembleRHS(b, variable_size, residual_matrix, slave_geometry, InverseConectivityDatabase);
                 }
             } else {
-                indexes_to_remove.push_back(*it_pair);
+                indexes_to_remove.push_back(master_id);
             }
         }
 
