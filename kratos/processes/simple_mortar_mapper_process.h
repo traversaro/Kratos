@@ -598,7 +598,7 @@ private:
         MatrixType& A,
         std::vector<VectorType>& b,
         IntMap& InverseConectivityDatabase,
-        typename TClassType::Pointer pIndexesSet,
+        typename TClassType::Pointer pIndexesPairs,
         ConditionsArrayType::iterator itCond,
         ExactMortarIntegrationUtility<TDim, TNumNodes>& IntegrationUtility,
         MortarKinematicVariables<TNumNodes>& rThisKineticVariables,
@@ -616,8 +616,8 @@ private:
         const array_1d<double, 3>& slave_normal = itCond->GetValue(NORMAL);
         GeometryType& slave_geometry = itCond->GetGeometry();
 
-        for (auto it_pair = pIndexesSet->begin(); it_pair != pIndexesSet->end(); ++it_pair ) {
-            const IndexType master_id = pIndexesSet->GetId(it_pair);
+        for (auto it_pair = pIndexesPairs->begin(); it_pair != pIndexesPairs->end(); ++it_pair ) {
+            const IndexType master_id = pIndexesPairs->GetId(it_pair);
             Condition::Pointer p_cond_master = mOriginModelPart.pGetCondition(master_id); // MASTER
             const array_1d<double, 3>& master_normal = p_cond_master->GetValue(NORMAL);
             GeometryType& master_geometry = p_cond_master->GetGeometry();
@@ -681,7 +681,7 @@ private:
 
         // Clear indexes
         for (IndexType i_to_remove = 0; i_to_remove < indexes_to_remove.size(); ++i_to_remove) {
-            pIndexesSet->RemoveId(indexes_to_remove[i_to_remove]);
+            pIndexesPairs->RemoveId(indexes_to_remove[i_to_remove]);
         }
     }
 
