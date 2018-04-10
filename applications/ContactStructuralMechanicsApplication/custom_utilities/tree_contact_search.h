@@ -323,14 +323,14 @@ private:
     
     /**
      * @brief It check the conditions if they are correctly detected
-     * @param pIndexesSet Set containing the ids to the conditions
+     * @param pIndexesPairs Set containing the ids to the conditions
      * @param pCond1 The pointer to the condition in the destination model part
      * @param pCond2 The pointer to the condition in the destination model part  
      * @param InvertedSearch If the search is inverted
      * @return If OK or Fail on the check
      */
     inline CheckResult CheckCondition(
-        IndexSet::Pointer pIndexesSet,
+        IndexMap::Pointer pIndexesPairs,
         const Condition::Pointer pCond1,
         const Condition::Pointer pCond2,
         const bool InvertedSearch = false
@@ -354,7 +354,7 @@ private:
      * @param pCondSlave The pointer to the slave condition
      * @param rPointsFound The potential pairs found 
      * @param NumberOfPointsFound The number of potential pairs found
-     * @param IndexesSet The id sets of potential pairs
+     * @param IndexesPairs The id sets of potential pairs
      */
     inline void AddPotentialPairing(
         ModelPart& rComputingModelPart,
@@ -362,7 +362,7 @@ private:
         Condition::Pointer pCondSlave,
         PointVector& rPointsFound,
         const IndexType NumberOfPointsFound,
-        IndexSet::Pointer IndexesSet
+        IndexMap::Pointer IndexesPairs
         );
     
     /**
@@ -385,14 +385,14 @@ private:
      * @param rConditionId The ID of the new condition to be created
      * @param pCondSlave The pointer to the slave condition
      * @param pCondMaster The pointer to the master condition
-     * @param IndexesSet The map of indexes considered
+     * @param IndexesPairs The map of indexes considered
      */
     inline void AddPairing(
         ModelPart& rComputingModelPart,
         IndexType& rConditionId,
         Condition::Pointer pCondSlave,
         Condition::Pointer pCondMaster,
-        IndexSet::Pointer IndexesSet
+        IndexMap::Pointer IndexesPairs
         );
     
     /**

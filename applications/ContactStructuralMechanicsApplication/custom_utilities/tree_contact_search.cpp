@@ -119,8 +119,8 @@ void TreeContactSearch<TDim, TNumNodes>::InitializeMortarConditions()
     for(int i = 0; i < num_conditions; ++i) {
         auto it_cond = conditions_array.begin() + i;
 
-        if (it_cond->Has(INDEX_SET) == false) it_cond->SetValue(INDEX_SET, Kratos::make_shared<IndexSet>());
-//             it_cond->GetValue(INDEX_SET)->reserve(mThisParameters["allocation_size"].GetInt());
+        if (it_cond->Has(INDEX_MAP) == false) it_cond->SetValue(INDEX_MAP, Kratos::make_shared<IndexMap>());
+//             it_cond->GetValue(INDEX_MAP)->reserve(mThisParameters["allocation_size"].GetInt());
     }
 }
 
@@ -401,17 +401,17 @@ void TreeContactSearch<TDim, TNumNodes>::UpdateMortarConditions()
 //                 KRATOS_INFO("Check search") << "The search is properly done" << std::endl;
             #endif
 
-                IndexSet::Pointer p_indexes_set = it_cond->GetValue(INDEX_SET);
+                IndexMap::Pointer p_indexes_pairs = it_cond->GetValue(INDEX_MAP);
 
                 // If not active we check if can be potentially in contact
                 if (mCheckGap == CheckGap::MappingCheck) {
                     for (IndexType i_point = 0; i_point < number_points_found; ++i_point ) {
                         Condition::Pointer p_cond_master = points_found[i_point]->GetCondition();
-                        const CheckResult condition_checked_right = CheckCondition(p_indexes_set, (*it_cond.base()), p_cond_master, mInvertedSearch);
-                        if (condition_checked_right == CheckResult::OK) p_indexes_set->AddId(p_cond_master->Id());
+                        const CheckResult condition_checked_right = CheckCondition(p_indexes_pairs, (*it_cond.base()), p_cond_master, mInvertedSearch);
+                        if (condition_checked_right == CheckResult::OK) p_indexes_pairs->AddId(p_cond_master->Id());
                     }
                 } else
-                    AddPotentialPairing(computing_rcontact_model_part, condition_id, (*it_cond.base()), points_found, number_points_found, p_indexes_set);
+                    AddPotentialPairing(computing_rcontact_model_part, condition_id, (*it_cond.base()), points_found, number_points_found, p_indexes_pairs);
             }
         }
     }
@@ -491,10 +491,10 @@ void TreeContactSearch<TDim, TNumNodes>::AddPairing(
     IndexType& rConditionId,
     Condition::Pointer pCondSlave,
     Condition::Pointer pCondMaster,
-    IndexSet::Pointer IndexesSet
+    IndexMap::Pointer IndexesPairs
     )
 {
-    IndexesSet->AddId(pCondMaster->Id());
+    IndexesPairs->AddId(pCondMaster->Id());
 
     AddPairing(rComputingModelPart, rConditionId, pCondSlave, pCondMaster);
 }
@@ -511,8 +511,8 @@ void TreeContactSearch<TDim, TNumNodes>::CheckMortarConditions()
     for(int i = 0; i < static_cast<int>(conditions_array.size()); ++i) {
         auto it_cond = conditions_array.begin() + i;
 
-        if (it_cond->Has(INDEX_SET)) {
-            IndexSet::Pointer ids_destination = it_cond->GetValue(INDEX_SET);
+        if (it_cond->Has(INDEX_MAP)) {
+            IndexMap::Pointer ids_destination = it_cond->GetValue(INDEX_MAP);
             if (ids_destination->size() > 0) {
                 KRATOS_INFO("Check paired conditions (Origin)") << "Origin condition ID:" << it_cond->Id() << " Number of pairs: " << ids_destination->size() << std::endl;
                 KRATOS_INFO("Check paired conditions (Destination)") << ids_destination->Info();
@@ -689,7 +689,7 @@ inline double TreeContactSearch<TDim, TNumNodes>::GetMeanNodalH()
 
 template<std::size_t TDim, std::size_t TNumNodes>
 inline typename TreeContactSearch<TDim, TNumNodes>::CheckResult TreeContactSearch<TDim, TNumNodes>::CheckCondition(
-    IndexSet::Pointer pIndexesSet,
+    IndexMap::Pointer pIndexesPairs,
     const Condition::Pointer pCond1,
     const Condition::Pointer pCond2,
     const bool InvertedSearch
@@ -708,13 +708,13 @@ inline typename TreeContactSearch<TDim, TNumNodes>::CheckResult TreeContactSearc
 
     // Otherwise will not be necessary to check
     if (!mPredefinedMasterSlave || pCond2->Is(SLAVE) == !InvertedSearch) {
-        auto p_indexes_set_2 = pCond2->GetValue(INDEX_SET);
-        if (p_indexes_set_2->find(index_1) != p_indexes_set_2->end())
+        auto p_indexes_pairs_2 = pCond2->GetValue(INDEX_MAP);
+        if (p_indexes_pairs_2->find(index_1) != p_indexes_pairs_2->end())
             return CheckResult::Fail;
     }
 
     // To avoid to repeat twice the same condition
-    if (pIndexesSet->find(index_2) != pIndexesSet->end())
+    if (pIndexesPairs->find(index_2) != pIndexesPairs->end())
         return CheckResult::AlreadyInTheMap;
 
     return CheckResult::OK;
@@ -740,11 +740,11 @@ inline void TreeContactSearch<TDim, TNumNodes>::NotPredefinedMasterSlave(ModelPa
         #pragma omp for
         for(int i = 0; i < num_conditions; ++i) {
             auto it_cond = conditions_array.begin() + i;
-            IndexSet::Pointer p_indexes_set = it_cond->GetValue(INDEX_SET);
-            if (p_indexes_set->size() > 0) {
+            IndexMap::Pointer p_indexes_pairs = it_cond->GetValue(INDEX_MAP);
+            if (p_indexes_pairs->size() > 0) {
                 it_cond->Set(SLAVE, true);
-                for (auto& i_pair : *p_indexes_set) {
-                    master_conditions_ids_buffer.push_back(i_pair);
+                for (auto& i_pair : *p_indexes_pairs) {
+                    master_conditions_ids_buffer.push_back(i_pair.first);
                 }
             }
         }
@@ -823,7 +823,7 @@ inline void TreeContactSearch<TDim, TNumNodes>::AddPotentialPairing(
     Condition::Pointer pCondSlave,
     PointVector& rPointsFound,
     const IndexType NumberOfPointsFound,
-    IndexSet::Pointer IndexesSet
+    IndexMap::Pointer IndexesPairs
     )
 {
     // Some auxiliar values
@@ -918,7 +918,7 @@ inline void TreeContactSearch<TDim, TNumNodes>::AddPotentialPairing(
         }
 
         if (at_least_one_node_potential_contact)
-            AddPairing(rComputingModelPart, rConditionId, pCondSlave, p_cond_master, IndexesSet);
+            AddPairing(rComputingModelPart, rConditionId, pCondSlave, p_cond_master, IndexesPairs);
     }
 }
 
@@ -1437,9 +1437,9 @@ inline void TreeContactSearch<TDim, TNumNodes>::CreateAuxiliarConditions(
     for(IndexType i = 0; i < conditions_array.size(); ++i) {
         auto it_cond = conditions_array.begin() + i;
         if (it_cond->Is(SLAVE) == !mInvertedSearch) {
-            IndexSet::Pointer p_indexes_set = it_cond->GetValue(INDEX_SET);
-            for (auto it_pair = p_indexes_set->begin(); it_pair != p_indexes_set->end(); ++it_pair ) {
-                Condition::Pointer p_cond_master = mrMainModelPart.pGetCondition(*it_pair); // MASTER
+            IndexMap::Pointer p_indexes_pairs = it_cond->GetValue(INDEX_MAP);
+            for (auto it_pair = p_indexes_pairs->begin(); it_pair != p_indexes_pairs->end(); ++it_pair ) {
+                Condition::Pointer p_cond_master = mrMainModelPart.pGetCondition(it_pair->first); // MASTER
                 AddPairing(rComputingModelPart, rConditionId, (*it_cond.base()), p_cond_master);
             }
         }
@@ -1476,11 +1476,11 @@ void TreeContactSearch<TDim, TNumNodes>::ResetContactOperators()
     for(int i = 0; i < static_cast<int>(conditions_array.size()); ++i) {
         auto it_cond = conditions_array.begin() + i;
         if (it_cond->Is(SLAVE) == !mInvertedSearch) {
-            auto& p_indexes_set = it_cond->GetValue(INDEX_SET);
+            auto& p_indexes_pairs = it_cond->GetValue(INDEX_MAP);
 
-            if (p_indexes_set != nullptr) {
-                p_indexes_set->clear();
-//                 p_indexes_set->reserve(mAllocationSize);
+            if (p_indexes_pairs != nullptr) {
+                p_indexes_pairs->clear();
+//                 p_indexes_pairs->reserve(mAllocationSize);
             }
         }
     }
@@ -1522,10 +1522,10 @@ void TreeContactSearch<TDim, TNumNodes>::ResetContactOperators()
 //         auto it_pair = active_cond_map.begin();
 //         std::advance(it_pair, i_pair);
 //         Condition::Pointer pcond = mrMainModelPart.pGetCondition(it_pair->first);
-//         auto& p_indexes_set = pcond->GetValue(INDEX_SET);
+//         auto& p_indexes_pairs = pcond->GetValue(INDEX_MAP);
 // //         std::sort((it_pair->second).begin(), (it_pair->second).end());
 //         for (auto id : it_pair->second)
-//             p_indexes_set->AddId(id);
+//             p_indexes_pairs->AddId(id);
 //     }
 }
 
