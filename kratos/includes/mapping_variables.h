@@ -117,6 +117,16 @@ namespace Kratos
         virtual IndexType GetNewEntityId(const IndexType IndexOrigin) {return 0;}
 
         /**
+        * @brief It sets the new created entity ID
+        * @param IndexOrigin The condition ID to remove
+        * @param IndexNewEntity The new created entity ID
+        */
+        virtual void SetNewEntityId(
+            const IndexType IndexOrigin,
+            const IndexType IndexNewEntity = 0
+            ) {}
+
+        /**
          * @brief Turn back information as a string.
          */
         virtual std::string Info() const {return "IndexDatabase";}
@@ -171,6 +181,16 @@ namespace Kratos
         IndexType GetId(IteratorType ThisIterator)
         {
             return *ThisIterator;
+        }
+
+        /**
+        * @brief Returns the new entity id corresponding a iterator
+        * @param ThisIterator The iterator of the class
+        * @return The ID of the new generated entity
+        */
+        IndexType GetOtherId(IteratorType ThisIterator)
+        {
+            return 0;
         }
 
         /**
@@ -281,6 +301,16 @@ namespace Kratos
         }
 
         /**
+        * @brief Returns the new entity id corresponding a iterator
+        * @param ThisIterator The iterator of the class
+        * @return The ID of the new generated entity
+        */
+        IndexType GetOtherId(IteratorType ThisIterator)
+        {
+            return ThisIterator->second;
+        }
+
+        /**
         * @brief It checks if an ID exists in the map
         * @param IndexOrigin The condition ID to remove
         * @return If the ID already exists or not
@@ -330,6 +360,21 @@ namespace Kratos
                 return map->second;
 
             return 0;
+        }
+
+        /**
+        * @brief It sets the new created entity ID
+        * @param IndexOrigin The condition ID to remove
+        * @param IndexNewEntity The new created entity ID
+        */
+        void SetNewEntityId(
+            const IndexType IndexOrigin,
+            const IndexType IndexNewEntity
+            ) override
+        {
+            BaseType::iterator map = find(IndexOrigin);
+            if(map != end())
+                map->second = IndexNewEntity;
         }
 
         /**
