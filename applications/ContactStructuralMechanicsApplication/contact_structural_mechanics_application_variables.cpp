@@ -20,8 +20,6 @@ namespace Kratos
 {
 typedef array_1d<double,3> Vector3;
 typedef Geometry<Node<3>> GeometryType;
-typedef std::pair<std::size_t, std::size_t> PairIndexType;
-typedef Kratos::shared_ptr<PairIndexType> PointerPairIndexType;
 
 // VARIABLES
 /* Mortar method general variables */
@@ -33,7 +31,6 @@ KRATOS_CREATE_VARIABLE( Vector3, PAIRED_NORMAL )                                
 KRATOS_CREATE_3D_VARIABLE_WITH_COMPONENTS( AUXILIAR_COORDINATES )                    // Auxiliar coordinates used to map
 KRATOS_CREATE_3D_VARIABLE_WITH_COMPONENTS( DELTA_COORDINATES )                       // Delta coordinates used to map
 KRATOS_CREATE_VARIABLE( double, NORMAL_GAP )                                         // The normal gap employed in contact formulation
-KRATOS_CREATE_VARIABLE( PointerPairIndexType, CONDITION_PAIR )                       // It stores the pairing between conditions (in order to identify the origin-destination)
 
 /* Weighted values */
 KRATOS_CREATE_VARIABLE( double, WEIGHTED_GAP )                                       // The integrated gap employed in mortar formulation

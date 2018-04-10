@@ -35,8 +35,6 @@ namespace Kratos
 
     typedef array_1d<double,3> Vector3;
     typedef Geometry<Node<3>> GeometryType;
-    typedef std::pair<std::size_t, std::size_t> PairIndexType;
-    typedef Kratos::shared_ptr<PairIndexType> PointerPairIndexType;
 
 ///@}
 ///@name  Enum's
@@ -58,7 +56,6 @@ KRATOS_DEFINE_APPLICATION_VARIABLE( CONTACT_STRUCTURAL_MECHANICS_APPLICATION, Ve
 KRATOS_DEFINE_3D_APPLICATION_VARIABLE_WITH_COMPONENTS(CONTACT_STRUCTURAL_MECHANICS_APPLICATION, AUXILIAR_COORDINATES )                    // Auxiliar coordinates used to map
 KRATOS_DEFINE_3D_APPLICATION_VARIABLE_WITH_COMPONENTS(CONTACT_STRUCTURAL_MECHANICS_APPLICATION, DELTA_COORDINATES )                       // Delta coordinates used to map
 KRATOS_DEFINE_APPLICATION_VARIABLE( CONTACT_STRUCTURAL_MECHANICS_APPLICATION, double, NORMAL_GAP )                                        // The normal gap employed in contact formulation
-KRATOS_DEFINE_APPLICATION_VARIABLE( CONTACT_STRUCTURAL_MECHANICS_APPLICATION, PointerPairIndexType, CONDITION_PAIR )                      // It stores the pairing between conditions (in order to identify the origin-destination)
 
 /* Weighted values */
 KRATOS_DEFINE_APPLICATION_VARIABLE( CONTACT_STRUCTURAL_MECHANICS_APPLICATION, double, WEIGHTED_GAP )                                      // The integrated gap employed in mortar formulation
