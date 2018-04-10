@@ -547,8 +547,10 @@ void TreeContactSearch<TDim, TNumNodes>::ClearComponentsMortarConditions(NodesAr
     #pragma omp parallel for
     for(int i = 0; i < static_cast<int>(NodesArray.size()); ++i) {
         auto it_node = NodesArray.begin() + i;
-        if (it_node->Is(ACTIVE) == false)
-            noalias((NodesArray.begin() + i)->FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) = ZeroVector(3);
+        if (it_node->Is(ACTIVE) == false) {
+            const array_1d<double, 3> zero_array(3, 0.0);
+            noalias((NodesArray.begin() + i)->FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) = zero_array;
+        }
     }
 }
 
@@ -1002,6 +1004,8 @@ inline void TreeContactSearch<TDim, TNumNodes>::ComputeMappedGap(const bool Sear
             // We activate if the node is close enough
             if (norm_2(auxiliar_coordinates) > tolerance)
                 it_node->SetValue(NORMAL_GAP, gap);
+        } else {
+            it_node->SetValue(NORMAL_GAP, 0.0);
         }
     }
 }
@@ -1029,17 +1033,18 @@ inline void TreeContactSearch<TDim, TNumNodes>::ComputeActiveInactiveNodes()
     #pragma omp parallel for private(auxiliar_check)
     for(int i = 0; i < static_cast<int>(nodes_array.size()); ++i) {
         auto it_node = nodes_array.begin() + i;
-
-        const double auxiliar_length = distance_threshold * active_check_factor;
-        auxiliar_check = false;
-        if (it_node->SolutionStepsDataHas(WEIGHTED_GAP)) {
-            const double nodal_area = it_node->Has(NODAL_AREA) ? it_node->GetValue(NODAL_AREA) : 1.0;
-            auxiliar_check = (it_node->FastGetSolutionStepValue(WEIGHTED_GAP)/nodal_area < auxiliar_length) ? true : false;
+        if (it_node->Is(SLAVE) == !mInvertedSearch) {
+            const double auxiliar_length = distance_threshold * active_check_factor;
+            auxiliar_check = false;
+            if (it_node->SolutionStepsDataHas(WEIGHTED_GAP)) {
+                const double nodal_area = it_node->Has(NODAL_AREA) ? it_node->GetValue(NODAL_AREA) : 1.0;
+                auxiliar_check = (it_node->FastGetSolutionStepValue(WEIGHTED_GAP)/nodal_area < auxiliar_length) ? true : false;
+            }
+            if ((it_node->GetValue(NORMAL_GAP) < auxiliar_length) || auxiliar_check)
+                SetActiveNode(it_node, a, b);
+            else
+                SetInactiveNode(it_node);
         }
-        if ((it_node->GetValue(NORMAL_GAP) < auxiliar_length) || auxiliar_check)
-            SetActiveNode(it_node, a, b);
-        else
-            SetInactiveNode(it_node);
     }
 }
 
@@ -1097,11 +1102,14 @@ inline void TreeContactSearch<TDim, TNumNodes>::SetActiveNode(
 template<std::size_t TDim, std::size_t TNumNodes>
 inline void TreeContactSearch<TDim, TNumNodes>::SetInactiveNode(NodesArrayType::iterator ItNode)
 {
+    // Auxiliar zero array
+    const array_1d<double, 3> zero_array(3, 0.0);
+
     if (ItNode->Is(ACTIVE) ) {
         ItNode->Set(ACTIVE, false);
         switch(mTypeSolution) {
             case TypeSolution::VectorLagrangeMultiplier :
-                noalias(ItNode->FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) = ZeroVector(3);
+                noalias(ItNode->FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) = zero_array;
                 break;
             case TypeSolution::ScalarLagrangeMultiplier :
                 ItNode->FastGetSolutionStepValue(SCALAR_LAGRANGE_MULTIPLIER) = 0.0;
