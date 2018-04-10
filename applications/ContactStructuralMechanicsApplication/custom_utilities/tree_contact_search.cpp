@@ -44,7 +44,6 @@ TreeContactSearch<TDim, TNumNodes>::TreeContactSearch(
         "final_string"                         : "",
         "inverted_search"                      : false,
         "dynamic_search"                       : false,
-        "double_formulation"                   : false,
         "predefined_master_slave"              : true
     })" );
 
@@ -466,17 +465,6 @@ void TreeContactSearch<TDim, TNumNodes>::AddPairing(
         // We activate the condition and initialize it
         p_auxiliar_condition->Set(ACTIVE, true);
         p_auxiliar_condition->Initialize();
-//         if (mThisParameters["double_formulation"].GetBool()) { // TODO: Remove!!
-//             ++rConditionId;
-//             Condition::Pointer p_double_auxiliar_condition = rComputingModelPart.CreateNewCondition(mConditionName, rConditionId, pCondMaster->GetGeometry(), pCondMaster->pGetProperties());
-//             // We set the geometrical values
-//             p_double_auxiliar_condition->SetValue(PAIRED_GEOMETRY, pCondSlave->pGetGeometry());
-//             p_double_auxiliar_condition->SetValue(NORMAL, pCondMaster->GetValue(NORMAL));
-//             p_double_auxiliar_condition->SetValue(PAIRED_NORMAL, pCondSlave->GetValue(NORMAL));
-//             // We activate the condition and initialize it
-//             p_double_auxiliar_condition->Set(ACTIVE, true);
-//             p_double_auxiliar_condition->Initialize();
-//         }
     }
 }
 
@@ -875,38 +863,6 @@ inline void TreeContactSearch<TDim, TNumNodes>::AddPotentialPairing(
                 } else
                     at_least_one_node_potential_contact = true;
             }
-//             if (mThisParameters["double_formulation"].GetBool()) { // TODO: Remove!!
-//                 for (IndexType i_node = 0; i_node < TNumNodes; ++i_node) {
-//                     if (geom_master[i_node].Is(ACTIVE) == false) {
-//                         Point projected_point;
-//                         double aux_distance = 0.0;
-//                         const array_1d<double, 3> normal = geom_master[i_node].GetValue(NORMAL);
-//                         if (norm_2(normal) < tolerance)
-//                             aux_distance = MortarUtilities::FastProjectDirection(geom_slave, geom_master[i_node], projected_point, normal_master, normal_master);
-//                         else
-//                             aux_distance = MortarUtilities::FastProjectDirection(geom_slave, geom_master[i_node], projected_point, normal_master, normal);
-//
-//                         array_1d<double, 3> result;
-//                         if (aux_distance <= geom_master[i_node].FastGetSolutionStepValue(NODAL_H) * active_check_factor &&  geom_slave.IsInside(projected_point, result, tolerance)) { // NOTE: This can be problematic (It depends the way IsInside() and the local_pointCoordinates() are implemented)
-//                             at_least_one_node_potential_contact = true;
-//                             geom_master[i_node].Set(ACTIVE, true);
-//                             if (mTypeSolution == TypeSolution::VectorLagrangeMultiplier && mrMainModelPart.Is(SLIP))
-//                                 if (norm_2(geom_master[i_node].FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance)
-//                                     geom_master[i_node].Set(SLIP, false);
-//                         }
-//
-//                         aux_distance = MortarUtilities::FastProjectDirection(geom_slave, geom_master[i_node], projected_point, normal_master, -normal_master);
-//                         if (aux_distance <= geom_master[i_node].FastGetSolutionStepValue(NODAL_H) * active_check_factor &&  geom_slave.IsInside(projected_point, result, tolerance)) { // NOTE: This can be problematic (It depends the way IsInside() and the local_pointCoordinates() are implemented)
-//                             at_least_one_node_potential_contact = true;
-//                             geom_master[i_node].Set(ACTIVE, true);
-//                             if (mTypeSolution == TypeSolution::VectorLagrangeMultiplier && mrMainModelPart.Is(SLIP))
-//                                 if (norm_2(geom_master[i_node].FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance)
-//                                     geom_master[i_node].Set(SLIP, false);
-//                         }
-//                     } else
-//                         at_least_one_node_potential_contact = true;
-//                 }
-//             }
         } else {
             at_least_one_node_potential_contact = true;
             for (IndexType i_node = 0; i_node < TNumNodes; ++i_node) {
@@ -948,8 +904,6 @@ inline void TreeContactSearch<TDim, TNumNodes>::CheckPairing(
 
     // We compute the gap in the slave
     ComputeMappedGap(!mInvertedSearch);
-//     if (mThisParameters["double_formulation"].GetBool()) // TODO: Remove!!
-//         ComputeMappedGap(mInvertedSearch);
 
     // We revert the nodes to the original position
     NodesArrayType& nodes_array = rcontact_model_part.Nodes();
