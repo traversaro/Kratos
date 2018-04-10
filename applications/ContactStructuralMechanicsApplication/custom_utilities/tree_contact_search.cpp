@@ -458,27 +458,25 @@ void TreeContactSearch<TDim, TNumNodes>::AddPairing(
         ++rConditionId;
         Condition::Pointer p_auxiliar_condition = rComputingModelPart.CreateNewCondition(mConditionName, rConditionId, pCondSlave->GetGeometry(), pCondSlave->pGetProperties());
         // We set the geometrical values
-        Kratos::shared_ptr<std::pair<IndexType, IndexType>> p_index_pair = Kratos::make_shared<std::pair<IndexType, IndexType>>(pCondSlave->Id(), pCondMaster->Id());
-        p_auxiliar_condition->SetValue(CONDITION_PAIR, p_index_pair);
+        IndexMap::Pointer ids_destination = pCondSlave->GetValue(INDEX_MAP);
+        ids_destination->SetNewEntityId(pCondMaster->Id(), rConditionId);
         p_auxiliar_condition->SetValue(PAIRED_GEOMETRY, pCondMaster->pGetGeometry());
         p_auxiliar_condition->SetValue(NORMAL, pCondSlave->GetValue(NORMAL));
         p_auxiliar_condition->SetValue(PAIRED_NORMAL, pCondMaster->GetValue(NORMAL));
         // We activate the condition and initialize it
         p_auxiliar_condition->Set(ACTIVE, true);
         p_auxiliar_condition->Initialize();
-        if (mThisParameters["double_formulation"].GetBool()) {
-            ++rConditionId;
-            Condition::Pointer p_double_auxiliar_condition = rComputingModelPart.CreateNewCondition(mConditionName, rConditionId, pCondMaster->GetGeometry(), pCondMaster->pGetProperties());
-            // We set the geometrical values
-            Kratos::shared_ptr<std::pair<IndexType, IndexType>> p_double_index_pair = Kratos::make_shared<std::pair<IndexType, IndexType>>(pCondMaster->Id(), pCondSlave->Id());
-            p_double_auxiliar_condition->SetValue(CONDITION_PAIR, p_double_index_pair);
-            p_double_auxiliar_condition->SetValue(PAIRED_GEOMETRY, pCondSlave->pGetGeometry());
-            p_double_auxiliar_condition->SetValue(NORMAL, pCondMaster->GetValue(NORMAL));
-            p_double_auxiliar_condition->SetValue(PAIRED_NORMAL, pCondSlave->GetValue(NORMAL));
-            // We activate the condition and initialize it
-            p_double_auxiliar_condition->Set(ACTIVE, true);
-            p_double_auxiliar_condition->Initialize();
-        }
+//         if (mThisParameters["double_formulation"].GetBool()) { // TODO: Remove!!
+//             ++rConditionId;
+//             Condition::Pointer p_double_auxiliar_condition = rComputingModelPart.CreateNewCondition(mConditionName, rConditionId, pCondMaster->GetGeometry(), pCondMaster->pGetProperties());
+//             // We set the geometrical values
+//             p_double_auxiliar_condition->SetValue(PAIRED_GEOMETRY, pCondSlave->pGetGeometry());
+//             p_double_auxiliar_condition->SetValue(NORMAL, pCondMaster->GetValue(NORMAL));
+//             p_double_auxiliar_condition->SetValue(PAIRED_NORMAL, pCondSlave->GetValue(NORMAL));
+//             // We activate the condition and initialize it
+//             p_double_auxiliar_condition->Set(ACTIVE, true);
+//             p_double_auxiliar_condition->Initialize();
+//         }
     }
 }
 
@@ -875,38 +873,38 @@ inline void TreeContactSearch<TDim, TNumNodes>::AddPotentialPairing(
                 } else
                     at_least_one_node_potential_contact = true;
             }
-            if (mThisParameters["double_formulation"].GetBool()) {
-                for (IndexType i_node = 0; i_node < TNumNodes; ++i_node) {
-                    if (geom_master[i_node].Is(ACTIVE) == false) {
-                        Point projected_point;
-                        double aux_distance = 0.0;
-                        const array_1d<double, 3> normal = geom_master[i_node].GetValue(NORMAL);
-                        if (norm_2(normal) < tolerance)
-                            aux_distance = MortarUtilities::FastProjectDirection(geom_slave, geom_master[i_node], projected_point, normal_master, normal_master);
-                        else
-                            aux_distance = MortarUtilities::FastProjectDirection(geom_slave, geom_master[i_node], projected_point, normal_master, normal);
-
-                        array_1d<double, 3> result;
-                        if (aux_distance <= geom_master[i_node].FastGetSolutionStepValue(NODAL_H) * active_check_factor &&  geom_slave.IsInside(projected_point, result, tolerance)) { // NOTE: This can be problematic (It depends the way IsInside() and the local_pointCoordinates() are implemented)
-                            at_least_one_node_potential_contact = true;
-                            geom_master[i_node].Set(ACTIVE, true);
-                            if (mTypeSolution == TypeSolution::VectorLagrangeMultiplier && mrMainModelPart.Is(SLIP))
-                                if (norm_2(geom_master[i_node].FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance)
-                                    geom_master[i_node].Set(SLIP, false);
-                        }
-
-                        aux_distance = MortarUtilities::FastProjectDirection(geom_slave, geom_master[i_node], projected_point, normal_master, -normal_master);
-                        if (aux_distance <= geom_master[i_node].FastGetSolutionStepValue(NODAL_H) * active_check_factor &&  geom_slave.IsInside(projected_point, result, tolerance)) { // NOTE: This can be problematic (It depends the way IsInside() and the local_pointCoordinates() are implemented)
-                            at_least_one_node_potential_contact = true;
-                            geom_master[i_node].Set(ACTIVE, true);
-                            if (mTypeSolution == TypeSolution::VectorLagrangeMultiplier && mrMainModelPart.Is(SLIP))
-                                if (norm_2(geom_master[i_node].FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance)
-                                    geom_master[i_node].Set(SLIP, false);
-                        }
-                    } else
-                        at_least_one_node_potential_contact = true;
-                }
-            }
+//             if (mThisParameters["double_formulation"].GetBool()) { // TODO: Remove!!
+//                 for (IndexType i_node = 0; i_node < TNumNodes; ++i_node) {
+//                     if (geom_master[i_node].Is(ACTIVE) == false) {
+//                         Point projected_point;
+//                         double aux_distance = 0.0;
+//                         const array_1d<double, 3> normal = geom_master[i_node].GetValue(NORMAL);
+//                         if (norm_2(normal) < tolerance)
+//                             aux_distance = MortarUtilities::FastProjectDirection(geom_slave, geom_master[i_node], projected_point, normal_master, normal_master);
+//                         else
+//                             aux_distance = MortarUtilities::FastProjectDirection(geom_slave, geom_master[i_node], projected_point, normal_master, normal);
+//
+//                         array_1d<double, 3> result;
+//                         if (aux_distance <= geom_master[i_node].FastGetSolutionStepValue(NODAL_H) * active_check_factor &&  geom_slave.IsInside(projected_point, result, tolerance)) { // NOTE: This can be problematic (It depends the way IsInside() and the local_pointCoordinates() are implemented)
+//                             at_least_one_node_potential_contact = true;
+//                             geom_master[i_node].Set(ACTIVE, true);
+//                             if (mTypeSolution == TypeSolution::VectorLagrangeMultiplier && mrMainModelPart.Is(SLIP))
+//                                 if (norm_2(geom_master[i_node].FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance)
+//                                     geom_master[i_node].Set(SLIP, false);
+//                         }
+//
+//                         aux_distance = MortarUtilities::FastProjectDirection(geom_slave, geom_master[i_node], projected_point, normal_master, -normal_master);
+//                         if (aux_distance <= geom_master[i_node].FastGetSolutionStepValue(NODAL_H) * active_check_factor &&  geom_slave.IsInside(projected_point, result, tolerance)) { // NOTE: This can be problematic (It depends the way IsInside() and the local_pointCoordinates() are implemented)
+//                             at_least_one_node_potential_contact = true;
+//                             geom_master[i_node].Set(ACTIVE, true);
+//                             if (mTypeSolution == TypeSolution::VectorLagrangeMultiplier && mrMainModelPart.Is(SLIP))
+//                                 if (norm_2(geom_master[i_node].FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance)
+//                                     geom_master[i_node].Set(SLIP, false);
+//                         }
+//                     } else
+//                         at_least_one_node_potential_contact = true;
+//                 }
+//             }
         } else {
             at_least_one_node_potential_contact = true;
             for (IndexType i_node = 0; i_node < TNumNodes; ++i_node) {
@@ -948,8 +946,8 @@ inline void TreeContactSearch<TDim, TNumNodes>::CheckPairing(
 
     // We compute the gap in the slave
     ComputeMappedGap(!mInvertedSearch);
-    if (mThisParameters["double_formulation"].GetBool())
-        ComputeMappedGap(mInvertedSearch);
+//     if (mThisParameters["double_formulation"].GetBool()) // TODO: Remove!!
+//         ComputeMappedGap(mInvertedSearch);
 
     // We revert the nodes to the original position
     NodesArrayType& nodes_array = rcontact_model_part.Nodes();
@@ -1439,8 +1437,10 @@ inline void TreeContactSearch<TDim, TNumNodes>::CreateAuxiliarConditions(
         if (it_cond->Is(SLAVE) == !mInvertedSearch) {
             IndexMap::Pointer p_indexes_pairs = it_cond->GetValue(INDEX_MAP);
             for (auto it_pair = p_indexes_pairs->begin(); it_pair != p_indexes_pairs->end(); ++it_pair ) {
-                Condition::Pointer p_cond_master = mrMainModelPart.pGetCondition(it_pair->first); // MASTER
-                AddPairing(rComputingModelPart, rConditionId, (*it_cond.base()), p_cond_master);
+                if (it_pair->second == 0) { // If different than 0 it is an existing condition
+                    Condition::Pointer p_cond_master = mrMainModelPart.pGetCondition(it_pair->first); // MASTER
+                    AddPairing(rComputingModelPart, rConditionId, (*it_cond.base()), p_cond_master);
+                }
             }
         }
     }
@@ -1476,9 +1476,20 @@ void TreeContactSearch<TDim, TNumNodes>::ResetContactOperators()
     for(int i = 0; i < static_cast<int>(conditions_array.size()); ++i) {
         auto it_cond = conditions_array.begin() + i;
         if (it_cond->Is(SLAVE) == !mInvertedSearch) {
-            auto& p_indexes_pairs = it_cond->GetValue(INDEX_MAP);
+            IndexMap::Pointer p_indexes_pairs = it_cond->GetValue(INDEX_MAP);
 
             if (p_indexes_pairs != nullptr) {
+//                 std::vector<IndexType> indexes_to_remove;
+//                 for (auto it_pair = p_indexes_pairs->begin(); it_pair != p_indexes_pairs->end(); ++it_pair ) {
+//                     Condition::Pointer p_cond = mrMainModelPart.pGetCondition(it_pair->second);
+//                     if (p_cond->IsNot(ACTIVE)) {
+//                         p_cond->Set(TO_ERASE, true);
+//                         indexes_to_remove.push_back(it_pair->first);
+//                     }
+//                 }
+//                 for (auto& i_to_remove : indexes_to_remove) {
+//                     p_indexes_pairs->RemoveId(indexes_to_remove[i_to_remove]);
+//                 }
                 p_indexes_pairs->clear();
 //                 p_indexes_pairs->reserve(mAllocationSize);
             }
@@ -1493,40 +1504,10 @@ void TreeContactSearch<TDim, TNumNodes>::ResetContactOperators()
     #pragma omp parallel for
     for(int i = 0; i < num_computing_conditions; ++i) {
         auto it_cond = computing_conditions_array.begin() + i;
-//         if (it_cond->IsNot(ACTIVE))
-            it_cond->Set(TO_ERASE, true);
+        it_cond->Set(TO_ERASE, true);
     }
 
     mrMainModelPart.RemoveConditionsFromAllLevels(TO_ERASE);
-
-//     // Now we create a list of the active condtions
-//     std::unordered_map<IndexType, std::vector<IndexType>> active_cond_map;
-//     for(IndexType i = 0; i < computing_conditions_array.size(); ++i) {
-//         auto it_cond = computing_conditions_array.begin() + i;
-//         if (it_cond->Is(ACTIVE)) {
-//             Kratos::shared_ptr<std::pair<IndexType, IndexType>> p_index_pair = it_cond->GetValue(CONDITION_PAIR);
-//             if (active_cond_map.find(p_index_pair->first) != active_cond_map.end()) {
-//                 active_cond_map[p_index_pair->first].push_back(p_index_pair->second);
-//             } else {
-//                 std::vector<IndexType> aux_index_vector(1);
-//                 aux_index_vector[0] = p_index_pair->second;
-//                 std::pair<IndexType, std::vector<IndexType>> aux_pair(p_index_pair->first, aux_index_vector);
-//                 active_cond_map.insert(aux_pair);
-//             }
-//         }
-//     }
-//
-//     // We interate over the map
-//     #pragma omp parallel for
-//     for (int i_pair = 0; i_pair < static_cast<int>(active_cond_map.size()); ++i_pair) {
-//         auto it_pair = active_cond_map.begin();
-//         std::advance(it_pair, i_pair);
-//         Condition::Pointer pcond = mrMainModelPart.pGetCondition(it_pair->first);
-//         auto& p_indexes_pairs = pcond->GetValue(INDEX_MAP);
-// //         std::sort((it_pair->second).begin(), (it_pair->second).end());
-//         for (auto id : it_pair->second)
-//             p_indexes_pairs->AddId(id);
-//     }
 }
 
 /***********************************************************************************/
