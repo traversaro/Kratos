@@ -343,9 +343,9 @@ private:
     static inline void NotPredefinedMasterSlave(ModelPart& rModelPart);
 
     /**
-     * @brief This method reorders the ID of the conditions
+     * @brief This method gets the maximum the ID of the conditions
      */
-    inline IndexType ReorderConditionsIds();
+    inline IndexType GetMaximumConditionsIds();
     
     /**
      * @brief This method checks the potential pairing between two conditions/geometries

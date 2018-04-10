@@ -311,7 +311,7 @@ void TreeContactSearch<TDim, TNumNodes>::UpdateMortarConditions()
     MortarUtilities::ComputeNodesMeanNormalModelPart(mrMainModelPart.GetSubModelPart("Contact"));
 
     // We get the computing model part
-    IndexType condition_id = ReorderConditionsIds();
+    IndexType condition_id = GetMaximumConditionsIds();
     ModelPart& computing_rcontact_model_part = mrMainModelPart.GetSubModelPart("ComputingContact");
 
     // We reset the computing contact model part in case of already initialized
@@ -798,14 +798,16 @@ inline void TreeContactSearch<TDim, TNumNodes>::NotPredefinedMasterSlave(ModelPa
 /***********************************************************************************/
 
 template<std::size_t TDim, std::size_t TNumNodes>
-inline IndexType TreeContactSearch<TDim, TNumNodes>::ReorderConditionsIds()
+inline IndexType TreeContactSearch<TDim, TNumNodes>::GetMaximumConditionsIds()
 {
     ConditionsArrayType& conditions_array = mrMainModelPart.Conditions();
 
     IndexType condition_id = 0;
-    for(int i = 0; i < static_cast<int>(conditions_array.size()); ++i)  {
-        ++condition_id;
-        (conditions_array.begin() + i)->SetId(condition_id);
+    for(IndexType i = 0; i < conditions_array.size(); ++i)  {
+        auto it_cond = conditions_array.begin() + i;
+        const IndexType id = it_cond->GetId();
+        if (id > condition_id)
+            condition_id = id;
     }
 
     return condition_id;
@@ -993,6 +995,7 @@ inline void TreeContactSearch<TDim, TNumNodes>::ComputeMappedGap(const bool Sear
     NodesArrayType& nodes_array_slave = r_slave_model_part.Nodes();
 
     // We set the auxiliar Coordinates
+    const array_1d<double, 3> zero_array(3, 0.0);
     #pragma omp parallel for
     for(int i = 0; i < static_cast<int>(nodes_array_master.size()); ++i) {
         auto it_node = nodes_array_master.begin() + i;
@@ -1000,7 +1003,7 @@ inline void TreeContactSearch<TDim, TNumNodes>::ComputeMappedGap(const bool Sear
         if (SearchOrientation)
             it_node->SetValue(AUXILIAR_COORDINATES, it_node->Coordinates());
         else
-            it_node->SetValue(AUXILIAR_COORDINATES, ZeroVector(3));
+            it_node->SetValue(AUXILIAR_COORDINATES, zero_array);
     }
     #pragma omp parallel for
     for(int i = 0; i < static_cast<int>(nodes_array_slave.size()); ++i) {
@@ -1009,7 +1012,7 @@ inline void TreeContactSearch<TDim, TNumNodes>::ComputeMappedGap(const bool Sear
         if (!SearchOrientation)
             it_node->SetValue(AUXILIAR_COORDINATES, it_node->Coordinates());
         else
-            it_node->SetValue(AUXILIAR_COORDINATES, ZeroVector(3));
+            it_node->SetValue(AUXILIAR_COORDINATES, zero_array);
     }
 
     // Switch MASTER/SLAVE
@@ -1472,39 +1475,53 @@ void TreeContactSearch<TDim, TNumNodes>::ResetContactOperators()
 {
     ConditionsArrayType& conditions_array = mrMainModelPart.GetSubModelPart("Contact").Conditions();
 
-    #pragma omp parallel for
-    for(int i = 0; i < static_cast<int>(conditions_array.size()); ++i) {
-        auto it_cond = conditions_array.begin() + i;
-        if (it_cond->Is(SLAVE) == !mInvertedSearch) {
-            IndexMap::Pointer p_indexes_pairs = it_cond->GetValue(INDEX_MAP);
+    if (mrMainModelPart.Is(MODIFIED)) { // It has been remeshed. We remove everything
 
-            if (p_indexes_pairs != nullptr) {
-//                 std::vector<IndexType> indexes_to_remove;
-//                 for (auto it_pair = p_indexes_pairs->begin(); it_pair != p_indexes_pairs->end(); ++it_pair ) {
-//                     Condition::Pointer p_cond = mrMainModelPart.pGetCondition(it_pair->second);
-//                     if (p_cond->IsNot(ACTIVE)) {
-//                         p_cond->Set(TO_ERASE, true);
-//                         indexes_to_remove.push_back(it_pair->first);
-//                     }
-//                 }
-//                 for (auto& i_to_remove : indexes_to_remove) {
-//                     p_indexes_pairs->RemoveId(indexes_to_remove[i_to_remove]);
-//                 }
-                p_indexes_pairs->clear();
-//                 p_indexes_pairs->reserve(mAllocationSize);
+        #pragma omp parallel for
+        for(int i = 0; i < static_cast<int>(conditions_array.size()); ++i) {
+            auto it_cond = conditions_array.begin() + i;
+            if (it_cond->Is(SLAVE) == !mInvertedSearch) {
+                IndexMap::Pointer p_indexes_pairs = it_cond->GetValue(INDEX_MAP);
+
+                if (p_indexes_pairs != nullptr) {
+                    p_indexes_pairs->clear();
+//                     p_indexes_pairs->reserve(mAllocationSize);
+                }
             }
         }
-    }
 
-    // We remove the (just) the inactive conditions
-    ModelPart& computing_rcontact_model_part = mrMainModelPart.GetSubModelPart("ComputingContact");
-    ConditionsArrayType& computing_conditions_array = computing_rcontact_model_part.Conditions();
-    const int num_computing_conditions = static_cast<int>(computing_conditions_array.size());
+        // We remove all the computing conditions conditions
+        ModelPart& computing_rcontact_model_part = mrMainModelPart.GetSubModelPart("ComputingContact");
+        ConditionsArrayType& computing_conditions_array = computing_rcontact_model_part.Conditions();
+        const int num_computing_conditions = static_cast<int>(computing_conditions_array.size());
 
-    #pragma omp parallel for
-    for(int i = 0; i < num_computing_conditions; ++i) {
-        auto it_cond = computing_conditions_array.begin() + i;
-        it_cond->Set(TO_ERASE, true);
+        #pragma omp parallel for
+        for(int i = 0; i < num_computing_conditions; ++i) {
+            auto it_cond = computing_conditions_array.begin() + i;
+            it_cond->Set(TO_ERASE, true);
+        }
+    } else {
+        // We iterate, but not in OMP
+        for(IndexType i = 0; i < conditions_array.size(); ++i) {
+            auto it_cond = conditions_array.begin() + i;
+            if (it_cond->Is(SLAVE) == !mInvertedSearch) {
+                IndexMap::Pointer p_indexes_pairs = it_cond->GetValue(INDEX_MAP);
+                if (p_indexes_pairs != nullptr) {
+                    // The vector with the ids to remove
+                    std::vector<IndexType> inactive_conditions_ids;
+                    for (auto it_pair = p_indexes_pairs->begin(); it_pair != p_indexes_pairs->end(); ++it_pair ) {
+                        Condition::Pointer p_cond = mrMainModelPart.pGetCondition(it_pair->second);
+                        if (p_cond->IsNot(ACTIVE)) {
+                            p_cond->Set(TO_ERASE, true);
+                            inactive_conditions_ids.push_back(it_pair->first);
+                        }
+                    }
+                    for (auto& i_to_remove : inactive_conditions_ids) {
+                        p_indexes_pairs->RemoveId(inactive_conditions_ids[i_to_remove]);
+                    }
+                }
+            }
+        }
     }
 
     mrMainModelPart.RemoveConditionsFromAllLevels(TO_ERASE);
