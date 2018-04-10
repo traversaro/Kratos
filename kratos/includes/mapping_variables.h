@@ -143,6 +143,7 @@ namespace Kratos
         KRATOS_CLASS_POINTER_DEFINITION( IndexSet );
 
         typedef std::unordered_set<IndexType> BaseType;
+        typedef iterator IteratorType;
 
         ///@}
         ///@name Life Cycle
@@ -161,6 +162,16 @@ namespace Kratos
         ///@}
         ///@name Operations
         ///@{
+
+        /**
+        * @brief Returns the id corresponding a iterator
+        * @param ThisIterator The iterator of the class
+        * @return The ID
+        */
+        IndexType GetId(IteratorType ThisIterator)
+        {
+            return *ThisIterator;
+        }
 
         /**
         * @brief It checks if an ID exists in the map
@@ -239,6 +250,7 @@ namespace Kratos
         KRATOS_CLASS_POINTER_DEFINITION( IndexMap );
 
         typedef std::unordered_map<IndexType, IndexType> BaseType;
+        typedef iterator IteratorType;
         
         ///@}
         ///@name Life Cycle
@@ -253,11 +265,21 @@ namespace Kratos
         ///@}
         ///@name Operators
         ///@{
-        
+
         ///@}
         ///@name Operations
         ///@{
-        
+
+        /**
+        * @brief Returns the id corresponding a iterator
+        * @param ThisIterator The iterator of the class
+        * @return The ID
+        */
+        IndexType GetId(IteratorType ThisIterator)
+        {
+            return ThisIterator->first;
+        }
+
         /**
         * @brief It checks if an ID exists in the map
         * @param IndexOrigin The condition ID to remove
@@ -271,7 +293,7 @@ namespace Kratos
             
             return false;
         }
-        
+
         /**
         * @brief It adds a new ID to the map
         * @param IndexOrigin The condition ID to remove
