@@ -141,7 +141,7 @@ bool ExactMortarIntegrationUtility<3, 3, false>::GetExactIntegration(
     const double zero_tolerance = std::numeric_limits<double>::epsilon();
 
     // Firt we create an auxiliar plane based in the condition center and its normal
-    const PointType& slave_center = OriginalSlaveGeometry.Center();
+    const PointType slave_center = OriginalSlaveGeometry.Center();
 
     // We define the condition tangents
     array_1d<double, 3> slave_tangent_xi = OriginalSlaveGeometry[1].Coordinates() - OriginalSlaveGeometry[0].Coordinates();
@@ -225,7 +225,7 @@ bool ExactMortarIntegrationUtility<3, 4, false>::GetExactIntegration(
     const double zero_tolerance = std::numeric_limits<double>::epsilon();
 
     // Firt we create an auxiliar plane based in the condition center and its normal
-    const PointType& slave_center = OriginalSlaveGeometry.Center();
+    const PointType slave_center = OriginalSlaveGeometry.Center();
 
     // We define the condition tangents
     array_1d<double, 3> slave_tangent_xi = OriginalSlaveGeometry[2].Coordinates() - OriginalSlaveGeometry[0].Coordinates();
@@ -434,7 +434,7 @@ bool ExactMortarIntegrationUtility<3, 3, true>::GetExactIntegration(
     const double zero_tolerance = std::numeric_limits<double>::epsilon();
 
     // Firt we create an auxiliar plane based in the condition center and its normal
-    const PointType& slave_center = OriginalSlaveGeometry.Center();
+    const PointType slave_center = OriginalSlaveGeometry.Center();
 
     // We define the condition tangents
     array_1d<double, 3> slave_tangent_xi = OriginalSlaveGeometry[1].Coordinates() - OriginalSlaveGeometry[0].Coordinates();
@@ -513,7 +513,7 @@ bool ExactMortarIntegrationUtility<3, 4, true>::GetExactIntegration(
     const double zero_tolerance = std::numeric_limits<double>::epsilon();
 
     // Firt we create an auxiliar plane based in the condition center and its normal
-    const PointType& slave_center = OriginalSlaveGeometry.Center();
+    const PointType slave_center = OriginalSlaveGeometry.Center();
 
     // We define the condition tangents
     array_1d<double, 3> slave_tangent_xi = OriginalSlaveGeometry[2].Coordinates() - OriginalSlaveGeometry[0].Coordinates();
