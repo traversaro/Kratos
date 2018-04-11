@@ -174,7 +174,7 @@ void SimpleMortarMapperProcess<TDim, TNumNodes, TVarType, THistOrigin, THistDest
             
             double radius = 0.0; 
             for(IndexType i_node = 0; i_node < it_cond->GetGeometry().PointsNumber(); ++i_node)  {
-                const array_1d<double, 3>& aux_vector = center.Coordinates() - it_cond->GetGeometry()[i_node].Coordinates();
+                const array_1d<double, 3> aux_vector = center.Coordinates() - it_cond->GetGeometry()[i_node].Coordinates();
                 const double aux_value = inner_prod(aux_vector, aux_vector);
                 if(aux_value > radius) radius = aux_value; 
             } 

@@ -638,7 +638,7 @@ private:
                 // Initialize the mortar operators
                 rThisMortarOperators.Initialize();
 
-                const BoundedMatrixType& Ae = CalculateAe(slave_geometry, rThisKineticVariables, conditions_points_slave, this_integration_method);
+                const BoundedMatrixType Ae = CalculateAe(slave_geometry, rThisKineticVariables, conditions_points_slave, this_integration_method);
 
                 AssemblyMortarOperators( conditions_points_slave, slave_geometry, master_geometry,master_normal, rThisKineticVariables, rThisMortarOperators, this_integration_method, Ae);
 
