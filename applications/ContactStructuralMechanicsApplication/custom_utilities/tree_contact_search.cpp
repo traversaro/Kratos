@@ -819,6 +819,7 @@ inline void TreeContactSearch<TDim, TNumNodes>::AddPotentialPairing(
     // Some auxiliar values
     const double active_check_factor = mrMainModelPart.GetProcessInfo()[ACTIVE_CHECK_FACTOR];
     const double tolerance = std::numeric_limits<double>::epsilon();
+    const bool frictional_problem = mrMainModelPart.Is(SLIP);
 
     // Slave geometry
     GeometryType& geom_slave = pCondSlave->GetGeometry();
@@ -849,18 +850,32 @@ inline void TreeContactSearch<TDim, TNumNodes>::AddPotentialPairing(
                     if (aux_distance <= geom_slave[i_node].FastGetSolutionStepValue(NODAL_H) * active_check_factor &&  geom_master.IsInside(projected_point, result, tolerance)) { // NOTE: This can be problematic (It depends the way IsInside() and the local_pointCoordinates() are implemented)
                         at_least_one_node_potential_contact = true;
                         geom_slave[i_node].Set(ACTIVE, true);
-                        if (mTypeSolution == TypeSolution::VectorLagrangeMultiplier && mrMainModelPart.Is(SLIP))
-                            if (norm_2(geom_slave[i_node].FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance)
-                                geom_slave[i_node].Set(SLIP, false);
+                        if (mTypeSolution == TypeSolution::VectorLagrangeMultiplier && frictional_problem) {
+                            NodeType& node = geom_slave[i_node];
+                            if (norm_2(node.FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance) {
+                                if (node.GetValue(FRICTION_COEFFICIENT) < tolerance) {
+                                    node.Set(SLIP, true);
+                                } else {
+                                    node.Set(SLIP, false);
+                                }
+                            }
+                        }
                     }
 
                     aux_distance = MortarUtilities::FastProjectDirection(geom_master, geom_slave[i_node], projected_point, normal_master, -normal_master);
                     if (aux_distance <= geom_slave[i_node].FastGetSolutionStepValue(NODAL_H) * active_check_factor &&  geom_master.IsInside(projected_point, result, tolerance)) { // NOTE: This can be problematic (It depends the way IsInside() and the local_pointCoordinates() are implemented)
                         at_least_one_node_potential_contact = true;
                         geom_slave[i_node].Set(ACTIVE, true);
-                        if (mTypeSolution == TypeSolution::VectorLagrangeMultiplier && mrMainModelPart.Is(SLIP))
-                            if (norm_2(geom_slave[i_node].FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance)
-                                geom_slave[i_node].Set(SLIP, false);
+                        if (mTypeSolution == TypeSolution::VectorLagrangeMultiplier && frictional_problem) {
+                            NodeType& node = geom_slave[i_node];
+                            if (norm_2(node.FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance) {
+                                if (node.GetValue(FRICTION_COEFFICIENT) < tolerance) {
+                                    node.Set(SLIP, true);
+                                } else {
+                                    node.Set(SLIP, false);
+                                }
+                            }
+                        }
                     }
                 } else
                     at_least_one_node_potential_contact = true;
@@ -869,9 +884,18 @@ inline void TreeContactSearch<TDim, TNumNodes>::AddPotentialPairing(
             at_least_one_node_potential_contact = true;
             for (IndexType i_node = 0; i_node < TNumNodes; ++i_node) {
                 geom_slave[i_node].Set(ACTIVE, true);
-                if (mTypeSolution == TypeSolution::VectorLagrangeMultiplier && mrMainModelPart.Is(SLIP))
-                    if (norm_2(geom_slave[i_node].FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance)
-                        geom_slave[i_node].Set(SLIP, false);
+                if (mTypeSolution == TypeSolution::VectorLagrangeMultiplier && frictional_problem) {
+                    NodeType& node = geom_slave[i_node];
+                    if (norm_2(geom_slave[i_node].FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance) {
+                        if (norm_2(node.FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance) {
+                            if (node.GetValue(FRICTION_COEFFICIENT) < tolerance) {
+                                node.Set(SLIP, true);
+                            } else {
+                                node.Set(SLIP, false);
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -1223,8 +1247,13 @@ inline void TreeContactSearch<TDim, TNumNodes>::CorrectALMFrictionalMortarLM(
     const double b
     )
 {
-    if (norm_2(ItNode->FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance)
-        ItNode->Set(SLIP, false);
+    if (norm_2(ItNode->FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance) {
+        if (ItNode->GetValue(FRICTION_COEFFICIENT) < ZeroTolerance) {
+            ItNode->Set(SLIP, true);
+        } else {
+            ItNode->Set(SLIP, false);
+        }
+    }
 }
 
 /***********************************************************************************/
@@ -1337,8 +1366,13 @@ inline void TreeContactSearch<TDim, TNumNodes>::PredictALMFrictionalMortarLM(
     const double b
     )
 {
-    if (norm_2(ItNode->FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance)
-        ItNode->Set(SLIP, false);
+    if (norm_2(ItNode->FastGetSolutionStepValue(VECTOR_LAGRANGE_MULTIPLIER)) < ZeroTolerance) {
+        if (ItNode->GetValue(FRICTION_COEFFICIENT) < ZeroTolerance) {
+            ItNode->Set(SLIP, true);
+        } else {
+            ItNode->Set(SLIP, false);
+        }
+    }
 }
 
 /***********************************************************************************/
