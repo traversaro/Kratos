@@ -70,8 +70,6 @@ target_link_libraries(KratosPETScApplication PUBLIC KratosPETScCore)
 set_target_properties(KratosPETScApplication PROPERTIES PREFIX "")
 
 
-install(TARGETS KratosPETScApplication DESTINATION libs )
-
 # changing the .dll suffix to .pyd (Windows)
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	set_target_properties(KratosPETScApplication PROPERTIES SUFFIX .pyd)

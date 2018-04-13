@@ -1,21 +1,15 @@
-//    |  /           |
-//    ' /   __| _` | __|  _ \   __|
-//    . \  |   (   | |   (   |\__ `
-//   _|\_\_|  \__,_|\__|\___/ ____/
-//                   Multi-Physics
 //
-//  License:		 BSD License
-//					 Kratos default license: kratos/license.txt
+//   Project Name:        KratosPETScApplication      $
+//   Created by:          $Author:        JMCarbonell $
+//   Last modified by:    $Co-Author:                 $
+//   Date:                $Date:           April 2018 $
+//   Revision:            $Revision:              0.0 $
 //
-//  Main authors:    Pooyan Dadvand@{KRATOS_APP_AUTHOR}
 //
-
 
 // System includes
 
-
 // External includes
-
 
 // Project includes
 #include "petsc_application.h"

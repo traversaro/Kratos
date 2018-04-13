@@ -1,13 +1,10 @@
-//    |  /           |
-//    ' /   __| _` | __|  _ \   __|
-//    . \  |   (   | |   (   |\__ `
-//   _|\_\_|  \__,_|\__|\___/ ____/
-//                   Multi-Physics
 //
-//  License:		 BSD License
-//					 Kratos default license: kratos/license.txt
+//   Project Name:        KratosPETScApplication      $
+//   Created by:          $Author:        JMCarbonell $
+//   Last modified by:    $Co-Author:                 $
+//   Date:                $Date:           April 2018 $
+//   Revision:            $Revision:              0.0 $
 //
-//  Main authors:    @{KRATOS_APP_AUTHOR}
 //
 
 #if !defined(KRATOS_PETSC_APPLICATION_VARIABLES_H_INCLUDED )
@@ -25,6 +22,6 @@
 namespace Kratos
 {
 
-}
+} // Namespace Kratos
 
-#endif	/* KRATOS_PETSC_APPLICATION_VARIABLES_H_INCLUDED */
+#endif	// KRATOS_PETSC_APPLICATION_VARIABLES_H_INCLUDED 
