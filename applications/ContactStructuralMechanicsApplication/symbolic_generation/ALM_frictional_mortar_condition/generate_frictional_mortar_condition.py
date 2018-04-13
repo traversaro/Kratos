@@ -154,6 +154,7 @@ for normalvar in range(2):
         DeltaDx1DeltaMx2 = (DOperator - DOperatorold) * x1 - (MOperator - MOperatorold) * x2
         Dx1oldMx2old = DOperator * x1old - MOperator * x2old
         Dw1Mw2 = DOperator * w1 - MOperator * w2
+        DeltaDw1DeltaMw2 = (DOperator - DOperatorold) * w1 - (MOperator - MOperatorold) * w2
         for node in range(nnodes):
             NormalGap[node] = Dx1Mx2.row(node).dot(NormalSlave.row(node))
             gap_time_derivative = (Dx1oldMx2old.row(node) - Dx1Mx2.row(node))/delta_time - DeltaDx1DeltaMx2.row(node)/delta_time
@@ -165,8 +166,10 @@ for normalvar in range(2):
         Dw1Mw2Slip = DefineMatrix('Dw1Mw2Slip', nnodes, dim)
         for node in range(nnodes):
             Dw1Mw2Gap[node] = (Dw1Mw2.row(node)).dot(NormalSlave.row(node))
+            #auxDw1Mw2Slip = (DeltaDw1DeltaMw2.row(node)).dot(TangentSlave.row(node))
             auxDw1Mw2Slip = Dw1Mw2.row(node) - Dw1Mw2Gap[node] * NormalSlave.row(node)
             for idim in range(dim):
+                #Dw1Mw2Slip[node,idim] = - auxDw1Mw2Slip * TangentSlave[node, idim]
                 Dw1Mw2Slip[node,idim] = auxDw1Mw2Slip[idim]
 
         # Define dofs & test function vector
