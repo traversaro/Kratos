@@ -1,14 +1,10 @@
-//    |  /           |
-//    ' /   __| _` | __|  _ \   __|
-//    . \  |   (   | |   (   |\__ `
-//   _|\_\_|  \__,_|\__|\___/ ____/
-//                   Multi-Physics 
 //
-//  License:		 BSD License 
-//					 Kratos default license: kratos/license.txt
+//   Project Name:        KratosPETScApplication      $
+//   Created by:          $Author:        JMCarbonell $
+//   Last modified by:    $Co-Author:                 $
+//   Date:                $Date:           April 2018 $
+//   Revision:            $Revision:              0.0 $
 //
-//  Main authors:    Author1 Fullname
-//                   Author2 Fullname 
 //
 
 
@@ -16,15 +12,13 @@
 #define  KRATOS_ADD_UTILITIES_TO_PYTHON_H_INCLUDED
 
 
-
 // System includes
-
+#include <pybind11/pybind11.h>
 
 // External includes
 
-
 // Project includes
-#include "includes/define.h"
+#include "includes/define_python.h"
 
 
 namespace Kratos
@@ -33,7 +27,7 @@ namespace Kratos
 namespace Python
 {
 
-  void  AddCustomUtilitiesToPython();
+void  AddCustomUtilitiesToPython(pybind11::module& m);
 
 }  // namespace Python.
 
