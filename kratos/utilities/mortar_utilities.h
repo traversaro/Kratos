@@ -571,13 +571,15 @@ public:
                     const array_1d<double, 3> tangent = tangent_lm/norm_2(tangent_lm);
                     for (std::size_t i_dof = 0; i_dof < TDim; ++i_dof)
                         tangent_matrix(i_node, i_dof) = tangent[i_dof];
-                } else {
+                } else { // We consider the tangent direction as auxiliar
+                    const array_1d<double, 3>& tangent_xi = ThisNodes[i_node].GetValue(TANGENT_XI);
                     for (std::size_t i_dof = 0; i_dof < TDim; ++i_dof)
-                        tangent_matrix(i_node, i_dof) = 0.0;
+                        tangent_matrix(i_node, i_dof) = tangent_xi[i_dof];
                 }
-            } else { // In case of zero LM
+            } else { // We consider the tangent direction as auxiliar
+                const array_1d<double, 3>& tangent_xi = ThisNodes[i_node].GetValue(TANGENT_XI);
                 for (std::size_t i_dof = 0; i_dof < TDim; ++i_dof)
-                    tangent_matrix(i_node, i_dof) = 0.0;
+                    tangent_matrix(i_node, i_dof) = tangent_xi[i_dof];
             }
         }
 
