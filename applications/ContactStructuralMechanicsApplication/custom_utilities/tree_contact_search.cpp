@@ -306,8 +306,12 @@ void TreeContactSearch<TDim, TNumNodes>::UpdateMortarConditions()
     // We update the list of points
     UpdatePointListMortar();
 
+    // The contact model part
+    ModelPart& rcontact_model_part = mrMainModelPart.GetSubModelPart("Contact");
+
     // Calculate the mean of the normal in all the nodes
-    MortarUtilities::ComputeNodesMeanNormalModelPart(mrMainModelPart.GetSubModelPart("Contact"));
+    const bool frictional_problem = mrMainModelPart.IsDefined(SLIP) ? mrMainModelPart.Is(SLIP) : false;
+    MortarUtilities::ComputeNodesMeanNormalModelPart(rcontact_model_part, frictional_problem);
 
     // We get the computing model part
     IndexType condition_id = GetMaximumConditionsIds();
@@ -332,7 +336,6 @@ void TreeContactSearch<TDim, TNumNodes>::UpdateMortarConditions()
     KDTree tree_points(mPointListDestination.begin(), mPointListDestination.end(), bucket_size);
 
     // Auxiliar model parts and components
-    ModelPart& rcontact_model_part = mrMainModelPart.GetSubModelPart("Contact");
     ConditionsArrayType& conditions_array = rcontact_model_part.Conditions();
     const int num_conditions = static_cast<int>(conditions_array.size());
 
@@ -429,7 +432,7 @@ void TreeContactSearch<TDim, TNumNodes>::UpdateMortarConditions()
         // We revert the nodes to the original position
         if (mThisParameters["dynamic_search"].GetBool()) {
             if (mrMainModelPart.NodesBegin()->SolutionStepsDataHas(VELOCITY_X)) {
-                NodesArrayType& nodes_array = mrMainModelPart.GetSubModelPart("Contact").Nodes();
+                NodesArrayType& nodes_array = rcontact_model_part.Nodes();
                 #pragma omp parallel for
                 for(int i = 0; i < static_cast<int>(nodes_array.size()); ++i) {
                     auto it_node = nodes_array.begin() + i;
@@ -944,7 +947,8 @@ inline void TreeContactSearch<TDim, TNumNodes>::CheckPairing(
     }
 
     // Calculate the mean of the normal in all the nodes
-    MortarUtilities::ComputeNodesMeanNormalModelPart(rcontact_model_part);
+    const bool frictional_problem = mrMainModelPart.IsDefined(SLIP) ? mrMainModelPart.Is(SLIP) : false;
+    MortarUtilities::ComputeNodesMeanNormalModelPart(rcontact_model_part, frictional_problem);
 
     // Iterate in the conditions and create the new ones
     CreateAuxiliarConditions(rcontact_model_part, rComputingModelPart, rConditionId);
