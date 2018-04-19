@@ -55,10 +55,10 @@ public:
     ///@name Operations
     ///@{
 
-    bool GetElementNameAndCheckModelPart(ModelPart& rModelPart, std::string& rElementName)
+    std::string GetElementNameAndCheckModelPart(ModelPart& rModelPart)
     {
-        bool has_element = false;
-        std::string reference_element_name;
+        //bool has_element = false;
+        std::string reference_element_name = "";
         std::string element_name; 
 
         if(rModelPart.Elements().size() > 0)
@@ -76,18 +76,16 @@ public:
                 KRATOS_ERROR_IF(reference_element_name != element_name)
                     << "There are more than one element types in sub model part! Replacement not possible!" << std::endl;
             }
-            rElementName = reference_element_name;
-            has_element = true;
         }
-
-        return has_element;
+        
+        return reference_element_name.c_str();
     }   
 
     //-----------------------------------------------------------------------------------------------------------------
-    bool GetConditionNameAndCheckModelPart(ModelPart& rModelPart, std::string& rConditionName)
+    std::string GetConditionNameAndCheckModelPart(ModelPart& rModelPart)
     {
-        bool has_condition = false;
-        std::string reference_condition_name;
+        //bool has_condition = false;
+        std::string reference_condition_name = "";
         std::string condition_name; 
 
         if(rModelPart.Conditions().size() > 0)
@@ -105,11 +103,9 @@ public:
                 KRATOS_ERROR_IF(reference_condition_name != condition_name)
                     << "There are more than one condition types in sub model part! Replacement not possible!" << std::endl;
             }
-            rConditionName = reference_condition_name;
-            has_condition =  true;
         }
-
-        return has_condition;
+      
+        return reference_condition_name.c_str();
     }  
 
 private:
