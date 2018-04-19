@@ -42,6 +42,19 @@ class AdjointStructuralSolver(structural_mechanics_solver.MechanicalSolver):
         self.print_on_rank_zero("::[AdjointMechanicalSolver]:: ", "Variables ADDED")
 
     def PrepareModelPartForSolver(self):
+
+        #--------------------
+        self.primal_settings = KratosMultiphysics.Parameters( open(self.response_function_settings["primal_settings"].GetString(),'r').read() )
+        
+        params = KratosMultiphysics.Parameters("{}")
+        params.AddValue("problem_domain_sub_model_part_list",self.primal_settings["solver_settings"]["problem_domain_sub_model_part_list"])
+        params.AddValue("processes_sub_model_part_list",self.primal_settings["solver_settings"]["processes_sub_model_part_list"])
+
+        # Assign mesh entities from domain and process sub model parts to the computing model part.
+        import adjoint_replacement
+        adjoint_replacement.AdjointReplacementProcess(self.main_model_part, params).Execute(True)
+        #--------------------
+
         # here we replace the dummy elements we read with proper elements
         self.settings.AddEmptyValue("element_replace_settings")
         if(self.main_model_part.ProcessInfo[KratosMultiphysics.DOMAIN_SIZE] == 3):
@@ -54,13 +67,14 @@ class AdjointStructuralSolver(structural_mechanics_solver.MechanicalSolver):
                 "from_primal_to_adjoint": true
                 }
                 """)
-
+        
         elif(self.main_model_part.ProcessInfo[KratosMultiphysics.DOMAIN_SIZE] == 2):
             raise Exception("there is currently no 2D adjoint element")
         else:
             raise Exception("domain size is not 2 or 3")
-
+        
         StructuralMechanicsApplication.ReplaceElementsAndConditionsForAdjointProblemProcess(self.main_model_part, self.settings["element_replace_settings"]).Execute()
+        
         super(AdjointStructuralSolver, self).PrepareModelPartForSolver()
         self.print_on_rank_zero("::[AdjointMechanicalSolver]:: ", "ModelPart prepared for Solver.")
 
