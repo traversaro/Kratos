@@ -23,6 +23,8 @@
 
 #include "custom_response_functions/adjoint_processes/replace_elements_and_conditions_for_adjoint_problem_process.h"
 
+#include "custom_response_functions/adjoint_processes/replacement_tool.h"
+
 //Response Functions
 #include "custom_response_functions/response_utilities/adjoint_structural_response_function.h"
 #include "custom_response_functions/response_utilities/adjoint_local_stress_response_function.h"
@@ -48,10 +50,16 @@ void  AddCustomResponseFunctionsToPython()
     /// Processes
     class_<ReplaceElementsAndConditionsForAdjointProblemProcess , bases<Process>, boost::noncopyable >("ReplaceElementsAndConditionsForAdjointProblemProcess",
             init<ModelPart&, Parameters>());
+    class_<ReplaceElementsAndConditionsForAdjointProblemProcess , bases<Process>, boost::noncopyable >("ReplaceElementsAndConditionsForAdjointProblemProcess",
+            init<ModelPart&, Parameters>());
+
+    class_<ReplacementTool, boost::noncopyable>
+      ("ReplacementTool", init< >())
+      .def("GetElementNameAndCheckModelPart", &ReplacementTool::GetElementNameAndCheckModelPart)
+      .def("GetConditionNameAndCheckModelPart", &ReplacementTool::GetConditionNameAndCheckModelPart);
 
     //Response Functions
-    class_<AdjointStructuralResponseFunction, boost::noncopyable>
-      ("AdjointStructuralResponseFunction", init<ModelPart&, Parameters&>())
+    class_<AdjointStructuralResponseFunction, boost::noncopyable>("AdjointStructuralResponseFunction", init<ModelPart&, Parameters&>())
       .def("Initialize", &AdjointStructuralResponseFunction::Initialize)
       .def("FinalizeSolutionStep", &AdjointStructuralResponseFunction::FinalizeSolutionStep)
       .def("CalculateValue", &AdjointStructuralResponseFunction::CalculateValue);
