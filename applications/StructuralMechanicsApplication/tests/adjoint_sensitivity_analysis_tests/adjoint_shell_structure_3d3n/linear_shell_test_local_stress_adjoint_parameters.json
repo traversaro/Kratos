@@ -29,7 +29,8 @@
             "traced_element"    : 2,
             "stress_type"       : "MXX",
             "stress_treatment"  : "mean",
-            "stress_location"   : 1
+            "stress_location"   : 1,
+            "primal_settings"  : "./adjoint_sensitivity_analysis_tests/adjoint_shell_structure_3d3n/linear_shell_test_parameters.json"
         },
         "echo_level"                   : 0,
         "problem_domain_sub_model_part_list" : ["Parts_AREAS"],
