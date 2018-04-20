@@ -1022,7 +1022,7 @@ public:
     * @return default integration method
     */
 
-    IntegrationMethod GetDefaultIntegrationMethod()
+    IntegrationMethod GetDefaultIntegrationMethod() const
     {
         return mpGeometryData->DefaultIntegrationMethod();
     }
