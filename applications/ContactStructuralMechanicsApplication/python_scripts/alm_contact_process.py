@@ -134,6 +134,8 @@ class ALMContactProcess(python_process.PythonProcess):
         # If we compute a frictional contact simulation
         if self.settings["contact_type"].GetString() == "Frictional":
             self.is_frictional = True
+            if self.normal_variation == CSMA.NormalDerivativesComputation.NO_DERIVATIVES_COMPUTATION:
+                self.normal_variation = CSMA.NormalDerivativesComputation.NO_DERIVATIVES_COMPUTATION_WITH_NORMAL_UPDATE
         else:
             self.is_frictional = False
 
