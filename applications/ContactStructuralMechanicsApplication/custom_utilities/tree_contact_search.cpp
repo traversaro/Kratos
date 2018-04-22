@@ -1388,7 +1388,7 @@ inline void TreeContactSearch<TDim, TNumNodes>::ComputeWeightedReaction()
     // Auxiliar zero array
     const array_1d<double, 3> zero_array(3, 0.0);
 
-    // The contact model part
+    // Auxiliar gap
     ModelPart& rcontact_model_part = mrMainModelPart.GetSubModelPart("Contact");
     NodesArrayType& nodes_array = rcontact_model_part.Nodes();
     switch(mTypeSolution) {
