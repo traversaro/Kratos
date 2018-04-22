@@ -307,24 +307,23 @@ void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TN
 
         const bounded_matrix<double, TNumNodes, TDim> delta_D_x1_M_x2 = prod(DeltaDOperator, x1) - prod(DeltaMOperator, x2);
 
-        // The tangent matrix
-        const bounded_matrix<double, TNumNodes, TDim> tangent_slave = MortarUtilities::ComputeTangentMatrix<TNumNodes, TDim>(slave_geometry);
-
         // The estimation of the slip time derivative
         const bounded_matrix<double, TNumNodes, TDim> slip_time_derivative = (D_x1_old_M_x2_old - D_x1_M_x2)/delta_time - delta_D_x1_M_x2/delta_time;
 
         for (IndexType i_node = 0; i_node < TNumNodes; ++i_node) {
-            // We compute the tangent
-            const array_1d<double, TDim>& tangent_node = row(tangent_slave, i_node);
+            // We get the normal
+            const array_1d<double, TDim>& normal = subrange(slave_geometry[i_node].FastGetSolutionStepValue(NORMAL), 0, TDim);
+
+            // We compute the slip
             const array_1d<double, TDim>& slip_time_derivative_node = row(slip_time_derivative, i_node);
-            const double slip_node = delta_time * inner_prod(tangent_node, slip_time_derivative_node);
+            const array_1d<double, TDim> slip_node = delta_time * (slip_time_derivative_node - inner_prod(normal, slip_time_derivative_node) * normal);
 
             // The weighted slip
             array_1d<double, 3>& weighted_slip = slave_geometry[i_node].FastGetSolutionStepValue(WEIGHTED_SLIP);
 
             for (IndexType i_dim = 0; i_dim < TDim; ++i_dim) {
                 #pragma omp atomic
-                weighted_slip[i_dim] += slip_node * tangent_node[i_dim];
+                weighted_slip[i_dim] += slip_node[i_dim];
             }
         }
 
