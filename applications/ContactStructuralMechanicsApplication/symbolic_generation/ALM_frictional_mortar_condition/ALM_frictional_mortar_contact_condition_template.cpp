@@ -300,15 +300,15 @@ void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TN
         const bounded_matrix<double, TNumNodes, TNumNodes> DeltaMOperator = MOperator - mPreviousMortarOperators.MOperator;
 
         // Old coordinates
-        const bounded_matrix<double, TNumNodes, TDim> x1_old = MortarUtilities::GetCoordinates<TDim,TNumNodes>(slave_geometry, false, 1);
-        const bounded_matrix<double, TNumNodes, TDim> x2_old = MortarUtilities::GetCoordinates<TDim,TNumNodes>(master_geometry, false, 1);
+        const bounded_matrix<double, TNumNodes, TDim> delta_x1 = x1 - MortarUtilities::GetCoordinates<TDim,TNumNodes>(slave_geometry, false, 1);
+        const bounded_matrix<double, TNumNodes, TDim> delta_x2 = x2 - MortarUtilities::GetCoordinates<TDim,TNumNodes>(master_geometry, false, 1);
 
-        const bounded_matrix<double, TNumNodes, TDim> D_x1_old_M_x2_old = prod(DOperator, x1_old) - prod(MOperator, x2_old);
+        const bounded_matrix<double, TNumNodes, TDim> D_delta_x1_M_delta_x2 = prod(DOperator, delta_x1) - prod(MOperator, delta_x2);
 
         const bounded_matrix<double, TNumNodes, TDim> delta_D_x1_M_x2 = prod(DeltaDOperator, x1) - prod(DeltaMOperator, x2);
 
         // The estimation of the slip time derivative
-        const bounded_matrix<double, TNumNodes, TDim> slip_time_derivative = (D_x1_old_M_x2_old - D_x1_M_x2)/delta_time - delta_D_x1_M_x2/delta_time;
+        const bounded_matrix<double, TNumNodes, TDim> slip_time_derivative = D_delta_x1_M_delta_x2/delta_time + delta_D_x1_M_x2/delta_time;
 
         for (IndexType i_node = 0; i_node < TNumNodes; ++i_node) {
             // We get the normal
@@ -316,7 +316,7 @@ void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TN
 
             // We compute the slip
             const array_1d<double, TDim>& slip_time_derivative_node = row(slip_time_derivative, i_node);
-            const array_1d<double, TDim> slip_node = delta_time * (slip_time_derivative_node - inner_prod(normal, slip_time_derivative_node) * normal);
+            const array_1d<double, TDim> slip_node = - delta_time * (slip_time_derivative_node - inner_prod(normal, slip_time_derivative_node) * normal);
 
             // The weighted slip
             array_1d<double, 3>& weighted_slip = slave_geometry[i_node].FastGetSolutionStepValue(WEIGHTED_SLIP);
