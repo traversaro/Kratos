@@ -26,6 +26,7 @@
 //Response Functions
 #include "custom_response_functions/response_utilities/adjoint_structural_response_function.h"
 #include "custom_response_functions/response_utilities/adjoint_local_stress_response_function.h"
+#include "custom_response_functions/response_utilities/adjoint_integral_stress_response_function.h"
 #include "custom_response_functions/response_utilities/adjoint_nodal_displacement_response_function.h"
 #include "custom_response_functions/response_utilities/adjoint_strain_energy_response_function.h"
 
@@ -58,6 +59,9 @@ void  AddCustomResponseFunctionsToPython()
 
     class_<AdjointLocalStressResponseFunction, bases<AdjointStructuralResponseFunction>, boost::noncopyable>
       ("AdjointLocalStressResponseFunction", init<ModelPart&, Parameters&>());
+
+    class_<AdjointIntegralStressResponseFunction, bases<AdjointStructuralResponseFunction>, boost::noncopyable>
+      ("AdjointIntegralStressResponseFunction", init<ModelPart&, Parameters&>());
 
     class_<AdjointNodalDisplacementResponseFunction, bases<AdjointStructuralResponseFunction>, boost::noncopyable>
       ("AdjointNodalDisplacementResponseFunction", init<ModelPart&, Parameters&>());
