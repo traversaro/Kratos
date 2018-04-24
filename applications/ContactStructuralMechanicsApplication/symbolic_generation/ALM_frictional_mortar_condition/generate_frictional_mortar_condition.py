@@ -151,27 +151,16 @@ for normalvar in range(2):
         # Defining the normal NormalGap and tangent slip
         Dx1Mx2 = DOperator * x1 - MOperator * x2
         DeltaDx1DeltaMx2 = (DOperator - DOperatorold) * x1 - (MOperator - MOperatorold) * x2
-        Dx1oldMx2old = DOperator * x1old - MOperator * x2old
+        DDeltax1MDeltax2 = DOperator * (x1 - x1old) - MOperator * (x2 - x2old)
         Dw1Mw2 = DOperator * w1 - MOperator * w2
         DeltaDw1DeltaMw2 = (DOperator - DOperatorold) * w1 - (MOperator - MOperatorold) * w2
         for node in range(nnodes):
             NormalGap[node] = Dx1Mx2.row(node).dot(NormalSlave.row(node))
-            gap_time_derivative = (Dx1oldMx2old.row(node) - Dx1Mx2.row(node))/delta_time - DeltaDx1DeltaMx2.row(node)/delta_time
+            gap_time_derivative = DDeltax1MDeltax2.row(node)/delta_time + DeltaDx1DeltaMx2.row(node)/delta_time
             #auxTangentSlip = delta_time * gap_time_derivative.dot(TangentSlave.row(node))
             auxTangentSlip = delta_time * (gap_time_derivative - gap_time_derivative.dot(NormalSlave.row(node)) * NormalSlave.row(node))
             for idim in range(dim):
-                TangentSlip[node, idim] = - auxTangentSlip[idim]
-
-        Dw1Mw2Gap = DefineVector('Dw1Mw2Gap', nnodes)
-        Dw1Mw2Slip = DefineMatrix('Dw1Mw2Slip', nnodes, dim)
-        for node in range(nnodes):
-            Dw1Mw2Gap[node] = (Dw1Mw2.row(node)).dot(NormalSlave.row(node))
-            #auxDw1Mw2Slip = (DeltaDw1DeltaMw2.row(node)).dot(TangentSlave.row(node))
-            #auxDw1Mw2Slip = DeltaDw1DeltaMw2.row(node) - (DeltaDw1DeltaMw2.row(node)).dot(NormalSlave.row(node)) * NormalSlave.row(node)
-            auxDw1Mw2Slip = Dw1Mw2.row(node) - Dw1Mw2Gap[node] * NormalSlave.row(node)
-            for idim in range(dim):
-                #Dw1Mw2Slip[node, idim] = - auxDw1Mw2Slip * TangentSlave[node, idim]
-                Dw1Mw2Slip[node, idim] = auxDw1Mw2Slip[idim]
+                TangentSlip[node, idim] = auxTangentSlip[idim]
 
         # Define dofs & test function vector
         dofs = Matrix( zeros(number_dof, 1) )
@@ -211,17 +200,17 @@ for normalvar in range(2):
                     rv_galerkin -= ScaleFactor**2.0 / PenaltyParameter[node] * LMNormal[node] * wLMNormal[node]
                     rv_galerkin -= ScaleFactor**2.0 / (PenaltyParameter[node] * TangentFactor) * (LMTangent.row(node)).dot(wLMTangent.row(node))
                 else:
-                    augmented_normal_lm = (ScaleFactor * LMNormal[node] + PenaltyParameter[node] * NormalGap[node])
-                    rv_galerkin += DynamicFactor[node] * augmented_normal_lm * Dw1Mw2Gap[node]
                     rv_galerkin += ScaleFactor * NormalGap[node] * wLMNormal[node]
+                    augmented_normal_lm = ScaleFactor * LMNormal[node] + PenaltyParameter[node] * NormalGap[node]
 
                     if (slip == 1): # Slip
-                        rv_galerkin -= DynamicFactor[node] * mu[node] * augmented_normal_lm * (TangentSlave.row(node)).dot(Dw1Mw2Slip.row(node))
+                        augmented_lm = (ScaleFactor * LM.row(node) + PenaltyParameter[node] * NormalGap[node] * NormalSlave.row(node))
+                        rv_galerkin += DynamicFactor[node] * (augmented_lm).dot(Dw1Mw2.row(node))
                         modified_augmented_tangent_lm = ScaleFactor * LMTangent.row(node) + mu[node] * augmented_normal_lm * TangentSlave.row(node)
                         rv_galerkin -= (ScaleFactor / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm.dot(wLMTangent.row(node))
                     else: # Stick
-                        augmented_tangent_lm = ScaleFactor * LMTangent.row(node) + TangentFactor * PenaltyParameter[node] * TangentSlip.row(node)
-                        rv_galerkin += DynamicFactor[node] * augmented_tangent_lm.dot(Dw1Mw2Slip.row(node))
+                        augmented_lm = (ScaleFactor * LM.row(node) + PenaltyParameter[node] * NormalGap[node] * NormalSlave.row(node) + TangentFactor * PenaltyParameter[node] * TangentSlip.row(node))
+                        rv_galerkin += DynamicFactor[node] * (augmented_lm).dot(Dw1Mw2.row(node))
                         rv_galerkin += ScaleFactor * (TangentSlip.row(node)).dot(wLMTangent.row(node))
 
                 if(do_simplifications):
