@@ -413,41 +413,19 @@ public:
     /**
      * @brief It computes the mean of the normal in the condition in all the nodes
      * @param rModelPart The model part to compute
-     * @param IsFrictional If the tangents must be computed too
      */
     
-    static inline void ComputeNodesMeanNormalModelPart(
-        ModelPart& rModelPart,
-        const bool IsFrictional = false
-        )
-    {
-        // The zero tolerance
-        const double zero_tolerance = std::numeric_limits<double>::epsilon();
-
-        // An auxiliar array of zeros
-        const array_1d<double, 3> zero_array(3, 0.0);
-
-        // The conditions of the model part
-        ConditionsArrayType& conditions_array = rModelPart.Conditions();
-        const SizeType dimension = (conditions_array.begin()->GetGeometry()).WorkingSpaceDimension();
-
-        // The nodes of the model part
+    static inline void ComputeNodesMeanNormalModelPart(ModelPart& rModelPart) {
         NodesArrayType& nodes_array = rModelPart.Nodes();
         const int num_nodes = static_cast<int>(nodes_array.size()); 
         
         #pragma omp parallel for
-        for(int i = 0; i < num_nodes; ++i) {
-            auto it_node = nodes_array.begin() + i;
-            noalias(it_node->FastGetSolutionStepValue(NORMAL)) = zero_array;
-            if (IsFrictional) {
-                it_node->SetValue(TANGENT_XI, zero_array);
-                if (dimension == 3) {
-                    it_node->SetValue(TANGENT_ETA, zero_array);
-                }
-            }
-        }
+        for(int i = 0; i < num_nodes; ++i) 
+            noalias((nodes_array.begin() + i)->FastGetSolutionStepValue(NORMAL)) = ZeroVector(3);
         
         // Sum all the nodes normals
+        ConditionsArrayType& conditions_array = rModelPart.Conditions();
+        
         #pragma omp parallel for
         for(int i = 0; i < static_cast<int>(conditions_array.size()); ++i) {
             auto it_cond = conditions_array.begin() + i;
@@ -456,35 +434,19 @@ public:
             // Aux coordinates
             CoordinatesArrayType aux_coords;
             aux_coords = this_geometry.PointLocalCoordinates(aux_coords, this_geometry.Center());
-
-            array_1d<double, 3> normal, tangent_xi, tangent_eta;
-            normal = this_geometry.UnitNormalWithTangents(aux_coords, normal, tangent_xi, tangent_eta);
-            it_cond->SetValue(NORMAL, normal);
             
-            const SizeType number_nodes = this_geometry.PointsNumber();
+            it_cond->SetValue(NORMAL, this_geometry.UnitNormal(aux_coords));
             
-            for (IndexType i = 0; i < number_nodes; ++i) {
+            const unsigned int number_nodes = this_geometry.PointsNumber();
+            
+            for (unsigned int i = 0; i < number_nodes; ++i) {
                 auto& this_node = this_geometry[i];
                 aux_coords = this_geometry.PointLocalCoordinates(aux_coords, this_node.Coordinates());
-                normal = this_geometry.UnitNormalWithTangents(aux_coords, normal, tangent_xi, tangent_eta);
+                const array_1d<double, 3> normal = this_geometry.UnitNormal(aux_coords);
                 auto& aux_normal = this_node.FastGetSolutionStepValue(NORMAL);
-                for (IndexType index = 0; index < 3; ++index) {
+                for (unsigned int index = 0; index < 3; ++index) {
                     #pragma omp atomic
                     aux_normal[index] += normal[index];
-                }
-                if (IsFrictional) {
-                    auto& aux_tangent_xi = this_node.GetValue(TANGENT_XI);
-                    for (IndexType index = 0; index < 3; ++index) {
-                        #pragma omp atomic
-                        aux_tangent_xi[index] += tangent_xi[index];
-                    }
-                    if (dimension == 3) {
-                        auto& aux_tangent_eta = this_node.GetValue(TANGENT_ETA);
-                        for (IndexType index = 0; index < 3; ++index) {
-                            #pragma omp atomic
-                            aux_tangent_eta[index] += tangent_eta[index];
-                        }
-                    }
                 }
             }
         }
@@ -495,20 +457,8 @@ public:
 
             array_1d<double, 3>& normal = it_node->FastGetSolutionStepValue(NORMAL);
             const double norm_normal = norm_2(normal);
-            if (norm_normal > zero_tolerance) normal /= norm_normal;
-            else KRATOS_ERROR << "ERROR:: ZERO NORM NORMAL IN NODE: " << it_node->Id() << std::endl;
-            if (IsFrictional) {
-                array_1d<double, 3>& tangent_xi = it_node->GetValue(TANGENT_XI);
-                const double norm_tangent_xi = norm_2(tangent_xi);
-                if (norm_tangent_xi > zero_tolerance) tangent_xi /= norm_tangent_xi;
-                else KRATOS_ERROR << "ERROR:: ZERO NORM TANGENT_XI IN NODE: " << it_node->Id() << std::endl;
-                if (dimension == 3) {
-                    array_1d<double, 3>& tangent_eta = it_node->GetValue(TANGENT_ETA);
-                    const double norm_tangent_eta = norm_2(tangent_eta);
-                    if (norm_tangent_eta > zero_tolerance) tangent_eta /= norm_tangent_eta;
-                    else KRATOS_ERROR << "ERROR:: ZERO NORM TANGENT_ETA IN NODE: " << it_node->Id() << std::endl;
-                }
-            }
+            if (norm_normal > std::numeric_limits<double>::epsilon()) normal /= norm_normal;
+            else KRATOS_ERROR << "WARNING:: ZERO NORM NORMAL IN NODE: " << it_node->Id() << std::endl;
         }
     }
     
@@ -571,15 +521,13 @@ public:
                     const array_1d<double, 3> tangent = tangent_lm/norm_2(tangent_lm);
                     for (std::size_t i_dof = 0; i_dof < TDim; ++i_dof)
                         tangent_matrix(i_node, i_dof) = tangent[i_dof];
-                } else { // We consider the tangent direction as auxiliar
-                    const array_1d<double, 3>& tangent_xi = ThisNodes[i_node].GetValue(TANGENT_XI);
+                } else {
                     for (std::size_t i_dof = 0; i_dof < TDim; ++i_dof)
-                        tangent_matrix(i_node, i_dof) = tangent_xi[i_dof];
+                        tangent_matrix(i_node, i_dof) = 0.0;
                 }
-            } else { // We consider the tangent direction as auxiliar
-                const array_1d<double, 3>& tangent_xi = ThisNodes[i_node].GetValue(TANGENT_XI);
+            } else { // In case of zero LM
                 for (std::size_t i_dof = 0; i_dof < TDim; ++i_dof)
-                    tangent_matrix(i_node, i_dof) = tangent_xi[i_dof];
+                    tangent_matrix(i_node, i_dof) = 0.0;
             }
         }
 

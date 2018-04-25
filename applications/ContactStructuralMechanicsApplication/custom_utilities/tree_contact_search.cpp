@@ -310,8 +310,7 @@ void TreeContactSearch<TDim, TNumNodes>::UpdateMortarConditions()
     ModelPart& rcontact_model_part = mrMainModelPart.GetSubModelPart("Contact");
 
     // Calculate the mean of the normal in all the nodes
-    const bool frictional_problem = mrMainModelPart.IsDefined(SLIP) ? mrMainModelPart.Is(SLIP) : false;
-    MortarUtilities::ComputeNodesMeanNormalModelPart(rcontact_model_part, frictional_problem);
+    MortarUtilities::ComputeNodesMeanNormalModelPart(rcontact_model_part);
 
     // We get the computing model part
     IndexType condition_id = GetMaximumConditionsIds();
@@ -947,8 +946,7 @@ inline void TreeContactSearch<TDim, TNumNodes>::CheckPairing(
     }
 
     // Calculate the mean of the normal in all the nodes
-    const bool frictional_problem = mrMainModelPart.IsDefined(SLIP) ? mrMainModelPart.Is(SLIP) : false;
-    MortarUtilities::ComputeNodesMeanNormalModelPart(rcontact_model_part, frictional_problem);
+    MortarUtilities::ComputeNodesMeanNormalModelPart(rcontact_model_part);
 
     // Iterate in the conditions and create the new ones
     CreateAuxiliarConditions(rcontact_model_part, rComputingModelPart, rConditionId);

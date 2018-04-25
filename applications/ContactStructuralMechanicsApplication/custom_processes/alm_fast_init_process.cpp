@@ -28,7 +28,6 @@ void ALMFastInit::Execute()
     
     // We initialize the penalty parameter
     const double epsilon = mrThisModelPart.GetProcessInfo()[INITIAL_PENALTY];
-    const std::size_t dimension = mrThisModelPart.GetProcessInfo()[DOMAIN_SIZE];
     
     // Auxiliar zero array
     const array_1d<double, 3> zero_array(3, 0.0);
@@ -51,13 +50,8 @@ void ALMFastInit::Execute()
         // Auxiliar values
         it_node->SetValue(DYNAMIC_FACTOR, 1.0);
         it_node->SetValue(AUGMENTED_NORMAL_CONTACT_PRESSURE, 0.0);
-        if (is_frictional) {
+        if (is_frictional)
             it_node->SetValue(AUGMENTED_TANGENT_CONTACT_PRESSURE, zero_array);
-            // The auxiliar tangent vectors
-            it_node->SetValue(TANGENT_XI, zero_array);
-            if (dimension == 3)
-                it_node->SetValue(TANGENT_ETA, zero_array);
-        }
     }
     
     // Now we iterate over the conditions
@@ -65,7 +59,7 @@ void ALMFastInit::Execute()
     
     #pragma omp parallel for
     for(int i = 0; i < static_cast<int>(conditions_array.size()); ++i)
-        (conditions_array.begin() + i)->SetValue(NORMAL, zero_array); // The normal and tangents vectors
+        (conditions_array.begin() + i)->SetValue(NORMAL, ZeroVector(3)); // The normal and tangents vectors
 
     if (is_frictional) {
         // We initialize the frictional coefficient. The evolution of the frictional coefficient it is supposed to be controled by a law

@@ -142,10 +142,8 @@ public:
 
         // We update the normals if necessary
         const auto normal_variation = process_info.Has(CONSIDER_NORMAL_VARIATION) ? static_cast<NormalDerivativesComputation>(process_info.GetValue(CONSIDER_NORMAL_VARIATION)) : NO_DERIVATIVES_COMPUTATION;
-        if (normal_variation != NO_DERIVATIVES_COMPUTATION) {
-            const bool frictional_problem = rModelPart.IsDefined(SLIP) ? rModelPart.Is(SLIP) : false;
-            MortarUtilities::ComputeNodesMeanNormalModelPart( r_contact_model_part, frictional_problem ); // Update normal of the conditions
-        }
+        if (normal_variation != NO_DERIVATIVES_COMPUTATION)
+            MortarUtilities::ComputeNodesMeanNormalModelPart( r_contact_model_part); // Update normal of the conditions
         
         const bool adapt_penalty = process_info.Has(ADAPT_PENALTY) ? process_info.GetValue(ADAPT_PENALTY) : false;
         const bool dynamic_case = rModelPart.NodesBegin()->SolutionStepsDataHas(VELOCITY_X);
@@ -294,8 +292,7 @@ public:
             ModelPart& r_contact_model_part = rModelPart.GetSubModelPart("Contact");
 
             // Update normal of the conditions
-            const bool frictional_problem = rModelPart.IsDefined(SLIP) ? rModelPart.Is(SLIP) : false;
-            MortarUtilities::ComputeNodesMeanNormalModelPart( r_contact_model_part, frictional_problem );
+            MortarUtilities::ComputeNodesMeanNormalModelPart( r_contact_model_part );
         }
         
         // GiD IO for debugging
