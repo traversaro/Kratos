@@ -544,7 +544,7 @@ def Derivatives_CollectingFactors(A,name, mode, initial_tabs = 1, max_index=30, 
     for factor in A_factors:
         varname = factor[0]
         value = factor[1]
-        Acoefficient_str += "    const double " + str(varname.__str__()) + " = " + value 
+        Acoefficient_str += initial_tabs * "    " + "const double " + str(varname.__str__()) + " = " + value
         #print(output_str)
         
     return [A, Acoefficient_str]
@@ -561,7 +561,7 @@ def OutputMatrix_CollectingFactors(A,name, mode, initial_tabs = 1, max_index=30,
         varname = factor[0]
         value = factor[1]
         output_value = OutputSymbolicVariable(value, mode, varname, aux_dict)
-        Acoefficient_str += "    const double " + str(varname.__str__()) + " = " + output_value 
+        Acoefficient_str += initial_tabs * "    " + "const double " + str(varname.__str__()) + " = " + output_value
         #print(output_str)
     A_out = Acoefficient_str+"\n"+OutputMatrix(A,name,mode,initial_tabs,max_index, aux_dict)    
     return A_out
@@ -578,7 +578,7 @@ def OutputVector_CollectingFactors(A,name, mode, initial_tabs = 1, max_index=30,
         varname = factor[0]
         value = factor[1]
         output_value = OutputSymbolicVariable(value, mode, varname, aux_dict)
-        Acoefficient_str += "    const double " + str(varname.__str__()) + " = " + output_value 
+        Acoefficient_str += initial_tabs * "    " + "const double " + str(varname.__str__()) + " = " + output_value
         #print(output_str)
     A_out = Acoefficient_str+"\n"+OutputVector(A,name,mode,initial_tabs,max_index, aux_dict)    
     return A_out
@@ -595,7 +595,7 @@ def OutputMatrix_CollectingFactorsNonZero(A,name, mode, initial_tabs = 1, max_in
         varname = factor[0]
         value = factor[1]
         output_value = OutputSymbolicVariable(value, mode, varname, aux_dict)
-        Acoefficient_str += "    const double " + str(varname.__str__()) + " = " + output_value 
+        Acoefficient_str += initial_tabs * "    " + "const double " + str(varname.__str__()) + " = " + output_value
         #print(output_str)
     A_out = Acoefficient_str+"\n"+OutputMatrixNonZero(A,name,mode,initial_tabs,max_index, aux_dict)    
     return A_out
@@ -612,7 +612,7 @@ def OutputVector_CollectingFactorsNonZero(A,name, mode, initial_tabs = 1, max_in
         varname = factor[0]
         value = factor[1]
         output_value = OutputSymbolicVariable(value, mode, varname, aux_dict)
-        Acoefficient_str += "    const double " + str(varname.__str__()) + " = " + output_value 
+        Acoefficient_str += initial_tabs * "    " + "const double " + str(varname.__str__()) + " = " + output_value
         #print(output_str)
     A_out = Acoefficient_str+"\n"+OutputVectorNonZero(A,name,mode,initial_tabs,max_index, aux_dict)    
     return A_out
