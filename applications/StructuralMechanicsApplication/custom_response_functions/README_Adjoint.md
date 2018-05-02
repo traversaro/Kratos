@@ -37,7 +37,10 @@ This feature of the Structural Mechanics Applicattion provides the framework to 
 *Please note:* The adjoint elements and conditions are derived from elements/conditions of the Structural Mechanics Application and can not be seen independently from them. Rather they have to be traced as additions of their parents in order to use the parents in the context of adjoint sensitivity analysis. So basic tasks like the computation of the stiffness matrix are not overwritten. The main task of the adjoint elements/conditions is the derive different quantities with respect to the design variable or state (e.g. the right hand side or post-processing results like stresses).
 
 ### Usage: 
-In order to perform a sensitivity analysis for one response function with the adjoint approach, the solutuions of two linear static problems are necessary: The primal and the adjoint problem. The primal problem can be defind by the regular input files which are needed for an usual linear static analysis. As only difference the output process of the HDF5Application has to be added in the list_other_processes in the project parameters:
+In order to perform a sensitivity analysis for one response function with the adjoint approach, the solutuions of two linear static problems are necessary: The primal and the adjoint problem. 
+
+#### Primal Problem
+The primal problem can be defind by the regular input files which are needed for an usual linear static analysis. As only difference the output process of the HDF5Application has to be added in the ```list_other_processes``` in the project parameters:
 
 ```python
     "list_other_processes" :[{
@@ -59,6 +62,8 @@ In order to perform a sensitivity analysis for one response function with the ad
         }
     } 
 ```
+
+#### Adjoint Problem
 In order to define the adjoint problem an additional *.json-file for the adjoint project parameters is necessary. This input file is in principle very similar to the respective file of the primal analysis. In comparsion to a regular file for a linear static analysis three points have to be modified:
 - ```solver_settings``` by using the ```adjoint_structural_solver``` as ```solver_type``` and by the definion of the ```response_function_settings```
 - 
