@@ -3,7 +3,7 @@
 
 ### General remarks:
 
-This feature of the Structural Mechanics Applicattion provides the framework to compute sensitivities of structural responses (e.g. displacements, strain energy or stresses) with respect to different types of design variables (e.g. nodal coordinates, material or cross-sectional properties) with the adjoint approach. Therefore for each response function an adjoint problem has to be solved. The sensitivies are than computed in a post-processing step. The implemented sensitivity analysis uses a so called semi-analytic approach which means that the derivatives at element level are computed by finite differences.
+This feature provides the framework to compute sensitivities of structural responses (e.g. displacements, strain energy or stresses) with respect to different types of design variables (e.g. nodal coordinates, material or cross-sectional properties or load intensity) with the adjoint approach. Therefore for each response function an adjoint problem has to be solved. The sensitivies are than computed in a post-processing step. The implemented sensitivity analysis uses a so called semi-analytic approach which means that the derivatives at element level are computed by finite differences.
 
 *Please note:* 
 - This feature currently only works for linear problems
@@ -34,13 +34,13 @@ This feature of the Structural Mechanics Applicattion provides the framework to 
         * Thin triangular shell (derived from ShellThinElement3D3N)
 
 *Please note:* 
-The adjoint elements and conditions are derived from elements/conditions of the Structural Mechanics Application and can not be seen independently from them. Rather they have to be traced as additions of their parents in the context of adjoint sensitivity analysis. So basic tasks like the computation of the stiffness matrix are not overwritten. The main task of the adjoint elements/conditions is the derive different quantities with respect to the design variable or state (e.g. the right hand side or post-processing results like stresses).
+The adjoint elements and conditions are derived from elements/conditions of the Structural Mechanics Application and can not be seen independently from them. Rather they have to be traced as additions of their parents in the context of adjoint sensitivity analysis. So basic tasks like the computation of the stiffness matrix are not overwritten. The main task of the adjoint elements/conditions is to derive different quantities with respect to the design variable or state (e.g. the right hand side or post-processing results like stresses).
 
 ### Usage: 
 In order to perform a sensitivity analysis for one response function, the solutions of two linear static problems are necessary: The primal and the adjoint problem. 
 
 *Please note:* 
-For the solution of the two problems different kind of variables are used in order to store them. For the primal problem the usual variables ```DISPLACEMENT``` and ```ROTATION``` and for the adjoint problem ```ADJOINT_DISPLACEMENT``` and ```ADJOINT_ROTATION```are used.
+For the solution of the two problems different kind of variables are used in order to store the results. For the primal problem the usual variables ```DISPLACEMENT``` and ```ROTATION``` and for the adjoint problem ```ADJOINT_DISPLACEMENT``` and ```ADJOINT_ROTATION``` are used.
 
 #### Definition of the Primal Problem
 The primal problem can be defind by the regular input files which are needed for an usual linear static analysis. As only difference the output process of the HDF5Application has to be added to the ```list_other_processes``` in the project parameters:
@@ -68,9 +68,9 @@ The primal problem can be defind by the regular input files which are needed for
 
 #### Definition of the Adjoint Problem
 In order to define the adjoint problem an additional *.json-file for the adjoint project parameters is necessary. This input file is in principle very similar to the respective file of the primal analysis. In comparsion to a regular file for a linear static analysis three points have to be modified:
-- ```solver_settings``` by using the ```adjoint_structural_solver``` as ```solver_type``` and by the definion of the ```response_function_settings```
+- ```solver_settings``` by using the ```adjoint_structural_solver``` as ```solver_type``` and by the definition of the ```response_function_settings```
 - The input process of the HDF5Application has to be added to the ```list_other_processes``` in order to read the primal solution
-- When defining *Dirichlet*-conditions in the ```constraints_process_list``` the ```variable_name``` has to be modified to ```ADJOINT_DISPLACEMENT``` respective ```ADJOINT_ROTATION```
+- When defining *Dirichlet* conditions in the ```constraints_process_list``` the ```variable_name``` has to be modified to ```ADJOINT_DISPLACEMENT``` respective ```ADJOINT_ROTATION```
 
 For example the ```solver_settings``` can be look like this (Hints for the ```response_function_settings``` are given below):
 
@@ -157,22 +157,22 @@ Independet from the chosen response function the following definitions are alway
 - ```sensitivity_model_part_name```: Add here the name of the model part for which components sensitivities has to be computed (e.g. if the chosen design parameter is ```THICKNESS``` than for each element in this model part the sensitivity w.r.t. this variable is calculated).
 - ```nodal_sensitivity_variables```: Currently only ```SHAPE_SENSITIVITY``` is availible. Doing this the sensitivities w.r.t. to the x-, y- and z-coordinate of all nodes in the ```sensitivity_model_part_name``` are computed.
 - ```element_sensitivity_variables```: Here are sensitivities with respect to the properties of the elements are computed. For that the respective name of the Kratos-Variable has to be given (e.g. ```THICKNESS```, ```I22``` or ```YOUNG_MODULUS```)
-- ```condition_sensitivity_variables```: Here are sensitivities with respect to the properties of the elements are computed. Currenty there is only ```POINT_LOAD``` availible.
+- ```condition_sensitivity_variables```: Here are sensitivities with respect to the properties of the conditions are computed. Currenty there is only ```POINT_LOAD``` availible.
 
 *Please note:*
-In order to use a element or condition design variable one has to ensure that a corresponding Kratos-Varibale is defined (e.g. for the design variable ```THICKNESS``` a corresponding varibale called ```THICKNESS_SENSITIVITY``` is necessary). This additional variable is necessary to store the result of the sensitivity analysis.
+In order to use an element or condition design variable one has to ensure that a corresponding Kratos-Variable for the sensitivity is defined (e.g. for the design variable ```THICKNESS``` a corresponding variable called ```THICKNESS_SENSITIVITY``` is necessary). This additional variable is necessary to store the results of the sensitivity analysis.
 
-There are currently three different types of response functions availible which can be chosen as ```response_type```. For each of them are specific settings neccessary:
+There are currently three different types of response functions availible which can be chosen as ```response_type```. For each of them specific settings are neccessary:
 - ```adjoint_nodal_displacement```: The response is the displacement or rotation of a single node. Necessary additional settings are:
     * ```traced_node```: ID of the traced node
     * ```traced_dof```: Define the traced DOF (e.g. ```DISPLACEMENT_Z``` or ```ROTATION_X```)
 
-- ```adjoint_strain_energy```: The response the linear strain energy. No additional settings are necessary.
+- ```adjoint_strain_energy```: The response is the linear strain energy. No additional settings are necessary.
 
 - ```adjoint_local_stress```: The response is the stress or stress-resultant of a single element. Necessary additional settings are:
     * ```traced_element```: ID of the element which should be traced
-    * ```stress_type```: Stress type which should be traced (e.g. MY or MXX)
-    * ```stress_treatment```: There are three possibilities: ```node``` (takes the response value at the position of a definded node of the element), ```GP``` (takes the response value at a defined Gauss-Point of the element) and ```mean``` (The response is the mean value of all Gauss-Point results of the traced stress type)
+    * ```stress_type```: Stress type which should be traced (e.g. FX, MY, FXX or MXX)
+    * ```stress_treatment```: There are three possibilities: ```node``` (Takes the response value at the position of a defined node of the element. Only availible for beam element.), ```GP``` (Takes the response value at a defined Gauss-Point of the element.) and ```mean``` (The response is the mean value of all Gauss-Point results of the traced stress type.)
     * ```stress_location```: Only necessary if ```node``` or ```GP``` is chosen as ```stress_treatment```. Define here the local ID of the position where the stress has to be traced (e.g. if the stress resultant of a beam element should be traced at one of his two nodes ```stress_location``` has to be 1 or 2)
 
 Examples:
@@ -222,6 +222,10 @@ Examples:
 ### Post-Processing
 
 The results of the sensitivity analysis are accessible in the post-processing as ```nodal_results``` (currently only ```SHAPE_SENSITIVITY``` and ```POINT_LOAD_SENSITIVITY```) and ```gauss_point_results``` (sensitivities for elemental design variables like ```THICKNESS_SENSITIVITY``` or ```I22_SENSITIVITY```).
+```python
+    "nodal_results"       : ["DISPLACMENT","ADJOINT_DISPLACEMENT", "SHAPE_SENSITIVITY", "POINT_LOAD_SENSITIVITY"],
+    "gauss_point_results" : ["THICKNESS_SENSITIVITY"]
+```    
 
 
 
