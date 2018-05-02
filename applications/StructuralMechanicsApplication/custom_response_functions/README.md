@@ -82,7 +82,6 @@ For example the ```solver_settings``` can be look like this (Hints for the ```re
             },
         "response_function_settings" : {
                 "response_type"     : "adjoint_nodal_displacement",
-                "use_kratos"        : true,
                 "gradient_mode"     : "semi_analytic",
                 "sensitivity_model_part_name" : "Parts_Beam",
                 "nodal_sensitivity_variables"  : ["SHAPE_SENSITIVITY"],
@@ -140,7 +139,6 @@ A possible python code can look like this:
     # Solve the primal problem     
     with open("concrete_building_parameters.json",'r') as parameter_file:
         ProjectParametersPrimal = Parameters( parameter_file.read())
-    parameter_file.close()
     primal_analysis = structural_mechanics_analysis.StructuralMechanicsAnalysis(ProjectParametersPrimal)
     primal_analysis.Run()
     # Solve adjoint problem and compute sensitivities
@@ -150,22 +148,24 @@ A possible python code can look like this:
     adjoint_analysis.Run()
 ```
 
-#### Possible ```response_function_settings```
+#### Possible ```response_function_settings```:
 
 Independet from the chosen response function the following definitions are always necessary:
 
-- ```use_kratos```: TODO: ask Armin why this is needed
 - ```gradient_mode```: Currently there is only ```semi_analytic``` availible.
 - ```step_size``` is the perturbation measure for finite difference computations within the semi-analytic apporach. 
 - ```sensitivity_model_part_name```: Add here the name of the model part for which components sensitivities has to be computed (e.g. if the chosen design parameter is ```THICKNESS``` than for each element in this model part the sensitivity w.r.t. this variable is calculated).
 - ```nodal_sensitivity_variables```: Currently only ```SHAPE_SENSITIVITY``` is availible. Doing this the sensitivities w.r.t. to the x-, y- and z-coordinate of all nodes in the ```sensitivity_model_part_name``` are computed.
-- ```element_sensitivity_variables```: Here are sensitivities with respect to the properties of the elements are computed. For that the respective name of the Kratosvariable has to be given (e.g. ```THICKNESS```, ```I22``` or ```YOUNG_MODULUS```)
+- ```element_sensitivity_variables```: Here are sensitivities with respect to the properties of the elements are computed. For that the respective name of the Kratos-Variable has to be given (e.g. ```THICKNESS```, ```I22``` or ```YOUNG_MODULUS```)
 - ```condition_sensitivity_variables```: Here are sensitivities with respect to the properties of the elements are computed. Currenty there is only ```POINT_LOAD``` availible.
+
+*Please note:*
+In order to use a element or condition design variable one has to ensure that a corresponding Kratos-Varibale is defined (e.g. for the design variable ```THICKNESS``` a corresponding varibale called ```THICKNESS_SENSITIVITY``` is necessary). This additional variable is necessary to store the result of the sensitivity analysis.
 
 There are currently three different types of response functions availible which can be chosen as ```response_type```. For each of them are specific settings neccessary:
 - ```adjoint_nodal_displacement```: The response is the displacement or rotation of a single node. Necessary additional settings are:
     * ```traced_node```: ID of the traced node
-    * ```traced_dof```: Give the traced DOF (e.g. ```DISPLACEMENT_Z``` or ```ROTATION_X```)
+    * ```traced_dof```: Define the traced DOF (e.g. ```DISPLACEMENT_Z``` or ```ROTATION_X```)
 
 - ```adjoint_strain_energy```: The response the linear strain energy. No additional settings are necessary.
 
@@ -179,7 +179,6 @@ Examples:
 ```python
     "response_function_settings" : {
             "response_type"     : "adjoint_nodal_displacement",
-            "use_kratos"        : true,
             "gradient_mode"     : "semi_analytic",
             "sensitivity_model_part_name" : "Parts_Beam",
             "nodal_sensitivity_variables"  : ["SHAPE_SENSITIVITY"],
@@ -194,7 +193,6 @@ Examples:
 ```python
     "response_function_settings" : {
             "response_type"     : "adjoint_strain_energy",
-            "use_kratos"        : true,
             "gradient_mode"     : "semi_analytic",
             "sensitivity_model_part_name" : "Parts_Beam",
             "nodal_sensitivity_variables"  : ["SHAPE_SENSITIVITY"],
@@ -207,7 +205,6 @@ Examples:
 ```python
     "response_function_settings" : {
             "response_type"     : "adjoint_local_stress",
-            "use_kratos"        : true,
             "gradient_mode"     : "semi_analytic",
             "sensitivity_model_part_name" : "Parts_Beam",
             "nodal_sensitivity_variables"  : ["SHAPE_SENSITIVITY"],
@@ -220,7 +217,14 @@ Examples:
             "stress_location"   : 1
         }
     }
-```     
+```
+
+### Post-Processing
+
+The results of the sensitivity analysis are accessible in the post-processing as ```nodal_results``` (currently only ```SHAPE_SENSITIVITY``` and ```POINT_LOAD_SENSITIVITY```) and ```gauss_point_results``` (sensitivities for elemental design variables like ```THICKNESS_SENSITIVITY``` or ```I22_SENSITIVITY```).
+
+
+
 
 
 
