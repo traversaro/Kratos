@@ -3,6 +3,10 @@
 
 ### Theory:
 
+The local sensitivity of a response $g$ with respect to a design variable $s_{i}$ can be computed by 
+
+$$ \frac{dg}{ds_{i}} = \frac{\partial g}{\partial s_{i}} $$
+
 
   
   
