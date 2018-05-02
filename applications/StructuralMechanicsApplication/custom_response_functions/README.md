@@ -223,7 +223,7 @@ Examples:
 
 The results of the sensitivity analysis are accessible in the post-processing as ```nodal_results``` (currently only ```SHAPE_SENSITIVITY``` and ```POINT_LOAD_SENSITIVITY```) and ```gauss_point_results``` (sensitivities for elemental design variables like ```THICKNESS_SENSITIVITY``` or ```I22_SENSITIVITY```).
 ```python
-    "nodal_results"       : ["DISPLACMENT","ADJOINT_DISPLACEMENT", "SHAPE_SENSITIVITY", "POINT_LOAD_SENSITIVITY"],
+    "nodal_results"       : ["DISPLACEMENT","ADJOINT_DISPLACEMENT", "SHAPE_SENSITIVITY", "POINT_LOAD_SENSITIVITY"],
     "gauss_point_results" : ["THICKNESS_SENSITIVITY"]
 ```    
 
