@@ -36,6 +36,7 @@
 #include "custom_strategies/custom_schemes/residual_based_relaxation_scheme.hpp"
 #include "custom_strategies/custom_schemes/explicit_central_differences_scheme.hpp"
 #include "custom_strategies/custom_schemes/eigensolver_dynamic_scheme.hpp"
+#include "custom_response_functions/adjoint_schemes/adjoint_structural_scheme.h"
 
 // Builder and solvers
 #include "solving_strategies/builder_and_solvers/residualbased_block_builder_and_solver.h"
@@ -87,6 +88,7 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
     typedef ResidualBasedRelaxationScheme< SparseSpaceType, LocalSpaceType >  ResidualBasedRelaxationSchemeType;
     typedef EigensolverDynamicScheme< SparseSpaceType, LocalSpaceType > EigensolverDynamicSchemeType;
     typedef ExplicitCentralDifferencesScheme< SparseSpaceType, LocalSpaceType >  ExplicitCentralDifferencesSchemeType;
+    typedef AdjointStructuralScheme< SparseSpaceType, LocalSpaceType >  AdjointStructuralSchemeType;
     
 
     // Custom convergence criterion types
@@ -155,6 +157,10 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
     // Explicit Central Differences Scheme Type
     class_< ExplicitCentralDifferencesSchemeType,typename ExplicitCentralDifferencesSchemeType::Pointer, BaseSchemeType >(m,"ExplicitCentralDifferencesScheme")
     .def(init< const double, const double, const double>() );
+
+    // Adjoint Scheme Type
+    class_<AdjointStructuralSchemeType, typename AdjointStructuralSchemeType::Pointer, BaseSchemeType>(m,"AdjointStructuralScheme")
+    .def(init<Parameters&, AdjointStructuralResponseFunction::Pointer>());
 
     //********************************************************************
     //*******************CONVERGENCE CRITERIA CLASSES*********************

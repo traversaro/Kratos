@@ -38,6 +38,10 @@
 #include "custom_elements/cr_beam_element_2D2N.hpp"
 #include "custom_elements/cr_beam_element_linear_2D2N.hpp"
 
+/* Adding the adjoint elements */
+#include "custom_response_functions/adjoint_elements/shell_thin_adjoint_element_3D3N.hpp"
+#include "custom_response_functions/adjoint_elements/cr_beam_adjoint_element_3D2N.hpp"
+
 /* Adding shells and membranes elements */
 #include "custom_elements/isotropic_shell_element.hpp"
 #include "custom_elements/membrane_element.hpp"
@@ -72,6 +76,10 @@
 #include "custom_conditions/axisym_line_load_condition_2d.h"
 #include "custom_conditions/surface_load_condition_3d.h"
 #include "custom_conditions/point_moment_condition_3d.h"
+
+/* Adding the adjoint conditions */
+#include "custom_response_functions/adjoint_conditions/point_load_adjoint_condition.h"
+#include "custom_response_functions/adjoint_conditions/surface_load_adjoint_condition_3d.h"
 
 /* CONSTITUTIVE LAWS */
 #include "custom_constitutive/truss_constitutive_law.h"
@@ -356,6 +364,10 @@ private:
     // Adding the spring damper element
     const SpringDamperElement3D2N mSpringDamperElement3D2N;
 
+    // Adding adjoint elements
+    const ShellThinAdjointElement3D3N mShellThinAdjointElement3D3N;
+    const CrBeamAdjointElement3D2N mCrLinearBeamAdjointElement3D2N;
+
     /* CONDITIONS*/
     // Point load
     const PointLoadCondition mPointLoadCondition2D1N;
@@ -381,6 +393,13 @@ private:
     
     // Point moment
     const PointMomentCondition3D mPointMomentCondition3D1N;
+
+    // Adjoint Conditions
+    const PointLoadAdjointCondition mPointLoadAdjointCondition2D1N;
+    const PointLoadAdjointCondition mPointLoadAdjointCondition3D1N;
+    const SurfaceLoadAdjointCondition3D mSurfaceLoadAdjointCondition3D3N;
+    const SurfaceLoadAdjointCondition3D mSurfaceLoadAdjointCondition3D4N;
+
     
     /* CONSTITUTIVE LAWS */
     // Linear elastics laws

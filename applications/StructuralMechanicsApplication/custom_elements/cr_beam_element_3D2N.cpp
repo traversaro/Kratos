@@ -1168,7 +1168,7 @@ Vector CrBeamElement3D2N::UpdateIncrementDeformation() {
 
   KRATOS_TRY
   Vector actual_deformation = ZeroVector(msElementSize);
-  this->GetValuesVector(actual_deformation, 0);
+  CrBeamElement3D2N::GetValuesVector(actual_deformation, 0); 
 
   Vector increment_deformation =
       actual_deformation - this->mTotalNodalDeformation;

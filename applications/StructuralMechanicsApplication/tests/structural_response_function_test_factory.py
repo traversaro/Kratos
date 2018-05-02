@@ -65,6 +65,19 @@ class StructuralResponseFunctionTestFactory(KratosUnittest.TestCase):
             kratos_utils.DeleteFileIfExisting(self.problem_name + ".time")
             kratos_utils.DeleteFileIfExisting("response_function_tests.post.lst")
 
+class TestAdjointStrainEnergyResponseFunction(StructuralResponseFunctionTestFactory):
+    path = "response_function_tests"
+    file_name = "adjoint_strain_energy_response"
+
+    def test_execution(self):
+        self._calculate_response_and_gradient()
+        self.assertAlmostEqual(self.value, 0.02093537934221532)
+
+        nodeId = 173
+        self.assertAlmostEqual(self.gradient[nodeId][0], 0.00121046447093712)
+        self.assertAlmostEqual(self.gradient[nodeId][1], -0.0012105003653027089)
+        self.assertAlmostEqual(self.gradient[nodeId][2], -8.400456838458809e-09)
+
 class TestMassResponseFunction(StructuralResponseFunctionTestFactory):
     path = GetFilePath("response_function_tests")
     file_name = "mass_response"
@@ -92,6 +105,7 @@ class TestStrainEnergyResponseFunction(StructuralResponseFunctionTestFactory):
 if __name__ == "__main__":
     suites = KratosUnittest.KratosSuites
     smallSuite = suites['small'] # These tests are executed by the continuous integration tool
+    smallSuite.addTests(KratosUnittest.TestLoader().loadTestsFromTestCases([TestAdjointStrainEnergyResponseFunction]))
     smallSuite.addTests(KratosUnittest.TestLoader().loadTestsFromTestCases([TestMassResponseFunction]))
     smallSuite.addTests(KratosUnittest.TestLoader().loadTestsFromTestCases([TestStrainEnergyResponseFunction]))
     allSuite = suites['all']

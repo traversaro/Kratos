@@ -180,6 +180,13 @@ protected:
 
     ///@}
 
+    ///@name Member Variables
+    ///@{
+
+    CoordinateTransformationBasePointerType mpCoordinateTransformation; /*!< The Coordinate Transformation */
+
+    ///@}
+
 private:
 
     ///@name Private Classes
@@ -339,8 +346,6 @@ private:
 
     ///@name Member Variables
     ///@{
-
-    CoordinateTransformationBasePointerType mpCoordinateTransformation; /*!< The Coordinate Transformation */
 
     SizeType mStrainSize = 6;
 

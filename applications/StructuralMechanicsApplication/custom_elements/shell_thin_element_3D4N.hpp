@@ -229,7 +229,7 @@ Southern California, 2012.
 		// Calculate functions
 		void Calculate(const Variable<Matrix >& rVariable,
 			Matrix& Output,
-			const ProcessInfo& rCurrentProcessInfo) override;
+			const ProcessInfo& rCurrentProcessInfo) override;	
 
 		///@}
 
@@ -251,6 +251,13 @@ Southern California, 2012.
 		}
 
 		///@}
+
+        ///@name Member Variables
+		///@{
+
+		CoordinateTransformationBasePointerType mpCoordinateTransformation; /*!< The Coordinate Transformation */
+
+        ///@}
 
 	private:
 
@@ -425,8 +432,6 @@ Southern California, 2012.
 
 		///@name Member Variables
 		///@{
-		CoordinateTransformationBasePointerType mpCoordinateTransformation; /*!< The Coordinate Transformation */
-
         ///@}
 
         ///@name Serialization

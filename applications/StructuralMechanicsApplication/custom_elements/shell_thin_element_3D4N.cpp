@@ -1950,7 +1950,7 @@ namespace Kratos
 		// calculate the displacement vector
 		// in global and local coordinate systems
 
-		GetValuesVector(data.globalDisplacements);
+		ShellThinElement3D4N::GetValuesVector(data.globalDisplacements); 
 		data.localDisplacements =
 			mpCoordinateTransformation->CalculateLocalDisplacements(
 				data.LCS, data.globalDisplacements);
