@@ -17,13 +17,13 @@
 /* Mortar includes */
 #include "custom_conditions/ALM_frictional_mortar_contact_condition.h"
 
-namespace Kratos 
+namespace Kratos
 {
 /************************************* OPERATIONS **********************************/
 /***********************************************************************************/
 
 template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
-Condition::Pointer AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TNormalVariation>::Create( 
+Condition::Pointer AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TNormalVariation>::Create(
     IndexType NewId,
     NodesArrayType const& rThisNodes,
     PropertiesPointerType pProperties ) const
@@ -104,6 +104,32 @@ void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TN
 /***********************************************************************************/
 
 template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TNormalVariation>::InitializeNonLinearIteration( ProcessInfo& rCurrentProcessInfo )
+{
+    KRATOS_TRY;
+
+    BaseType::InitializeNonLinearIteration(rCurrentProcessInfo);
+
+    KRATOS_CATCH( "" );
+}
+
+/***********************************************************************************/
+/***********************************************************************************/
+
+template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
+void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TNormalVariation>::FinalizeNonLinearIteration( ProcessInfo& rCurrentProcessInfo )
+{
+    KRATOS_TRY;
+
+    BaseType::FinalizeNonLinearIteration(rCurrentProcessInfo);
+
+    KRATOS_CATCH( "" );
+}
+
+/***********************************************************************************/
+/***********************************************************************************/
+
+template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
 void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TNormalVariation>::FinalizeSolutionStep( ProcessInfo& rCurrentProcessInfo )
 {
     KRATOS_TRY;
@@ -123,6 +149,12 @@ template< std::size_t TDim, std::size_t TNumNodes, bool TNormalVariation >
 void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TNormalVariation>::AddExplicitContribution(ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY;
+
+    // We "save" the mortar operator in case not initialized
+    if (mPreviousMortarOperatorsInitialized == false) {
+        ComputePreviousMortarOperators(rCurrentProcessInfo);
+        mPreviousMortarOperatorsInitialized = true;
+    }
 
     // The slave geometry
     GeometryType& slave_geometry = this->GetGeometry();
@@ -234,20 +266,38 @@ void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TN
         // The increment of time
         const double delta_time = rCurrentProcessInfo[DELTA_TIME];
 
+        // Auxiliar slip derivative
+        BoundedMatrix<double, TNumNodes, TDim> slip_time_derivative;
+
         // Delta mortar condition matrices - DOperator and MOperator
         const BoundedMatrix<double, TNumNodes, TNumNodes> DeltaDOperator = DOperator - mPreviousMortarOperators.DOperator;
         const BoundedMatrix<double, TNumNodes, TNumNodes> DeltaMOperator = MOperator - mPreviousMortarOperators.MOperator;
 
-        // Old coordinates
-        const BoundedMatrix<double, TNumNodes, TDim> delta_x1 = x1 - MortarUtilities::GetCoordinates<TDim,TNumNodes>(slave_geometry, false, 1);
-        const BoundedMatrix<double, TNumNodes, TDim> delta_x2 = x2 - MortarUtilities::GetCoordinates<TDim,TNumNodes>(master_geometry, false, 1);
+//         const double tolerance = std::numeric_limits<double>::epsilon();
+//         if (norm_frobenius(DeltaDOperator) > tolerance && norm_frobenius(DeltaMOperator) > tolerance) {  // Frame indifferent
+            const BoundedMatrix<double, TNumNodes, TDim> delta_D_x1_delta_M_x2 = prod(DeltaDOperator, x1) - prod(DeltaMOperator, x2);
 
-        const BoundedMatrix<double, TNumNodes, TDim> D_delta_x1_M_delta_x2 = prod(DOperator, delta_x1) - prod(MOperator, delta_x2);
+            // The estimation of the slip time derivative
+            slip_time_derivative = delta_D_x1_delta_M_x2/delta_time;
 
-        const BoundedMatrix<double, TNumNodes, TDim> delta_D_x1_M_x2 = prod(DeltaDOperator, x1) - prod(DeltaMOperator, x2);
+// //             const BoundedMatrix<double, TNumNodes, TDim> u1 = MortarUtilities::GetVariableMatrix<TDim,TNumNodes>(slave_geometry, DISPLACEMENT, 0) - MortarUtilities::GetVariableMatrix<TDim,TNumNodes>(slave_geometry, DISPLACEMENT, 1);
+// //             const BoundedMatrix<double, TNumNodes, TDim> u2 = MortarUtilities::GetVariableMatrix<TDim,TNumNodes>(master_geometry, DISPLACEMENT, 0) - MortarUtilities::GetVariableMatrix<TDim,TNumNodes>(master_geometry, DISPLACEMENT, 1);
+// //             const BoundedMatrix<double, TNumNodes, TDim> delta_D_u1_delta_M_u2 = prod(DeltaDOperator, u1) - prod(DeltaMOperator, u2);
+// //
+// //             // The estimation of the slip time derivative
+// //             slip_time_derivative = delta_D_u1_delta_M_u2/delta_time;
+// //
+//         } else { // Standard definition
+//             // Old coordinates
+//             const BoundedMatrix<double, TNumNodes, TDim> delta_x1 = x1- MortarUtilities::GetCoordinates<TDim,TNumNodes>(slave_geometry, false, 1);
+//             const BoundedMatrix<double, TNumNodes, TDim> delta_x2 = x2- MortarUtilities::GetCoordinates<TDim,TNumNodes>(master_geometry, false, 1);
+//
+//             const BoundedMatrix<double, TNumNodes, TDim> D_delta_x1_M_delta_x2 = prod(DOperator, delta_x1) - prod(MOperator, delta_x2);
+//
+//             slip_time_derivative = D_delta_x1_M_delta_x2/delta_time;
+//         }
 
-        // The estimation of the slip time derivative
-        const BoundedMatrix<double, TNumNodes, TDim> slip_time_derivative = D_delta_x1_M_delta_x2/delta_time + delta_D_x1_M_x2/delta_time;
+//         const BoundedMatrix<double, TNumNodes, TDim> slip_time_derivative = D_delta_x1_M_delta_x2/delta_time + delta_D_x1_delta_M_x2/delta_time;
 
         for (IndexType i_node = 0; i_node < TNumNodes; ++i_node) {
             // We get the normal
