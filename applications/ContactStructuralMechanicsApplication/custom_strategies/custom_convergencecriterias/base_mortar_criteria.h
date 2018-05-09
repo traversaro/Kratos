@@ -143,7 +143,7 @@ public:
         // We update the normals if necessary
         const auto normal_variation = process_info.Has(CONSIDER_NORMAL_VARIATION) ? static_cast<NormalDerivativesComputation>(process_info.GetValue(CONSIDER_NORMAL_VARIATION)) : NO_DERIVATIVES_COMPUTATION;
         if (normal_variation != NO_DERIVATIVES_COMPUTATION)
-            MortarUtilities::ComputeNodesMeanNormalModelPart( r_contact_model_part); // Update normal of the conditions
+            ComputeNodesMeanNormalModelPartWithPairedNormal(rModelPart); // Update normal of the conditions
         
         const bool adapt_penalty = process_info.Has(ADAPT_PENALTY) ? process_info.GetValue(ADAPT_PENALTY) : false;
         const bool dynamic_case = rModelPart.NodesBegin()->SolutionStepsDataHas(VELOCITY_X);
@@ -287,13 +287,8 @@ public:
 
         // We update the normals if necessary
         const auto normal_variation = process_info.Has(CONSIDER_NORMAL_VARIATION) ? static_cast<NormalDerivativesComputation>(process_info.GetValue(CONSIDER_NORMAL_VARIATION)) : NO_DERIVATIVES_COMPUTATION;
-        if (normal_variation == NO_DERIVATIVES_COMPUTATION) {
-            // The contact model part
-            ModelPart& r_contact_model_part = rModelPart.GetSubModelPart("Contact");
-
-            // Update normal of the conditions
-            MortarUtilities::ComputeNodesMeanNormalModelPart( r_contact_model_part );
-        }
+        if (normal_variation == NO_DERIVATIVES_COMPUTATION)
+            ComputeNodesMeanNormalModelPartWithPairedNormal( rModelPart );
         
         // GiD IO for debugging
         if (mIODebug == true) {
@@ -402,6 +397,35 @@ private:
     ///@name Private Operations
     ///@{
     
+    /**
+     * @brief It computes the mean of the normal in the condition in all the nodes
+     * @param rModelPart The model part to compute
+     */
+    static inline void ComputeNodesMeanNormalModelPartWithPairedNormal(ModelPart& rModelPart) {
+        MortarUtilities::ComputeNodesMeanNormalModelPart(rModelPart.GetSubModelPart("Contact"));
+
+        // Iterate over the computing conditions
+        ConditionsArrayType& conditions_array = rModelPart.GetSubModelPart("ComputingContact").Conditions();
+
+        #pragma omp parallel for
+        for(int i = 0; i < static_cast<int>(conditions_array.size()); ++i) {
+            auto it_cond = conditions_array.begin() + i;
+
+            // Aux coordinates
+            Point::CoordinatesArrayType aux_coords;
+
+            // We update the paired normal
+            GeometryType& this_geometry = it_cond->GetGeometry();
+            aux_coords = p_this_geometry.PointLocalCoordinates(aux_coords, p_this_geometry.Center());
+            it_cond->SetValue(NORMAL, p_this_geometry.UnitNormal(aux_coords));
+
+            // We update the paired normal
+            GeometryType::Pointer p_paired_geometry = it_cond->GetValue(PAIRED_GEOMETRY);
+            aux_coords = p_paired_geometry->PointLocalCoordinates(aux_coords, p_paired_geometry->Center());
+            it_cond->SetValue(PAIRED_NORMAL, p_paired_geometry->UnitNormal(aux_coords));
+        }
+    }
+
     ///@}
     ///@name Private  Access
     ///@{
