@@ -416,8 +416,8 @@ private:
 
             // We update the paired normal
             GeometryType& this_geometry = it_cond->GetGeometry();
-            aux_coords = p_this_geometry.PointLocalCoordinates(aux_coords, p_this_geometry.Center());
-            it_cond->SetValue(NORMAL, p_this_geometry.UnitNormal(aux_coords));
+            aux_coords = this_geometry.PointLocalCoordinates(aux_coords, this_geometry.Center());
+            it_cond->SetValue(NORMAL, this_geometry.UnitNormal(aux_coords));
 
             // We update the paired normal
             GeometryType::Pointer p_paired_geometry = it_cond->GetValue(PAIRED_GEOMETRY);
