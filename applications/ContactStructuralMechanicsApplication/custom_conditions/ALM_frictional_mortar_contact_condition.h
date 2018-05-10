@@ -316,6 +316,7 @@ protected:
     ///@{
 
     bool mPreviousMortarOperatorsInitialized;             /// If the previous mortar operators are initialized
+    MortarBaseConditionMatrices mCurrentMortarOperators;  /// These are the mortar operators from the current step, necessary for a consistent definition of the slip
     MortarBaseConditionMatrices mPreviousMortarOperators; /// These are the mortar operators from the previous converged step, necessary for a consistent definition of the slip
 
     // TODO: Define the "CL" or friction law to compute this. Or do it nodally
@@ -438,11 +439,17 @@ private:
     ///@{
 
     /**
-     * @brief It computes the previous mortar operators
-     * @param rCurrentProcessInfo the current process info instance
+     * @brief It computes only mortar operators
+     * @param TheMortarOperators The mortar operators necessary to compute
+     * @param rCurrentProcessInfo The current process info instance
+     * @param ComputeStandardMortarOperators If to compute the standard LM or the dual (standard by default)
      */
 
-    inline void ComputePreviousMortarOperators(ProcessInfo& rCurrentProcessInfo)
+    inline void ComputeStandardMortarOperators(
+        MortarBaseConditionMatrices& TheMortarOperators,
+        ProcessInfo& rCurrentProcessInfo,
+        const bool ComputeStandardMortarOperators = true
+        )
     {
         // The slave geometry
         GeometryType& slave_geometry = this->GetGeometry();
@@ -486,9 +493,9 @@ private:
             rDerivativeData.UpdateMasterPair(master_geometry);
 
             // Initialize the mortar operators
-            mPreviousMortarOperators.Initialize();
+            TheMortarOperators.Initialize();
 
-            const bool dual_LM = DerivativesUtilitiesType::CalculateAeAndDeltaAe(slave_geometry, normal_slave, master_geometry, rDerivativeData, rVariables, consider_normal_variation, conditions_points_slave, this_integration_method, this->GetAxisymmetricCoefficient(rVariables));
+            const bool dual_LM = ComputeStandardMortarOperators ? false : DerivativesUtilitiesType::CalculateAeAndDeltaAe(slave_geometry, normal_slave, master_geometry, rDerivativeData, rVariables, consider_normal_variation, conditions_points_slave, this_integration_method, this->GetAxisymmetricCoefficient(rVariables));
 
             for (IndexType i_geom = 0; i_geom < conditions_points_slave.size(); ++i_geom) {
                 std::vector<PointType::Pointer> points_array (TDim); // The points are stored as local coordinates, we calculate the global coordinates of this points
@@ -521,7 +528,7 @@ private:
 
                         const double integration_weight = integration_points_slave[point_number].Weight() * this->GetAxisymmetricCoefficient(rVariables);
 
-                        mPreviousMortarOperators.CalculateMortarOperators(rVariables, integration_weight);
+                        TheMortarOperators.CalculateMortarOperators(rVariables, integration_weight);
                     }
                 }
             }

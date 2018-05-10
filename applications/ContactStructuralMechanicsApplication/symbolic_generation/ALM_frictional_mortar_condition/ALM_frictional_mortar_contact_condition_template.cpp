@@ -74,7 +74,8 @@ void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TN
 
     BaseType::Initialize();
 
-    // We initailize the previous mortar operators
+    // We initailize the mortar operators
+    mCurrentMortarOperators.Initialize();
     mPreviousMortarOperators.Initialize();
     mPreviousMortarOperatorsInitialized = false;
 
@@ -93,7 +94,7 @@ void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TN
 
     // We "save" the mortar operator in case not initialized
     if (mPreviousMortarOperatorsInitialized == false) {
-        ComputePreviousMortarOperators(rCurrentProcessInfo);
+        ComputeStandardMortarOperators(mPreviousMortarOperators, rCurrentProcessInfo);
         mPreviousMortarOperatorsInitialized = true;
     }
 
@@ -109,6 +110,9 @@ void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TN
     KRATOS_TRY;
 
     BaseType::InitializeNonLinearIteration(rCurrentProcessInfo);
+
+    // We compute the current standard mortar operators
+    ComputeStandardMortarOperators(mCurrentMortarOperators, rCurrentProcessInfo);
 
     KRATOS_CATCH( "" );
 }
@@ -137,7 +141,7 @@ void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TN
     BaseType::FinalizeSolutionStep(rCurrentProcessInfo);
 
     // We "save" the mortar operator for the next step
-    ComputePreviousMortarOperators(rCurrentProcessInfo);
+    ComputeStandardMortarOperators(mPreviousMortarOperators, rCurrentProcessInfo);
 
     KRATOS_CATCH( "" );
 }
@@ -150,9 +154,10 @@ void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TN
 {
     KRATOS_TRY;
 
-    // We "save" the mortar operator in case not initialized
+    // We compute the current standard mortar operators
+    ComputeStandardMortarOperators(mCurrentMortarOperators, rCurrentProcessInfo);
     if (mPreviousMortarOperatorsInitialized == false) {
-        ComputePreviousMortarOperators(rCurrentProcessInfo);
+        ComputeStandardMortarOperators(mPreviousMortarOperators, rCurrentProcessInfo);
         mPreviousMortarOperatorsInitialized = true;
     }
 
@@ -270,32 +275,40 @@ void AugmentedLagrangianMethodFrictionalMortarContactCondition<TDim,TNumNodes,TN
         BoundedMatrix<double, TNumNodes, TDim> slip_time_derivative;
 
         // Delta mortar condition matrices - DOperator and MOperator
-        const BoundedMatrix<double, TNumNodes, TNumNodes> DeltaDOperator = DOperator - mPreviousMortarOperators.DOperator;
-        const BoundedMatrix<double, TNumNodes, TNumNodes> DeltaMOperator = MOperator - mPreviousMortarOperators.MOperator;
+        const BoundedMatrix<double, TNumNodes, TDim> x1old = MortarUtilities::GetCoordinates<TDim,TNumNodes>(slave_geometry, false, 1);
+        const BoundedMatrix<double, TNumNodes, TDim> x2old = MortarUtilities::GetCoordinates<TDim,TNumNodes>(master_geometry, false, 1);
+        const BoundedMatrix<double, TNumNodes, TNumNodes> DeltaDOperator = mCurrentMortarOperators.DOperator - mPreviousMortarOperators.DOperator;
+        const BoundedMatrix<double, TNumNodes, TNumNodes> DeltaMOperator = mCurrentMortarOperators.MOperator - mPreviousMortarOperators.MOperator;
 
 //         const double tolerance = std::numeric_limits<double>::epsilon();
 //         if (norm_frobenius(DeltaDOperator) > tolerance && norm_frobenius(DeltaMOperator) > tolerance) {  // Frame indifferent
-            const BoundedMatrix<double, TNumNodes, TDim> delta_D_x1_delta_M_x2 = prod(DeltaDOperator, x1) - prod(DeltaMOperator, x2);
+            const BoundedMatrix<double, TNumNodes, TDim> delta_D_x1_delta_M_x2 = prod(DeltaDOperator, x1old) - prod(DeltaMOperator, x2old);
+//             const BoundedMatrix<double, TNumNodes, TDim> delta_D_x1_delta_M_x2 = prod(DeltaDOperator, x1) - prod(DeltaMOperator, x2);
 
             // The estimation of the slip time derivative
-            slip_time_derivative = delta_D_x1_delta_M_x2/delta_time;
+            slip_time_derivative = - delta_D_x1_delta_M_x2/delta_time;
 
-// //             const BoundedMatrix<double, TNumNodes, TDim> u1 = MortarUtilities::GetVariableMatrix<TDim,TNumNodes>(slave_geometry, DISPLACEMENT, 0) - MortarUtilities::GetVariableMatrix<TDim,TNumNodes>(slave_geometry, DISPLACEMENT, 1);
-// //             const BoundedMatrix<double, TNumNodes, TDim> u2 = MortarUtilities::GetVariableMatrix<TDim,TNumNodes>(master_geometry, DISPLACEMENT, 0) - MortarUtilities::GetVariableMatrix<TDim,TNumNodes>(master_geometry, DISPLACEMENT, 1);
-// //             const BoundedMatrix<double, TNumNodes, TDim> delta_D_u1_delta_M_u2 = prod(DeltaDOperator, u1) - prod(DeltaMOperator, u2);
-// //
-// //             // The estimation of the slip time derivative
-// //             slip_time_derivative = delta_D_u1_delta_M_u2/delta_time;
-// //
+//             const BoundedMatrix<double, TNumNodes, TDim> u1 = MortarUtilities::GetVariableMatrix<TDim,TNumNodes>(slave_geometry, DISPLACEMENT, 0) - MortarUtilities::GetVariableMatrix<TDim,TNumNodes>(slave_geometry, DISPLACEMENT, 1);
+//             const BoundedMatrix<double, TNumNodes, TDim> u2 = MortarUtilities::GetVariableMatrix<TDim,TNumNodes>(master_geometry, DISPLACEMENT, 0) - MortarUtilities::GetVariableMatrix<TDim,TNumNodes>(master_geometry, DISPLACEMENT, 1);
+//             const BoundedMatrix<double, TNumNodes, TDim> delta_D_u1_delta_M_u2 = prod(DeltaDOperator, u1) - prod(DeltaMOperator, u2);
+//
+//             // The estimation of the slip time derivative
+//             slip_time_derivative = delta_D_u1_delta_M_u2/delta_time;
+//
 //         } else { // Standard definition
 //             // Old coordinates
 //             const BoundedMatrix<double, TNumNodes, TDim> delta_x1 = x1- MortarUtilities::GetCoordinates<TDim,TNumNodes>(slave_geometry, false, 1);
 //             const BoundedMatrix<double, TNumNodes, TDim> delta_x2 = x2- MortarUtilities::GetCoordinates<TDim,TNumNodes>(master_geometry, false, 1);
 //
+//             const BoundedMatrix<double, TNumNodes, TDim> D_delta_x1_M_delta_x2 = prod(DOperator, x1) - prod(MOperator, x2);
 //             const BoundedMatrix<double, TNumNodes, TDim> D_delta_x1_M_delta_x2 = prod(DOperator, delta_x1) - prod(MOperator, delta_x2);
+// //             const BoundedMatrix<double, TNumNodes, TDim> D_delta_x1_M_delta_x2 = prod(mCurrentMortarOperators.DOperator, delta_x1) - prod(mCurrentMortarOperators.MOperator, delta_x2);
 //
+// //             slip_time_derivative += D_delta_x1_M_delta_x2/delta_time;
+// // //             const BoundedMatrix<double, TNumNodes, TDim> D_delta_x1_M_delta_x2 = prod(DOperator, delta_x1) - prod(MOperator, delta_x2);
+// //
 //             slip_time_derivative = D_delta_x1_M_delta_x2/delta_time;
-//         }
+// //         }
 
 //         const BoundedMatrix<double, TNumNodes, TDim> slip_time_derivative = D_delta_x1_M_delta_x2/delta_time + delta_D_x1_delta_M_x2/delta_time;
 
