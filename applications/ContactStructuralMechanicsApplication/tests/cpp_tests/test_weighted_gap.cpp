@@ -155,7 +155,7 @@ namespace Kratos
             }
 
             // We compute the normals
-            MortarUtilities::ComputeNodesMeanNormalModelPart(ThisModelPart);
+            MortarUtilities::ComputeNodesMeanNormalWithTangentsModelPart(ThisModelPart);
             
             // We compute the normal gap to compare with the weighted gap
             // We add the index SetScalarVar
@@ -258,6 +258,8 @@ namespace Kratos
             this_model_part.AddNodalSolutionStepVariable(DISPLACEMENT);
             this_model_part.AddNodalSolutionStepVariable(WEIGHTED_GAP);
             this_model_part.AddNodalSolutionStepVariable(NORMAL);
+            this_model_part.AddNodalSolutionStepVariable(TANGENT_XI);
+            this_model_part.AddNodalSolutionStepVariable(TANGENT_ETA);
 
             auto& process_info = this_model_part.GetProcessInfo();
             process_info[STEP] = 1;
@@ -310,6 +312,8 @@ namespace Kratos
             this_model_part.AddNodalSolutionStepVariable(WEIGHTED_GAP);
             this_model_part.AddNodalSolutionStepVariable(WEIGHTED_SLIP);
             this_model_part.AddNodalSolutionStepVariable(NORMAL);
+            this_model_part.AddNodalSolutionStepVariable(TANGENT_XI);
+            this_model_part.AddNodalSolutionStepVariable(TANGENT_ETA);
 
             auto& process_info = this_model_part.GetProcessInfo();
             process_info[STEP] = 1;
@@ -365,6 +369,8 @@ namespace Kratos
             this_model_part.AddNodalSolutionStepVariable(WEIGHTED_GAP);
             this_model_part.AddNodalSolutionStepVariable(WEIGHTED_SLIP);
             this_model_part.AddNodalSolutionStepVariable(NORMAL);
+            this_model_part.AddNodalSolutionStepVariable(TANGENT_XI);
+            this_model_part.AddNodalSolutionStepVariable(TANGENT_ETA);
             
             auto& process_info = this_model_part.GetProcessInfo();
             process_info[STEP] = 1;

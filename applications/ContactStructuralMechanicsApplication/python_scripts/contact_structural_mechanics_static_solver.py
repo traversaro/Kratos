@@ -109,6 +109,8 @@ class StaticMechanicalSolver(structural_mechanics_static_solver.StaticMechanical
                 self.main_model_part.AddNodalSolutionStepVariable(CSMA.WEIGHTED_GAP)                         # Add normal contact gap
                 self.main_model_part.AddNodalSolutionStepVariable(CSMA.WEIGHTED_SLIP)                        # Add contact slip
                 self.main_model_part.AddNodalSolutionStepVariable(CSMA.WEIGHTED_VECTOR_RESIDUAL)             # Add vector LM residual
+                self.main_model_part.AddNodalSolutionStepVariable(KM.TANGENT_XI)                             # Add tangent (I)
+                self.main_model_part.AddNodalSolutionStepVariable(KM.TANGENT_ETA)                            # Add tangent (II) # TODO: Look for only and in 3D
             elif  mortar_type == "ScalarMeshTying":
                 self.main_model_part.AddNodalSolutionStepVariable(KM.SCALAR_LAGRANGE_MULTIPLIER)             # Add scalar LM
                 self.main_model_part.AddNodalSolutionStepVariable(CSMA.WEIGHTED_SCALAR_RESIDUAL)             # Add scalar LM residual

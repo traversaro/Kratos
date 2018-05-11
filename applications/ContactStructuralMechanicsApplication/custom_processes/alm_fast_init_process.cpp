@@ -56,10 +56,16 @@ void ALMFastInit::Execute()
     
     // Now we iterate over the conditions
     ConditionsArrayType& conditions_array = mrThisModelPart.Conditions();
-    
+
     #pragma omp parallel for
-    for(int i = 0; i < static_cast<int>(conditions_array.size()); ++i)
-        (conditions_array.begin() + i)->SetValue(NORMAL, ZeroVector(3)); // The normal and tangents vectors
+    for(int i = 0; i < static_cast<int>(conditions_array.size()); ++i) {
+        auto it_cond = (conditions_array.begin() + i);
+        it_cond->SetValue(NORMAL, zero_array); // The normal and tangents vectors
+        if (is_frictional) {
+            it_cond->SetValue(TANGENT_XI, zero_array);
+            it_cond->SetValue(TANGENT_ETA, zero_array); // TODO: Look to add only in 3D
+        }
+    }
 
     if (is_frictional) {
         // We initialize the frictional coefficient. The evolution of the frictional coefficient it is supposed to be controled by a law

@@ -402,7 +402,13 @@ private:
      * @param rModelPart The model part to compute
      */
     static inline void ComputeNodesMeanNormalModelPartWithPairedNormal(ModelPart& rModelPart) {
-        MortarUtilities::ComputeNodesMeanNormalModelPart(rModelPart.GetSubModelPart("Contact"));
+        ModelPart& r_contact_model_part = rModelPart.GetSubModelPart("Contact");
+        const bool frictional_problem = rModelPart.Is(SLIP);
+        if (frictional_problem)
+            MortarUtilities::ComputeNodesMeanNormalWithTangentsModelPart(r_contact_model_part);
+        else
+            MortarUtilities::ComputeNodesMeanNormalModelPart(r_contact_model_part);
+
 
         // Iterate over the computing conditions
         ConditionsArrayType& conditions_array = rModelPart.GetSubModelPart("ComputingContact").Conditions();
