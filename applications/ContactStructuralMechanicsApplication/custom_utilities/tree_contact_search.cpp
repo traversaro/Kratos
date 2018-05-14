@@ -409,7 +409,9 @@ void TreeContactSearch<TDim, TNumNodes>::UpdateMortarConditions()
                     for (IndexType i_point = 0; i_point < number_points_found; ++i_point ) {
                         Condition::Pointer p_cond_master = points_found[i_point]->GetCondition();
                         const CheckResult condition_checked_right = CheckCondition(p_indexes_pairs, (*it_cond.base()), p_cond_master, mInvertedSearch);
-                        if (condition_checked_right == CheckResult::OK) p_indexes_pairs->AddId(p_cond_master->Id());
+
+                        if (condition_checked_right == CheckResult::OK)
+                            p_indexes_pairs->AddId(p_cond_master->Id());
                     }
                 } else
                     AddPotentialPairing(computing_rcontact_model_part, condition_id, (*it_cond.base()), points_found, number_points_found, p_indexes_pairs);
