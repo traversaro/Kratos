@@ -1557,7 +1557,7 @@ typename TreeContactSearch<TDim, TNumNodes>::CheckGap TreeContactSearch<TDim, TN
         return CheckGap::NoCheck;
     else if(str == "DirectCheck" || str == "direct_check")
         return CheckGap::DirectCheck;
-    else if (str == "CheckGap::MappingCheck" || str == "mapping_check")
+    else if (str == "MappingCheck" || str == "mapping_check")
         return CheckGap::MappingCheck;
     else
         return CheckGap::MappingCheck;
