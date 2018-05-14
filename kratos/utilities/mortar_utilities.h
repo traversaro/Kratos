@@ -478,39 +478,40 @@ public:
         // Sum all the nodes normals
         ConditionsArrayType& conditions_array = rModelPart.Conditions();
 
+        // Aux coordinates
+        CoordinatesArrayType aux_coords;
+
         // Orthonormal base
         array_1d<double, 3> normal, tangent_xi, tangent_eta; // TODO: Look to add only in 3D eta
 
-        #pragma omp parallel for
+        #pragma omp parallel for private(normal, tangent_xi, tangent_eta, aux_coords)
         for(int i = 0; i < static_cast<int>(conditions_array.size()); ++i) {
             auto it_cond = conditions_array.begin() + i;
             GeometryType& this_geometry = it_cond->GetGeometry();
 
-            // Aux coordinates
-            CoordinatesArrayType aux_coords;
             aux_coords = this_geometry.PointLocalCoordinates(aux_coords, this_geometry.Center());
 
             this_geometry.UnitNormalWithTangents(aux_coords, normal, tangent_xi, tangent_eta);
             it_cond->SetValue(NORMAL, normal);
-//             it_cond->SetValue(TANGENT_XI, tangent_xi);
-//             it_cond->SetValue(TANGENT_ETA, tangent_eta);
+            it_cond->SetValue(TANGENT_XI, tangent_xi);
+            it_cond->SetValue(TANGENT_ETA, tangent_eta);
 
             const std::size_t number_nodes = this_geometry.PointsNumber();
 
             for (std::size_t i = 0; i < number_nodes; ++i) {
                 auto& this_node = this_geometry[i];
                 aux_coords = this_geometry.PointLocalCoordinates(aux_coords, this_node.Coordinates());
-                const array_1d<double, 3> normal = this_geometry.UnitNormal(aux_coords);
+                this_geometry.UnitNormalWithTangents(aux_coords, normal, tangent_xi, tangent_eta);
                 array_1d<double, 3>& aux_normal = this_node.FastGetSolutionStepValue(NORMAL);
-//                 array_1d<double, 3>& aux_tangent_xi = this_node.FastGetSolutionStepValue(TANGENT_XI);
-//                 array_1d<double, 3>& aux_tangent_eta = this_node.FastGetSolutionStepValue(TANGENT_ETA);
+                array_1d<double, 3>& aux_tangent_xi = this_node.FastGetSolutionStepValue(TANGENT_XI);
+                array_1d<double, 3>& aux_tangent_eta = this_node.FastGetSolutionStepValue(TANGENT_ETA);
                 for (std::size_t index = 0; index < 3; ++index) {
                     #pragma omp atomic
                     aux_normal[index] += normal[index];
-//                     #pragma omp atomic
-//                     aux_tangent_xi[index] += tangent_xi[index];
-//                     #pragma omp atomic
-//                     aux_tangent_eta[index] += tangent_eta[index];
+                    #pragma omp atomic
+                    aux_tangent_xi[index] += tangent_xi[index];
+                    #pragma omp atomic
+                    aux_tangent_eta[index] += tangent_eta[index];
                 }
             }
         }
@@ -523,14 +524,14 @@ public:
             const double norm_normal = norm_2(normal);
             if (norm_normal > std::numeric_limits<double>::epsilon()) normal /= norm_normal;
             else KRATOS_ERROR << "WARNING:: ZERO NORM NORMAL IN NODE: " << it_node->Id() << std::endl;
-//             array_1d<double, 3>& tangent_xi = it_node->FastGetSolutionStepValue(TANGENT_XI);
-//             const double norm_tangent_xi = norm_2(tangent_xi);
-//             if (norm_tangent_xi > std::numeric_limits<double>::epsilon()) tangent_xi /= norm_tangent_xi;
-//             else KRATOS_ERROR << "WARNING:: ZERO NORM TANGENT XI IN NODE: " << it_node->Id() << std::endl;
-//             array_1d<double, 3>& tangent_eta = it_node->FastGetSolutionStepValue(TANGENT_ETA);
-//             const double norm_tangent_eta = norm_2(tangent_eta);
-//             if (norm_tangent_eta > std::numeric_limits<double>::epsilon()) tangent_eta /= norm_tangent_eta;
-//             else KRATOS_ERROR << "WARNING:: ZERO NORM TANGENT ETA IN NODE: " << it_node->Id() << std::endl;
+            array_1d<double, 3>& tangent_xi = it_node->FastGetSolutionStepValue(TANGENT_XI);
+            const double norm_tangent_xi = norm_2(tangent_xi);
+            if (norm_tangent_xi > std::numeric_limits<double>::epsilon()) tangent_xi /= norm_tangent_xi;
+            else KRATOS_ERROR << "WARNING:: ZERO NORM TANGENT XI IN NODE: " << it_node->Id() << std::endl;
+            array_1d<double, 3>& tangent_eta = it_node->FastGetSolutionStepValue(TANGENT_ETA);
+            const double norm_tangent_eta = norm_2(tangent_eta);
+            if (norm_tangent_eta > std::numeric_limits<double>::epsilon()) tangent_eta /= norm_tangent_eta;
+            else KRATOS_ERROR << "WARNING:: ZERO NORM TANGENT ETA IN NODE: " << it_node->Id() << std::endl;
         }
     }
 
