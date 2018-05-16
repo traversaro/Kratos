@@ -278,6 +278,11 @@ public:
         BaseType::Initialize();
         mFinalizeWasPerformed = false;
 
+        // Initializing NL_ITERATION_NUMBER
+        ModelPart& r_model_part = StrategyBaseType::GetModelPart();
+        ProcessInfo& r_process_info = r_model_part.GetProcessInfo();
+        r_process_info[NL_ITERATION_NUMBER] = 1;
+
         KRATOS_CATCH("");
     }
     
