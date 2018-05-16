@@ -253,12 +253,12 @@ for normalvar in range(2):
                         #if (dim == 3):
                             #modified_augmented_tangent_lm_eta = mu[node] * augmented_normal_lm * TangentFactor * PenaltyParameter[node] * TangentSlipEta[node]
                             #rv_galerkin += modified_augmented_tangent_lm_eta * wLMTangentEta[node]
-                        #rv_galerkin += ScaleFactor * TangentSlipXi[node] * wLMTangentXi[node]
-                        #if (dim == 3):
-                            #rv_galerkin += ScaleFactor * TangentSlipEta[node] * wLMTangentEta[node]
-                        rv_galerkin -= ScaleFactor * (- Dx1Mx2.row(node).dot(TangentSlaveXi.row(node))) * wLMTangentXi[node]
+                        rv_galerkin += ScaleFactor * TangentSlipXi[node] * wLMTangentXi[node]
                         if (dim == 3):
-                            rv_galerkin -= ScaleFactor * (- Dx1Mx2.row(node).dot(TangentSlaveEta.row(node))) * wLMTangentEta[node]
+                            rv_galerkin += ScaleFactor * TangentSlipEta[node] * wLMTangentEta[node]
+                        #rv_galerkin -= ScaleFactor * (- Dx1Mx2.row(node).dot(TangentSlaveXi.row(node))) * wLMTangentXi[node]
+                        #if (dim == 3):
+                            #rv_galerkin -= ScaleFactor * (- Dx1Mx2.row(node).dot(TangentSlaveEta.row(node))) * wLMTangentEta[node]
 
                 if(do_simplifications):
                     rv_galerkin = simplify(rv_galerkin)
