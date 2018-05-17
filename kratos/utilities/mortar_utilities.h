@@ -502,7 +502,7 @@ public:
      */
 
     template< SizeType TNumNodes, SizeType TDim>
-    static inline BoundedMatrix<double, TNumNodes, TDim> ComputeTangentMatrix(const GeometryType& ThisNodes) {
+    static inline BoundedMatrix<double, TNumNodes, TDim> ComputeTangentMatrix(GeometryType& ThisNodes) {
         /* DEFINITIONS */
         // Zero tolerance
         const double zero_tolerance = std::numeric_limits<double>::epsilon();
