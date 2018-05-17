@@ -182,8 +182,8 @@ namespace Kratos
                     rVariables.Initialize();
 
                     // Update slave element info
-                    rDerivativeData.UpdateMasterPair(MasterCondition1->GetGeometry());
-                    rDerivativeData0.UpdateMasterPair(MasterCondition0->GetGeometry());
+                    rDerivativeData.UpdateMasterPair(MasterCondition1->GetGeometry(), ThisModelPart.GetProcessInfo());
+                    rDerivativeData0.UpdateMasterPair(MasterCondition0->GetGeometry(), ThisModelPart.GetProcessInfo());
                     
                     if (conditions_points_slave.size() == conditions_points_slave0.size()) {// Just in case we have the "same configuration"
                         DerivativesUtilitiesType::CalculateAeAndDeltaAe(slave_geometry_1, normal_slave_1, MasterCondition1->GetGeometry(), rDerivativeData, rVariables, consider_normal_variation, conditions_points_slave, this_integration_method);
