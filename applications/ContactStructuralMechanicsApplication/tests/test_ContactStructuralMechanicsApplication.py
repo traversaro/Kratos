@@ -276,8 +276,8 @@ def AssambleTestSuites():
             TComponentsALMThreeDPatchComplexGeomTestContact,
             TComponentsALMTThreeDPatchMatchingTestContact,
             TComponentsALMThreeDPatchNotMatchingTestContact,
-            TALMHyperSimplePatchFrictionalTestContact,
-            #### NIGTHLY
+            #TALMHyperSimplePatchFrictionalTestContact,
+            ### NIGTHLY
             TALMTaylorPatchTestContact,
             TALMHertzSimpleTestContact,
             TALMHertzSimpleSphereTestContact,
@@ -288,9 +288,9 @@ def AssambleTestSuites():
             TComponentsALMHertzSimpleSphereTestContact,
             #####TComponentsALMHertzSphereTestContact,  # FIXME: This test requieres the axisymmetric to work (memmory error, correct it)
             TComponentsALMHertzCompleteTestContact,
-            TALMTaylorPatchFrictionalTestContact,
-            TALMPureFrictionalTestContact,
-            #### VALIDATION
+            #TALMTaylorPatchFrictionalTestContact,
+            #TALMPureFrictionalTestContact,
+            ### VALIDATION
             TALMTaylorPatchDynamicTestContact,
             TALMMeshMovingMatchingTestContact,
             TALMMeshMovingNotMatchingTestContact,
