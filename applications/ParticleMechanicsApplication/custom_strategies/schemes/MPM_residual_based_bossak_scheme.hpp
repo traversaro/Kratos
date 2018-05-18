@@ -629,8 +629,7 @@ public:
                     
                     ++nodes_counter;
                 }
-			
-            }    
+            }
 
             NormVel = sqrt(NormVel);
             NormAcc = sqrt(NormAcc);
