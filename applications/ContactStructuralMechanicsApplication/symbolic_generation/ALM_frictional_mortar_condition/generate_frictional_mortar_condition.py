@@ -155,7 +155,8 @@ for normalvar in range(2):
         #Du1Mu2 = DOperator * u1 - MOperator * u2
         Dx1Mx2 = DOperator * x1 - MOperator * x2
         #DeltaDu1DeltaMu2 = (StandardDOperator - StandardDOperatorold)/delta_time * u1 - (StandardMOperator - StandardMOperatorold)/delta_time * u2
-        DeltaDx1DeltaMx2 = (StandardDOperator - StandardDOperatorold)/delta_time * x1 - (StandardMOperator - StandardMOperatorold)/delta_time * x2
+        DeltaDx1DeltaMx2 = (DOperator - StandardDOperatorold)/delta_time * x1 - (MOperator - StandardMOperatorold)/delta_time * x2
+        #DeltaDx1DeltaMx2 = (StandardDOperator - StandardDOperatorold)/delta_time * x1 - (StandardMOperator - StandardMOperatorold)/delta_time * x2
         #DeltaDx1DeltaMx2 = (StandardDOperator - StandardDOperatorold)/delta_time * x1old - (StandardMOperator - StandardMOperatorold)/delta_time * x2old
         #DeltaDx1DeltaMx2 = (StandardDOperator - StandardDOperatorold)/delta_time * x1old - (StandardMOperator - StandardMOperatorold)/delta_time * x2old + (StandardDOperator - StandardDOperatorold)/delta_time * u1 - (StandardMOperator - StandardMOperatorold)/delta_time * u2
         #DDeltax1MDeltax2 = DOperator * x1old/delta_time - MOperator * x2old/delta_time # Cardona, doesn't work
@@ -169,7 +170,7 @@ for normalvar in range(2):
             objective_gap_time_derivative = - DeltaDx1DeltaMx2.row(node)
             #objective_gap_time_derivative = DDeltax1MDeltax2.row(node)
             #objective_gap_time_derivative = (DDeltax1MDeltax2.row(node) - (DDeltax1MDeltax2.row(node) + DeltaDx1DeltaMx2.row(node)))
-            gap_time_derivative = (DDeltax1MDeltax2.row(node))
+            #gap_time_derivative = (DDeltax1MDeltax2.row(node))
             #gap_time_derivative = - (DDeltax1MDeltax2.row(node) + DeltaDx1DeltaMx2.row(node))
             TangentSlipXi[node] = delta_time * objective_gap_time_derivative.dot(TangentSlaveXi.row(node))
             if (dim == 3):
@@ -234,31 +235,32 @@ for normalvar in range(2):
                         # Normal contact
                         rv_galerkin -= ScaleFactor * NormalGap[node] * wLMNormal[node]
                         # Frictional contact
-                        modified_augmented_tangent_lm_xi = augmented_tangent_lm_xi * ScaleFactor * LMTangentXi[node] - mu[node] * augmented_normal_lm * augmented_tangent_lm_xi
-                        rv_galerkin -= (1.0 / (PenaltyParameter[node] * TangentFactor)) * augmented_tangent_lm_xi * wLMTangentXi[node]
-                        if (dim == 3):
-                            modified_augmented_tangent_lm_eta = augmented_tangent_lm_eta * ScaleFactor * LMTangentEta[node] - mu[node] * augmented_normal_lm * augmented_tangent_lm_eta
-                            rv_galerkin -= (1.0 / (PenaltyParameter[node] * TangentFactor)) * augmented_tangent_lm_eta * wLMTangentEta[node]
-                        #modified_augmented_tangent_lm_xi = ScaleFactor * LMTangentXi[node] + mu[node] * augmented_normal_lm
-                        #rv_galerkin -= (ScaleFactor / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm_xi * wLMTangentXi[node]
+                        #modified_augmented_tangent_lm_xi = augmented_tangent_lm_xi * ScaleFactor * LMTangentXi[node] - mu[node] * augmented_normal_lm * augmented_tangent_lm_xi
+                        #rv_galerkin -= (1.0 / (PenaltyParameter[node] * TangentFactor)) * augmented_tangent_lm_xi * wLMTangentXi[node]
                         #if (dim == 3):
-                            #modified_augmented_tangent_lm_eta = ScaleFactor * LMTangentEta[node] + mu[node] * augmented_normal_lm
-                            #rv_galerkin -= (ScaleFactor / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm_eta * wLMTangentEta[node]
+                            #modified_augmented_tangent_lm_eta = augmented_tangent_lm_eta * ScaleFactor * LMTangentEta[node] - mu[node] * augmented_normal_lm * augmented_tangent_lm_eta
+                            #rv_galerkin -= (1.0 / (PenaltyParameter[node] * TangentFactor)) * augmented_tangent_lm_eta * wLMTangentEta[node]
+                        modified_augmented_tangent_lm_xi = ScaleFactor * LMTangentXi[node] + mu[node] * augmented_normal_lm
+                        rv_galerkin -= (ScaleFactor / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm_xi * wLMTangentXi[node]
+                        if (dim == 3):
+                            modified_augmented_tangent_lm_eta = ScaleFactor * LMTangentEta[node] + mu[node] * augmented_normal_lm
+                            rv_galerkin -= (ScaleFactor / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm_eta * wLMTangentEta[node]
                     else: # Stick
                         # Normal contact
                         rv_galerkin -= ScaleFactor * NormalGap[node] * wLMNormal[node]
                         # Frictional contact
-                        modified_augmented_tangent_lm_xi = mu[node] * augmented_normal_lm * TangentFactor * PenaltyParameter[node] * TangentSlipXi[node]
-                        rv_galerkin += modified_augmented_tangent_lm_xi * wLMTangentXi[node]
-                        if (dim == 3):
-                            modified_augmented_tangent_lm_eta = mu[node] * augmented_normal_lm * TangentFactor * PenaltyParameter[node] * TangentSlipEta[node]
-                            rv_galerkin += modified_augmented_tangent_lm_eta * wLMTangentEta[node]
-                        #rv_galerkin += ScaleFactor * TangentSlipXi[node] * wLMTangentXi[node]
+                        #modified_augmented_tangent_lm_xi = mu[node] * augmented_normal_lm * TangentFactor * PenaltyParameter[node] * TangentSlipXi[node]
+                        #rv_galerkin += modified_augmented_tangent_lm_xi * wLMTangentXi[node]
                         #if (dim == 3):
-                            #rv_galerkin += ScaleFactor * TangentSlipEta[node] * wLMTangentEta[node]
+                            #modified_augmented_tangent_lm_eta = mu[node] * augmented_normal_lm * TangentFactor * PenaltyParameter[node] * TangentSlipEta[node]
+                            #rv_galerkin += modified_augmented_tangent_lm_eta * wLMTangentEta[node]
+                        rv_galerkin += ScaleFactor * TangentSlipXi[node] * wLMTangentXi[node]
+                        if (dim == 3):
+                            rv_galerkin += ScaleFactor * TangentSlipEta[node] * wLMTangentEta[node]
                         #rv_galerkin -= ScaleFactor * (- Dx1Mx2.row(node).dot(TangentSlaveXi.row(node))) * wLMTangentXi[node]
                         #if (dim == 3):
                             #rv_galerkin -= ScaleFactor * (- Dx1Mx2.row(node).dot(TangentSlaveEta.row(node))) * wLMTangentEta[node]
+                    #rv_galerkin -= ScaleFactor * (- Du1Mu2.row(node).dot(wLM.row(node)))
 
                 if(do_simplifications):
                     rv_galerkin = simplify(rv_galerkin)
@@ -276,10 +278,10 @@ for normalvar in range(2):
                 initial_index = dim * (2 * nnodes)
                 if (slip > 0):
                     for idim in range(dim):
-                        #lhs[initial_index + dim * node + 0, initial_index + dim * node + idim] = NormalSlave[idim]
-                        lhs[initial_index + dim * node + 1, initial_index + dim * node + idim] = TangentSlaveXi[idim]
+                        #lhs[initial_index + dim * node + 0, initial_index + dim * node + idim] = ScaleFactor**2 * NormalSlave[idim]
+                        lhs[initial_index + dim * node + 1, initial_index + dim * node + idim] = ScaleFactor**2 * TangentSlaveXi[idim]
                         if (dim == 3):
-                            lhs[initial_index + dim * node + 2, initial_index + dim * node + idim] = TangentSlaveEta[idim]
+                            lhs[initial_index + dim * node + 2, initial_index + dim * node + idim] = ScaleFactor**2 * TangentSlaveEta[idim]
 
                 initial_tabs = 1
                 lhs_out = OutputMatrix_CollectingFactorsNonZero(lhs, "lhs", mode, initial_tabs, number_dof)
