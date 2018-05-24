@@ -448,7 +448,7 @@ private:
     inline void ComputeStandardMortarOperators(
         MortarBaseConditionMatrices& TheMortarOperators,
         ProcessInfo& rCurrentProcessInfo,
-        const bool ComputeStandardMortarOperators = true
+        const bool ComputeStandardMortarOperators = false
         )
     {
         // The slave geometry

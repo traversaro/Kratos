@@ -285,10 +285,8 @@ public:
         // The current process info
         ProcessInfo& process_info = rModelPart.GetProcessInfo();
 
-        // We update the normals if necessary
-        const auto normal_variation = process_info.Has(CONSIDER_NORMAL_VARIATION) ? static_cast<NormalDerivativesComputation>(process_info.GetValue(CONSIDER_NORMAL_VARIATION)) : NO_DERIVATIVES_COMPUTATION;
-        if (normal_variation == NO_DERIVATIVES_COMPUTATION)
-            ComputeNodesMeanNormalModelPartWithPairedNormal( rModelPart );
+        // We update the normals
+        ComputeNodesMeanNormalModelPartWithPairedNormal( rModelPart );
         
         // GiD IO for debugging
         if (mIODebug == true) {

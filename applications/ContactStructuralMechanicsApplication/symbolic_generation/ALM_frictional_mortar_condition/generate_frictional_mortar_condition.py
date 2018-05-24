@@ -240,9 +240,11 @@ for normalvar in range(2):
                         #if (dim == 3):
                             #modified_augmented_tangent_lm_eta = augmented_tangent_lm_eta * ScaleFactor * LMTangentEta[node] - mu[node] * augmented_normal_lm * augmented_tangent_lm_eta
                             #rv_galerkin -= (1.0 / (PenaltyParameter[node] * TangentFactor)) * augmented_tangent_lm_eta * wLMTangentEta[node]
+                        #modified_augmented_tangent_lm_xi = mu[node] * augmented_normal_lm
                         modified_augmented_tangent_lm_xi = ScaleFactor * LMTangentXi[node] + mu[node] * augmented_normal_lm
                         rv_galerkin -= (ScaleFactor / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm_xi * wLMTangentXi[node]
                         if (dim == 3):
+                            #modified_augmented_tangent_lm_eta = mu[node] * augmented_normal_lm
                             modified_augmented_tangent_lm_eta = ScaleFactor * LMTangentEta[node] + mu[node] * augmented_normal_lm
                             rv_galerkin -= (ScaleFactor / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm_eta * wLMTangentEta[node]
                     else: # Stick
@@ -257,10 +259,19 @@ for normalvar in range(2):
                         rv_galerkin += ScaleFactor * TangentSlipXi[node] * wLMTangentXi[node]
                         if (dim == 3):
                             rv_galerkin += ScaleFactor * TangentSlipEta[node] * wLMTangentEta[node]
+                        #rv_galerkin += ScaleFactor * TangentSlipXi[node] * wLMTangentXi[node] - ScaleFactor**2/PenaltyParameter[node] * LMTangentXi[node] * wLMTangentXi[node]
+                        #if (dim == 3):
+                            #rv_galerkin += ScaleFactor * TangentSlipEta[node] * wLMTangentEta[node] - ScaleFactor**2/PenaltyParameter[node] * LMTangentEta[node] * wLMTangentEta[node]
                         #rv_galerkin -= ScaleFactor * (- Dx1Mx2.row(node).dot(TangentSlaveXi.row(node))) * wLMTangentXi[node]
                         #if (dim == 3):
                             #rv_galerkin -= ScaleFactor * (- Dx1Mx2.row(node).dot(TangentSlaveEta.row(node))) * wLMTangentEta[node]
                     #rv_galerkin -= ScaleFactor * (- Du1Mu2.row(node).dot(wLM.row(node)))
+
+                    #modified_augmented_tangent_lm_xi = mu[node] * augmented_normal_lm * TangentFactor * (PenaltyParameter[node] * TangentFactor) * TangentSlipXi[node]
+                    #rv_galerkin -= ScaleFactor/(PenaltyParameter[node] * TangentFactor) * (ScaleFactor * LMTangentXi[node] - modified_augmented_tangent_lm_xi) * wLMTangentXi[node]
+                    #if (dim == 3):
+                        #modified_augmented_tangent_lm_eta = mu[node] * augmented_normal_lm * TangentFactor * (PenaltyParameter[node] * TangentFactor) * TangentSlipEta[node]
+                        #rv_galerkin -= ScaleFactor/(PenaltyParameter[node] * TangentFactor) * (ScaleFactor * LMTangentEta[node] - modified_augmented_tangent_lm_eta) * wLMTangentEta[node]
 
                 if(do_simplifications):
                     rv_galerkin = simplify(rv_galerkin)
@@ -274,14 +285,6 @@ for normalvar in range(2):
                 print("LHS= ", lhs.shape)
                 print("RHS= ", rhs.shape)
                 print("LHS and RHS have been created!")
-
-                initial_index = dim * (2 * nnodes)
-                if (slip > 0):
-                    for idim in range(dim):
-                        #lhs[initial_index + dim * node + 0, initial_index + dim * node + idim] = ScaleFactor**2 * NormalSlave[idim]
-                        lhs[initial_index + dim * node + 1, initial_index + dim * node + idim] = ScaleFactor**2 * TangentSlaveXi[idim]
-                        if (dim == 3):
-                            lhs[initial_index + dim * node + 2, initial_index + dim * node + idim] = ScaleFactor**2 * TangentSlaveEta[idim]
 
                 initial_tabs = 1
                 lhs_out = OutputMatrix_CollectingFactorsNonZero(lhs, "lhs", mode, initial_tabs, number_dof)
