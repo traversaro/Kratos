@@ -360,38 +360,38 @@ namespace Kratos
             ModelPart this_model_part("Contact");
             this_model_part.CreateSubModelPart("ComputingContact");
             this_model_part.SetBufferSize(2);
-            
+
             this_model_part.AddNodalSolutionStepVariable(DISPLACEMENT);
             this_model_part.AddNodalSolutionStepVariable(WEIGHTED_GAP);
             this_model_part.AddNodalSolutionStepVariable(WEIGHTED_SLIP);
             this_model_part.AddNodalSolutionStepVariable(NORMAL);
-            
+
             auto& process_info = this_model_part.GetProcessInfo();
             process_info[STEP] = 1;
             process_info[NL_ITERATION_NUMBER] = 1;
             process_info[DELTA_TIME] = 1.0;
             process_info[DISTANCE_THRESHOLD] = 1.0;
-            
+
             // First we create the nodes
             const std::size_t number_of_divisions = 8;
             const double lenght = 4.0;
             const double radius = 6.0;
             const double angle = Globals::Pi/6;
             const double slope = 0.0;
-            
+
             // We create our problem
             CreatePlaneCilynderProblem(this_model_part, number_of_divisions, lenght, radius, angle, slope, true);
-            
+
             // We compute the explicit contribution
             const array_1d<double, 3> zero_vector(3, 0.0);
             VariableUtils().SetScalarVar<Variable<double>>(WEIGHTED_GAP, 0.0, this_model_part.Nodes());
             VariableUtils().SetVectorVar(WEIGHTED_SLIP, zero_vector, this_model_part.Nodes());
             for (auto& id_cond : this_model_part.GetSubModelPart("ComputingContact").Conditions())
                 id_cond.AddExplicitContribution(process_info);
-                
+
 //             // DEBUG
 //             GiDIOGapDebug(this_model_part);
-            
+
             const double tolerance = 1.0e-4;
             array_1d<double, 3> slip(3, 0.0);
             slip[0] = 0.1;
@@ -406,6 +406,161 @@ namespace Kratos
                         }
                     }
                 }
+            }
+        }
+
+        /**
+        * Checks the correct work of the weighted slip computation
+        * Test 4
+        */
+
+        KRATOS_TEST_CASE_IN_SUITE(WeightedGap4, KratosContactStructuralMechanicsFastSuite)
+        {
+            ModelPart this_model_part("Contact");
+            this_model_part.CreateSubModelPart("ComputingContact");
+            this_model_part.SetBufferSize(2);
+            
+            this_model_part.AddNodalSolutionStepVariable(DISPLACEMENT);
+            this_model_part.AddNodalSolutionStepVariable(WEIGHTED_GAP);
+            this_model_part.AddNodalSolutionStepVariable(WEIGHTED_SLIP);
+            this_model_part.AddNodalSolutionStepVariable(NORMAL);
+            
+            this_model_part.CreateSubModelPart("SlaveModelPart");
+            ModelPart& slave_model_part = this_model_part.GetSubModelPart("SlaveModelPart");
+            this_model_part.CreateSubModelPart("MasterModelPart");
+            ModelPart& master_model_part = this_model_part.GetSubModelPart("MasterModelPart");
+
+            auto& process_info = this_model_part.GetProcessInfo();
+            process_info[STEP] = 1;
+            process_info[NL_ITERATION_NUMBER] = 1;
+            process_info[DELTA_TIME] = 1.0;
+            process_info[DISTANCE_THRESHOLD] = 1.0;
+            
+            Properties::Pointer p_cond_prop = this_model_part.pGetProperties(0);
+
+            std::size_t id_node = 0;
+            std::size_t id_cond = 0;
+            std::vector<Condition::Pointer> slave_conds;
+            id_node++;
+            NodeType::Pointer p_node_1 = this_model_part.CreateNewNode(id_node, 0.0 , 1.0e-3 , 0.0);
+            slave_model_part.AddNode(p_node_1);
+            p_node_1->Set(SLAVE, true);
+            p_node_1->Set(MASTER, false);
+            p_node_1->Set(ACTIVE, true);
+            id_node++;
+            NodeType::Pointer p_node_2 = this_model_part.CreateNewNode(id_node, 1.0 , 1.0e-3 , 0.0);
+            slave_model_part.AddNode(p_node_2);
+            p_node_2->Set(SLAVE, true);
+            p_node_2->Set(MASTER, false);
+            p_node_2->Set(ACTIVE, true);
+
+            id_cond++;
+            std::vector<NodeType::Pointer> condition_nodes (2);
+            condition_nodes[0] = p_node_1;
+            condition_nodes[1] = p_node_2;
+            Line2D2 <NodeType> line0( condition_nodes);
+
+            Condition::Pointer pcond0 = this_model_part.CreateNewCondition("Condition2D2N", id_cond, line0, p_cond_prop);
+            slave_model_part.AddCondition(pcond0);
+            pcond0->Set(SLAVE, true);
+            pcond0->Set(MASTER, false);
+            slave_conds.push_back(pcond0);
+
+            std::vector<Condition::Pointer> master_conds;
+            IndexSet this_set;
+
+            id_node++;
+            NodeType::Pointer p_node_3 = this_model_part.CreateNewNode(id_node, 0.0 , 0.0 , 0.0);
+            master_model_part.AddNode(p_node_3);
+            p_node_3->Set(SLAVE, false);
+            p_node_3->Set(MASTER, true);
+            p_node_3->Set(ACTIVE, true);
+            id_node++;
+            NodeType::Pointer p_node_4 = this_model_part.CreateNewNode(id_node, 1.0 , 0.0 , 0.0);
+            master_model_part.AddNode(p_node_4);
+            p_node_4->Set(SLAVE, false);
+            p_node_4->Set(MASTER, true);
+            p_node_4->Set(ACTIVE, true);
+            id_node++;
+            NodeType::Pointer p_node_5 = this_model_part.CreateNewNode(id_node, 2.0 , 0.0 , 0.0);
+            master_model_part.AddNode(p_node_5);
+            p_node_5->Set(SLAVE, false);
+            p_node_5->Set(MASTER, true);
+            p_node_5->Set(ACTIVE, true);
+
+            id_cond++;
+            this_set.AddId(id_cond);
+            condition_nodes[1] = p_node_3;
+            condition_nodes[0] = p_node_4;
+            Line2D2 <NodeType> line1( condition_nodes);
+
+            Condition::Pointer pcond1 = master_model_part.CreateNewCondition("Condition2D2N", id_cond, line1, p_cond_prop);
+            master_model_part.AddCondition(pcond1);
+            pcond1->Set(SLAVE, false);
+            pcond1->Set(MASTER, true);
+            master_conds.push_back(pcond1);
+
+            id_cond++;
+            this_set.AddId(id_cond);
+            condition_nodes[1] = p_node_4;
+            condition_nodes[0] = p_node_5;
+            Line2D2 <NodeType> line2( condition_nodes);
+
+            Condition::Pointer pcond2 = master_model_part.CreateNewCondition("Condition2D2N", id_cond, line2, p_cond_prop);
+            master_model_part.AddCondition(pcond2);
+            pcond2->Set(SLAVE, false);
+            pcond2->Set(MASTER, true);
+            master_conds.push_back(pcond2);
+
+            // We compute the normals
+            MortarUtilities::ComputeNodesMeanNormalModelPart(this_model_part);
+
+            // We compute the normal gap to compare with the weighted gap
+            // We add the index SetScalarVar
+            for(auto& icond : this_model_part.Conditions()) {
+                if (icond.Is(SLAVE))
+                    icond.SetValue(INDEX_SET, Kratos::make_shared<IndexSet>(this_set));
+            }
+
+            // We set the database
+            ModelPart& computing_rcontact_model_part = this_model_part.GetSubModelPart("ComputingContact");
+            for (auto& slave_cond : slave_conds) {
+                for (auto& master_cond : master_conds) {
+                    id_cond++;
+                    Condition::Pointer p_auxiliar_condition = computing_rcontact_model_part.CreateNewCondition("ALMFrictionalMortarContactCondition2D2N", id_cond, slave_cond->GetGeometry(), p_cond_prop);
+                    // We set the geometrical values
+                    p_auxiliar_condition->SetValue(PAIRED_GEOMETRY, master_cond->pGetGeometry());
+                    p_auxiliar_condition->SetValue(NORMAL, slave_cond->GetValue(NORMAL));
+                    p_auxiliar_condition->SetValue(PAIRED_NORMAL, master_cond->GetValue(NORMAL));
+                    // We activate the condition and initialize it
+                    p_auxiliar_condition->Set(ACTIVE, true);
+                    p_auxiliar_condition->Initialize();
+                    p_auxiliar_condition->InitializeSolutionStep(process_info);
+                }
+            }
+
+            for (auto& inode : slave_model_part.Nodes()) {
+                inode.FastGetSolutionStepValue(DISPLACEMENT_X) = 0.5;
+                inode.Coordinates() += inode.FastGetSolutionStepValue(DISPLACEMENT);
+            }
+            
+            // We compute the explicit contribution
+            const array_1d<double, 3> zero_vector(3, 0.0);
+            VariableUtils().SetScalarVar<Variable<double>>(WEIGHTED_GAP, 0.0, this_model_part.Nodes());
+            VariableUtils().SetVectorVar(WEIGHTED_SLIP, zero_vector, this_model_part.Nodes());
+            for (auto& id_cond : this_model_part.GetSubModelPart("ComputingContact").Conditions())
+                id_cond.AddExplicitContribution(process_info);
+                
+//             // DEBUG
+//             GiDIOGapDebug(this_model_part);
+            
+            const double tolerance = 1.0e-4;
+            array_1d<double, 3> slip(3, 0.0);
+            slip[0] = 0.5;
+            for (auto& inode : slave_model_part.Nodes()) {
+                const auto& weighted_slip_corrected = inode.FastGetSolutionStepValue(WEIGHTED_SLIP)/0.5;
+                KRATOS_CHECK_LESS_EQUAL(norm_2(weighted_slip_corrected - slip)/norm_2(slip), tolerance);
+
             }
         }
         
