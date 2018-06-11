@@ -286,6 +286,14 @@ for normalvar in range(2):
                 print("RHS= ", rhs.shape)
                 print("LHS and RHS have been created!")
 
+                #initial_index = dim * (2 * nnodes)
+                #if (slip > 0):
+                    #for idim in range(dim):
+                        #lhs[initial_index + dim * node + 0, initial_index + dim * node + idim] = NormalSlave[idim]
+                        #lhs[initial_index + dim * node + 1, initial_index + dim * node + idim] = TangentSlaveXi[idim]
+                        #if (dim == 3):
+                            #lhs[initial_index + dim * node + 2, initial_index + dim * node + idim] = TangentSlaveEta[idim]
+
                 initial_tabs = 1
                 lhs_out = OutputMatrix_CollectingFactorsNonZero(lhs, "lhs", mode, initial_tabs, number_dof)
                 rhs_out = OutputVector_CollectingFactorsNonZero(rhs, "rhs", mode, initial_tabs, number_dof)
