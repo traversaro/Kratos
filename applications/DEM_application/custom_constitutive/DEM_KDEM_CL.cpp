@@ -108,11 +108,11 @@ namespace Kratos {
         // GetContactArea(my_radius, other_radius, vector_of_contact_areas, i, calculation_area);
 
         double radius_sum = my_radius + other_radius;
-        double initial_delta = element1->GetInitialDelta(i);
-        double initial_dist = radius_sum - initial_delta;
+        // double initial_delta = element1->GetInitialDelta(i);
+        // double initial_dist = radius_sum - initial_delta;
 
         // calculation of elastic constants
-        double kn_el = equiv_young * calculation_area / initial_dist;
+        double kn_el = equiv_young * calculation_area /*/ initial_dist*/;
 
         if (&element1_props == &element2_props) {
             mTensionLimit = element1->GetFastProperties()->GetContactSigmaMin()*1e6;
