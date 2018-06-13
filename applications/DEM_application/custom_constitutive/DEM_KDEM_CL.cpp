@@ -31,8 +31,9 @@ namespace Kratos {
 //         double radius_sum = radius + other_radius;
 //         double equiv_radius = radius * other_radius / radius_sum;
 //         double equiv_radius = 0.5 * radius_sum;
-        double equiv_radius = std::min(radius, other_radius);
-        calculation_area = Globals::Pi * equiv_radius * equiv_radius;
+        // double equiv_radius = std::min(radius, other_radius);
+        // calculation_area = Globals::Pi * equiv_radius * equiv_radius;
+        double calculation_area = 77.45e-4;
         KRATOS_CATCH("")
     }
 
@@ -56,8 +57,8 @@ namespace Kratos {
         KRATOS_TRY
 
         const double equiv_shear = equiv_young / (2.0 * (1 + equiv_poisson)); // TODO: Is this correct? SLS
-        kn_el = equiv_young * calculation_area / current_distance;
-        kt_el = equiv_shear * calculation_area / current_distance;
+        kn_el = equiv_young * calculation_area /*/ current_distance*/;
+        kt_el = equiv_shear * calculation_area /*/ current_distance*/;
 
         KRATOS_CATCH("")
     }
