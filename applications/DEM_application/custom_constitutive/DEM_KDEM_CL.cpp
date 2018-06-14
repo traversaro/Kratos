@@ -31,9 +31,10 @@ namespace Kratos {
 //         double radius_sum = radius + other_radius;
 //         double equiv_radius = radius * other_radius / radius_sum;
 //         double equiv_radius = 0.5 * radius_sum;
-        // double equiv_radius = std::min(radius, other_radius);
-        // calculation_area = Globals::Pi * equiv_radius * equiv_radius;
-        double calculation_area = 77.45e-4;
+//         double equiv_radius = std::min(radius, other_radius);
+//         calculation_area = Globals::Pi * equiv_radius * equiv_radius;
+        if (radius == other_radius) calculation_area = 7.745e-3;
+        else calculation_area = 2.25e-2;
         KRATOS_CATCH("")
     }
 
@@ -47,8 +48,8 @@ namespace Kratos {
     }
 
     void DEM_KDEM::GetContactArea(const double radius, const double other_radius, const Vector& vector_of_initial_areas, const int neighbour_position, double& calculation_area) {
-        if (vector_of_initial_areas.size()) calculation_area = vector_of_initial_areas[neighbour_position];
-        else CalculateContactArea(radius, other_radius, calculation_area);
+        // if (vector_of_initial_areas.size()) calculation_area = vector_of_initial_areas[neighbour_position];
+        CalculateContactArea(radius, other_radius, calculation_area);
     }
 
     void DEM_KDEM::CalculateElasticConstants(double& kn_el, double& kt_el, double current_distance, double equiv_young,
@@ -57,8 +58,8 @@ namespace Kratos {
         KRATOS_TRY
 
         const double equiv_shear = equiv_young / (2.0 * (1 + equiv_poisson)); // TODO: Is this correct? SLS
-        kn_el = equiv_young * calculation_area /*/ current_distance*/;
-        kt_el = equiv_shear * calculation_area /*/ current_distance*/;
+        kn_el = equiv_young * calculation_area / current_distance;
+        kt_el = equiv_shear * calculation_area / current_distance;
 
         KRATOS_CATCH("")
     }
@@ -102,18 +103,17 @@ namespace Kratos {
 
         const double my_radius = element1->GetRadius();
         const double other_radius = element2->GetRadius();
-        // double calculation_area = 0;
-        double calculation_area = 77.45e-4;
+        double calculation_area = 0;
 
         Vector& vector_of_contact_areas = element1->GetValue(NEIGHBOURS_CONTACT_AREAS);
-        // GetContactArea(my_radius, other_radius, vector_of_contact_areas, i, calculation_area);
+        GetContactArea(my_radius, other_radius, vector_of_contact_areas, i, calculation_area);
 
         double radius_sum = my_radius + other_radius;
-        // double initial_delta = element1->GetInitialDelta(i);
-        // double initial_dist = radius_sum - initial_delta;
+        double initial_delta = element1->GetInitialDelta(i);
+        double initial_dist = radius_sum - initial_delta;
 
         // calculation of elastic constants
-        double kn_el = equiv_young * calculation_area /*/ initial_dist*/;
+        double kn_el = equiv_young * calculation_area / initial_dist;
 
         if (&element1_props == &element2_props) {
             mTensionLimit = element1->GetFastProperties()->GetContactSigmaMin()*1e6;
@@ -356,7 +356,7 @@ namespace Kratos {
         GeometryFunctions::VectorGlobal2Local(LocalCoordSystem, GlobalDeltaAngularVelocity, LocalDeltaAngularVelocity);
         //GeometryFunctions::VectorGlobal2Local(LocalCoordSystem, mContactMoment, LocalRotationalMoment);
 
-        const double equivalent_radius = std::sqrt(calculation_area / Globals::Pi);
+        // const double equivalent_radius = std::sqrt(calculation_area / Globals::Pi);
         const double element_mass  = element->GetMass();
         const double neighbor_mass = neighbor->GetMass();
         const double equiv_mass    = element_mass * neighbor_mass / (element_mass + neighbor_mass);
