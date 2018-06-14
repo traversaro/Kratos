@@ -33,8 +33,7 @@ namespace Kratos {
 //         double equiv_radius = 0.5 * radius_sum;
 //         double equiv_radius = std::min(radius, other_radius);
 //         calculation_area = Globals::Pi * equiv_radius * equiv_radius;
-        if (radius == other_radius) calculation_area = 7.745e-3;
-        else calculation_area = 2.25e-2;
+        calculation_area = 7.745e-3;
         KRATOS_CATCH("")
     }
 
