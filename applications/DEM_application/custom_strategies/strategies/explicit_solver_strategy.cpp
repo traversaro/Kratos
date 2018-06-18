@@ -754,7 +754,9 @@ namespace Kratos {
 
                 int Element_Id_1 = mpParticleCreatorDestructor->FindMaxElementIdInModelPart(fem_model_part);
 
-                Properties::Pointer properties = fem_model_part.GetMesh().pGetProperties(submp[PROPERTIES_ID]);
+                Properties::Pointer properties;
+                if (submp.Has(PROPERTIES_ID)) properties = fem_model_part.GetMesh().pGetProperties(submp[PROPERTIES_ID]);
+                else properties = fem_model_part.GetMesh().pGetProperties(fem_model_part.GetMesh(0).PropertiesBegin()->GetId()); // JIG: Backward compatibility, it should be removed in the future
 
                 std::string ElementNameString = "RigidBodyElement3D";
 
@@ -774,33 +776,38 @@ namespace Kratos {
                 std::vector<std::size_t> ElementIds;
                 ElementIds.push_back(element_id);
 
-                std::vector<std::vector<Node<3>::Pointer> > thread_vectors_of_node_pointers;
-                thread_vectors_of_node_pointers.resize(mNumberOfThreads);
-                std::vector<std::vector<array_1d<double, 3> > > thread_vectors_of_coordinates;
-                thread_vectors_of_coordinates.resize(mNumberOfThreads);
+                if (submp.Has(FREE_BODY_MOTION)) { // JIG: Backward compatibility, it should be removed in the future
+                    if (submp[FREE_BODY_MOTION]) {
 
-                #pragma omp parallel for
-                for (int k = 0; k < (int)pNodes.size(); k++) {
-                    ModelPart::NodeIterator i = pNodes.ptr_begin() + k;
-                    thread_vectors_of_node_pointers[OpenMPUtils::ThisThread()].push_back(*(i.base())); //TODO: this could be raw pointers. It would be a lot faster here (same speed when reading later on)
-                    thread_vectors_of_coordinates[OpenMPUtils::ThisThread()].push_back(i->Coordinates() - reference_coordinates);
-                }
-                for (int i = 0; i < mNumberOfThreads; i++) {
-                    rigid_body_element->mListOfNodes.insert(rigid_body_element->mListOfNodes.end(), thread_vectors_of_node_pointers[i].begin(), thread_vectors_of_node_pointers[i].end());
-                    rigid_body_element->mListOfCoordinates.insert(rigid_body_element->mListOfCoordinates.end(), thread_vectors_of_coordinates[i].begin(), thread_vectors_of_coordinates[i].end());
-                }
+                        std::vector<std::vector<Node<3>::Pointer> > thread_vectors_of_node_pointers;
+                        thread_vectors_of_node_pointers.resize(mNumberOfThreads);
+                        std::vector<std::vector<array_1d<double, 3> > > thread_vectors_of_coordinates;
+                        thread_vectors_of_coordinates.resize(mNumberOfThreads);
 
-                std::vector<std::vector<RigidFace3D*> > thread_vectors_of_rigid_faces;
-                thread_vectors_of_rigid_faces.resize(mNumberOfThreads);
+                        #pragma omp parallel for
+                        for (int k = 0; k < (int)pNodes.size(); k++) {
+                            ModelPart::NodeIterator i = pNodes.ptr_begin() + k;
+                            thread_vectors_of_node_pointers[OpenMPUtils::ThisThread()].push_back(*(i.base())); //TODO: this could be raw pointers. It would be a lot faster here (same speed when reading later on)
+                            thread_vectors_of_coordinates[OpenMPUtils::ThisThread()].push_back(i->Coordinates() - reference_coordinates);
+                        }
+                        for (int i = 0; i < mNumberOfThreads; i++) {
+                            rigid_body_element->mListOfNodes.insert(rigid_body_element->mListOfNodes.end(), thread_vectors_of_node_pointers[i].begin(), thread_vectors_of_node_pointers[i].end());
+                            rigid_body_element->mListOfCoordinates.insert(rigid_body_element->mListOfCoordinates.end(), thread_vectors_of_coordinates[i].begin(), thread_vectors_of_coordinates[i].end());
+                        }
 
-                #pragma omp parallel for
-                for (int k = 0; k < (int)pTConditions.size(); k++) {
-                    ConditionsArrayType::iterator it = pTConditions.ptr_begin() + k;
-                    RigidFace3D* it_face = dynamic_cast<RigidFace3D*>(&(*it));
-                    thread_vectors_of_rigid_faces[OpenMPUtils::ThisThread()].push_back(it_face);
-                }
-                for (int i = 0; i < mNumberOfThreads; i++) {
-                    rigid_body_element->mListOfRigidFaces.insert(rigid_body_element->mListOfRigidFaces.end(), thread_vectors_of_rigid_faces[i].begin(), thread_vectors_of_rigid_faces[i].end());
+                        std::vector<std::vector<RigidFace3D*> > thread_vectors_of_rigid_faces;
+                        thread_vectors_of_rigid_faces.resize(mNumberOfThreads);
+
+                        #pragma omp parallel for
+                        for (int k = 0; k < (int)pTConditions.size(); k++) {
+                            ConditionsArrayType::iterator it = pTConditions.ptr_begin() + k;
+                            RigidFace3D* it_face = dynamic_cast<RigidFace3D*>(&(*it));
+                            thread_vectors_of_rigid_faces[OpenMPUtils::ThisThread()].push_back(it_face);
+                        }
+                        for (int i = 0; i < mNumberOfThreads; i++) {
+                            rigid_body_element->mListOfRigidFaces.insert(rigid_body_element->mListOfRigidFaces.end(), thread_vectors_of_rigid_faces[i].begin(), thread_vectors_of_rigid_faces[i].end());
+                        }
+                    }
                 }
 
                 rigid_body_element->Initialize(r_process_info);
@@ -1050,7 +1057,7 @@ namespace Kratos {
 
             rigid_body_elements_counter++;
 
-            if (submp.Has(FREE_BODY_MOTION)) {
+            if (submp.Has(FREE_BODY_MOTION)) { // JIG: Backward compatibility, it should be removed in the future
                 if (submp[FREE_BODY_MOTION]) {
                     double vel_start = 0.0, vel_stop = std::numeric_limits<double>::max();
                     if (submp.Has(VELOCITY_START_TIME)) vel_start = submp[VELOCITY_START_TIME];
@@ -1068,7 +1075,7 @@ namespace Kratos {
                         if (submp.Has(IMPOSED_ANGULAR_VELOCITY_Y_VALUE)) rigid_body_element.GetGeometry()[0].FastGetSolutionStepValue(ANGULAR_VELOCITY)[1] = submp[IMPOSED_ANGULAR_VELOCITY_Y_VALUE];
                         else rigid_body_element.GetGeometry()[0].Set(DEMFlags::FIXED_ANG_VEL_Y, false);
                         if (submp.Has(IMPOSED_ANGULAR_VELOCITY_Z_VALUE)) rigid_body_element.GetGeometry()[0].FastGetSolutionStepValue(ANGULAR_VELOCITY)[2] = submp[IMPOSED_ANGULAR_VELOCITY_Z_VALUE];
-                    else rigid_body_element.GetGeometry()[0].Set(DEMFlags::FIXED_ANG_VEL_Z, false);
+                        else rigid_body_element.GetGeometry()[0].Set(DEMFlags::FIXED_ANG_VEL_Z, false);
                     }
 
                     else {
