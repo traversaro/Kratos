@@ -4,28 +4,28 @@
 #include <cmath>
 
 // Project includes
-#include "DEM_Beam_CL.h"
+#include "DEM_KDEM_Beam_CL.h"
 #include "custom_elements/spheric_continuum_particle.h"
 
 namespace Kratos {
 
-    void DEM_Beam::Initialize() {
+    void DEM_KDEM_Beam::Initialize() {
 
         KRATOS_TRY
         KRATOS_CATCH("")
     }
 
-    DEMContinuumConstitutiveLaw::Pointer DEM_Beam::Clone() const {
-        DEMContinuumConstitutiveLaw::Pointer p_clone(new DEM_Beam(*this));
+    DEMContinuumConstitutiveLaw::Pointer DEM_KDEM_Beam::Clone() const {
+        DEMContinuumConstitutiveLaw::Pointer p_clone(new DEM_KDEM_Beam(*this));
         return p_clone;
     }
 
-    void DEM_Beam::SetConstitutiveLawInProperties(Properties::Pointer pProp, bool verbose) const {
-        KRATOS_INFO("DEM") << "Assigning DEM_Beam to Properties " << pProp->Id() << std::endl;
+    void DEM_KDEM_Beam::SetConstitutiveLawInProperties(Properties::Pointer pProp, bool verbose) const {
+        KRATOS_INFO("DEM") << "Assigning DEM_KDEM_Beam to Properties " << pProp->Id() << std::endl;
         pProp->SetValue(DEM_CONTINUUM_CONSTITUTIVE_LAW_POINTER, this->Clone());
     }
 
-    void DEM_Beam::CalculateContactArea(double radius, double other_radius, double& calculation_area) {
+    void DEM_KDEM_Beam::CalculateContactArea(double radius, double other_radius, double& calculation_area) {
 
         KRATOS_TRY
 //         double radius_sum = radius + other_radius;
@@ -37,7 +37,7 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
-    double DEM_Beam::CalculateContactArea(double radius, double other_radius, Vector& v) {
+    double DEM_KDEM_Beam::CalculateContactArea(double radius, double other_radius, Vector& v) {
         double a = 0.0;
         CalculateContactArea(radius, other_radius, a);
         unsigned int old_size = v.size();
@@ -46,12 +46,12 @@ namespace Kratos {
         return a;
     }
 
-    void DEM_Beam::GetContactArea(const double radius, const double other_radius, const Vector& vector_of_initial_areas, const int neighbour_position, double& calculation_area) {
+    void DEM_KDEM_Beam::GetContactArea(const double radius, const double other_radius, const Vector& vector_of_initial_areas, const int neighbour_position, double& calculation_area) {
         // if (vector_of_initial_areas.size()) calculation_area = vector_of_initial_areas[neighbour_position];
         CalculateContactArea(radius, other_radius, calculation_area);
     }
 
-    void DEM_Beam::CalculateElasticConstants(double& kn_el, double& kt_el, double current_distance, double equiv_young,
+    void DEM_KDEM_Beam::CalculateElasticConstants(double& kn_el, double& kt_el, double current_distance, double equiv_young,
                                              double equiv_poisson, double calculation_area, SphericContinuumParticle* element1, SphericContinuumParticle* element2) {
 
         KRATOS_TRY
@@ -63,7 +63,7 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
-    void DEM_Beam::CalculateViscoDampingCoeff(double& equiv_visco_damp_coeff_normal,
+    void DEM_KDEM_Beam::CalculateViscoDampingCoeff(double& equiv_visco_damp_coeff_normal,
                                               double& equiv_visco_damp_coeff_tangential,
                                               SphericContinuumParticle* element1,
                                               SphericContinuumParticle* element2,
@@ -87,7 +87,7 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
-    double DEM_Beam::LocalMaxSearchDistance(const int i,
+    double DEM_KDEM_Beam::LocalMaxSearchDistance(const int i,
                                             SphericContinuumParticle* element1,
                                             SphericContinuumParticle* element2) {
 
@@ -126,7 +126,7 @@ namespace Kratos {
         return u1;
     }
 
-    void DEM_Beam::CalculateForces(const ProcessInfo& r_process_info,
+    void DEM_KDEM_Beam::CalculateForces(const ProcessInfo& r_process_info,
                                 double OldLocalElasticContactForce[3],
                                 double LocalElasticContactForce[3],
                                 double LocalElasticExtraContactForce[3],
@@ -204,7 +204,7 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
-    void DEM_Beam::ComputeParticleRotationalMoments(SphericContinuumParticle* element,
+    void DEM_KDEM_Beam::ComputeParticleRotationalMoments(SphericContinuumParticle* element,
                                                     SphericContinuumParticle* neighbor,
                                                     double equiv_young,
                                                     double distance,
@@ -288,7 +288,7 @@ namespace Kratos {
         KRATOS_CATCH("")
     }//ComputeParticleRotationalMoments
 
-    void DEM_Beam::AddPoissonContribution(const double equiv_poisson, double LocalCoordSystem[3][3], double& normal_force,
+    void DEM_KDEM_Beam::AddPoissonContribution(const double equiv_poisson, double LocalCoordSystem[3][3], double& normal_force,
                                           double calculation_area, Matrix* mSymmStressTensor, SphericContinuumParticle* element1,
                                           SphericContinuumParticle* element2, const ProcessInfo& r_process_info, const int i_neighbor_count, const double indentation) {
 
@@ -332,7 +332,7 @@ namespace Kratos {
 
     } //AddPoissonContribution
 
-    void DEM_Beam::AddContributionOfShearStrainParallelToBond(double OldLocalElasticContactForce[3],
+    void DEM_KDEM_Beam::AddContributionOfShearStrainParallelToBond(double OldLocalElasticContactForce[3],
                                                               double LocalElasticExtraContactForce[3],
                                                               array_1d<double, 3>& OldElasticExtraContactForce,
                                                               double LocalCoordSystem[3][3],

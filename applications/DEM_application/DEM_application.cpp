@@ -33,6 +33,7 @@
 #include "custom_constitutive/dem_d_linear_custom_constants_cl.h"
 #include "custom_constitutive/DEM_D_Hertz_dependent_friction_CL.h"
 #include "custom_constitutive/DEM_KDEM_fabric_CL.h"
+#include "custom_constitutive/DEM_KDEM_Beam_CL.h"
 #include "custom_constitutive/DEM_KDEM_Rankine_CL.h"
 #include "custom_constitutive/DEM_ExponentialHC_CL.h"
 #include "custom_constitutive/DEM_D_Hertz_viscous_Coulomb_Nestle_CL.h"
@@ -841,6 +842,7 @@ void KratosDEMApplication::Register() {
     Serializer::Register("DEM_Dempack2D", DEM_Dempack2D());
     Serializer::Register("DEM_KDEM", DEM_KDEM());
     Serializer::Register("DEM_KDEMFabric", DEM_KDEMFabric());
+    Serializer::Register("DEM_KDEMBeam", DEM_KDEMBeam());
     Serializer::Register("DEM_KDEM_Rankine", DEM_KDEM_Rankine());
     Serializer::Register("DEM_Dempack_torque", DEM_Dempack_torque());
     Serializer::Register("DEM_Dempack_dev", DEM_Dempack_dev());

@@ -1,6 +1,6 @@
 
-#if !defined(DEM_Beam_CL_H_INCLUDED)
-#define  DEM_Beam_CL_H_INCLUDED
+#if !defined(DEM_KDEM_Beam_CL_H_INCLUDED)
+#define  DEM_KDEM_Beam_CL_H_INCLUDED
 
 /* Project includes */
 #include "DEM_continuum_constitutive_law.h"
@@ -8,19 +8,19 @@
 
 namespace Kratos {
 
-    class KRATOS_API(DEM_APPLICATION) DEM_Beam : public DEMContinuumConstitutiveLaw {
+    class KRATOS_API(DEM_APPLICATION) DEM_KDEM_Beam : public DEMContinuumConstitutiveLaw {
     public:
 
-        KRATOS_CLASS_POINTER_DEFINITION(DEM_Beam);
+        KRATOS_CLASS_POINTER_DEFINITION(DEM_KDEM_Beam);
 
-        DEM_Beam() {
+        DEM_KDEM_Beam() {
         }
 
         void Initialize() override;
 
         void SetConstitutiveLawInProperties(Properties::Pointer pProp, bool verbose = true) const override;
 
-        ~DEM_Beam() {
+        ~DEM_KDEM_Beam() {
         }
 
         DEMContinuumConstitutiveLaw::Pointer Clone() const override;
@@ -158,4 +158,4 @@ namespace Kratos {
     };
 
 } /* namespace Kratos.*/
-#endif /* DEM_Beam_H_INCLUDED  defined */
+#endif /* DEM_KDEM_Beam_H_INCLUDED  defined */
