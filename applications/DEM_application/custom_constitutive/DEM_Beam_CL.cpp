@@ -155,7 +155,7 @@ namespace Kratos {
                                 double ViscoDampingLocalContactForce[3]) {
 
         KRATOS_TRY
-        CalculateNormalForces(LocalElasticContactForce,
+        DEM_KDEM::CalculateNormalForces(LocalElasticContactForce,
                 kn_el,
                 equiv_young,
                 indentation,
@@ -166,7 +166,7 @@ namespace Kratos {
                 i_neighbour_count,
                 time_steps);
 
-        CalculateTangentialForces(OldLocalElasticContactForce,
+        DEM_KDEM::CalculateTangentialForces(OldLocalElasticContactForce,
                 LocalElasticContactForce,
                 LocalElasticExtraContactForce,
                 LocalCoordSystem,
@@ -186,146 +186,20 @@ namespace Kratos {
                 search_control_vector,
                 r_process_info);
 
-        CalculateViscoDampingCoeff(equiv_visco_damp_coeff_normal,
+        DEM_KDEM::CalculateViscoDampingCoeff(equiv_visco_damp_coeff_normal,
                                    equiv_visco_damp_coeff_tangential,
                                    element1,
                                    element2,
                                    kn_el,
                                    kt_el);
 
-        CalculateViscoDamping(LocalRelVel,
+        DEM_KDEM::CalculateViscoDamping(LocalRelVel,
                               ViscoDampingLocalContactForce,
                               indentation,
                               equiv_visco_damp_coeff_normal,
                               equiv_visco_damp_coeff_tangential,
                               sliding,
                               element1->mIniNeighbourFailureId[i_neighbour_count]);
-
-        KRATOS_CATCH("")
-    }
-
-    void DEM_Beam::CalculateNormalForces(double LocalElasticContactForce[3],
-            const double kn_el,
-            double equiv_young,
-            double indentation,
-            double calculation_area,
-            double& acumulated_damage,
-            SphericContinuumParticle* element1,
-            SphericContinuumParticle* element2,
-            int i_neighbour_count,
-            int time_steps) {
-
-        KRATOS_TRY
-
-        if (indentation >= 0.0) { //COMPRESSION
-            LocalElasticContactForce[2] = kn_el * indentation;
-        }
-        else { //tension
-            int& failure_type = element1->mIniNeighbourFailureId[i_neighbour_count];
-            if (failure_type == 0) {
-                double mTensionLimit = 0.5 * 1e6 * (element1->GetFastProperties()->GetContactSigmaMin() + element2->GetFastProperties()->GetContactSigmaMin()); //N/m2
-                const double limit_force = mTensionLimit * calculation_area;
-                LocalElasticContactForce[2] = kn_el * indentation;
-                if (fabs(LocalElasticContactForce[2]) > limit_force) {
-                    failure_type = 4; //tension failure
-                    LocalElasticContactForce[2] = 0.0;
-                }
-            }
-            else {
-                LocalElasticContactForce[2] = 0.0;
-            }
-        }
-
-        KRATOS_CATCH("")
-    }
-
-    void DEM_Beam::CalculateTangentialForces(double OldLocalElasticContactForce[3],
-            double LocalElasticContactForce[3],
-            double LocalElasticExtraContactForce[3],
-            double LocalCoordSystem[3][3],
-            double LocalDeltDisp[3],
-            const double kt_el,
-            const double equiv_shear,
-            double& contact_sigma,
-            double& contact_tau,
-            double indentation,
-            double calculation_area,
-            double& failure_criterion_state,
-            SphericContinuumParticle* element1,
-            SphericContinuumParticle* element2,
-            int i_neighbour_count,
-            bool& sliding,
-            int search_control,
-            DenseVector<int>& search_control_vector,
-            const ProcessInfo& r_process_info) {
-
-        KRATOS_TRY
-
-        int& failure_type = element1->mIniNeighbourFailureId[i_neighbour_count];
-        LocalElasticContactForce[0] = OldLocalElasticContactForce[0] - kt_el * LocalDeltDisp[0]; // 0: first tangential
-        LocalElasticContactForce[1] = OldLocalElasticContactForce[1] - kt_el * LocalDeltDisp[1]; // 1: second tangential
-
-        double ShearForceNow = sqrt(LocalElasticContactForce[0] * LocalElasticContactForce[0]
-                                  + LocalElasticContactForce[1] * LocalElasticContactForce[1]);
-
-        if (failure_type == 0) { // This means it has not broken
-            //Properties& element1_props = element1->GetProperties();
-            //Properties& element2_props = element2->GetProperties();
-            if (r_process_info[SHEAR_STRAIN_PARALLEL_TO_BOND_OPTION]) { //TODO: use this only for intact bonds (not broken))
-                AddContributionOfShearStrainParallelToBond(OldLocalElasticContactForce, LocalElasticExtraContactForce, element1->mNeighbourElasticExtraContactForces[i_neighbour_count], LocalCoordSystem, kt_el, calculation_area,  element1, element2);
-            }
-
-            const double mTauZero = 0.5 * 1e6 * (element1->GetFastProperties()->GetContactTauZero() + element2->GetFastProperties()->GetContactTauZero());
-            const double mInternalFriction = 0.5 * (element1->GetFastProperties()->GetContactInternalFricc() + element2->GetFastProperties()->GetContactInternalFricc());
-
-            contact_tau = ShearForceNow / calculation_area;
-            contact_sigma = LocalElasticContactForce[2] / calculation_area;
-
-            double tau_strength = mTauZero;
-
-            if (contact_sigma >= 0) {
-                tau_strength = mTauZero + mInternalFriction * contact_sigma;
-            }
-
-            if (contact_tau > tau_strength) {
-                failure_type = 2; // shear
-            }
-        }
-        else {
-            const double equiv_tg_of_fri_ang = 0.5 * (element1->GetTgOfFrictionAngle() + element2->GetTgOfFrictionAngle());
-            double Frictional_ShearForceMax = equiv_tg_of_fri_ang * LocalElasticContactForce[2];
-
-            if (Frictional_ShearForceMax < 0.0) {
-                Frictional_ShearForceMax = 0.0;
-            }
-
-            if ((ShearForceNow > Frictional_ShearForceMax) && (ShearForceNow != 0.0)) {
-                LocalElasticContactForce[0] = (Frictional_ShearForceMax / ShearForceNow) * LocalElasticContactForce[0];
-                LocalElasticContactForce[1] = (Frictional_ShearForceMax / ShearForceNow) * LocalElasticContactForce[1];
-                sliding = true;
-            }
-        }
-
-        KRATOS_CATCH("")
-    }
-
-    void DEM_Beam::CalculateViscoDamping(double LocalRelVel[3],
-                                         double ViscoDampingLocalContactForce[3],
-                                         double indentation,
-                                         double equiv_visco_damp_coeff_normal,
-                                         double equiv_visco_damp_coeff_tangential,
-                                         bool& sliding,
-                                         int failure_id) {
-
-        KRATOS_TRY
-
-        if ((indentation > 0) || (failure_id == 0)) {
-            ViscoDampingLocalContactForce[2] = -equiv_visco_damp_coeff_normal * LocalRelVel[2];
-        }
-        if (((indentation > 0) || (failure_id == 0)) && (sliding == false)) {
-            ViscoDampingLocalContactForce[0] = -equiv_visco_damp_coeff_tangential * LocalRelVel[0];
-            ViscoDampingLocalContactForce[1] = -equiv_visco_damp_coeff_tangential * LocalRelVel[1];
-        }
 
         KRATOS_CATCH("")
     }

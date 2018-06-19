@@ -31,9 +31,9 @@ namespace Kratos {
 //         double radius_sum = radius + other_radius;
 //         double equiv_radius = radius * other_radius / radius_sum;
 //         double equiv_radius = 0.5 * radius_sum;
-//         double equiv_radius = std::min(radius, other_radius);
-//         calculation_area = Globals::Pi * equiv_radius * equiv_radius;
-        calculation_area = 7.745e-3;
+        double equiv_radius = std::min(radius, other_radius);
+        calculation_area = Globals::Pi * equiv_radius * equiv_radius;
+        // calculation_area = 7.745e-3;
         KRATOS_CATCH("")
     }
 
@@ -355,26 +355,26 @@ namespace Kratos {
         GeometryFunctions::VectorGlobal2Local(LocalCoordSystem, GlobalDeltaAngularVelocity, LocalDeltaAngularVelocity);
         //GeometryFunctions::VectorGlobal2Local(LocalCoordSystem, mContactMoment, LocalRotationalMoment);
 
-        // const double equivalent_radius = std::sqrt(calculation_area / Globals::Pi);
+        const double equivalent_radius = std::sqrt(calculation_area / Globals::Pi);
         const double element_mass  = element->GetMass();
         const double neighbor_mass = neighbor->GetMass();
         const double equiv_mass    = element_mass * neighbor_mass / (element_mass + neighbor_mass);
         const double equiv_shear   = equiv_young / (2.0 * (1 + equiv_poisson));
-        // const double Inertia_I     = 0.25 * Globals::Pi * equivalent_radius * equivalent_radius * equivalent_radius * equivalent_radius;
-        const double Inertia_I     = 3217.0e-8;
+        const double Inertia_I     = 0.25 * Globals::Pi * equivalent_radius * equivalent_radius * equivalent_radius * equivalent_radius;
+        // const double Inertia_I     = 3217.0e-8;
         const double Inertia_J     = 2.0 * Inertia_I; // This is the polar inertia
 
         const double my_gamma    = element->GetProperties()[DAMPING_GAMMA];
         const double other_gamma = neighbor->GetProperties()[DAMPING_GAMMA];
         const double equiv_gamma = 0.5 * (my_gamma + other_gamma);
 
+        double aux = (element->GetRadius() + neighbor->GetRadius()) / distance; // This is necessary because if spheres are not tangent the DeltaRotatedAngle and the DeltaAngularVelocity have to be interpolated
+
         //Viscous parameter taken from Olmedo et al., 'Discrete element model of the dynamic response of fresh wood stems to impact'
         array_1d<double, 3> visc_param;
-        visc_param[0] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * Inertia_I / distance); // OLMEDO
-        visc_param[1] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * Inertia_I / distance); // OLMEDO
-        visc_param[2] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_shear * Inertia_J / distance); // OLMEDO
-
-        double aux = (element->GetRadius() + neighbor->GetRadius()) / distance; // This is necessary because if spheres are not tangent the DeltaAngularVelocity has to be interpolated
+        visc_param[0] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * Inertia_I / aux); // OLMEDO
+        visc_param[1] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * Inertia_I / aux); // OLMEDO
+        visc_param[2] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_shear * Inertia_J / aux); // OLMEDO
 
         array_1d<double, 3> LocalEffDeltaRotatedAngle;
         LocalEffDeltaRotatedAngle[0] = LocalDeltaRotatedAngle[0] * aux;
