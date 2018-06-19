@@ -28,12 +28,10 @@ namespace Kratos {
     void DEM_KDEM::CalculateContactArea(double radius, double other_radius, double& calculation_area) {
 
         KRATOS_TRY
-//         double radius_sum = radius + other_radius;
+        double radius_sum = radius + other_radius;
 //         double equiv_radius = radius * other_radius / radius_sum;
-//         double equiv_radius = 0.5 * radius_sum;
-        double equiv_radius = std::min(radius, other_radius);
+        double equiv_radius = 0.5 * radius_sum;
         calculation_area = Globals::Pi * equiv_radius * equiv_radius;
-        // calculation_area = 7.745e-3;
         KRATOS_CATCH("")
     }
 
@@ -361,7 +359,6 @@ namespace Kratos {
         const double equiv_mass    = element_mass * neighbor_mass / (element_mass + neighbor_mass);
         const double equiv_shear   = equiv_young / (2.0 * (1 + equiv_poisson));
         const double Inertia_I     = 0.25 * Globals::Pi * equivalent_radius * equivalent_radius * equivalent_radius * equivalent_radius;
-        // const double Inertia_I     = 3217.0e-8;
         const double Inertia_J     = 2.0 * Inertia_I; // This is the polar inertia
 
         const double my_gamma    = element->GetProperties()[DAMPING_GAMMA];
