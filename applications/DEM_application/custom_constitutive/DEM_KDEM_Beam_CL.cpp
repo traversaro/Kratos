@@ -26,15 +26,15 @@ namespace Kratos {
     }
 
     void DEM_KDEM_Beam::ComputeParticleRotationalMoments(SphericContinuumParticle* element,
-                                                    SphericContinuumParticle* neighbor,
-                                                    double equiv_young,
-                                                    double distance,
-                                                    double calculation_area,
-                                                    double LocalCoordSystem[3][3],
-                                                    double ElasticLocalRotationalMoment[3],
-                                                    double ViscoLocalRotationalMoment[3],
-                                                    double equiv_poisson,
-                                                    double indentation) {
+                                                         SphericContinuumParticle* neighbor,
+                                                         double equiv_young,
+                                                         double distance,
+                                                         double calculation_area,
+                                                         double LocalCoordSystem[3][3],
+                                                         double ElasticLocalRotationalMoment[3],
+                                                         double ViscoLocalRotationalMoment[3],
+                                                         double equiv_poisson,
+                                                         double indentation) {
 
         KRATOS_TRY
         double LocalDeltaRotatedAngle[3]    = {0.0};
