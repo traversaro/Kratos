@@ -15,10 +15,6 @@
 
 namespace Kratos {
 
-    class KRATOS_API(DEM_APPLICATION) SphericContinuumParticle : public SphericParticle
-    {
-    public:
-
     class KRATOS_API(DEM_APPLICATION) BeamParticle : public SphericContinuumParticle {
 
         public:
@@ -53,6 +49,8 @@ namespace Kratos {
 
         /// Print object's data
         virtual void PrintData(std::ostream& rOStream) const override {}
+
+        virtual void Initialize(ProcessInfo& r_process_info);
 
         virtual void ComputeBallToBallContactForce(SphericParticle::ParticleDataBuffer &,
                                                    ProcessInfo& r_process_info,

@@ -53,9 +53,6 @@ namespace Kratos {
         const double equiv_mass    = element_mass * neighbor_mass / (element_mass + neighbor_mass);
         const double equiv_shear   = equiv_young / (2.0 * (1 + equiv_poisson));
 
-        array_1d<double, 3> my_inertia  = element->GetProperties()[INERTIA_BEAM];
-        array_1d<double, 3> other_inertia  = neighbor->GetProperties()[INERTIA_BEAM];
-
         array_1d<double, 3> inertia;
         inertia[0] = std::max(element->GetGeometry()[0].FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[0], neighbor->GetGeometry()[0].FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[0]);
         inertia[1] = std::max(element->GetGeometry()[0].FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[1], neighbor->GetGeometry()[0].FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[1]);

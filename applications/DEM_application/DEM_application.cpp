@@ -136,6 +136,9 @@ KRATOS_CREATE_VARIABLE(double, PARTICLE_COHESION)
 KRATOS_CREATE_VARIABLE(int, IF_BOUNDARY_ELEMENT)
 KRATOS_CREATE_VARIABLE(Vector, IF_BOUNDARY_FACE)
 KRATOS_CREATE_VARIABLE(DenseVector<int>, PARTICLE_CONTACT_FAILURE_ID)
+KRATOS_CREATE_VARIABLE(double, BEAM_INERTIA_TENSOR_XX)
+KRATOS_CREATE_VARIABLE(double, BEAM_INERTIA_TENSOR_YY)
+KRATOS_CREATE_VARIABLE(double, BEAM_INERTIA_TENSOR_ZZ)
 
 // *************** Continuum only END ***************
 
@@ -544,6 +547,9 @@ void KratosDEMApplication::Register() {
     KRATOS_REGISTER_VARIABLE(IF_BOUNDARY_FACE)
     KRATOS_REGISTER_VARIABLE(PARTICLE_CONTACT_FAILURE_ID)
     KRATOS_REGISTER_VARIABLE(EXPORT_PARTICLE_FAILURE_ID)
+    KRATOS_REGISTER_VARIABLE(BEAM_INERTIA_TENSOR_XX)
+    KRATOS_REGISTER_VARIABLE(BEAM_INERTIA_TENSOR_YY)
+    KRATOS_REGISTER_VARIABLE(BEAM_INERTIA_TENSOR_ZZ)
     // *************** Continuum only END ***************
 
     // MATERIAL PARAMETERS
@@ -846,7 +852,7 @@ void KratosDEMApplication::Register() {
     Serializer::Register("DEM_Dempack2D", DEM_Dempack2D());
     Serializer::Register("DEM_KDEM", DEM_KDEM());
     Serializer::Register("DEM_KDEMFabric", DEM_KDEMFabric());
-    Serializer::Register("DEM_KDEMBeam", DEM_KDEMBeam());
+    Serializer::Register("DEM_KDEM_Beam", DEM_KDEM_Beam());
     Serializer::Register("DEM_KDEM_Rankine", DEM_KDEM_Rankine());
     Serializer::Register("DEM_Dempack_torque", DEM_Dempack_torque());
     Serializer::Register("DEM_Dempack_dev", DEM_Dempack_dev());
