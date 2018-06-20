@@ -7,65 +7,24 @@
 
 namespace Kratos {
 
-    void BeamParticle::ContactAreaWeighting() //MISMI 10: POOYAN this could be done by calculating on the bars. not looking at the neighbors of my neighbors.
-    {
-        double alpha = 1.0;
-        //double external_sphere_area = 4 * Globals::Pi * GetRadius()*GetRadius();
-        double effectiveVolumeRadius = EffectiveVolumeRadius();  //calculateEffectiveVolumeRadius
-        double external_sphere_area = 4 * Globals::Pi * effectiveVolumeRadius * effectiveVolumeRadius;
-        double total_equiv_area = 0.0;
-        double total_mContIniNeighArea = 0.0;
-        int cont_ini_neighbours_size = mContinuumInitialNeighborsSize;
-        Vector& cont_ini_neigh_area = GetValue(NEIGHBOURS_CONTACT_AREAS);
-        bool print_debug_files = false;
+    void BeamParticle::Initialize(ProcessInfo& r_process_info) {
 
-        for (int i = 0; i < cont_ini_neighbours_size; i++) {
-            SphericParticle* ini_cont_neighbour_iterator = mNeighbourElements[i];
-            double other_radius = ini_cont_neighbour_iterator->GetRadius();
-            double area = mContinuumConstitutiveLawArray[i]->CalculateContactArea(GetRadius(), other_radius, cont_ini_neigh_area); //This call fills the vector of areas only if the Constitutive Law wants.
-            total_equiv_area += area;
+        SphericParticle::Initialize(r_process_info);
 
+        NodeType& node = GetGeometry()[0];
+
+        if (this->Is(DEMFlags::HAS_ROTATION)) {
+            node.GetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[0] = GetProperties()[BEAM_INERTIA_TENSOR_XX];
+            node.GetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[1] = GetProperties()[BEAM_INERTIA_TENSOR_YY];
+            node.GetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[2] = GetProperties()[BEAM_INERTIA_TENSOR_ZZ];
         }
-        if (print_debug_files) {
-            std::ofstream outputfile("external_sphere_area-total_equiv_area.txt", std::ios_base::out | std::ios_base::app);
-            outputfile << external_sphere_area << "  " << total_equiv_area << "\n";
-            outputfile.close();
-        }
-        if (cont_ini_neighbours_size >= 6) {
-            if (!IsSkin()) {
-                AuxiliaryFunctions::CalculateAlphaFactor3D(cont_ini_neighbours_size, external_sphere_area, total_equiv_area, alpha);
-                if (print_debug_files) {
-                    std::ofstream outputfile("alpha.txt", std::ios_base::out | std::ios_base::app);
-                    outputfile << alpha << "\n";
-                    outputfile.close();
-                }
-                for (unsigned int i = 0; i < cont_ini_neigh_area.size(); i++) {
-                    cont_ini_neigh_area[i] = alpha * cont_ini_neigh_area[i];
-                    total_mContIniNeighArea += cont_ini_neigh_area[i];
-                } //for every neighbor
-
-                if (print_debug_files) {
-                    std::ofstream outputfile2("total_mContIniNeighArea-total_equiv_area.txt", std::ios_base::out | std::ios_base::app);
-                    outputfile2 << total_mContIniNeighArea << "  " << total_equiv_area << "\n";
-                    outputfile2.close();
-                }
-            }
-
-            else {//skin sphere
-                for (unsigned int i = 0; i < cont_ini_neigh_area.size(); i++) {
-                    alpha = 1.00 * (1.40727)*(external_sphere_area / total_equiv_area)*((double(cont_ini_neighbours_size)) / 11.0);
-
-                    cont_ini_neigh_area[i] = alpha * cont_ini_neigh_area[i];
-                } //for every neighbor
-            }
-        }//if more than 3 neighbors
     }
 
     void BeamParticle::ComputeBallToBallContactForce(SphericParticle::ParticleDataBuffer & data_buffer,
-                                                                 ProcessInfo& r_process_info,
-                                                                 array_1d<double, 3>& rElasticForce,
-                                                                 array_1d<double, 3>& rContactForce,
-                                                                 double& RollingResistance)
+                                                     ProcessInfo& r_process_info,
+                                                     array_1d<double, 3>& rElasticForce,
+                                                     array_1d<double, 3>& rContactForce,
+                                                     double& RollingResistance)
     {
         KRATOS_TRY
 
@@ -128,7 +87,9 @@ namespace Kratos {
             const double equiv_shear = equiv_young / (2.0 * (1 + equiv_poisson));
 
             if (i < mContinuumInitialNeighborsSize) {
-                mContinuumConstitutiveLawArray[i]->GetContactArea(GetRadius(), other_radius, cont_ini_neigh_area, i, calculation_area); //some Constitutive Laws get a value, some others calculate the value.
+                double area = this->GetProperties()[BEAM_CONTACT_AREA];
+                double other_area = data_buffer.mpOtherParticle->GetProperties()[BEAM_CONTACT_AREA];
+                double calculation_area = std::max(radius, other_radius);
                 mContinuumConstitutiveLawArray[i]->CalculateElasticConstants(kn_el, kt_el, initial_dist, equiv_young, equiv_poisson, calculation_area, this, neighbour_iterator);
             }
 
@@ -207,8 +168,9 @@ namespace Kratos {
             } else if (indentation > 0.0) {
                 const double previous_indentation = indentation + LocalDeltDisp[2];
                 mDiscontinuumConstitutiveLaw->CalculateForces(r_process_info, OldLocalElasticContactForce, LocalElasticContactForce,
-                        LocalDeltDisp, LocalRelVel, indentation, previous_indentation,
-                        ViscoDampingLocalContactForce, cohesive_force, this, data_buffer.mpOtherParticle, sliding, LocalCoordSystem);
+                                                              LocalDeltDisp, LocalRelVel, indentation, previous_indentation,
+                                                              ViscoDampingLocalContactForce, cohesive_force, this, data_buffer.mpOtherParticle,
+                                                              sliding, LocalCoordSystem);
             } else { //Not bonded and no idata_buffer.mpOtherParticlendentation
                 LocalElasticContactForce[0] = 0.0;      LocalElasticContactForce[1] = 0.0;      LocalElasticContactForce[2] = 0.0;
                 ViscoDampingLocalContactForce[0] = 0.0; ViscoDampingLocalContactForce[1] = 0.0; ViscoDampingLocalContactForce[2] = 0.0;
@@ -254,10 +216,6 @@ namespace Kratos {
             AddContributionToRepresentativeVolume(data_buffer.mDistance, radius_sum, calculation_area);
 
             ComputeForceWithNeighbourFinalOperations();
-
-            /*if (i < mContinuumInitialNeighborsSize) {
-                DEM_COPY_SECOND_TO_FIRST_3(mArrayOfDeltaDisplacements[i], DeltDisp);
-            }*/
         } // for each neighbor
 
         ComputeBrokenBondsRatio();

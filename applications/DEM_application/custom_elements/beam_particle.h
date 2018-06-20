@@ -54,8 +54,6 @@ namespace Kratos {
         /// Print object's data
         virtual void PrintData(std::ostream& rOStream) const override {}
 
-        virtual void BeamParticle::ContactAreaWeighting() override;
-
         virtual void ComputeBallToBallContactForce(SphericParticle::ParticleDataBuffer &,
                                                    ProcessInfo& r_process_info,
                                                    array_1d<double, 3>& rElasticForce,

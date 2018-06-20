@@ -20,6 +20,7 @@
 #include "custom_elements/spheric_continuum_particle.h"
 #include "custom_elements/nanoparticle.h"
 #include "custom_elements/analytic_spheric_particle.h"
+#include "custom_elements/beam_particle.h"
 #include "custom_elements/ice_continuum_particle.h"
 #include "custom_elements/Particle_Contact_Element.h"
 #include "custom_elements/cluster3D.h"
