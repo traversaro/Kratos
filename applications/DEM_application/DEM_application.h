@@ -91,6 +91,7 @@ private:
     const AnalyticSphericParticle mAnalyticSphericParticle3D;
     const SphericContinuumParticle mSphericContinuumParticle3D;
     const IceContinuumParticle mIceContinuumParticle3D;
+    const BeamParticle mBeamParticle3D;
     const ThermalSphericParticle<SphericContinuumParticle> mThermalSphericContinuumParticle3D;
     const ThermalSphericParticle<SphericParticle> mThermalSphericParticle3D;
     const SinteringSphericContinuumParticle mSinteringSphericContinuumParticle3D;

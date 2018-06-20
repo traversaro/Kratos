@@ -23,7 +23,7 @@ namespace Kratos {
 
         public:
 
-        /// Pointer definition of IceContinuumParticle
+        /// Pointer definition of BeamParticle
         KRATOS_CLASS_POINTER_DEFINITION(BeamParticle);
 
         BeamParticle() : SphericContinuumParticle() {}
@@ -76,13 +76,13 @@ namespace Kratos {
 
         /*
         /// Assignment operator
-        IceContinuumParticle& operator=(BeamParticle const& rOther)
+        BeamParticle& operator=(BeamParticle const& rOther)
         {
         return *this;
         }
 
         /// Copy constructor
-        IceContinuumParticle(BeamParticle const& rOther)
+        BeamParticle(BeamParticle const& rOther)
         {
         *this = rOther;
         }

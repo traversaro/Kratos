@@ -414,6 +414,7 @@ KratosDEMApplication::KratosDEMApplication() : KratosApplication("DEMApplication
       mAnalyticSphericParticle3D(0, Element::GeometryType::Pointer(new Sphere3D1<Node<3> >(Element::GeometryType::PointsArrayType(1)))),
       mSphericContinuumParticle3D(0, Element::GeometryType::Pointer(new Sphere3D1<Node<3> >(Element::GeometryType::PointsArrayType(1)))),
       mIceContinuumParticle3D(0, Element::GeometryType::Pointer(new Sphere3D1<Node<3> >(Element::GeometryType::PointsArrayType(1)))),
+      mBeamParticle3D(0, Element::GeometryType::Pointer(new Sphere3D1<Node<3> >(Element::GeometryType::PointsArrayType(1)))),
       mThermalSphericContinuumParticle3D(0, Element::GeometryType::Pointer(new Sphere3D1<Node<3> >(Element::GeometryType::PointsArrayType(1)))),
       mThermalSphericParticle3D(0, Element::GeometryType::Pointer(new Sphere3D1<Node<3> >(Element::GeometryType::PointsArrayType(1)))),
       mSinteringSphericContinuumParticle3D(0, Element::GeometryType::Pointer(new Sphere3D1<Node<3> >(Element::GeometryType::PointsArrayType(1)))),
@@ -796,6 +797,7 @@ void KratosDEMApplication::Register() {
     KRATOS_REGISTER_ELEMENT("AnalyticSphericParticle3D", mAnalyticSphericParticle3D)
     KRATOS_REGISTER_ELEMENT("SphericContinuumParticle3D", mSphericContinuumParticle3D)
     KRATOS_REGISTER_ELEMENT("IceContinuumParticle3D", mIceContinuumParticle3D)
+    KRATOS_REGISTER_ELEMENT("BeamParticle3D", mBeamParticle3D)
     KRATOS_REGISTER_ELEMENT("ThermalSphericContinuumParticle3D", mThermalSphericContinuumParticle3D)
     KRATOS_REGISTER_ELEMENT("ThermalSphericParticle3D", mThermalSphericParticle3D)
     KRATOS_REGISTER_ELEMENT("SinteringSphericContinuumParticle3D", mSinteringSphericContinuumParticle3D)
