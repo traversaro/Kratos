@@ -7,9 +7,9 @@
 
 namespace Kratos {
 
-    void BeamParticle::Initialize(ProcessInfo& r_process_info) {
+    void BeamParticle::Initialize(const ProcessInfo& r_process_info) {
 
-        SphericParticle::Initialize(r_process_info);
+        SphericContinuumParticle::Initialize(r_process_info);
 
         NodeType& node = GetGeometry()[0];
 
@@ -35,7 +35,7 @@ namespace Kratos {
         const array_1d<double, 3>& vel         = this->GetGeometry()[0].FastGetSolutionStepValue(VELOCITY);
         const array_1d<double, 3>& delta_displ = this->GetGeometry()[0].FastGetSolutionStepValue(DELTA_DISPLACEMENT);
         const array_1d<double, 3>& ang_vel     = this->GetGeometry()[0].FastGetSolutionStepValue(ANGULAR_VELOCITY);
-        // Vector& cont_ini_neigh_area            = this->GetValue(NEIGHBOURS_CONTACT_AREAS);
+
         int NeighbourSize = mNeighbourElements.size();
         GetGeometry()[0].GetSolutionStepValue(NEIGHBOUR_SIZE) = NeighbourSize;
 
@@ -89,7 +89,7 @@ namespace Kratos {
             if (i < mContinuumInitialNeighborsSize) {
                 double area = this->GetProperties()[BEAM_CONTACT_AREA];
                 double other_area = data_buffer.mpOtherParticle->GetProperties()[BEAM_CONTACT_AREA];
-                double calculation_area = std::max(area, other_area);
+                calculation_area = std::max(area, other_area);
                 mContinuumConstitutiveLawArray[i]->CalculateElasticConstants(kn_el, kt_el, initial_dist, equiv_young, equiv_poisson, calculation_area, this, neighbour_iterator);
             }
 
