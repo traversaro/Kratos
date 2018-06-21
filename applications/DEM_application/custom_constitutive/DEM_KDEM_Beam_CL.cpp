@@ -47,10 +47,9 @@ namespace Kratos {
         const double equiv_mass    = element_mass * neighbor_mass / (element_mass + neighbor_mass);
         const double equiv_shear   = equiv_young / (2.0 * (1 + equiv_poisson));
 
-        array_1d<double, 3> inertia;
-        inertia[0] = std::max(element->GetGeometry()[0].FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[0], neighbor->GetGeometry()[0].FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[0]);
-        inertia[1] = std::max(element->GetGeometry()[0].FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[1], neighbor->GetGeometry()[0].FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[1]);
-        inertia[2] = std::max(element->GetGeometry()[0].FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[2], neighbor->GetGeometry()[0].FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[2]);
+        const double Inertia_Ix = std::max(element->GetProperties()[BEAM_PLANAR_MOMENT_OF_INERTIA_X], neighbor->GetProperties()[BEAM_PLANAR_MOMENT_OF_INERTIA_X]);
+        const double Inertia_Iy = std::max(element->GetProperties()[BEAM_PLANAR_MOMENT_OF_INERTIA_Y], neighbor->GetProperties()[BEAM_PLANAR_MOMENT_OF_INERTIA_Y]);
+        const double Inertia_J  = Inertia_Ix + Inertia_Iy;
 
         const double my_gamma    = element->GetProperties()[DAMPING_GAMMA];
         const double other_gamma = neighbor->GetProperties()[DAMPING_GAMMA];
@@ -60,9 +59,9 @@ namespace Kratos {
 
         //Viscous parameter taken from Olmedo et al., 'Discrete element model of the dynamic response of fresh wood stems to impact'
         array_1d<double, 3> visc_param;
-        visc_param[0] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * inertia[0] / aux); // OLMEDO
-        visc_param[1] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * inertia[1] / aux); // OLMEDO
-        visc_param[2] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_shear * inertia[2] / aux); // OLMEDO
+        visc_param[0] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * Inertia_Ix / aux); // OLMEDO
+        visc_param[1] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * Inertia_Iy / aux); // OLMEDO
+        visc_param[2] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_shear * Inertia_J  / aux); // OLMEDO
 
         array_1d<double, 3> LocalEffDeltaRotatedAngle;
         LocalEffDeltaRotatedAngle[0] = LocalDeltaRotatedAngle[0] * aux;
@@ -74,9 +73,9 @@ namespace Kratos {
         LocalEffDeltaAngularVelocity[1] = LocalDeltaAngularVelocity[1] * aux;
         LocalEffDeltaAngularVelocity[2] = LocalDeltaAngularVelocity[2] * aux;
 
-        ElasticLocalRotationalMoment[0] = -equiv_young * inertia[0] * LocalEffDeltaRotatedAngle[0] / distance;
-        ElasticLocalRotationalMoment[1] = -equiv_young * inertia[1] * LocalEffDeltaRotatedAngle[1] / distance;
-        ElasticLocalRotationalMoment[2] = -equiv_shear * inertia[2] * LocalEffDeltaRotatedAngle[2] / distance;
+        ElasticLocalRotationalMoment[0] = -equiv_young * Inertia_Ix * LocalEffDeltaRotatedAngle[0] / distance;
+        ElasticLocalRotationalMoment[1] = -equiv_young * Inertia_Iy * LocalEffDeltaRotatedAngle[1] / distance;
+        ElasticLocalRotationalMoment[2] = -equiv_shear * Inertia_J  * LocalEffDeltaRotatedAngle[2] / distance;
 
         ViscoLocalRotationalMoment[0] = -visc_param[0] * LocalEffDeltaAngularVelocity[0];
         ViscoLocalRotationalMoment[1] = -visc_param[1] * LocalEffDeltaAngularVelocity[1];

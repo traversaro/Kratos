@@ -163,7 +163,7 @@ void SphericParticle::Initialize(const ProcessInfo& r_process_info)
     mClusterId = -1;
 
     if (this->Is(DEMFlags::HAS_ROTATION)) {
-        node.GetSolutionStepValue(PARTICLE_MOMENT_OF_INERTIA) = node.GetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[0] = node.GetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[1] = node.GetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[2] = CalculateMomentOfInertia();
+        node.GetSolutionStepValue(PARTICLE_MOMENT_OF_INERTIA) = CalculateMomentOfInertia();
 
         Quaternion<double  > Orientation = Quaternion<double>::Identity();
         node.GetSolutionStepValue(ORIENTATION) = Orientation;

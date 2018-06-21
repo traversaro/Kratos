@@ -462,7 +462,6 @@ class Procedures(object):
         model_part.AddNodalSolutionStepVariable(EXTERNAL_APPLIED_MOMENT)
         model_part.AddNodalSolutionStepVariable(FORCE_REACTION)
         model_part.AddNodalSolutionStepVariable(MOMENT_REACTION)
-        model_part.AddNodalSolutionStepVariable(PRINCIPAL_MOMENTS_OF_INERTIA)
 
         # BASIC PARTICLE PROPERTIES
         model_part.AddNodalSolutionStepVariable(RADIUS)

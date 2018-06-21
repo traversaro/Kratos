@@ -7,19 +7,6 @@
 
 namespace Kratos {
 
-    void BeamParticle::Initialize(const ProcessInfo& r_process_info) {
-
-        SphericContinuumParticle::Initialize(r_process_info);
-
-        NodeType& node = GetGeometry()[0];
-
-        if (this->Is(DEMFlags::HAS_ROTATION)) {
-            node.GetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[0] = GetProperties()[BEAM_INERTIA_TENSOR_XX];
-            node.GetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[1] = GetProperties()[BEAM_INERTIA_TENSOR_YY];
-            node.GetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[2] = GetProperties()[BEAM_INERTIA_TENSOR_ZZ];
-        }
-    }
-
     void BeamParticle::ComputeBallToBallContactForce(SphericParticle::ParticleDataBuffer & data_buffer,
                                                      ProcessInfo& r_process_info,
                                                      array_1d<double, 3>& rElasticForce,
@@ -87,8 +74,8 @@ namespace Kratos {
             const double equiv_shear = equiv_young / (2.0 * (1 + equiv_poisson));
 
             if (i < mContinuumInitialNeighborsSize) {
-                double area = this->GetProperties()[BEAM_CONTACT_AREA];
-                double other_area = data_buffer.mpOtherParticle->GetProperties()[BEAM_CONTACT_AREA];
+                double area = this->GetProperties()[BEAM_CROSS_SECTION];
+                double other_area = data_buffer.mpOtherParticle->GetProperties()[BEAM_CROSS_SECTION];
                 calculation_area = std::max(area, other_area);
                 mContinuumConstitutiveLawArray[i]->CalculateElasticConstants(kn_el, kt_el, initial_dist, equiv_young, equiv_poisson, calculation_area, this, neighbour_iterator);
             }

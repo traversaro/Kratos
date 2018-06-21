@@ -479,7 +479,7 @@ proc ::wkcf::WriteProperties {AppId} {
 		                    GiD_File fprintf $filechannel "DEM_CONTINUUM_CONSTITUTIVE_LAW_NAME DEM_KDEMFabric"
 		                } elseif {$propvalue == "KDEMBeam"} {
 		                    set using_dem_kdem 1
-		                    GiD_File fprintf $filechannel "BEAM_CONTACT_AREA [::xmlutils::setXml "DEMMaterial//m.$material//p.DEM_Beam_Contact_Area" dv read {} mat]"
+		                    GiD_File fprintf $filechannel "BEAM_CROSS_SECTION [::xmlutils::setXml "DEMMaterial//m.$material//p.DEM_Beam_Contact_Area" dv read {} mat]"
 		                    GiD_File fprintf $filechannel "DEM_CONTINUUM_CONSTITUTIVE_LAW_NAME DEM_KDEM_Beam"
 		                } else {
 		                    WarnWin [= "Unknown Continuum Constitutive Law for material $material"]
