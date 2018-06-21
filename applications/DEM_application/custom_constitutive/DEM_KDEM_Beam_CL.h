@@ -4,7 +4,7 @@
 
 /* Project includes */
 #include "DEM_continuum_constitutive_law.h"
-
+#include "DEM_KDEM_CL.h"
 
 namespace Kratos {
 
@@ -13,13 +13,11 @@ namespace Kratos {
 
         KRATOS_CLASS_POINTER_DEFINITION(DEM_KDEM_Beam);
 
-        DEM_KDEM_Beam() {
-        }
+        DEM_KDEM_Beam() {}
+
+        ~DEM_KDEM_Beam() {}
 
         void SetConstitutiveLawInProperties(Properties::Pointer pProp, bool verbose = true) const override;
-
-        ~DEM_KDEM_Beam() {
-        }
 
         DEMContinuumConstitutiveLaw::Pointer Clone() const override;
 
