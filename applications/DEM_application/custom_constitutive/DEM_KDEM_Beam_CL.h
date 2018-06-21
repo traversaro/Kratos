@@ -16,8 +16,6 @@ namespace Kratos {
         DEM_KDEM_Beam() {
         }
 
-        void Initialize() override;
-
         void SetConstitutiveLawInProperties(Properties::Pointer pProp, bool verbose = true) const override;
 
         ~DEM_KDEM_Beam() {
