@@ -122,25 +122,35 @@ file(GLOB_RECURSE KRATOS_CORE_INPUT_OUTPUT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/i
 ## Kratos tests sources. Enabled by default
 if(${KRATOS_BUILD_TESTING} MATCHES ON)
     file(GLOB_RECURSE KRATOS_TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)
+    set(KRATOS_TESTING_LIBRARY KratosCoreTests)
 endif(${KRATOS_BUILD_TESTING} MATCHES ON)
 
 ## Define library KratosCore to be included in all of the others
-add_library(KratosCore SHARED ${KRATOS_CORE_SOURCES} ${KRATOS_CORE_TESTING_ENGINE_SOURCES} ${KRATOS_CORE_INPUT_OUTPUT_SOURCES} ${KRATOS_TEST_SOURCES})
-target_link_libraries(KratosCore PUBLIC gidpost) #${Boost_LIBRARIES} ${PYTHON_LIBRARIES} gidpost )
+add_library(KratosCore SHARED ${KRATOS_CORE_SOURCES} ${KRATOS_CORE_INPUT_OUTPUT_SOURCES} ${KRATOS_CORE_TESTING_ENGINE_SOURCES})
+target_link_libraries(KratosCore PUBLIC gidpost)
 set_target_properties(KratosCore PROPERTIES COMPILE_DEFINITIONS "KRATOS_CORE=IMPORT,API")
+
+if(${KRATOS_BUILD_TESTING} MATCHES ON)
+    ## Define library KratosCoreTests to be included in all of the others
+    add_library(KratosCoreTests SHARED ${KRATOS_TEST_SOURCES} )
+    target_link_libraries(KratosCoreTests PUBLIC KratosCore)
+
+    ## Define Kratos test Executable
+    add_executable(KratosCoreTestsRunner ${KRATOS_CORE_TESTING_ENGINE_SOURCES})
+    target_link_libraries(KratosCoreTestsRunner PUBLIC KratosCore ${KRATOS_TESTING_LIBRARY})
+endif(${KRATOS_BUILD_TESTING} MATCHES ON)
 
 ## Define library Kratos which defines the basic python interface
 pybind11_add_module(Kratos MODULE THIN_LTO ${KRATOS_PYTHON_SOURCES})
-# add_library(Kratos SHARED ${KRATOS_PYTHON_SOURCES})
-target_link_libraries(Kratos PRIVATE ${KRATOS_TEST_LIBRARIES} KratosCore)
-# set_target_properties(Kratos PROPERTIES PREFIX "")
+target_link_libraries(Kratos PRIVATE KratosCore ${KRATOS_TESTING_LIBRARY})
 
 if(USE_COTIRE MATCHES ON)
     ## Kratos cannot be compiled with just one unity build as it takes way too much ram
     SET(COTIRE_MAXIMUM_NUMBER_OF_UNITY_INCLUDES "-j2")
     cotire(KratosCore)
     if(${KRATOS_BUILD_TESTING} MATCHES ON)
-        cotire(KratosTests)
+        cotire(KratosCoreTests)
+        cotire(KratosCoreTestsRunner)
     endif(${KRATOS_BUILD_TESTING} MATCHES ON)
 
     ## Kratos cannot be compiled with just one unity build as it takes way too much ram
@@ -172,6 +182,8 @@ endif(USE_COTIRE MATCHES ON)
 
 install(TARGETS Kratos DESTINATION libs )
 install(TARGETS KratosCore DESTINATION libs)
+install(TARGETS KratosCoreTests DESTINATION libs)
+install(TARGETS KratosCoreTestsRunner DESTINATION .)
 
 if(${INSTALL_PYTHON_FILES} MATCHES ON)
     get_filename_component (CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
