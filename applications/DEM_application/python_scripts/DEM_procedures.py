@@ -18,7 +18,7 @@ def Flush(a):
 
 def KratosPrint(*args):
     Logger.Print(*args, label="DEM")
-    Flush(sys.stdout)
+    Logger.Flush()
 
 
 def Var_Translator(variable):
@@ -859,7 +859,7 @@ class Procedures(object):
 
     def KRATOSprint(self, message):
         Logger.Print(message, label="DEM")
-        self.Flush(sys.stdout)
+        Logger.Flush()
 
 
 class DEMFEMProcedures(object):
@@ -1449,7 +1449,7 @@ class DEMIo(object):
 
     def KRATOSprint(self, message):
         Logger.Print(message,label="DEM")
-        self.Flush(sys.stdout)
+        Logger.Flush()
 
     @classmethod
     def Flush(self, a):
