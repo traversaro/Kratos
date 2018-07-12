@@ -77,7 +77,7 @@
 			"preconditioner_type" : "None",
 			"scaling"             : false
 		    },
-		    "dofs" : ["PRESSURE"]
+		    "dofs" : ["FLUID_PRESSURE"]
 		}
 	    }],
 	    "processes"   : []
@@ -276,7 +276,7 @@
             "output_control_type" : "step",
             "output_frequency"    : 1,
             "node_output"         : true,
-            "nodal_results"       : ["DISPLACEMENT","VELOCITY","ACCELERATION","PRESSURE"],
+            "nodal_results"       : ["DISPLACEMENT","VELOCITY","ACCELERATION","FLUID_PRESSURE"],
             "gauss_point_results" : ["CAUCHY_STRESS_TENSOR"]
         }
     }

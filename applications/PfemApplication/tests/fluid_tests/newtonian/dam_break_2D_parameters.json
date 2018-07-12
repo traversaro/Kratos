@@ -78,7 +78,8 @@
 		    },
 		    "convergence_criterion_settings" : {
 			"convergence_criterion"       : "Variable_criterion",
-			"variable_relative_tolerance" : 1e-5
+			"variable_relative_tolerance" : 1e-5,
+			"separate_dofs" : false
 		    },
 		    "linear_solver_settings"    : {
 			"solver_type"         : "BICGSTABSolver",
@@ -87,7 +88,7 @@
 			"preconditioner_type" : "None",
 			"scaling"             : false
 		    },
-		    "dofs" : ["PRESSURE"]
+		    "dofs" : ["FLUID_PRESSURE","PRESSURE"]
 		}
 	    }],
 	    "processes"   : []
@@ -413,7 +414,7 @@
             "output_control_type" : "step",
             "output_frequency"    : 1,
             "node_output"         : true,
-            "nodal_results"       : ["DISPLACEMENT","VELOCITY","ACCELERATION","PRESSURE","NORMAL"],
+            "nodal_results"       : ["DISPLACEMENT","VELOCITY","ACCELERATION","FLUID_PRESSURE","PRESSURE","NORMAL"],
             "gauss_point_results" : ["CAUCHY_STRESS_TENSOR"]
         }
     }

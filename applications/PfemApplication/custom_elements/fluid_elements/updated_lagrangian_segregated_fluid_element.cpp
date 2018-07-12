@@ -148,7 +148,7 @@ void UpdatedLagrangianSegregatedFluidElement::GetDofList( DofsVectorType& rEleme
       {
         for ( SizeType i = 0; i < GetGeometry().size(); i++ )
         {
-          rElementalDofList.push_back( GetGeometry()[i].pGetDof( PRESSURE ) );
+          rElementalDofList.push_back( GetGeometry()[i].pGetDof( FLUID_PRESSURE ) );
         }
         break;
       }
@@ -189,7 +189,7 @@ void UpdatedLagrangianSegregatedFluidElement::EquationIdVector( EquationIdVector
       {
         for ( SizeType i = 0; i < number_of_nodes; i++ )
         {
-          rResult[i] = GetGeometry()[i].GetDof( PRESSURE ).EquationId();
+          rResult[i] = GetGeometry()[i].GetDof( FLUID_PRESSURE ).EquationId();
         }
         break;
       }
@@ -255,7 +255,7 @@ void UpdatedLagrangianSegregatedFluidElement::GetValuesVector( Vector& rValues, 
       {
         for ( SizeType i = 0; i < number_of_nodes; i++ )
         {
-          rValues[i]     = GetGeometry()[i].GetSolutionStepValue( PRESSURE, Step );
+          rValues[i]     = GetGeometry()[i].GetSolutionStepValue( FLUID_PRESSURE, Step );
         }
         break;
       }
@@ -298,7 +298,7 @@ void UpdatedLagrangianSegregatedFluidElement::GetFirstDerivativesVector( Vector&
       {
         for ( SizeType i = 0; i < number_of_nodes; i++ )
         {
-          rValues[i]     = GetGeometry()[i].GetSolutionStepValue( PRESSURE_VELOCITY, Step );
+          rValues[i]     = GetGeometry()[i].GetSolutionStepValue( FLUID_PRESSURE_VELOCITY, Step );
         }
         break;
       }
@@ -340,7 +340,7 @@ void UpdatedLagrangianSegregatedFluidElement::GetSecondDerivativesVector( Vector
       {
         for ( SizeType i = 0; i < number_of_nodes; i++ )
         {
-          rValues[i]     = GetGeometry()[i].GetSolutionStepValue( PRESSURE_ACCELERATION, Step );
+          rValues[i]     = GetGeometry()[i].GetSolutionStepValue( FLUID_PRESSURE_ACCELERATION, Step );
         }
         break;
       }
@@ -576,7 +576,7 @@ void UpdatedLagrangianSegregatedFluidElement::CalculateAndAddInternalForces(Vect
     double MeanPressure = 0;
     for( SizeType i=0; i<number_of_nodes; ++i)
     {
-      MeanPressure += rVariables.N[i] * ( this->GetGeometry()[i].FastGetSolutionStepValue(PRESSURE) * rVariables.Alpha +  this->GetGeometry()[i].FastGetSolutionStepValue(PRESSURE,1) * (1.0 - rVariables.Alpha) );
+      MeanPressure += rVariables.N[i] * ( this->GetGeometry()[i].FastGetSolutionStepValue(FLUID_PRESSURE) * rVariables.Alpha +  this->GetGeometry()[i].FastGetSolutionStepValue(FLUID_PRESSURE,1) * (1.0 - rVariables.Alpha) );
     }
 
     this->AddVolumetricPart(rVariables.StressVector, MeanPressure);
@@ -1051,11 +1051,11 @@ void UpdatedLagrangianSegregatedFluidElement::CalculateAndAddPressureForces(Vect
 
         // Add LHS to RHS: boundary terms (incremental pressure formulation)
         //(lumped)
-        //rRightHandSideVector[Faces[i][j]] -=  SideWeight * BoundFactor * rVariables.N[Faces[i][j]] * rGeometry[Faces[i][j]].FastGetSolutionStepValue(PRESSURE,0);
+        //rRightHandSideVector[Faces[i][j]] -=  SideWeight * BoundFactor * rVariables.N[Faces[i][j]] * rGeometry[Faces[i][j]].FastGetSolutionStepValue(FLUID_PRESSURE);
 
         //(reduced integration)
         for( SizeType k=0; k<Faces[i].size(); ++k ){
-          rRightHandSideVector[Faces[i][j]] -= SideWeight * BoundFactor * rVariables.N[Faces[i][j]] * rVariables.N[Faces[i][k]] * rGeometry[Faces[i][k]].FastGetSolutionStepValue(PRESSURE,0);
+          rRightHandSideVector[Faces[i][j]] -= SideWeight * BoundFactor * rVariables.N[Faces[i][j]] * rVariables.N[Faces[i][k]] * rGeometry[Faces[i][k]].FastGetSolutionStepValue(FLUID_PRESSURE);
         }
       }
 
@@ -1100,8 +1100,8 @@ void UpdatedLagrangianSegregatedFluidElement::CalculateAndAddPressureForces(Vect
   // const double& TimeStep = rVariables.GetProcessInfo()[DELTA_TIME];
   // for( SizeType i=0; i<number_of_nodes; ++i)
   // {
-  //   rRightHandSideVector[i] -= MassFactor * (1.0/ TimeStep) * rGeometry[j].FastGetSolutionStepValue(PRESSURE_VELOCITY);
-  //   rRightHandSideVector[i] -= BulkFactor * (1.0/(TimeStep*TimeStep)) * rGeometry[j].FastGetSolutionStepValue(PRESSURE_ACCELERATION);
+  //   rRightHandSideVector[i] -= MassFactor * (1.0/ TimeStep) * rGeometry[j].FastGetSolutionStepValue(FLUID_PRESSURE_VELOCITY);
+  //   rRightHandSideVector[i] -= BulkFactor * (1.0/(TimeStep*TimeStep)) * rGeometry[j].FastGetSolutionStepValue(FLUID_PRESSURE_ACCELERATION);
   // }
 
   // (REDUCED INTEGRATION)
@@ -1109,8 +1109,8 @@ void UpdatedLagrangianSegregatedFluidElement::CalculateAndAddPressureForces(Vect
   {
     for( SizeType j=0; j<number_of_nodes; ++j)
     {
-      rRightHandSideVector[i] -= MassFactor * rVariables.N[i] * rVariables.N[j] * rGeometry[j].FastGetSolutionStepValue(PRESSURE_VELOCITY);
-      rRightHandSideVector[i] -= BulkFactor * rVariables.N[i] * rVariables.N[j] * rGeometry[j].FastGetSolutionStepValue(PRESSURE_ACCELERATION);
+      rRightHandSideVector[i] -= MassFactor * rVariables.N[i] * rVariables.N[j] * rGeometry[j].FastGetSolutionStepValue(FLUID_PRESSURE_VELOCITY);
+      rRightHandSideVector[i] -= BulkFactor * rVariables.N[i] * rVariables.N[j] * rGeometry[j].FastGetSolutionStepValue(FLUID_PRESSURE_ACCELERATION);
     }
   }
 
@@ -1125,7 +1125,7 @@ void UpdatedLagrangianSegregatedFluidElement::CalculateAndAddPressureForces(Vect
     {
       for ( SizeType k = 0; k < dimension; ++k )
       {
-        rRightHandSideVector[i] -= (StabilizationFactor * rVariables.DN_DX(i,k) * rVariables.DN_DX(j,k)) * rGeometry[j].FastGetSolutionStepValue(PRESSURE,0);
+        rRightHandSideVector[i] -= (StabilizationFactor * rVariables.DN_DX(i,k) * rVariables.DN_DX(j,k)) * rGeometry[j].FastGetSolutionStepValue(FLUID_PRESSURE);
       }
     }
   }
@@ -1404,13 +1404,13 @@ int  UpdatedLagrangianSegregatedFluidElement::Check( const ProcessInfo& rCurrent
   {
     // Nodal data
     Node<3> &rNode = this->GetGeometry()[i];
-    KRATOS_CHECK_VARIABLE_IN_NODAL_DATA(PRESSURE,rNode);
-    KRATOS_CHECK_VARIABLE_IN_NODAL_DATA(PRESSURE_VELOCITY,rNode);
-    KRATOS_CHECK_VARIABLE_IN_NODAL_DATA(PRESSURE_ACCELERATION,rNode);
+    KRATOS_CHECK_VARIABLE_IN_NODAL_DATA(FLUID_PRESSURE,rNode);
+    KRATOS_CHECK_VARIABLE_IN_NODAL_DATA(FLUID_PRESSURE_VELOCITY,rNode);
+    KRATOS_CHECK_VARIABLE_IN_NODAL_DATA(FLUID_PRESSURE_ACCELERATION,rNode);
     //KRATOS_CHECK_VARIABLE_IN_NODAL_DATA(VOLUME_ACCELERATION,rNode);
 
     // Nodal dofs
-    KRATOS_CHECK_DOF_IN_NODE(PRESSURE,rNode);
+    KRATOS_CHECK_DOF_IN_NODE(FLUID_PRESSURE,rNode);
   }
   // Check compatibility with the constitutive law
 

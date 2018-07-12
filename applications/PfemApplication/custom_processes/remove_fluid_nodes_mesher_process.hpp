@@ -479,7 +479,7 @@ private:
                         array_1d<double,3> sumOfCurrentDisplacements=in->FastGetSolutionStepValue(DISPLACEMENT,0);
 		      	array_1d<double,3> sumOfCurrentVelocities=in->FastGetSolutionStepValue(VELOCITY,0);
 		      	array_1d<double,3> sumOfPreviousVelocities=in->FastGetSolutionStepValue(VELOCITY,1);
-		      	double sumOfPressures=in->FastGetSolutionStepValue(PRESSURE,0);
+		      	double sumOfPressures=in->FastGetSolutionStepValue(FLUID_PRESSURE,0);
 		      	double counter=1.0;
 
 		      	for (WeakPointerVector< Node <3> >::iterator nn = neighb_nodes.begin();nn != neighb_nodes.end(); nn++)
@@ -489,7 +489,7 @@ private:
                             noalias(sumOfCurrentDisplacements)+=nn->FastGetSolutionStepValue(DISPLACEMENT,0);
 		      	    noalias(sumOfCurrentVelocities)+=nn->FastGetSolutionStepValue(VELOCITY,0);
 		      	    noalias(sumOfPreviousVelocities)+=nn->FastGetSolutionStepValue(VELOCITY,1);
-		      	    sumOfPressures+=nn->FastGetSolutionStepValue(PRESSURE,0);
+		      	    sumOfPressures+=nn->FastGetSolutionStepValue(FLUID_PRESSURE,0);
 		      	  }
 		      	in->X()  = sumOfCoordinates[0]/counter;
 		      	in->Y()  = sumOfCoordinates[1]/counter;
@@ -503,7 +503,7 @@ private:
 		      	in->FastGetSolutionStepValue(VELOCITY_Y,0)=sumOfCurrentVelocities[1]/counter;
 		      	in->FastGetSolutionStepValue(VELOCITY_X,1)=sumOfPreviousVelocities[0]/counter;
 		      	in->FastGetSolutionStepValue(VELOCITY_Y,1)=sumOfPreviousVelocities[1]/counter;
-		      	in->FastGetSolutionStepValue(PRESSURE,0)=sumOfPressures/counter;
+		      	in->FastGetSolutionStepValue(FLUID_PRESSURE,0)=sumOfPressures/counter;
 		      	if(dimension==3){
 		      	  in->Z() =sumOfCoordinates[2]/counter;
 		      	  in->Z0() =in->Z()-sumOfCurrentDisplacements[2]/counter;

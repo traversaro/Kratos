@@ -125,7 +125,7 @@ class SetActiveFlagProcess
             }
           }
           if(doNotSetNullPressure==false)
-            itElem->GetGeometry()[i].FastGetSolutionStepValue(PRESSURE) = 0;
+            itElem->GetGeometry()[i].FastGetSolutionStepValue(FLUID_PRESSURE) = 0;
         }
 		
       }
@@ -224,17 +224,17 @@ void SetPressureToIsolatedWallNodes(Geometry<Node<3> > & wallElementNodes)
       isolatedWallID=i;
       foundedIsolatedWall=true;
     }else{
-      if(wallElementNodes[i].FastGetSolutionStepValue(PRESSURE,0)<currentPressureForIsolatedWall){
-        currentPressureForIsolatedWall=wallElementNodes[i].FastGetSolutionStepValue(PRESSURE,0);
+      if(wallElementNodes[i].FastGetSolutionStepValue(FLUID_PRESSURE,0)<currentPressureForIsolatedWall){
+        currentPressureForIsolatedWall=wallElementNodes[i].FastGetSolutionStepValue(FLUID_PRESSURE,0);
       }
-      if(wallElementNodes[i].FastGetSolutionStepValue(PRESSURE,1)<previousPressureForIsolatedWall){
-        previousPressureForIsolatedWall=wallElementNodes[i].FastGetSolutionStepValue(PRESSURE,1);
+      if(wallElementNodes[i].FastGetSolutionStepValue(FLUID_PRESSURE,1)<previousPressureForIsolatedWall){
+        previousPressureForIsolatedWall=wallElementNodes[i].FastGetSolutionStepValue(FLUID_PRESSURE,1);
       }
     }
   }
   if(foundedIsolatedWall==true){
-    wallElementNodes[isolatedWallID].FastGetSolutionStepValue(PRESSURE,0)=currentPressureForIsolatedWall;
-    wallElementNodes[isolatedWallID].FastGetSolutionStepValue(PRESSURE,1)=previousPressureForIsolatedWall;
+    wallElementNodes[isolatedWallID].FastGetSolutionStepValue(FLUID_PRESSURE,0)=currentPressureForIsolatedWall;
+    wallElementNodes[isolatedWallID].FastGetSolutionStepValue(FLUID_PRESSURE,1)=previousPressureForIsolatedWall;
   }
 
   KRATOS_CATCH(" ")

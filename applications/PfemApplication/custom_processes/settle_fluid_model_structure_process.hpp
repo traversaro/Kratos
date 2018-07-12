@@ -230,14 +230,14 @@ namespace Kratos
 		    {
 		      if( i_node->Is(RIGID) && i_node->IsNot(BLOCKED))
 			{
-			  // double pressureRigid=i_node->FastGetSolutionStepValue(PRESSURE);
+			  // double pressureRigid=i_node->FastGetSolutionStepValue(FLUID_PRESSURE);
                           if( i_node->IsNot(SOLID) )
-                            i_node->FastGetSolutionStepValue(PRESSURE) = 0;
+                            i_node->FastGetSolutionStepValue(FLUID_PRESSURE) = 0;
                           
 			  if(i_mp->Is(FLUID)) {
 			    i_node->Reset(FLUID);   //reset isolated
 			  }
-			  // std::cout<<" fluid 1. SET PRESSURE 0 TO ISOLATED NODE ("<<nodeId<<") its pressure was "<<pressureRigid<<std::endl;
+			  // std::cout<<" fluid 1. SET FLUID_PRESSURE 0 TO ISOLATED NODE ("<<nodeId<<") its pressure was "<<pressureRigid<<std::endl;
 			}
 		      i_node->Reset(ISOLATED);   //reset isolated
 		      i_node->Reset(NEW_ENTITY); //reset if was new 
@@ -263,7 +263,7 @@ namespace Kratos
 
 		    if( mOptions.Is(MesherUtilities::KEEP_ISOLATED_NODES) && i_node->IsNot(TO_ERASE) ){
                       if( i_node->IsNot(SOLID) )
-                        i_node->FastGetSolutionStepValue(PRESSURE) = 0;
+                        i_node->FastGetSolutionStepValue(FLUID_PRESSURE) = 0;
 		      (i_mp->Nodes()).push_back(*(i_node.base()));
 		      (rModelPart.Nodes()).push_back(*(i_node.base()));	
 		      rModelPart.Nodes().back().SetId(nodeId);
