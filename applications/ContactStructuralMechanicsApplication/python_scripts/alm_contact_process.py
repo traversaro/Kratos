@@ -68,6 +68,7 @@ class ALMContactProcess(KM.Process):
             "frictional_law"              : "Coulomb",
             "tangent_factor"              : 0.1,
             "integration_order"           : 2,
+            "clear_inactive_for_post"     : true,
             "search_parameters" : {
                 "type_search"                 : "in_radius",
                 "adapt_search"                : false,
@@ -312,7 +313,13 @@ class ALMContactProcess(KM.Process):
         Keyword arguments:
         self -- It signifies an instance of a class.
         """
-        pass
+        if (self.settings["clear_inactive_for_post"].GetBool()):
+            zero_vector = KM.Array3()
+            zero_vector[0] = 0.0
+            zero_vector[1] = 0.0
+            zero_vector[2] = 0.0
+            KM.VariableUtils().SetNonHistoricalVariable(CSMA.AUGMENTED_NORMAL_CONTACT_PRESSURE, 0.0, self.computing_model_part.Nodes, KM.NOT_ACTIVE)
+            KM.VariableUtils().SetNonHistoricalVariable(CSMA.AUGMENTED_TANGENT_CONTACT_PRESSURE, zero_vector, self.computing_model_part.Nodes, KM.NOT_ACTIVE)
 
     def ExecuteAfterOutputStep(self):
         """ This method is executed right after the ouput process computation
@@ -564,6 +571,8 @@ class ALMContactProcess(KM.Process):
         gid_io.WriteNodalFlags(KM.SLAVE, "SLAVE", self.main_model_part.Nodes, label)
         gid_io.WriteNodalResults(KM.NORMAL, self.main_model_part.Nodes, label, 0)
         gid_io.WriteNodalResultsNonHistorical(CSMA.AUGMENTED_NORMAL_CONTACT_PRESSURE, self.main_model_part.Nodes, label)
+        if (self.is_frictional is True):
+            gid_io.WriteNodalResultsNonHistorical(CSMA.AUGMENTED_TANGENT_CONTACT_PRESSURE, self.main_model_part.Nodes, label)
         gid_io.WriteNodalResultsNonHistorical(KM.NODAL_AREA, self.main_model_part.Nodes, label)
         gid_io.WriteNodalResults(KM.DISPLACEMENT, self.main_model_part.Nodes, label, 0)
         if (self.main_model_part.Nodes[1].SolutionStepsDataHas(KM.VELOCITY_X) is True):
