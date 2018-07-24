@@ -27,6 +27,7 @@
 // Project includes
 #include "includes/define.h"
 #include "includes/kratos_parameters.h"
+#include "utilities/svd_utils.h"
 
 // Application includes
 #include "custom_elements/vms_adjoint_element.h"
@@ -162,12 +163,6 @@ public:
                                         rLHS_Contribution,
                                         rRHS_Contribution,
                                         rCurrentProcessInfo);
-            case ArtificialDiffusionMethods::fullMatrixEigen:
-                return CalculateArtificialDiffusionFullMatrixEigen(
-                                        pCurrentElement,
-                                        rLHS_Contribution,
-                                        rRHS_Contribution,
-                                        rCurrentProcessInfo);
             case ArtificialDiffusionMethods::energyGenerationRateWithAdjointVariables:
                 return CalculateArtificialDiffusionEnergyGenerationRateWithAdjointVariables(
                                         pCurrentElement,
@@ -181,6 +176,12 @@ public:
                                         rRHS_Contribution,
                                         rCurrentProcessInfo);
 #ifdef EIGEN_ROOT
+            case ArtificialDiffusionMethods::fullMatrixEigen:
+                return CalculateArtificialDiffusionFullMatrixEigen(
+                                        pCurrentElement,
+                                        rLHS_Contribution,
+                                        rRHS_Contribution,
+                                        rCurrentProcessInfo);
             case ArtificialDiffusionMethods::singularValuePressureCoupled:
                 return CalculateArtificialDiffusionSVMethodPressureCoupled(
                                         pCurrentElement,
@@ -641,7 +642,7 @@ private:
 
         return artificial_diffusion;
 
-        KRATOS_WATCH("");
+        KRATOS_CATCH("");
     }
 
     double CalculateArtificialDiffusionEnergyGenerationRateMatrix(
@@ -652,7 +653,37 @@ private:
     {
         KRATOS_TRY;
 
-        KRATOS_WATCH("");
+        Matrix vms_steady_term_primal_gradient;
+        pCurrentElement->Calculate(VMS_STEADY_TERM_PRIMAL_GRADIENT_MATRIX,
+                                   vms_steady_term_primal_gradient,
+                                   rCurrentProcessInfo);
+
+        MatrixType svd_u;
+        MatrixType svd_v;
+        MatrixType svd_s;
+        SVDUtils<double>::SingularValueDecomposition(
+            vms_steady_term_primal_gradient, svd_u, svd_s, svd_v);
+
+        const double max_svd_vms_steady_term = svd_s(0, 0);
+
+        // MatrixType numerical_diffusion_matrix;
+        // pCurrentElement->SetValue(ARTIFICIAL_DIFFUSION, 1.0);
+        // pCurrentElement->Calculate(ARTIFICIAL_DIFFUSION_MATRIX, numerical_diffusion_matrix, rCurrentProcessInfo);
+        // SVDUtils<double>::SingularValueDecomposition(
+        //     numerical_diffusion_matrix, svd_u, svd_s, svd_v);
+
+        // const double max_svd_diffusion_term = svd_s(0, 0);
+
+        // double artificial_diffusion = 0.0;
+        // if (max_svd_diffusion_term > 0.0)
+        //     artificial_diffusion = max_svd_vms_steady_term;
+        // else
+        //     std::cout << "WARNING!!!!! artificial diffusion is: " << artificial_diffusion
+        //               << " for element " << pCurrentElement->Id() <<  std::endl;
+
+        return max_svd_vms_steady_term;
+
+        KRATOS_CATCH("");
     }
 
     ///@}

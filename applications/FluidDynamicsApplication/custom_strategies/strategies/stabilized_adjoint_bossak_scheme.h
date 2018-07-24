@@ -168,7 +168,27 @@ public:
         for (int i=0; i < static_cast<int>(r_elements.size()); ++i)
         {
             auto r_element = r_elements.begin() + i;
-            r_element->Calculate(STABILIZATION_ANALYSIS_MATRICES, dummy_matrix, rModelPart.GetProcessInfo());
+            //r_element->Calculate(STABILIZATION_ANALYSIS_MATRICES, dummy_matrix, rModelPart.GetProcessInfo());
+            Matrix vms_steady_term_primal_gradient;
+            r_element->Calculate(VMS_STEADY_TERM_PRIMAL_GRADIENT_MATRIX,
+                                       vms_steady_term_primal_gradient,
+                                       rModelPart.GetProcessInfo());
+            Matrix numerical_diffusion_matrix;
+            double const artificial_diffusion = r_element->GetValue(ARTIFICIAL_DIFFUSION);
+            r_element->SetValue(ARTIFICIAL_DIFFUSION, 1.0);
+            r_element->Calculate(ARTIFICIAL_DIFFUSION_MATRIX, numerical_diffusion_matrix, rModelPart.GetProcessInfo());
+            r_element->SetValue(ARTIFICIAL_DIFFUSION, artificial_diffusion);                    
+
+            Vector adjoint_vector;
+            r_element->GetValuesVector(adjoint_vector);
+            double k_energy = inner_prod(
+                adjoint_vector, prod(vms_steady_term_primal_gradient, adjoint_vector));
+            double d_energy = inner_prod(
+                adjoint_vector, prod(numerical_diffusion_matrix, adjoint_vector));
+
+            r_element->SetValue(STABILIZATION_ANALYSIS_MATRIX_1_ENERGY, k_energy);
+            r_element->SetValue(STABILIZATION_ANALYSIS_MATRIX_2_ENERGY, d_energy);
+            r_element->SetValue(STABILIZATION_ANALYSIS_MATRIX_3_ENERGY, k_energy-d_energy);
         }
 
         KRATOS_CATCH("");
@@ -221,24 +241,23 @@ protected:
         else if (domain_size == 3)
             gauss_integration_weight = r_geometry.Volume();
 
-        double artificial_diffusion;
-
         int k = OpenMPUtils::ThisThread();
         auto& r_artificial_diffusion_matrix = mArtificialDiffusionMatrix[k];
 
-        artificial_diffusion = mAdjointArtificialDiffusion.CalculateArtificialDiffusion(
+        double artificial_diffusion = mAdjointArtificialDiffusion.CalculateArtificialDiffusion(
                                         pCurrentElement,
                                         rLHS_Contribution,
                                         rRHS_Contribution,
                                         rCurrentProcessInfo);
+        artificial_diffusion /= mStabilizationSourceCoefficient;
+
         artificial_diffusion *= mOverallDiffusionCoefficient;
         pCurrentElement->SetValue(ARTIFICIAL_DIFFUSION, artificial_diffusion);
         pCurrentElement->Calculate(ARTIFICIAL_DIFFUSION_MATRIX, r_artificial_diffusion_matrix, rCurrentProcessInfo);
 
         LocalSystemMatrixType identity = identity_matrix<double>(rLHS_Contribution.size1());
-        double coff = mStabilizationSourceCoefficient*mOverallDiffusionCoefficient*gauss_integration_weight;
 
-        r_artificial_diffusion_matrix += coff*identity;
+        r_artificial_diffusion_matrix += artificial_diffusion*mStabilizationSourceCoefficient*identity;
 
         noalias(rLHS_Contribution) -= r_artificial_diffusion_matrix;
 
