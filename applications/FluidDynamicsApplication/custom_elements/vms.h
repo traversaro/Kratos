@@ -354,23 +354,23 @@ public:
          These terms are not used in OSS, as they belong to the finite element
          space and cancel out with their projections.
          */
-        const ProcessInfo& r_const_process_info = rCurrentProcessInfo;
-        if (r_const_process_info[OSS_SWITCH] != 1)
-        {
-            double ElemSize = this->ElementSize(Area);
-            double Viscosity = this->EffectiveViscosity(Density,N,DN_DX,ElemSize,rCurrentProcessInfo);
+        // const ProcessInfo& r_const_process_info = rCurrentProcessInfo;
+        // if (r_const_process_info[OSS_SWITCH] != 1)
+        // {
+        //     double ElemSize = this->ElementSize(Area);
+        //     double Viscosity = this->EffectiveViscosity(Density,N,DN_DX,ElemSize,rCurrentProcessInfo);
 
-            // Get Advective velocity
-            array_1d<double, 3 > AdvVel;
-            this->GetAdvectiveVel(AdvVel, N);
+        //     // Get Advective velocity
+        //     array_1d<double, 3 > AdvVel;
+        //     this->GetAdvectiveVel(AdvVel, N);
 
-            // stabilization parameters
-            double TauOne, TauTwo;
-            this->CalculateTau(TauOne,TauTwo,AdvVel,ElemSize,Density,Viscosity,rCurrentProcessInfo);
+        //     // stabilization parameters
+        //     double TauOne, TauTwo;
+        //     this->CalculateTau(TauOne,TauTwo,AdvVel,ElemSize,Density,Viscosity,rCurrentProcessInfo);
 
-            // Add dynamic stabilization terms ( all terms involving a delta(u) )
-            this->AddMassStabTerms(rMassMatrix, Density, AdvVel, TauOne, N, DN_DX, Area);
-        }
+        //     // Add dynamic stabilization terms ( all terms involving a delta(u) )
+        //     this->AddMassStabTerms(rMassMatrix, Density, AdvVel, TauOne, N, DN_DX, Area);
+        // }
     }
 
     /// Computes the local contribution associated to 'new' velocity and pressure values
