@@ -318,8 +318,8 @@ class ALMContactProcess(KM.Process):
             zero_vector[0] = 0.0
             zero_vector[1] = 0.0
             zero_vector[2] = 0.0
-            KM.VariableUtils().SetNonHistoricalVariable(CSMA.AUGMENTED_NORMAL_CONTACT_PRESSURE, 0.0, self.computing_model_part.Nodes, KM.NOT_ACTIVE)
-            KM.VariableUtils().SetNonHistoricalVariable(CSMA.AUGMENTED_TANGENT_CONTACT_PRESSURE, zero_vector, self.computing_model_part.Nodes, KM.NOT_ACTIVE)
+            KM.VariableUtils().SetNonHistoricalVariable(CSMA.AUGMENTED_NORMAL_CONTACT_PRESSURE, 0.0, self.computing_model_part.Nodes, KM.ACTIVE, False)
+            KM.VariableUtils().SetNonHistoricalVariable(CSMA.AUGMENTED_TANGENT_CONTACT_PRESSURE, zero_vector, self.computing_model_part.Nodes, KM.ACTIVE, False)
 
     def ExecuteAfterOutputStep(self):
         """ This method is executed right after the ouput process computation
