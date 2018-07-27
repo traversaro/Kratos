@@ -809,27 +809,20 @@ public:
     }
 
     /**
-     * @brief It computes the unit normal of the geometry, if possible
-     * @param rNormal The normal in the given point
-     * @param rTangentXi The tangent in the xi direction
-     * @param rTangentEta The tangent in the eta direction
-     * @return The normal of the geometry
+     * It computes the area normal of the geometry
+     * @param rPointLocalCoordinates Local coordinates of the point
+     * in where the area normal is to be computed
+     * @return The area normal in the given point
      */
-    array_1d<double, 3> NormalWithTangents(
-        const CoordinatesArrayType& rPointLocalCoordinates,
-        array_1d<double, 3>& rNormal,
-        array_1d<double, 3>& rTangentXi,
-        array_1d<double, 3>& rTangentEta
-        ) const override
+    array_1d<double, 3> AreaNormal(const CoordinatesArrayType& rPointLocalCoordinates) const override
     {
-        rTangentXi  = this->GetPoint(1) - this->GetPoint(0);
-        rTangentEta = this->GetPoint(2) - this->GetPoint(0);
+        const array_1d<double, 3> tangent_xi  = this->GetPoint(1) - this->GetPoint(0);
+        const array_1d<double, 3> tangent_eta = this->GetPoint(2) - this->GetPoint(0);
 
-        MathUtils<double>::CrossProduct(rNormal, rTangentXi, rTangentEta);
+        array_1d<double, 3> normal;
+        MathUtils<double>::CrossProduct(normal, tangent_xi, tangent_eta);
 
-        rNormal *= 0.5;
-
-        return rNormal;
+        return 0.5 * normal;
     }
 
     /**
