@@ -67,8 +67,12 @@ void InterfacePreprocessCondition::GenerateInterfacePart<2>(
             Properties::Pointer p_prop = new_properties[it_elem->pGetProperties()->Id()];
             KRATOS_DEBUG_ERROR_IF(p_prop == nullptr) << "ERROR:: Property not well initialized" << std::endl;
 
-            for (IndexType i_edge = 0; i_edge < this_geometry.EdgesNumber(); ++i_edge)
-                GenerateEdgeCondition(rInterfacePart, p_prop, this_geometry.Edges()[i_edge], simplest_geometry, cond_counter, cond_id);
+            if (this_geometry.LocalSpaceDimension() == 2) {
+                for (IndexType i_edge = 0; i_edge < this_geometry.EdgesNumber(); ++i_edge)
+                    GenerateEdgeCondition(rInterfacePart, p_prop, this_geometry.Edges()[i_edge], simplest_geometry, cond_counter, cond_id);
+            } else {
+                GenerateEdgeCondition(rInterfacePart, p_prop, this_geometry, simplest_geometry, cond_counter, cond_id);
+            }
         }
     } else {
         KRATOS_ERROR << "ERROR:: Nor conditions or nodes on the interface. Check your flags" << std::endl;
