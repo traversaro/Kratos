@@ -62,6 +62,7 @@ class ALMContactProcess(KM.Process):
             "computing_model_part_name"   : "computing_domain",
             "contact_model_part"          : {"0":[],"1":[],"2":[],"3":[],"4":[],"5":[],"6":[],"7":[],"8":[],"9":[]},
             "assume_master_slave"         : {"0":[],"1":[],"2":[],"3":[],"4":[],"5":[],"6":[],"7":[],"8":[],"9":[]},
+            "contact_property_ids"        : {"0": 0,"1": 0,"2": 0,"3": 0,"4": 0,"5": 0,"6": 0,"7": 0,"8": 0,"9": 0},
             "contact_type"                : "Frictionless",
             "interval"                    : [0.0,"End"],
             "normal_variation"            : "no_derivatives_computation",
@@ -382,7 +383,7 @@ class ALMContactProcess(KM.Process):
                     KM.VariableUtils().SetFlag(KM.SLAVE, True, model_part_slave.Conditions)
                     KM.VariableUtils().SetFlag(KM.MASTER, False, model_part_slave.Conditions)
 
-    def _interface_preprocess(self, partial_model_part):
+    def _interface_preprocess(self, partial_model_part, key = "0"):
         """ This method creates the process used to compute the contact interface
 
         Keyword arguments:
@@ -394,7 +395,8 @@ class ALMContactProcess(KM.Process):
         self.interface_preprocess = CSMA.InterfacePreprocessCondition(self.computing_model_part)
 
         # It should create the conditions automatically
-        interface_parameters = KM.Parameters("""{"simplify_geometry": false}""")
+        interface_parameters = KM.Parameters("""{"simplify_geometry": false, "contact_property_id": 0}""")
+        interface_parameters["contact_property_id"].SetInt(self.settings["contact_property_ids"][key].GetInt())
         if (self.dimension == 2):
             self.interface_preprocess.GenerateInterfacePart2D(partial_model_part, interface_parameters)
         else:
@@ -627,7 +629,11 @@ class ALMContactProcess(KM.Process):
                 KM.VariableUtils().SetFlag(KM.INTERFACE, True, partial_model_part.Conditions)
 
         if (self.preprocess is True):
-            sub_contact_model_part.SetProperties(self.main_model_part.GetProperties())
+            id_prop = self.settings["contact_property_ids"][key].GetInt()
+            if (id_prop != 0):
+                sub_contact_model_part.SetProperties(self.main_model_part.GetProperties(id_prop))
+            else:
+                sub_contact_model_part.SetProperties(self.main_model_part.GetProperties())
 
             # We transfer the list of submodelparts to the contact model part
             for i in range(0, param.size()):
@@ -638,7 +644,7 @@ class ALMContactProcess(KM.Process):
                     partial_model_part.RemoveConditions(KM.TO_ERASE)
 
                 # We generate the conditions
-                self._interface_preprocess(partial_model_part)
+                self._interface_preprocess(partial_model_part, key)
 
                 # We copy the conditions to the contact model part
                 transfer_process = KM.FastTransferBetweenModelPartsProcess(sub_contact_model_part, partial_model_part, KM.FastTransferBetweenModelPartsProcess.EntityTransfered.NODESANDCONDITIONS)
@@ -646,7 +652,6 @@ class ALMContactProcess(KM.Process):
 
     def __detect_skin(self, model_part, key = "0"):
         """ Generates a contact model part from the skin
-        TODO Adapt for the consideration of multiple model part
         Keyword arguments:
         self -- It signifies an instance of a class
         key -- The key to identify the current pair.
