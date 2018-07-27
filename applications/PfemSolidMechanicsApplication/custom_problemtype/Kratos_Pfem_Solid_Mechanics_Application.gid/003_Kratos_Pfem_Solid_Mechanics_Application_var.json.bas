@@ -142,13 +142,13 @@
               "solving_strategy_settings" : {
                    "line_search"                 : *tcl(string tolower *GenData(LineSearch)),
                    "implex"                      : *tcl(string tolower *GenData(Implex)),
+                   "reform_dofs_at_each_step"    : true,
                    "compute_reactions"           : *tcl(string tolower *GenData(Write_Reactions)),
 	           "compute_contact_forces"      : *tcl(string tolower *GenData(Write_Contact_Forces)),
                    "max_iteration"               : *GenData(Max_Iter,INT)
               },
               "convergence_criterion_settings":{
                    "convergence_criterion"       : "*GenData(Convergence_Criteria)",
-                   "reform_dofs_at_each_step"    : true,
                    "variable_relative_tolerance" : *GenData(Convergence_Tolerance),
                    "variable_absolute_tolerance" : *GenData(Absolute_Tolerance),
                    "residual_relative_tolerance" : *GenData(Convergence_Tolerance),
