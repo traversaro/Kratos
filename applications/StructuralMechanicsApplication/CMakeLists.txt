@@ -28,6 +28,7 @@ set( KRATOS_STRUCTURAL_MECHANICS_APPLICATION_CORE
   ${CMAKE_CURRENT_SOURCE_DIR}/custom_response_functions/response_utilities/adjoint_nodal_displacement_response_function.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/custom_response_functions/response_utilities/adjoint_linear_strain_energy_response_function.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/custom_response_functions/response_utilities/stress_response_definitions.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/custom_response_functions/response_utilities/direct_structural_state_response_function.cpp
 
   ## PROCESSES
   ${CMAKE_CURRENT_SOURCE_DIR}/custom_processes/postprocess_eigenvalues_process.cpp

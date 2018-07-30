@@ -30,6 +30,8 @@
 #include "custom_response_functions/response_utilities/adjoint_nodal_displacement_response_function.h"
 #include "custom_response_functions/response_utilities/adjoint_linear_strain_energy_response_function.h"
 
+#include "custom_response_functions/response_utilities/direct_structural_state_response_function.h"
+
 
 namespace Kratos
 {
@@ -87,6 +89,13 @@ void  AddCustomResponseFunctionUtilitiesToPython(pybind11::module& m)
     class_<AdjointLinearStrainEnergyResponseFunction, AdjointLinearStrainEnergyResponseFunction::Pointer, AdjointStructuralResponseFunction>
       (m, "AdjointLinearStrainEnergyResponseFunction")
       .def(init<ModelPart&, Parameters>());
+
+    class_<DirectStructuralStateResponseFunction, DirectStructuralStateResponseFunction::Pointer>
+      (m, "DirectStructuralStateResponseFunction")
+      .def(init<ModelPart&, Parameters>())
+      .def("Initialize", &DirectStructuralStateResponseFunction::Initialize)
+      .def("FinalizeSolutionStep", &DirectStructuralStateResponseFunction::FinalizeSolutionStep)
+      .def("CalculateValue", &DirectStructuralStateResponseFunction::CalculateValue);
 
 }
 
