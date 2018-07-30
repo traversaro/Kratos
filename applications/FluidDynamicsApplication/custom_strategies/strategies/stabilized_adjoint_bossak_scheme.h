@@ -135,7 +135,6 @@ public:
 
         LocalSystemMatrixType matrix_29;
         pCurrentElement->Calculate(VMS_ADJOINT_ENERGY_GENERATION_RATE_MATRIX,  matrix_29, rCurrentProcessInfo);
-
         pCurrentElement->SetValue(STABILIZATION_ANALYSIS_MATRIX_29, matrix_29);
 
         // Calculate artificial diffusion
@@ -177,7 +176,7 @@ public:
             double const artificial_diffusion = r_element->GetValue(ARTIFICIAL_DIFFUSION);
             r_element->SetValue(ARTIFICIAL_DIFFUSION, 1.0);
             r_element->Calculate(ARTIFICIAL_DIFFUSION_MATRIX, numerical_diffusion_matrix, rModelPart.GetProcessInfo());
-            r_element->SetValue(ARTIFICIAL_DIFFUSION, artificial_diffusion);                    
+            r_element->SetValue(ARTIFICIAL_DIFFUSION, artificial_diffusion);
 
             Vector adjoint_vector;
             r_element->GetValuesVector(adjoint_vector);
@@ -249,7 +248,6 @@ protected:
                                         rLHS_Contribution,
                                         rRHS_Contribution,
                                         rCurrentProcessInfo);
-        artificial_diffusion /= mStabilizationSourceCoefficient;
 
         artificial_diffusion *= mOverallDiffusionCoefficient;
         pCurrentElement->SetValue(ARTIFICIAL_DIFFUSION, artificial_diffusion);

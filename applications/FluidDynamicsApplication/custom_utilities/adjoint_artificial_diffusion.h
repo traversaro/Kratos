@@ -61,6 +61,7 @@ public:
 #ifdef EIGEN_ROOT
         singularValuePressureCoupled,
         fullMatrixEigen,
+        energyGenerationRateMatrixWithEigenValues,
 #endif
         dynamicFullVMSSteadyMatrix,
         dynamicFullMatrix,
@@ -117,6 +118,8 @@ public:
         }
         else if (method_name=="full_matrix_eigen_method")
             mArtificialDiffusionMethod = ArtificialDiffusionMethods::fullMatrixEigen;
+        else if (method_name=="energy_generation_rate_matrix_with_eigen_values")
+            mArtificialDiffusionMethod = ArtificialDiffusionMethods::energyGenerationRateMatrixWithEigenValues;
 #endif
         else
         {
@@ -184,6 +187,12 @@ public:
                                         rCurrentProcessInfo);
             case ArtificialDiffusionMethods::singularValuePressureCoupled:
                 return CalculateArtificialDiffusionSVMethodPressureCoupled(
+                                        pCurrentElement,
+                                        rLHS_Contribution,
+                                        rRHS_Contribution,
+                                        rCurrentProcessInfo);
+            case ArtificialDiffusionMethods::energyGenerationRateMatrixWithEigenValues:
+                return CalculateArtificialDiffusionEnergyGenerationRateMatrixWithEigenValues(
                                         pCurrentElement,
                                         rLHS_Contribution,
                                         rRHS_Contribution,
@@ -666,25 +675,45 @@ private:
 
         const double max_svd_vms_steady_term = svd_s(0, 0);
 
-        // MatrixType numerical_diffusion_matrix;
-        // pCurrentElement->SetValue(ARTIFICIAL_DIFFUSION, 1.0);
-        // pCurrentElement->Calculate(ARTIFICIAL_DIFFUSION_MATRIX, numerical_diffusion_matrix, rCurrentProcessInfo);
-        // SVDUtils<double>::SingularValueDecomposition(
-        //     numerical_diffusion_matrix, svd_u, svd_s, svd_v);
-
-        // const double max_svd_diffusion_term = svd_s(0, 0);
-
-        // double artificial_diffusion = 0.0;
-        // if (max_svd_diffusion_term > 0.0)
-        //     artificial_diffusion = max_svd_vms_steady_term;
-        // else
-        //     std::cout << "WARNING!!!!! artificial diffusion is: " << artificial_diffusion
-        //               << " for element " << pCurrentElement->Id() <<  std::endl;
-
-        return max_svd_vms_steady_term;
+        return max_svd_vms_steady_term/mEpsilon;
 
         KRATOS_CATCH("");
     }
+
+#ifdef EIGEN_ROOT
+    double CalculateArtificialDiffusionEnergyGenerationRateMatrixWithEigenValues(
+                                        Element::Pointer pCurrentElement,
+                                        MatrixType& rLHS_Contribution,
+                                        VectorType& rRHS_Contribution,
+                                        ProcessInfo& rCurrentProcessInfo)
+    {
+        KRATOS_TRY;
+
+        Matrix vms_steady_term_primal_gradient;
+        pCurrentElement->Calculate(VMS_STEADY_TERM_PRIMAL_GRADIENT_MATRIX,
+                                   vms_steady_term_primal_gradient,
+                                   rCurrentProcessInfo);
+
+        const double max_eigen_value = this->CalculateMaxEigenValue(vms_steady_term_primal_gradient);
+        pCurrentElement->SetValue(STABILIZATION_ANALYSIS_MATRIX_23_EIGEN_MAX, max_eigen_value);
+
+        // do not add artificial diffusion if there are no positive eigen values
+        if (std::abs(max_eigen_value) < 1e-12)
+            return 0.0;
+
+        MatrixType svd_u;
+        MatrixType svd_v;
+        MatrixType svd_s;
+        SVDUtils<double>::SingularValueDecomposition(
+            vms_steady_term_primal_gradient, svd_u, svd_s, svd_v);
+
+        const double max_svd_vms_steady_term = svd_s(0, 0);
+
+        return max_svd_vms_steady_term/(mEpsilon);
+
+        KRATOS_CATCH("");
+    }
+#endif
 
     ///@}
     ///@name Private Operations
