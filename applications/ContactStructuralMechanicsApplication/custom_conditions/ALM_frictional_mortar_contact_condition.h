@@ -584,11 +584,17 @@ private:
     void save(Serializer& rSerializer) const override
     {
         KRATOS_SERIALIZE_SAVE_BASE_CLASS( rSerializer, BaseType );
+        rSerializer.save("PreviousMortarOperatorsInitialized", mPreviousMortarOperatorsInitialized);
+//         rSerializer.save("CurrentMortarOperators", mCurrentMortarOperators); # TODO: Serialize mortar operators
+//         rSerializer.save("PreviousMortarOperators", mPreviousMortarOperators);
     }
 
     void load(Serializer& rSerializer) override
     {
         KRATOS_SERIALIZE_LOAD_BASE_CLASS( rSerializer, BaseType );
+        rSerializer.load("PreviousMortarOperatorsInitialized", mPreviousMortarOperatorsInitialized);
+//         rSerializer.load("CurrentMortarOperators", mCurrentMortarOperators); # TODO: Serialize mortar operators
+//         rSerializer.load("PreviousMortarOperators", mPreviousMortarOperators);
     }
 
     ///@}
