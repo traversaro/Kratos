@@ -197,7 +197,6 @@ namespace Kratos
             rResponseGradient.resize(rAdjointMatrix.size1(), false);
 
         rResponseGradient.clear();
-
         if (rAdjointElem.GetValue(UPDATE_SENSITIVITIES))
         {
             Matrix sensitivity_matrix;
