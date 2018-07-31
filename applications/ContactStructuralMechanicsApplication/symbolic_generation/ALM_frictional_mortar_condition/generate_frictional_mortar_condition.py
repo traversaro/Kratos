@@ -109,6 +109,11 @@ for normalvar in range(2):
                 LMTangent[node,idim] = LM[node,idim] - LMNormal[node] * NormalSlave[node, idim]
                 wLMTangent[node,idim] = wLM[node,idim] - wLMNormal[node] * NormalSlave[node, idim]
 
+            # Add implicit definition
+            aux_tangent_slave = LMTangent.row(node)/real_norm(LMTangent.row(node))
+            for idim in range(dim):
+                TangentSlave[node,idim] = aux_tangent_slave[idim]
+
         # Defining additional variables
         NormalGap = DefineVector('NormalGap', nnodes)
         NormalwGap = DefineVector('NormalwGap', nnodes)
@@ -237,10 +242,19 @@ for normalvar in range(2):
                     #rv_galerkin += DynamicFactor[node] * augmented_normal_lm * NormalwGap[node]
 
                     # Frictional contact
-                    augmented_tangent_lm = ScaleFactor * LMTangent.row(node) + TangentFactor * PenaltyParameter[node] * TangentSlip.row(node)
+                    #augmented_tangent_lm = ScaleFactor * LMTangent.row(node) + TangentFactor * PenaltyParameter[node] * TangentSlip.row(node)
                     #rv_galerkin += DynamicFactor[node] * (augmented_tangent_lm).dot(TangentwSlip.row(node))
                     #augmented_lm = (ScaleFactor * LM.row(node) + PenaltyParameter[node] * NormalGap[node] * NormalSlave.row(node))
-                    augmented_lm = (ScaleFactor * LM.row(node) + PenaltyParameter[node] * NormalGap[node] * NormalSlave.row(node) + TangentFactor * PenaltyParameter[node] * TangentSlip.row(node))
+                    #augmented_lm = (ScaleFactor * LM.row(node))
+                    #augmented_lm = (ScaleFactor * LM.row(node) + PenaltyParameter[node] * NormalGap[node] * NormalSlave.row(node))
+                    #augmented_lm = (ScaleFactor * LM.row(node) + PenaltyParameter[node] * NormalGap[node] * NormalSlave.row(node) + TangentFactor * PenaltyParameter[node] * TangentSlip.row(node))
+                    if (slip == 1):
+                        augmented_tangent_lm = mu[node] * augmented_normal_lm * TangentSlave.row(node)
+                        augmented_lm = augmented_normal_lm * NormalSlave.row(node) - augmented_tangent_lm
+                    else:
+                        augmented_tangent_lm = ScaleFactor * LMTangent.row(node) + TangentFactor * PenaltyParameter[node] * TangentSlip.row(node)
+                        augmented_lm = augmented_normal_lm * NormalSlave.row(node) + augmented_tangent_lm
+
                     rv_galerkin += DynamicFactor[node] * (augmented_lm).dot(Dw1Mw2.row(node))
                     if (slip == 1): # Slip
                         # Normal contact
@@ -248,8 +262,10 @@ for normalvar in range(2):
                         # Frictional contact
                         #modified_augmented_tangent_lm = real_norm(augmented_tangent_lm) * ScaleFactor * LMTangent.row(node) - mu[node] * augmented_normal_lm * augmented_tangent_lm
                         #rv_galerkin -= (1.0 / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm.dot(wLMTangent.row(node))
-                        modified_augmented_tangent_lm = ScaleFactor * LMTangent.row(node) + mu[node] * augmented_normal_lm * TangentSlave.row(node)
+                        #modified_augmented_tangent_lm = ScaleFactor * LMTangent.row(node) + mu[node] * augmented_normal_lm * TangentSlave.row(node)
+                        modified_augmented_tangent_lm = ScaleFactor * LMTangent.row(node) + augmented_tangent_lm
                         rv_galerkin -= (ScaleFactor / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm.dot(wLMTangent.row(node))
+                        #rv_galerkin -= ScaleFactor**2/PenaltyParameter[node] * (wLMTangent.row(node).dot(LMTangent.row(node)))
                     else: # Stick
                         # Normal contact
                         rv_galerkin -= ScaleFactor * NormalGap[node] * wLMNormal[node]
