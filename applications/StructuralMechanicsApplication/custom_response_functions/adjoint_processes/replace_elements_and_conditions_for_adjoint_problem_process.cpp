@@ -16,6 +16,7 @@
 #include "../adjoint_elements/adjoint_finite_difference_base_element.h"
 #include "../adjoint_elements/adjoint_finite_difference_shell_element.h"
 #include "../adjoint_elements/adjoint_finite_difference_cr_beam_element_3D2N.h"
+#include "../adjoint_elements/adjoint_finite_difference_total_lagrangian.h"
 #include "../adjoint_conditions/adjoint_semi_analytic_base_condition.h"
 #include "../adjoint_conditions/adjoint_semi_analytic_point_load_condition.h"
 
@@ -187,6 +188,30 @@ namespace Kratos
             rName = "AdjointFiniteDifferenceCrBeamElement";
         else if(name_current_element == "ShellThinElement3D3N")
             rName = "AdjointFiniteDifferencingShellElement";
+        else if(name_current_element == "TotalLagrangianElement2D3N")
+            rName = "AdjointFiniteDifferencingTotalLagrangian";
+        else if(name_current_element == "TotalLagrangianElement2D4N")
+            rName = "AdjointFiniteDifferencingTotalLagrangian";
+        else if(name_current_element == "TotalLagrangianElement2D6N")
+            rName = "AdjointFiniteDifferencingTotalLagrangian";
+        else if(name_current_element == "TotalLagrangianElement2D8N")
+            rName = "AdjointFiniteDifferencingTotalLagrangian";   
+        else if(name_current_element == "TotalLagrangianElement2D9N")
+            rName = "AdjointFiniteDifferencingTotalLagrangian";
+        else if(name_current_element == "TotalLagrangianElement3D4N")
+            rName = "AdjointFiniteDifferencingTotalLagrangian";
+        else if(name_current_element == "TotalLagrangianElement3D6N")
+            rName = "AdjointFiniteDifferencingTotalLagrangian";
+        else if(name_current_element == "TotalLagrangianElement3D8N")
+            rName = "AdjointFiniteDifferencingTotalLagrangian";
+        else if(name_current_element == "TotalLagrangianElement3D10N")
+            rName = "AdjointFiniteDifferencingTotalLagrangian";
+        else if(name_current_element == "TotalLagrangianElement3D15N")
+            rName = "AdjointFiniteDifferencingTotalLagrangian";
+        else if(name_current_element == "TotalLagrangianElement3D20N")
+            rName = "AdjointFiniteDifferencingTotalLagrangian";
+        else if(name_current_element == "TotalLagrangianElement3D27N")
+            rName = "AdjointFiniteDifferencingTotalLagrangian";
         else
         {
             KRATOS_ERROR << "It is not possible to replace the " << name_current_element <<
