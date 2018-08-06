@@ -172,10 +172,25 @@ double AdjointFiniteDifferenceTotalLagrangian::GetPerturbationSizeModificationFa
 
     if(rDesignVariable == SHAPE)
     {
-        double dx = this->GetGeometry()[1].X0() - this->GetGeometry()[0].X0();
-        double dy = this->GetGeometry()[1].Y0() - this->GetGeometry()[0].Y0();
-        double dz = this->GetGeometry()[1].Z0() - this->GetGeometry()[0].Z0();
-        double L = std::sqrt(dx*dx + dy*dy + dz*dz);
+        double dx = 0.0;
+        double dy = 0.0;
+        double dz = 0.0;
+        double L = 0.0;
+
+        const SizeType number_of_nodes = GetGeometry().size();
+        for (IndexType i = 0; i < number_of_nodes; ++i)
+        {
+            for (IndexType j = i+1; j < number_of_nodes; ++j)
+            {
+                dx = this->GetGeometry()[i].X0() - this->GetGeometry()[j].X0();
+                dy = this->GetGeometry()[i].Y0() - this->GetGeometry()[j].Y0();
+                dz = this->GetGeometry()[i].Z0() - this->GetGeometry()[j].Z0();
+                L += std::sqrt(dx*dx + dy*dy + dz*dz);
+            }
+        }
+        L /= number_of_nodes*(number_of_nodes-1)/2.0; 
+        std::cout << L << std::endl;
+        
         return L;
     }
     else
@@ -183,6 +198,13 @@ double AdjointFiniteDifferenceTotalLagrangian::GetPerturbationSizeModificationFa
 
     KRATOS_CATCH("")
 }
+
+/*void AdjointFiniteDifferenceTotalLagrangian::CalculateSensitivityMatrix(const Variable<array_1d<double,3>>& rDesignVariable, Matrix& rOutput,
+                                            const ProcessInfo& rCurrentProcessInfo)
+{
+    mpPrimalElement->CalculateSensitivityMatrix(SHAPE_SENSITIVITY, rOutput, rCurrentProcessInfo);
+}*/
+
 
 void AdjointFiniteDifferenceTotalLagrangian::save(Serializer& rSerializer) const
 {
