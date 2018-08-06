@@ -103,6 +103,12 @@ namespace Kratos
 
                     (*it.base()) = p_element;
                 }
+                else if (element_name == "AdjointFiniteDifferencingTotalLagrangian")
+                {
+                    Element::Pointer p_element = Kratos::make_shared<AdjointFiniteDifferenceTotalLagrangian>(*it.base() );
+
+                    (*it.base()) = p_element;
+                }
                 else
                     KRATOS_ERROR << "Unknown adjoint element: " << element_name << std::endl;
             }
