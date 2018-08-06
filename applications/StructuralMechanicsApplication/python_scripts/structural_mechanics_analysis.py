@@ -70,7 +70,7 @@ class StructuralMechanicsAnalysis(AnalysisStage):
         It will be removed in the future
         """
         list_of_processes = super(StructuralMechanicsAnalysis, self)._CreateProcesses(parameter_name, initialization_order)
-
+        print("I was here")
         if parameter_name == "processes":
             processes_block_names = ["constraints_process_list", "loads_process_list", "list_other_processes", "json_output_process",
                 "json_check_process", "check_analytic_results_process", "contact_process_list"]

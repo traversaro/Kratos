@@ -1,0 +1,139 @@
+{
+    "problem_data"             : {
+        "problem_name"    : "test_adjoint_total_lagrangian",
+        "model_part_name" : "Structure",
+        "domain_size"     : 3,
+        "parallel_type"   : "OpenMP",
+        "time_step"       : 1.1,
+        "start_time"      : 0.0,
+        "end_time"        : 1.0,
+        "echo_level"      : 0
+    },
+    "solver_settings"          : {
+        "solver_type"                  : "adjoint_static",
+        "analysis_type"                : "linear",
+        "compute_reactions"			   : false,
+        "move_mesh_flag"                    : false,
+        "scheme_settings" : {
+            "scheme_type"              : "adjoint_structural"
+            },
+        "response_function_settings" : {
+                "response_type"     : "adjoint_nodal_displacement",
+                "use_kratos"        : true,
+                "gradient_mode"     : "semi_analytic",
+                "sensitivity_model_part_name" : "Parts_Parts_Auto1",
+                "nodal_sensitivity_variables"  : ["SHAPE"],
+                "element_sensitivity_variables"  : ["YOUNG_MODULUS"],
+                "condition_sensitivity_variables"  : [],
+                "step_size"         : 1e-2,
+                "traced_node_id"       : 16,
+                "traced_dof"        : "DISPLACEMENT_Y"
+
+            },
+        "echo_level"                   : 0,
+        "problem_domain_sub_model_part_list" : ["Parts_Parts_Auto1"],
+        "processes_sub_model_part_list"      : ["DISPLACEMENT_Displacement_Auto6","DISPLACEMENT_Displacement_Auto7","DISPLACEMENT_Displacement_Auto8","PointLoad_Auto2"],
+        "computing_model_part_name" : "computing_domain",
+        "rotation_dofs"                      : false,
+        "linear_solver_settings"       : {
+            "solver_type"         : "Super_LU"
+        },
+        "model_import_settings"        : {
+            "input_type"     : "mdpa",
+            "input_filename" : "solid_model"
+        },
+        "material_import_settings" :{
+            "materials_filename": "materials_3D.json"
+        }
+    },
+    "constraints_process_list" : [{
+        "python_module" : "assign_vector_variable_process",
+        "kratos_module" : "KratosMultiphysics",
+        "help"          : "This process fixes the selected components of a given vector variable",
+        "process_name"  : "AssignVectorVariableProcess",
+        "Parameters"    : {
+            "mesh_id"         : 0,
+            "model_part_name" : "DISPLACEMENT_Displacement_Auto6",
+            "variable_name"   : "ADJOINT_DISPLACEMENT",
+            "constrained"     : [false,false,true],
+            "value"           : [0.0,0.0,0.0],
+            "interval"        : [0.0,"End"]
+        }
+    },{
+        "python_module" : "assign_vector_variable_process",
+        "kratos_module" : "KratosMultiphysics",
+        "help"          : "This process fixes the selected components of a given vector variable",
+        "process_name"  : "AssignVectorVariableProcess",
+        "Parameters"    : {
+            "mesh_id"         : 0,
+            "model_part_name" : "DISPLACEMENT_Displacement_Auto7",
+            "variable_name"   : "ADJOINT_DISPLACEMENT",
+            "constrained"     : [true,false,true],
+            "value"           : [0.0,0.0,0.0],
+            "interval"        : [0.0,"End"]
+        }
+    },{
+        "python_module" : "assign_vector_variable_process",
+        "kratos_module" : "KratosMultiphysics",
+        "help"          : "This process fixes the selected components of a given vector variable",
+        "process_name"  : "AssignVectorVariableProcess",
+        "Parameters"    : {
+            "mesh_id"         : 0,
+            "model_part_name" : "DISPLACEMENT_Displacement_Auto8",
+            "variable_name"   : "ADJOINT_DISPLACEMENT",
+            "constrained"     : [true,true,true],
+            "value"           : [0.0,0.0,0.0],
+            "interval"        : [0.0,"End"]
+        }
+    }],
+    "loads_process_list"       : [{
+        "python_module" : "assign_vector_by_direction_to_condition_process",
+        "kratos_module" : "KratosMultiphysics",
+        "help"          : "This process sets a vector variable value over a condition",
+        "check"         : "DirectorVectorNonZero direction",
+        "process_name"  : "AssignVectorByDirectionToConditionProcess",
+        "Parameters"    : {
+            "mesh_id"         : 0,
+            "model_part_name" : "PointLoad_Auto2",
+            "variable_name"   : "POINT_LOAD",
+            "modulus"         : 1.0,
+            "direction"       : [0.0,1.0,0.0],
+            "interval"        : [0.0,"End"]
+        }
+    }],
+    "list_other_processes" :[{
+        "kratos_module" : "KratosMultiphysics.HDF5Application",
+        "python_module" : "single_mesh_primal_input_process",
+        "help"          : "",
+        "process_name"  : "",
+        "Parameters" : {
+	        "model_part_name" : "Structure",
+            "file_settings" : {
+                "file_access_mode" : "read_only"
+            },
+            "nodal_results_settings" : {
+                "list_of_variables": ["DISPLACEMENT"]
+            }
+        }
+     }],
+     "_output_configuration"     : {
+        "result_file_configuration" : {
+            "gidpost_flags"       : {
+                "GiDPostMode"           : "GiD_PostBinary",
+                "WriteDeformedMeshFlag" : "WriteDeformed",
+                "WriteConditionsFlag"   : "WriteConditions",
+                "MultiFileFlag"         : "SingleFile"
+            },
+            "file_label"          : "step",
+            "output_control_type" : "step",
+            "output_frequency"    : 1,
+            "body_output"         : true,
+            "node_output"         : false,
+            "skin_output"         : false,
+            "plane_output"        : [],
+            "nodal_results"       : ["DISPLACEMENT"],
+            "gauss_point_results" : []
+        },
+        "point_data_configuration"  : []
+    }
+}
