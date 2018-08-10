@@ -195,16 +195,16 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
             .def(init< double, double, double, double, bool, bool >())
             ;
 
-//     // Displacement and lagrange multiplier mixed Convergence Criterion (frictional)
-//     class_< DisplacementLagrangeMultiplierMixedFrictionalContactCriteriaType, typename DisplacementLagrangeMultiplierMixedFrictionalContactCriteriaType::Pointer,
-//             ConvergenceCriteriaType >
-//             (m, "DisplacementLagrangeMultiplierMixedFrictionalContactCriteria")
-//             .def(init<>())
-//             .def(init<Parameters>())
-//             .def(init< double, double, double, double, double, double >())
-//             .def(init< double, double, double, double, double, double, bool >())
-//             .def(init< double, double, double, double, double, double, bool, bool >())
-//             ;
+    // Displacement and lagrange multiplier mixed Convergence Criterion (frictional)
+    class_< DisplacementLagrangeMultiplierMixedFrictionalContactCriteriaType, typename DisplacementLagrangeMultiplierMixedFrictionalContactCriteriaType::Pointer,
+            ConvergenceCriteriaType >
+            (m, "DisplacementLagrangeMultiplierMixedFrictionalContactCriteria")
+            .def(init<>())
+            .def(init<Parameters>())
+            .def(init< double, double, double, double, double, double >())
+            .def(init< double, double, double, double, double, double, bool >())
+            .def(init< double, double, double, double, double, double, bool, bool >())
+            ;
             
     // Displacement and lagrange multiplier residual Convergence Criterion
     class_< DisplacementLagrangeMultiplierResidualContactCriteriaType, typename DisplacementLagrangeMultiplierResidualContactCriteriaType::Pointer,
