@@ -106,11 +106,11 @@ public:
      */
     
     DisplacementLagrangeMultiplierContactCriteria(  
-        TDataType DispRatioTolerance,
-        TDataType DispAbsTolerance,
-        TDataType LMRatioTolerance,
-        TDataType LMAbsTolerance,
-        bool EnsureContact = false,
+        const TDataType DispRatioTolerance,
+        const TDataType DispAbsTolerance,
+        const TDataType LMRatioTolerance,
+        const TDataType LMAbsTolerance,
+        const bool EnsureContact = false,
         const bool PrintingOutput = false
         )
         : ConvergenceCriteria< TSparseSpace, TDenseSpace >(),

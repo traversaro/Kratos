@@ -9,8 +9,8 @@
 //  Main authors:    Vicente Mataix Ferrandiz
 //
 
-#if !defined(KRATOS_DISPLACEMENT_LAGRANGE_MULTIPLIER_MIXED_CONTACT_CRITERIA_H)
-#define KRATOS_DISPLACEMENT_LAGRANGE_MULTIPLIER_MIXED_CONTACT_CRITERIA_H
+#if !defined(KRATOS_DISPLACEMENT_LAGRANGE_MULTIPLIER_MIXED_FRICTIONAL_CONTACT_CRITERIA_H)
+#define KRATOS_DISPLACEMENT_LAGRANGE_MULTIPLIER_MIXED_FRICTIONAL_CONTACT_CRITERIA_H
 
 /* System includes */
 
@@ -47,7 +47,7 @@ namespace Kratos
 ///@{
 
 /**
- * @class DisplacementLagrangeMultiplierMixedContactCriteria 
+ * @class DisplacementLagrangeMultiplierMixedFrictionalContactCriteria
  * @ingroup ContactStructuralMechanicsApplication 
  * @brief Convergence criteria for contact problems
  * @details This class implements a convergence control based on nodal displacement and
@@ -57,7 +57,7 @@ namespace Kratos
  */
 template<   class TSparseSpace,
             class TDenseSpace >
-class DisplacementLagrangeMultiplierMixedContactCriteria 
+class DisplacementLagrangeMultiplierMixedFrictionalContactCriteria
     : public ConvergenceCriteria< TSparseSpace, TDenseSpace >
 {
 public:
@@ -65,8 +65,8 @@ public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of DisplacementLagrangeMultiplierMixedContactCriteria
-    KRATOS_CLASS_POINTER_DEFINITION( DisplacementLagrangeMultiplierMixedContactCriteria );
+    /// Pointer definition of DisplacementLagrangeMultiplierMixedFrictionalContactCriteria
+    KRATOS_CLASS_POINTER_DEFINITION( DisplacementLagrangeMultiplierMixedFrictionalContactCriteria );
 
     /// The base class definition (and it subclasses)
     typedef ConvergenceCriteria< TSparseSpace, TDenseSpace > BaseType;
@@ -91,8 +91,8 @@ public:
     ///@name Life Cycle
     ///@{
 
-    /// Constructor.
     /**
+     * @brief Default constructor.
      * @param DispRatioTolerance Relative tolerance for displacement residual error
      * @param DispAbsTolerance Absolute tolerance for displacement residual error
      * @param LMRatioTolerance Relative tolerance for lagrange multiplier residual  error
@@ -102,12 +102,14 @@ public:
      * @param PrintingOutput If the output is going to be printed in a txt file
      */
     
-    DisplacementLagrangeMultiplierMixedContactCriteria(  
-        TDataType DispRatioTolerance,
-        TDataType DispAbsTolerance,
-        TDataType LMRatioTolerance,
-        TDataType LMAbsTolerance,
-        bool EnsureContact = false,
+    DisplacementLagrangeMultiplierMixedFrictionalContactCriteria(
+        const TDataType DispRatioTolerance,
+        const TDataType DispAbsTolerance,
+        const TDataType LMNormalRatioTolerance,
+        const TDataType LMNormalAbsTolerance,
+        const TDataType LMTangentRatioTolerance,
+        const TDataType LMTangentAbsTolerance,
+        const bool EnsureContact = false,
         const bool PrintingOutput = false 
         )
         : ConvergenceCriteria< TSparseSpace, TDenseSpace >(),
@@ -115,18 +117,68 @@ public:
           mPrintingOutput(PrintingOutput),
           mTableIsInitialized(false)
     {
+        // The displacement residual
         mDispRatioTolerance = DispRatioTolerance;
         mDispAbsTolerance = DispAbsTolerance;
 
-        mLMNormalRatioTolerance = LMRatioTolerance;
-        mLMNormalAbsTolerance = LMAbsTolerance;
-        
+        // The normal contact residual
+        mLMNormalRatioTolerance = LMNormalRatioTolerance;
+        mLMNormalAbsTolerance = LMNormalAbsTolerance;
+
+        // The tangent contact residual
+        mLMTangentRatioTolerance = LMTangentRatioTolerance;
+        mLMTangentAbsTolerance = LMTangentAbsTolerance;
+
+        // We "initialize" the flag-> NOTE: Replace for a ral flag?¿
+        mInitialResidualIsSet = false;
+    }
+
+    /**
+     * @brief Default constructor (parameters)
+     * @param ThisParameters The configuration parameters
+     */
+    DisplacementLagrangeMultiplierMixedFrictionalContactCriteria( Parameters ThisParameters = Parameters(R"({})"))
+        : ConvergenceCriteria< TSparseSpace, TDenseSpace >(),
+          mTableIsInitialized(false)
+    {
+        // The default parameters
+        Parameters default_parameters = Parameters(R"(
+        {
+            "ensure_contact"                                     : false,
+            "print_convergence_criterion"                        : false,
+            "residual_relative_tolerance"                        : 1.0e-4,
+            "residual_absolute_tolerance"                        : 1.0e-9,
+            "contact_displacement_relative_tolerance"            : 1.0e-4,
+            "contact_displacement_absolute_tolerance"            : 1.0e-9,
+            "frictional_contact_displacement_relative_tolerance" : 1.0e-4,
+            "frictional_contact_displacement_absolute_tolerance" : 1.0e-9
+        })" );
+
+        ThisParameters.ValidateAndAssignDefaults(default_parameters);
+
+        // The displacement residual
+        mDispRatioTolerance = ThisParameters["residual_relative_tolerance"].GetDouble();
+        mDispAbsTolerance = ThisParameters["residual_absolute_tolerance"].GetDouble();
+
+        // The normal contact residual
+        mLMNormalRatioTolerance =  ThisParameters["contact_displacement_relative_tolerance"].GetDouble();
+        mLMNormalAbsTolerance =  ThisParameters["contact_displacement_absolute_tolerance"].GetDouble();
+
+        // The tangent contact residual
+        mLMTangentRatioTolerance =  ThisParameters["frictional_contact_displacement_relative_tolerance"].GetDouble();
+        mLMTangentAbsTolerance =  ThisParameters["frictional_contact_displacement_absolute_tolerance"].GetDouble();
+
+        // Additional flags -> NOTE: Replace for a ral flag?¿
+        mEnsureContact = ThisParameters["ensure_contact"].GetBool();
+        mPrintingOutput = ThisParameters["print_convergence_criterion"].GetBool();
+
+        // We "initialize" the flag-> NOTE: Replace for a ral flag?¿
         mInitialResidualIsSet = false;
     }
 
     //* Copy constructor.
-    DisplacementLagrangeMultiplierMixedContactCriteria( DisplacementLagrangeMultiplierMixedContactCriteria const& rOther )
-      :BaseType(rOther) 
+    DisplacementLagrangeMultiplierMixedFrictionalContactCriteria( DisplacementLagrangeMultiplierMixedFrictionalContactCriteria const& rOther )
+      :BaseType(rOther)
       ,mInitialResidualIsSet(rOther.mInitialResidualIsSet)
       ,mDispRatioTolerance(rOther.mDispRatioTolerance)
       ,mDispAbsTolerance(rOther.mDispAbsTolerance)
@@ -134,20 +186,22 @@ public:
       ,mDispCurrentResidualNorm(rOther.mDispCurrentResidualNorm)
       ,mLMNormalRatioTolerance(rOther.mLMNormalRatioTolerance)
       ,mLMNormalAbsTolerance(rOther.mLMNormalAbsTolerance)
+      ,mLMTangentRatioTolerance(rOther.mLMNormalRatioTolerance)
+      ,mLMTangentAbsTolerance(rOther.mLMNormalAbsTolerance)
       ,mPrintingOutput(rOther.mPrintingOutput)
       ,mTableIsInitialized(rOther.mTableIsInitialized)
     {
     }
     
     /// Destructor.
-    ~DisplacementLagrangeMultiplierMixedContactCriteria() override = default;
+    ~DisplacementLagrangeMultiplierMixedFrictionalContactCriteria() override = default;
 
     ///@}
     ///@name Operators
     ///@{
 
     /**
-     * Compute relative and absolute error.
+     * @brief Compute relative and absolute error.
      * @param rModelPart Reference to the ModelPart containing the contact problem.
      * @param rDofSet Reference to the container of the problem's degrees of freedom (stored by the BuilderAndSolver)
      * @param A System matrix (unused)
@@ -166,26 +220,68 @@ public:
     {
         if (SparseSpaceType::Size(b) != 0) { //if we are solving for something
             // Initialize
-            TDataType disp_residual_solution_norm = 0.0, lm_solution_norm = 0.0, lm_increase_norm = 0.0;
+            TDataType disp_residual_solution_norm = 0.0, normal_lm_solution_norm = 0.0, normal_lm_increase_norm = 0.0, tangent_lm_solution_norm = 0.0, tangent_lm_increase_norm = 0.0;
             IndexType disp_dof_num(0),lm_dof_num(0);
 
             // Loop over Dofs
-            #pragma omp parallel for reduction(+:disp_residual_solution_norm,lm_solution_norm,lm_increase_norm,disp_dof_num,lm_dof_num)
+            #pragma omp parallel for reduction(+:disp_residual_solution_norm,normal_lm_solution_norm,normal_lm_increase_norm,disp_dof_num,lm_dof_num)
             for (int i = 0; i < static_cast<int>(rDofSet.size()); i++) {
                 auto it_dof = rDofSet.begin() + i;
 
                 std::size_t dof_id;
-                TDataType residual_dof_value, dof_value, dof_incr;
+                TDataType residual_dof_value, dof_value, dof_incr, normal_dof_value, normal_dof_incr;
+
+                // The nodes array
+                auto& nodes_array = rModelPart.Nodes();
 
                 if (it_dof->IsFree()) {
                     dof_id = it_dof->EquationId();
                     
                     const auto curr_var = it_dof->GetVariable();
-                    if ((curr_var == VECTOR_LAGRANGE_MULTIPLIER_X) || (curr_var == VECTOR_LAGRANGE_MULTIPLIER_Y) || (curr_var == VECTOR_LAGRANGE_MULTIPLIER_Z) || (curr_var == LAGRANGE_MULTIPLIER_CONTACT_PRESSURE)) {
+                    if (curr_var == VECTOR_LAGRANGE_MULTIPLIER_X) {
+                        // The normal of the node (TODO: how to solve this without accesing all the time to the database?)
+                        const auto& it_node = nodes_array.find(it_dof->Id());
+                        const array_1d<double, 3>& normal = it_node->FastGetSolutionStepValue(NORMAL);
+
                         dof_value = it_dof->GetSolutionStepValue(0);
                         dof_incr = Dx[dof_id];
-                        lm_solution_norm += dof_value * dof_value;
-                        lm_increase_norm += dof_incr * dof_incr;
+                        const TDataType normal_dof_value = dof_value * normal[0];
+                        const TDataType normal_dof_incr = dof_incr * normal[0];
+
+                        normal_lm_solution_norm += std::pow(normal_dof_value, 2);
+                        normal_lm_increase_norm += std::pow(normal_dof_incr, 2);
+                        tangent_lm_solution_norm += std::pow(dof_value - normal_dof_value, 2);
+                        tangent_lm_increase_norm += std::pow(dof_incr - normal_dof_incr, 2);
+                        lm_dof_num++;
+                    } else if (curr_var == VECTOR_LAGRANGE_MULTIPLIER_Y) {
+                         // The normal of the node (TODO: how to solve this without accesing all the time to the database?)
+                        const auto& it_node = nodes_array.find(it_dof->Id());
+                        const array_1d<double, 3>& normal = it_node->FastGetSolutionStepValue(NORMAL);
+
+                        dof_value = it_dof->GetSolutionStepValue(0);
+                        dof_incr = Dx[dof_id];
+                        const TDataType normal_dof_value = dof_value * normal[1];
+                        const TDataType normal_dof_incr = dof_incr * normal[1];
+
+                        normal_lm_solution_norm += std::pow(normal_dof_value, 2);
+                        normal_lm_increase_norm += std::pow(normal_dof_incr, 2);
+                        tangent_lm_solution_norm += std::pow(dof_value - normal_dof_value, 2);
+                        tangent_lm_increase_norm += std::pow(dof_incr - normal_dof_incr, 2);
+                        lm_dof_num++;
+                    } else if (curr_var == VECTOR_LAGRANGE_MULTIPLIER_Z) {
+                        // The normal of the node (TODO: how to solve this without accesing all the time to the database?)
+                        const auto& it_node = nodes_array.find(it_dof->Id());
+                        const array_1d<double, 3>& normal = it_node->FastGetSolutionStepValue(NORMAL);
+
+                        dof_value = it_dof->GetSolutionStepValue(0);
+                        dof_incr = Dx[dof_id];
+                        const TDataType normal_dof_value = dof_value * normal[2];
+                        const TDataType normal_dof_incr = dof_incr * normal[2];
+
+                        normal_lm_solution_norm += std::pow(normal_dof_value, 2);
+                        normal_lm_increase_norm += std::pow(normal_dof_incr, 2);
+                        tangent_lm_solution_norm += std::pow(dof_value - normal_dof_value, 2);
+                        tangent_lm_increase_norm += std::pow(dof_incr - normal_dof_incr, 2);
                         lm_dof_num++;
                     } else {
                         residual_dof_value = b[dof_id];
@@ -195,12 +291,14 @@ public:
                 }
             }
 
-            if(lm_increase_norm == 0.0) lm_increase_norm = 1.0;
-            KRATOS_ERROR_IF(mEnsureContact && lm_solution_norm == 0.0) << "ERROR::CONTACT LOST::ARE YOU SURE YOU ARE SUPPOSED TO HAVE CONTACT?" << std::endl;
+            if(normal_lm_increase_norm == 0.0) normal_lm_increase_norm = 1.0;
+            KRATOS_ERROR_IF(mEnsureContact && normal_lm_solution_norm == 0.0) << "ERROR::CONTACT LOST::ARE YOU SURE YOU ARE SUPPOSED TO HAVE CONTACT?" << std::endl;
             
             mDispCurrentResidualNorm = disp_residual_solution_norm;
-            TDataType lm_ratio = std::sqrt(lm_increase_norm/lm_solution_norm);
-            TDataType lm_abs = std::sqrt(lm_increase_norm)/ static_cast<TDataType>(lm_dof_num);
+            const TDataType normal_lm_ratio = std::sqrt(normal_lm_increase_norm/normal_lm_solution_norm);
+            const TDataType normal_lm_abs = std::sqrt(normal_lm_increase_norm)/ static_cast<TDataType>(lm_dof_num);
+            const TDataType tangent_lm_ratio = std::sqrt(tangent_lm_increase_norm/tangent_lm_solution_norm);
+            const TDataType tangent_lm_abs = std::sqrt(tangent_lm_increase_norm)/ static_cast<TDataType>(lm_dof_num);
             
             TDataType residual_disp_ratio; 
             
@@ -226,27 +324,30 @@ public:
                     std::cout.precision(4);
                     TablePrinterPointerType p_table = r_process_info[TABLE_UTILITY];
                     auto& Table = p_table->GetTable();
-                    Table << residual_disp_ratio << mDispRatioTolerance << residual_disp_abs << mDispAbsTolerance << lm_ratio << mLMNormalRatioTolerance << lm_abs << mLMNormalAbsTolerance;
+                    Table << residual_disp_ratio << mDispRatioTolerance << residual_disp_abs << mDispAbsTolerance << normal_lm_ratio << mLMNormalRatioTolerance << normal_lm_abs << mLMNormalAbsTolerance << tangent_lm_ratio << mLMTangentRatioTolerance << tangent_lm_abs << mLMTangentAbsTolerance;
                 } else {
                     std::cout.precision(4);
                     if (mPrintingOutput == false) {
-                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedContactCriteria") << BOLDFONT("MIXED CONVERGENCE CHECK") << "\tSTEP: " << r_process_info[STEP] << "\tNL ITERATION: " << r_process_info[NL_ITERATION_NUMBER] << std::endl << std::scientific;
-                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedContactCriteria") << BOLDFONT("\tDISPLACEMENT: RATIO = ") << residual_disp_ratio << BOLDFONT(" EXP.RATIO = ") << mDispRatioTolerance << BOLDFONT(" ABS = ") << residual_disp_abs << BOLDFONT(" EXP.ABS = ") << mDispAbsTolerance << std::endl;
-                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedContactCriteria") << BOLDFONT("\tLAGRANGE MUL: RATIO = ") << lm_ratio << BOLDFONT(" EXP.RATIO = ") << mLMNormalRatioTolerance << BOLDFONT(" ABS = ") << lm_abs << BOLDFONT(" EXP.ABS = ") << mLMNormalAbsTolerance << std::endl;
+                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << BOLDFONT("MIXED CONVERGENCE CHECK") << "\tSTEP: " << r_process_info[STEP] << "\tNL ITERATION: " << r_process_info[NL_ITERATION_NUMBER] << std::endl << std::scientific;
+                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << BOLDFONT("\tDISPLACEMENT: RATIO = ") << residual_disp_ratio << BOLDFONT(" EXP.RATIO = ") << mDispRatioTolerance << BOLDFONT(" ABS = ") << residual_disp_abs << BOLDFONT(" EXP.ABS = ") << mDispAbsTolerance << std::endl;
+                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << BOLDFONT("\tLAGRANGE MUL: RATIO = ") << normal_lm_ratio << BOLDFONT(" EXP.RATIO = ") << mLMNormalRatioTolerance << BOLDFONT(" ABS = ") << normal_lm_abs << BOLDFONT(" EXP.ABS = ") << mLMNormalAbsTolerance << std::endl;
+                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << BOLDFONT("\tLAGRANGE MUL: RATIO = ") << tangent_lm_ratio << BOLDFONT(" EXP.RATIO = ") << mLMTangentRatioTolerance << BOLDFONT(" ABS = ") << tangent_lm_abs << BOLDFONT(" EXP.ABS = ") << mLMTangentAbsTolerance << std::endl;
                     } else {
-                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedContactCriteria") << "MIXED CONVERGENCE CHECK" << "\tSTEP: " << r_process_info[STEP] << "\tNL ITERATION: " << r_process_info[NL_ITERATION_NUMBER] << std::endl << std::scientific;
-                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedContactCriteria") << "\tDISPLACEMENT: RATIO = " << residual_disp_ratio << " EXP.RATIO = " << mDispRatioTolerance << " ABS = " << residual_disp_abs << " EXP.ABS = " << mDispAbsTolerance << std::endl;
-                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedContactCriteria") << "\tLAGRANGE MUL: RATIO = " << lm_ratio << " EXP.RATIO = " << mLMNormalRatioTolerance << " ABS = " << lm_abs << " EXP.ABS = " << mLMNormalAbsTolerance << std::endl;
+                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << "MIXED CONVERGENCE CHECK" << "\tSTEP: " << r_process_info[STEP] << "\tNL ITERATION: " << r_process_info[NL_ITERATION_NUMBER] << std::endl << std::scientific;
+                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << "\tDISPLACEMENT: RATIO = " << residual_disp_ratio << " EXP.RATIO = " << mDispRatioTolerance << " ABS = " << residual_disp_abs << " EXP.ABS = " << mDispAbsTolerance << std::endl;
+                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << "\tLAGRANGE MUL: RATIO = " << normal_lm_ratio << " EXP.RATIO = " << mLMNormalRatioTolerance << " ABS = " << normal_lm_abs << " EXP.ABS = " << mLMNormalAbsTolerance << std::endl;
+                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << "\tLAGRANGE MUL: RATIO = " << tangent_lm_ratio << " EXP.RATIO = " << mLMTangentRatioTolerance << " ABS = " << tangent_lm_abs << " EXP.ABS = " << mLMTangentAbsTolerance << std::endl;
                     }
                 }
             }
 
-            r_process_info[CONVERGENCE_RATIO] = (residual_disp_ratio > lm_ratio) ? residual_disp_ratio : lm_ratio;
-            r_process_info[RESIDUAL_NORM] = (lm_abs > mLMNormalAbsTolerance) ? lm_abs : mLMNormalAbsTolerance;
+            // NOTE: Here we don't include the tangent counter part
+            r_process_info[CONVERGENCE_RATIO] = (residual_disp_ratio > normal_lm_ratio) ? residual_disp_ratio : normal_lm_ratio;
+            r_process_info[RESIDUAL_NORM] = (normal_lm_abs > mLMNormalAbsTolerance) ? normal_lm_abs : mLMNormalAbsTolerance;
             
             // We check if converged
             const bool disp_converged = (residual_disp_ratio <= mDispRatioTolerance || residual_disp_abs <= mDispAbsTolerance);
-            const bool lm_converged = (!mEnsureContact && lm_solution_norm == 0.0) ? true : (lm_ratio <= mLMNormalRatioTolerance || lm_abs <= mLMNormalAbsTolerance);
+            const bool lm_converged = (!mEnsureContact && normal_lm_solution_norm == 0.0) ? true : (normal_lm_ratio <= mLMNormalRatioTolerance || normal_lm_abs <= mLMNormalAbsTolerance) && (tangent_lm_ratio <= mLMTangentRatioTolerance || tangent_lm_abs <= mLMTangentAbsTolerance);
             
             if ( disp_converged && lm_converged ) {
                 if (rModelPart.GetCommunicator().MyPID() == 0 && this->GetEchoLevel() > 0) {
@@ -259,9 +360,9 @@ public:
                             table << "Achieved";
                     } else {
                         if (mPrintingOutput == false)
-                            KRATOS_INFO("DisplacementLagrangeMultiplierMixedContactCriteria") << BOLDFONT("\tConvergence") << " is " << BOLDFONT(FGRN("achieved")) << std::endl;
+                            KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << BOLDFONT("\tConvergence") << " is " << BOLDFONT(FGRN("achieved")) << std::endl;
                         else
-                            KRATOS_INFO("DisplacementLagrangeMultiplierMixedContactCriteria") << "\tConvergence is achieved" << std::endl;
+                            KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << "\tConvergence is achieved" << std::endl;
                     }
                 }
                 return true;
@@ -276,9 +377,9 @@ public:
                             table << "Not achieved";
                     } else {
                         if (mPrintingOutput == false)
-                            KRATOS_INFO("DisplacementLagrangeMultiplierMixedContactCriteria") << BOLDFONT("\tConvergence") << " is " << BOLDFONT(FRED(" not achieved")) << std::endl;
+                            KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << BOLDFONT("\tConvergence") << " is " << BOLDFONT(FRED(" not achieved")) << std::endl;
                         else
-                            KRATOS_INFO("DisplacementLagrangeMultiplierMixedContactCriteria") << "\tConvergence is not achieved" << std::endl;
+                            KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << "\tConvergence is not achieved" << std::endl;
                     }
                 }
                 return false;
@@ -304,7 +405,11 @@ public:
             table.AddColumn("EXP. RAT", 10);
             table.AddColumn("ABS", 10);
             table.AddColumn("EXP. ABS", 10);
-            table.AddColumn("LM RATIO", 10);
+            table.AddColumn("N.LM RATIO", 10);
+            table.AddColumn("EXP. RAT", 10);
+            table.AddColumn("ABS", 10);
+            table.AddColumn("EXP. ABS", 10);
+            table.AddColumn("T.LM RATIO", 10);
             table.AddColumn("EXP. RAT", 10);
             table.AddColumn("ABS", 10);
             table.AddColumn("EXP. ABS", 10);
@@ -389,7 +494,7 @@ private:
     
     bool mInitialResidualIsSet; /// This "flag" is set in order to set that the initial residual is already computed
     
-    const bool mEnsureContact; /// This "flag" is used to check that the norm of the LM is always greater than 0 (no contact)
+    bool mEnsureContact; /// This "flag" is used to check that the norm of the LM is always greater than 0 (no contact)
     
     bool mPrintingOutput;      /// If the colors and bold are printed
     bool mTableIsInitialized;  /// If the table is already initialized
@@ -402,8 +507,8 @@ private:
     TDataType mLMNormalRatioTolerance; /// The ratio threshold for the norm of the LM (normal)
     TDataType mLMNormalAbsTolerance;   /// The absolute value threshold for the norm of the LM (normal)
 
-    TDataType mLMNormalRatioTolerance; /// The ratio threshold for the norm of the LM (tangent)
-    TDataType mLMNormalAbsTolerance;   /// The absolute value threshold for the norm of the LM (tangent)
+    TDataType mLMTangentRatioTolerance; /// The ratio threshold for the norm of the LM (tangent)
+    TDataType mLMTangentAbsTolerance;   /// The absolute value threshold for the norm of the LM (tangent)
     
     ///@}
     ///@name Private Operators
@@ -436,5 +541,5 @@ private:
 ///@} // Application group
 }
 
-#endif	/* KRATOS_DISPLACEMENT_LAGRANGE_MULTIPLIER_MIXED_CONTACT_CRITERIA_H */
+#endif	/* KRATOS_DISPLACEMENT_LAGRANGE_MULTIPLIER_MIXED_FRICTIONAL_CONTACT_CRITERIA_H */
 
