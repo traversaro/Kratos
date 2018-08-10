@@ -65,28 +65,30 @@ public:
     ///@name Type Definitions
     ///@{
 
-    /// Creating the corresponding pointer
+    /// Pointer definition of DisplacementLagrangeMultiplierContactCriteria
     KRATOS_CLASS_POINTER_DEFINITION( DisplacementLagrangeMultiplierContactCriteria );
 
-    typedef ConvergenceCriteria< TSparseSpace, TDenseSpace >     BaseType;
- 
-    typedef TSparseSpace                                  SparseSpaceType;
+    /// The base class definition (and it subclasses)
+    typedef ConvergenceCriteria< TSparseSpace, TDenseSpace > BaseType;
+    typedef typename BaseType::TDataType                    TDataType;
+    typedef typename BaseType::DofsArrayType            DofsArrayType;
+    typedef typename BaseType::TSystemMatrixType    TSystemMatrixType;
+    typedef typename BaseType::TSystemVectorType    TSystemVectorType;
 
-    typedef typename BaseType::TDataType                        TDataType;
+    /// The sparse space used
+    typedef TSparseSpace                              SparseSpaceType;
 
-    typedef typename BaseType::DofsArrayType                DofsArrayType;
-
-    typedef typename BaseType::TSystemMatrixType        TSystemMatrixType;
-
-    typedef typename BaseType::TSystemVectorType        TSystemVectorType;
-
-    typedef OpenMPUtils::PartitionVector                  PartitionVector;
-
-    typedef std::size_t                                           KeyType;
+    /// The table stream definition TODO: Replace by logger
+    typedef TableStreamUtility::Pointer       TablePrinterPointerType;
     
-    typedef TableStreamUtility::Pointer           TablePrinterPointerType;
-    
-    typedef std::size_t                                         IndexType;
+    /// The index type definition
+    typedef std::size_t                                     IndexType;
+
+    /// The key type definition
+    typedef std::size_t                                       KeyType;
+
+    /// The OMP partition definition
+    typedef OpenMPUtils::PartitionVector              PartitionVector;
 
     ///@}
     ///@name Life Cycle

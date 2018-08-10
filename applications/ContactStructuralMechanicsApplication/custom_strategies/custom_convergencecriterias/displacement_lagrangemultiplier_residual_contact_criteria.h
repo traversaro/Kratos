@@ -65,27 +65,30 @@ public:
     ///@name Type Definitions
     ///@{
 
+    /// Pointer definition of DisplacementLagrangeMultiplierResidualContactCriteria
     KRATOS_CLASS_POINTER_DEFINITION( DisplacementLagrangeMultiplierResidualContactCriteria );
 
-    typedef ConvergenceCriteria< TSparseSpace, TDenseSpace >     BaseType;
+    /// The base class definition (and it subclasses)
+    typedef ConvergenceCriteria< TSparseSpace, TDenseSpace > BaseType;
+    typedef typename BaseType::TDataType                    TDataType;
+    typedef typename BaseType::DofsArrayType            DofsArrayType;
+    typedef typename BaseType::TSystemMatrixType    TSystemMatrixType;
+    typedef typename BaseType::TSystemVectorType    TSystemVectorType;
 
-    typedef TSparseSpace                                  SparseSpaceType;
+    /// The sparse space used
+    typedef TSparseSpace                              SparseSpaceType;
 
-    typedef typename BaseType::TDataType                        TDataType;
+    /// The table stream definition TODO: Replace by logger
+    typedef TableStreamUtility::Pointer       TablePrinterPointerType;
 
-    typedef typename BaseType::DofsArrayType                DofsArrayType;
+    /// The index type definition
+    typedef std::size_t                                     IndexType;
 
-    typedef typename BaseType::TSystemMatrixType        TSystemMatrixType;
+    /// The key type definition
+    typedef std::size_t                                       KeyType;
 
-    typedef typename BaseType::TSystemVectorType        TSystemVectorType;
-
-    typedef OpenMPUtils::PartitionVector                  PartitionVector;
-
-    typedef std::size_t                                           KeyType;
-    
-    typedef TableStreamUtility::Pointer           TablePrinterPointerType;
-    
-    typedef std::size_t                                         IndexType;
+    /// The OMP partition definition
+    typedef OpenMPUtils::PartitionVector              PartitionVector;
 
     ///@}
     ///@name Life Cycle
