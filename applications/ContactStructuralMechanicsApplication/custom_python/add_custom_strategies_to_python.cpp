@@ -36,6 +36,7 @@
 #include "custom_strategies/custom_convergencecriterias/alm_frictionless_components_mortar_criteria.h"
 #include "custom_strategies/custom_convergencecriterias/alm_frictional_mortar_criteria.h"
 #include "custom_strategies/custom_convergencecriterias/displacement_lagrangemultiplier_contact_criteria.h"
+#include "custom_strategies/custom_convergencecriterias/displacement_lagrangemultiplier_frictional_contact_criteria.h"
 #include "custom_strategies/custom_convergencecriterias/displacement_lagrangemultiplier_mixed_contact_criteria.h"
 #include "custom_strategies/custom_convergencecriterias/displacement_lagrangemultiplier_mixed_frictional_contact_criteria.h"
 #include "custom_strategies/custom_convergencecriterias/displacement_lagrangemultiplier_residual_contact_criteria.h"
@@ -85,6 +86,7 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
     typedef ALMFrictionlessComponentsMortarConvergenceCriteria< SparseSpaceType,  LocalSpaceType > ALMFrictionlessComponentsMortarConvergenceCriteriaType;
     typedef ALMFrictionalMortarConvergenceCriteria< SparseSpaceType,  LocalSpaceType > ALMFrictionalMortarConvergenceCriteriaType;
     typedef DisplacementLagrangeMultiplierContactCriteria< SparseSpaceType,  LocalSpaceType > DisplacementLagrangeMultiplierContactCriteriaType;
+    typedef DisplacementLagrangeMultiplierFrictionalContactCriteria< SparseSpaceType,  LocalSpaceType > DisplacementLagrangeMultiplierFrictionalContactCriteriaType;
     typedef DisplacementLagrangeMultiplierMixedContactCriteria< SparseSpaceType,  LocalSpaceType > DisplacementLagrangeMultiplierMixedContactCriteriaType;
     typedef DisplacementLagrangeMultiplierMixedFrictionalContactCriteria< SparseSpaceType,  LocalSpaceType > DisplacementLagrangeMultiplierMixedFrictionalContactCriteriaType;
     typedef DisplacementLagrangeMultiplierResidualContactCriteria< SparseSpaceType,  LocalSpaceType > DisplacementLagrangeMultiplierResidualContactCriteriaType;
@@ -180,16 +182,31 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
     // Displacement and lagrange multiplier Convergence Criterion
     class_< DisplacementLagrangeMultiplierContactCriteriaType, typename DisplacementLagrangeMultiplierContactCriteriaType::Pointer,
             ConvergenceCriteriaType >
-            (m, "DisplacementLagrangeMultiplierContactCriteria") 
+            (m, "DisplacementLagrangeMultiplierContactCriteria")
+            .def(init<>())
+            .def(init<Parameters>())
             .def(init< double, double, double, double >())
             .def(init< double, double, double, double, bool >())
             .def(init< double, double, double, double, bool, bool >())
+            ;
+
+    // Displacement and lagrange multiplier Convergence Criterion (frictional)
+    class_< DisplacementLagrangeMultiplierFrictionalContactCriteriaType, typename DisplacementLagrangeMultiplierFrictionalContactCriteriaType::Pointer,
+            ConvergenceCriteriaType >
+            (m, "DisplacementLagrangeMultiplierFrictionalContactCriteria")
+            .def(init<>())
+            .def(init<Parameters>())
+            .def(init< double, double, double, double, double, double  >())
+            .def(init< double, double, double, double, double, double , bool >())
+            .def(init< double, double, double, double, double, double , bool, bool >())
             ;
             
     // Displacement and lagrange multiplier mixed Convergence Criterion
     class_< DisplacementLagrangeMultiplierMixedContactCriteriaType, typename DisplacementLagrangeMultiplierMixedContactCriteriaType::Pointer,
             ConvergenceCriteriaType >
             (m, "DisplacementLagrangeMultiplierMixedContactCriteria")
+            .def(init<>())
+            .def(init<Parameters>())
             .def(init< double, double, double, double >())
             .def(init< double, double, double, double, bool >())
             .def(init< double, double, double, double, bool, bool >())
@@ -210,6 +227,8 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
     class_< DisplacementLagrangeMultiplierResidualContactCriteriaType, typename DisplacementLagrangeMultiplierResidualContactCriteriaType::Pointer,
             ConvergenceCriteriaType >
             (m, "DisplacementLagrangeMultiplierResidualContactCriteria")
+            .def(init<>())
+            .def(init<Parameters>())
             .def(init< double, double, double, double >())
             .def(init< double, double, double, double, bool >())
             .def(init< double, double, double, double, bool, bool >())

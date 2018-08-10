@@ -145,11 +145,11 @@ public:
 
         ThisParameters.ValidateAndAssignDefaults(default_parameters);
 
-        // The displacement residual
+        // The displacement solution
         mDispRatioTolerance = ThisParameters["residual_relative_tolerance"].GetDouble();
         mDispAbsTolerance = ThisParameters["residual_absolute_tolerance"].GetDouble();
 
-        // The contact residual
+        // The contact solution
         mLMRatioTolerance =  ThisParameters["contact_displacement_relative_tolerance"].GetDouble();
         mLMAbsTolerance =  ThisParameters["contact_displacement_absolute_tolerance"].GetDouble();
 
@@ -426,7 +426,7 @@ private:
     
     bool mInitialResidualIsSet; /// This "flag" is set in order to set that the initial residual is already computed
     
-    const bool mEnsureContact; /// This "flag" is used to check that the norm of the LM is always greater than 0 (no contact)
+    bool mEnsureContact; /// This "flag" is used to check that the norm of the LM is always greater than 0 (no contact)
     
     bool mPrintingOutput;      /// If the colors and bold are printed
     bool mTableIsInitialized;  /// If the table is already initialized

@@ -160,11 +160,11 @@ public:
         mDispRatioTolerance = ThisParameters["residual_relative_tolerance"].GetDouble();
         mDispAbsTolerance = ThisParameters["residual_absolute_tolerance"].GetDouble();
 
-        // The normal contact residual
+        // The normal contact solution
         mLMNormalRatioTolerance =  ThisParameters["contact_displacement_relative_tolerance"].GetDouble();
         mLMNormalAbsTolerance =  ThisParameters["contact_displacement_absolute_tolerance"].GetDouble();
 
-        // The tangent contact residual
+        // The tangent contact solution
         mLMTangentRatioTolerance =  ThisParameters["frictional_contact_displacement_relative_tolerance"].GetDouble();
         mLMTangentAbsTolerance =  ThisParameters["frictional_contact_displacement_absolute_tolerance"].GetDouble();
 
@@ -223,16 +223,16 @@ public:
             TDataType disp_residual_solution_norm = 0.0, normal_lm_solution_norm = 0.0, normal_lm_increase_norm = 0.0, tangent_lm_solution_norm = 0.0, tangent_lm_increase_norm = 0.0;
             IndexType disp_dof_num(0),lm_dof_num(0);
 
+            // The nodes array
+            auto& nodes_array = rModelPart.Nodes();
+
             // Loop over Dofs
             #pragma omp parallel for reduction(+:disp_residual_solution_norm,normal_lm_solution_norm,normal_lm_increase_norm,disp_dof_num,lm_dof_num)
             for (int i = 0; i < static_cast<int>(rDofSet.size()); i++) {
                 auto it_dof = rDofSet.begin() + i;
 
                 std::size_t dof_id;
-                TDataType residual_dof_value, dof_value, dof_incr, normal_dof_value, normal_dof_incr;
-
-                // The nodes array
-                auto& nodes_array = rModelPart.Nodes();
+                TDataType residual_dof_value, dof_value, dof_incr;
 
                 if (it_dof->IsFree()) {
                     dof_id = it_dof->EquationId();
@@ -330,13 +330,13 @@ public:
                     if (mPrintingOutput == false) {
                         KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << BOLDFONT("MIXED CONVERGENCE CHECK") << "\tSTEP: " << r_process_info[STEP] << "\tNL ITERATION: " << r_process_info[NL_ITERATION_NUMBER] << std::endl << std::scientific;
                         KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << BOLDFONT("\tDISPLACEMENT: RATIO = ") << residual_disp_ratio << BOLDFONT(" EXP.RATIO = ") << mDispRatioTolerance << BOLDFONT(" ABS = ") << residual_disp_abs << BOLDFONT(" EXP.ABS = ") << mDispAbsTolerance << std::endl;
-                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << BOLDFONT("\tLAGRANGE MUL: RATIO = ") << normal_lm_ratio << BOLDFONT(" EXP.RATIO = ") << mLMNormalRatioTolerance << BOLDFONT(" ABS = ") << normal_lm_abs << BOLDFONT(" EXP.ABS = ") << mLMNormalAbsTolerance << std::endl;
-                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << BOLDFONT("\tLAGRANGE MUL: RATIO = ") << tangent_lm_ratio << BOLDFONT(" EXP.RATIO = ") << mLMTangentRatioTolerance << BOLDFONT(" ABS = ") << tangent_lm_abs << BOLDFONT(" EXP.ABS = ") << mLMTangentAbsTolerance << std::endl;
+                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << BOLDFONT("\tNORMAL LAGRANGE MUL: RATIO = ") << normal_lm_ratio << BOLDFONT(" EXP.RATIO = ") << mLMNormalRatioTolerance << BOLDFONT(" ABS = ") << normal_lm_abs << BOLDFONT(" EXP.ABS = ") << mLMNormalAbsTolerance << std::endl;
+                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << BOLDFONT("\tTANGENT LAGRANGE MUL: RATIO = ") << tangent_lm_ratio << BOLDFONT(" EXP.RATIO = ") << mLMTangentRatioTolerance << BOLDFONT(" ABS = ") << tangent_lm_abs << BOLDFONT(" EXP.ABS = ") << mLMTangentAbsTolerance << std::endl;
                     } else {
                         KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << "MIXED CONVERGENCE CHECK" << "\tSTEP: " << r_process_info[STEP] << "\tNL ITERATION: " << r_process_info[NL_ITERATION_NUMBER] << std::endl << std::scientific;
                         KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << "\tDISPLACEMENT: RATIO = " << residual_disp_ratio << " EXP.RATIO = " << mDispRatioTolerance << " ABS = " << residual_disp_abs << " EXP.ABS = " << mDispAbsTolerance << std::endl;
-                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << "\tLAGRANGE MUL: RATIO = " << normal_lm_ratio << " EXP.RATIO = " << mLMNormalRatioTolerance << " ABS = " << normal_lm_abs << " EXP.ABS = " << mLMNormalAbsTolerance << std::endl;
-                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << "\tLAGRANGE MUL: RATIO = " << tangent_lm_ratio << " EXP.RATIO = " << mLMTangentRatioTolerance << " ABS = " << tangent_lm_abs << " EXP.ABS = " << mLMTangentAbsTolerance << std::endl;
+                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << "\tNORMAL LAGRANGE MUL: RATIO = " << normal_lm_ratio << " EXP.RATIO = " << mLMNormalRatioTolerance << " ABS = " << normal_lm_abs << " EXP.ABS = " << mLMNormalAbsTolerance << std::endl;
+                        KRATOS_INFO("DisplacementLagrangeMultiplierMixedFrictionalContactCriteria") << "\tTANGENT LAGRANGE MUL: RATIO = " << tangent_lm_ratio << " EXP.RATIO = " << mLMTangentRatioTolerance << " ABS = " << tangent_lm_abs << " EXP.ABS = " << mLMTangentAbsTolerance << std::endl;
                     }
                 }
             }

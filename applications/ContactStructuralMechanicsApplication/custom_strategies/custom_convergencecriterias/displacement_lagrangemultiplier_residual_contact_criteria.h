@@ -433,7 +433,7 @@ private:
     
     bool mInitialResidualIsSet; /// This "flag" is set in order to set that the initial residual is already computed
     
-    const bool mEnsureContact; /// This "flag" is used to check that the norm of the LM is always greater than 0 (no contact)
+    bool mEnsureContact; /// This "flag" is used to check that the norm of the LM is always greater than 0 (no contact)
     
     bool mPrintingOutput;      /// If the colors and bold are printed
     bool mTableIsInitialized;  /// If the table is already initialized
