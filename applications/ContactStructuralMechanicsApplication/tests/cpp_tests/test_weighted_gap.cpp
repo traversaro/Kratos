@@ -459,7 +459,7 @@ namespace Kratos
             std::vector<NodeType::Pointer> condition_nodes (2);
             condition_nodes[0] = p_node_1;
             condition_nodes[1] = p_node_2;
-            Line2D2 <NodeType> line0( condition_nodes);
+            Line2D2 <NodeType> line0( PointerVector<NodeType>{condition_nodes});
 
             Condition::Pointer pcond0 = this_model_part.CreateNewCondition("Condition2D2N", id_cond, line0, p_cond_prop);
             slave_model_part.AddCondition(pcond0);
@@ -493,7 +493,7 @@ namespace Kratos
             this_set.AddId(id_cond);
             condition_nodes[1] = p_node_3;
             condition_nodes[0] = p_node_4;
-            Line2D2 <NodeType> line1( condition_nodes);
+            Line2D2 <NodeType> line1( PointerVector<NodeType>{condition_nodes});
 
             Condition::Pointer pcond1 = master_model_part.CreateNewCondition("Condition2D2N", id_cond, line1, p_cond_prop);
             master_model_part.AddCondition(pcond1);
@@ -505,7 +505,7 @@ namespace Kratos
             this_set.AddId(id_cond);
             condition_nodes[1] = p_node_4;
             condition_nodes[0] = p_node_5;
-            Line2D2 <NodeType> line2( condition_nodes);
+            Line2D2 <NodeType> line2( PointerVector<NodeType>{condition_nodes});
 
             Condition::Pointer pcond2 = master_model_part.CreateNewCondition("Condition2D2N", id_cond, line2, p_cond_prop);
             master_model_part.AddCondition(pcond2);
