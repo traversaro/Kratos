@@ -26,8 +26,8 @@ class TrilinosNavierStokesSolverMonolithic(navier_stokes_solver_vmsmonolithic.Na
         default_settings = KratosMultiphysics.Parameters("""
         {
             "solver_type": "trilinos_navier_stokes_solver_vmsmonolithic",
-            "model_part_name": "FluidModelPart",
-            "domain_size": 2,
+            "model_part_name": "",
+            "domain_size": -1,
             "model_import_settings": {
                 "input_type": "mdpa",
                 "input_filename": "unknown_name"
@@ -110,7 +110,7 @@ class TrilinosNavierStokesSolverMonolithic(navier_stokes_solver_vmsmonolithic.Na
         ## Construct the Trilinos import model part utility
         self.trilinos_model_part_importer = trilinos_import_model_part_utility.TrilinosImportModelPartUtility(self.main_model_part, self.settings)
         ## Execute the Metis partitioning and reading
-        self.trilinos_model_part_importer.ExecutePartitioningAndReading()
+        self.trilinos_model_part_importer.ImportModelPart()
 
         if self._IsPrintingRank():
             #TODO: CHANGE THIS ONCE THE MPI LOGGER IS IMPLEMENTED
@@ -140,7 +140,7 @@ class TrilinosNavierStokesSolverMonolithic(navier_stokes_solver_vmsmonolithic.Na
 
         ## If needed, create the estimate time step utility
         if (self.settings["time_stepping"]["automatic_time_step"].GetBool()):
-            self.EstimateDeltaTimeUtility = self._get_automatic_time_stepping_utility()
+            self.EstimateDeltaTimeUtility = self._GetAutomaticTimeSteppingUtility()
 
         ## Creating the Trilinos convergence criteria
         self.conv_criteria = KratosTrilinos.TrilinosUPCriteria(self.settings["relative_velocity_tolerance"].GetDouble(),
@@ -148,11 +148,12 @@ class TrilinosNavierStokesSolverMonolithic(navier_stokes_solver_vmsmonolithic.Na
                                                                self.settings["relative_pressure_tolerance"].GetDouble(),
                                                                self.settings["absolute_pressure_tolerance"].GetDouble())
 
+        (self.conv_criteria).SetEchoLevel(self.settings["echo_level"].GetInt())
+
         ## Creating the Trilinos time scheme
         if (self.settings["turbulence_model"].GetString() == "None"):
             if self.settings["consider_periodic_conditions"].GetBool() == True:
                 self.time_scheme = KratosTrilinos.TrilinosPredictorCorrectorVelocityBossakSchemeTurbulent(self.settings["alpha"].GetDouble(),
-                                                                                                          self.settings["move_mesh_strategy"].GetInt(),
                                                                                                           self.computing_model_part.ProcessInfo[KratosMultiphysics.DOMAIN_SIZE],
                                                                                                           KratosCFD.PATCH_INDEX)
             else:

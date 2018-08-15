@@ -23,6 +23,15 @@ void ALMFastInit::Execute()
 {
     KRATOS_TRY;
     
+    // First we reorder the conditions ids (may methods and utilities assume that conditions are ordered)
+    ConditionsArrayType& root_conditions_array = mrThisModelPart.GetRootModelPart().Conditions();
+
+    #pragma omp parallel for
+    for(int i = 0; i < static_cast<int>(root_conditions_array.size()); ++i) {
+        auto it_cond = root_conditions_array.begin() + i;
+        it_cond->SetId(i + 1);
+    }
+
     // We differentiate between frictional or frictionless
     const bool is_frictional = mrThisModelPart.Is(SLIP);
     
