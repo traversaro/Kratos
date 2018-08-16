@@ -110,6 +110,38 @@ public:
         KRATOS_CATCH("");
     }
 
+    void CalculateFirstDerivativesGradient(const Element& rAdjointElement,
+                                           const Matrix& rResidualGradient,
+                                           Vector& rResponseGradient,
+                                           const ProcessInfo& rProcessInfo) override
+    {
+        rResponseGradient = ZeroVector(rResidualGradient.size1());
+    }
+
+    void CalculateFirstDerivativesGradient(const Condition& rAdjointCondition,
+                                           const Matrix& rResidualGradient,
+                                           Vector& rResponseGradient,
+                                           const ProcessInfo& rProcessInfo) override
+    {
+        rResponseGradient = ZeroVector(rResidualGradient.size1());
+    }
+
+    void CalculateSecondDerivativesGradient(const Element& rAdjointElement,
+                                            const Matrix& rResidualGradient,
+                                            Vector& rResponseGradient,
+                                            const ProcessInfo& rProcessInfo) override
+    {
+        rResponseGradient = ZeroVector(rResidualGradient.size1());
+    }
+
+    void CalculateSecondDerivativesGradient(const Condition& rAdjointCondition,
+                                            const Matrix& rResidualGradient,
+                                            Vector& rResponseGradient,
+                                            const ProcessInfo& rProcessInfo) override
+    {
+        rResponseGradient = ZeroVector(rResidualGradient.size1());
+    }
+
     void CalculatePartialSensitivity(Element& rAdjointElement,
                                      const Variable<array_1d<double, 3>>& rVariable,
                                      const Matrix& rSensitivityMatrix,

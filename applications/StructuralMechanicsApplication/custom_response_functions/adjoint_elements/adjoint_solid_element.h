@@ -112,6 +112,24 @@ public:
         KRATOS_CATCH("");
     }
 
+    void CalculateFirstDerivativesLHS(MatrixType& rLeftHandSideMatrix,
+                                      ProcessInfo& rCurrentProcessInfo) override
+    {
+        KRATOS_TRY;
+        mPrimalElement.CalculateDampingMatrix(rLeftHandSideMatrix, rCurrentProcessInfo);
+        noalias(rLeftHandSideMatrix) = -rLeftHandSideMatrix;
+        KRATOS_CATCH("");
+    }
+
+    void CalculateSecondDerivativesLHS(MatrixType& rLeftHandSideMatrix,
+                                       ProcessInfo& rCurrentProcessInfo) override
+    {
+        KRATOS_TRY;
+        mPrimalElement.CalculateMassMatrix(rLeftHandSideMatrix, rCurrentProcessInfo);
+        noalias(rLeftHandSideMatrix) = -rLeftHandSideMatrix;
+        KRATOS_CATCH("");
+    }
+
     void GetValuesVector(Vector& rValues, int Step = 0) override
     {
         KRATOS_TRY;
