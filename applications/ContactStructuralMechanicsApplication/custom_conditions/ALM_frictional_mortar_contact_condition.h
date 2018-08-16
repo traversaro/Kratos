@@ -448,7 +448,7 @@ private:
     inline void ComputeStandardMortarOperators(
         MortarBaseConditionMatrices& TheMortarOperators,
         ProcessInfo& rCurrentProcessInfo,
-        const bool ComputeStandardMortarOperators = false
+        const bool ComputeStandardMortarOperators = true
         )
     {
         // The slave geometry
@@ -498,7 +498,7 @@ private:
             const bool dual_LM = ComputeStandardMortarOperators ? false : DerivativesUtilitiesType::CalculateAeAndDeltaAe(slave_geometry, normal_slave, master_geometry, rDerivativeData, rVariables, consider_normal_variation, conditions_points_slave, this_integration_method, this->GetAxisymmetricCoefficient(rVariables));
 
             for (IndexType i_geom = 0; i_geom < conditions_points_slave.size(); ++i_geom) {
-                PointerVector< PointType >  points_array (TDim); // The points are stored as local coordinates, we calculate the global coordinates of this points
+                PointerVector<PointType> points_array (TDim); // The points are stored as local coordinates, we calculate the global coordinates of this points
                 array_1d<BelongType, TDim> belong_array;
                 for (IndexType i_node = 0; i_node < TDim; ++i_node) {
                     PointType global_point;
@@ -584,11 +584,17 @@ private:
     void save(Serializer& rSerializer) const override
     {
         KRATOS_SERIALIZE_SAVE_BASE_CLASS( rSerializer, BaseType );
+        rSerializer.save("PreviousMortarOperatorsInitialized", mPreviousMortarOperatorsInitialized);
+//         rSerializer.save("CurrentMortarOperators", mCurrentMortarOperators); # TODO: Serialize mortar operators
+//         rSerializer.save("PreviousMortarOperators", mPreviousMortarOperators);
     }
 
     void load(Serializer& rSerializer) override
     {
         KRATOS_SERIALIZE_LOAD_BASE_CLASS( rSerializer, BaseType );
+        rSerializer.load("PreviousMortarOperatorsInitialized", mPreviousMortarOperatorsInitialized);
+//         rSerializer.load("CurrentMortarOperators", mCurrentMortarOperators); # TODO: Serialize mortar operators
+//         rSerializer.load("PreviousMortarOperators", mPreviousMortarOperators);
     }
 
     ///@}
