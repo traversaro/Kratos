@@ -79,21 +79,26 @@ for normalvar in range(2):
 
         # Normal and tangents components
         LMNormal = DefineVector('LMNormal', nnodes)
+        
+        # The resultant tangent LM
+        LMTangent = DefineMatrix('LMTangent', nnodes, dim)
+        wLMTangent = DefineMatrix('wLMTangent', nnodes, dim)
+        
+        # Tangent components
         LMTangentXi = DefineVector('LMTangentXi', nnodes)
         if (dim == 3):
             LMTangentEta = DefineVector('LMTangentEta', nnodes)
 
-        # Normal and tangets of the slave
+        # Normal and tangents of the slave
         NormalSlave = DefineMatrix('NormalSlave', nnodes, dim)
+        
+        # The resultant tangent
+        TangentSlave = DefineMatrix('TangentSlave', nnodes, dim)
+
+        # Tangent components
         TangentSlaveXi = DefineMatrix('TangentSlaveXi', nnodes, dim)
         if (dim == 3):
             TangentSlaveEta = DefineMatrix('TangentSlaveEta', nnodes, dim)
-
-        for node in range(nnodes):
-            LMNormal[node] = LM.row(node).dot(NormalSlave.row(node))
-            LMTangentXi[node] = LM.row(node).dot(TangentSlaveXi.row(node))
-            if (dim == 3):
-                LMTangentEta[node] = LM.row(node).dot(TangentSlaveEta.row(node))
 
         # Define test functions
         w1 = DefineMatrix('w1',nnodes,dim)
@@ -103,9 +108,29 @@ for normalvar in range(2):
         wLMTangentXi = DefineVector('wLMTangentXi', nnodes)
         wLMTangentEta = DefineVector('wLMTangentEta', nnodes)
 
+        # Components definition
+        for node in range(nnodes):
+            LMNormal[node] = LM.row(node).dot(NormalSlave.row(node))
+            
+            # We calculate the LM tangent resultant
+            for idim in range(dim):
+                LMTangent[node,idim] = LM[node,idim] - LMNormal[node] * NormalSlave[node, idim]
+                wLMTangent[node,idim] = wLM[node,idim] - wLMNormal[node] * NormalSlave[node, idim]
+                
+            # Add implicit definition of tangent
+            aux_tangent_slave = LMTangent.row(node)/real_norm(LMTangent.row(node))
+            for idim in range(dim):
+                TangentSlave[node,idim] = aux_tangent_slave[idim]
+                
+            # Tangent components
+            LMTangentXi[node] = LM.row(node).dot(TangentSlaveXi.row(node))
+            if (dim == 3):
+                LMTangentEta[node] = LM.row(node).dot(TangentSlaveEta.row(node))
+
         # Defining additional variables
         NormalGap = DefineVector('NormalGap', nnodes)
         GapTimeDerivative = DefineMatrix('GapTimeDerivative', nnodes, dim)
+        TangentSlip = DefineMatrix('TangentSlip', nnodes, dim)
         TangentSlipXi = DefineVector('TangentSlipXi', nnodes)
         TangentSlipEta = DefineVector('TangentSlipEta', nnodes)
         DOperator = DefineMatrix('DOperator', nnodes, nnodes)
@@ -168,39 +193,48 @@ for normalvar in range(2):
             NormalGap[node] = - Dx1Mx2.row(node).dot(NormalSlave.row(node))
             #objective_gap_time_derivative = DeltaDu1DeltaMu2.row(node)
             objective_gap_time_derivative = - DeltaDx1DeltaMx2.row(node)
+            gap_time_derivative = - (DDeltax1MDeltax2.row(node) - DDeltax1MDeltax2.row(node).dot(NormalSlave.row(node)) * NormalSlave.row(node))
             #objective_gap_time_derivative = DDeltax1MDeltax2.row(node)
             #objective_gap_time_derivative = (DDeltax1MDeltax2.row(node) - (DDeltax1MDeltax2.row(node) + DeltaDx1DeltaMx2.row(node)))
             #gap_time_derivative = (DDeltax1MDeltax2.row(node))
             #gap_time_derivative = - (DDeltax1MDeltax2.row(node) + DeltaDx1DeltaMx2.row(node))
-            TangentSlipXi[node] = delta_time * objective_gap_time_derivative.dot(TangentSlaveXi.row(node))
+            for idim in range(dim):
+                TangentSlip[node, idim] = delta_time * gap_time_derivative[idim]
+            TangentSlipXi[node] = delta_time * DDeltax1MDeltax2.row(node).dot(TangentSlaveXi.row(node))
             if (dim == 3):
-                TangentSlipEta[node] = delta_time * objective_gap_time_derivative.dot(TangentSlaveEta.row(node))
+                TangentSlipEta[node] = delta_time * DDeltax1MDeltax2.row(node).dot(TangentSlaveEta.row(node))
+            #TangentSlipXi[node] = delta_time * objective_gap_time_derivative.dot(TangentSlaveXi.row(node))
+            #if (dim == 3):
+                #TangentSlipEta[node] = delta_time * objective_gap_time_derivative.dot(TangentSlaveEta.row(node))
 
         # Define dofs & test function vector
         dofs = Matrix( zeros(number_dof, 1) )
-        testfunc = Matrix( zeros(number_dof, 1) )
+        testfunc_u = Matrix( zeros(number_dof, 1) )
+        testfunc_lm = Matrix( zeros(number_dof, 1) )
         count = 0
         for i in range(0,nnodes):
             for k in range(0,dim):
                 dofs[count] = u2[i,k]
-                testfunc[count] = w2[i,k]
+                testfunc_u[count] = w2[i,k]
+                testfunc_lm[count] = w2[i,k]
                 count+=1
         for i in range(0,nnodes):
             for k in range(0,dim):
                 dofs[count] = u1[i,k]
-                testfunc[count] = w1[i,k]
+                testfunc_u[count] = w1[i,k]
+                testfunc_lm[count] = w1[i,k]
                 count+=1
         for i in range(0,nnodes):
-            testfunc[count] = wLMNormal[i]
-            testfunc[count+1] = wLMTangentXi[i]
+            testfunc_lm[count] = wLMNormal[i]
+            testfunc_lm[count+1] = wLMTangentXi[i]
             if (dim == 3):
-                testfunc[count+2] = wLMTangentEta[i]
+                testfunc_lm[count+2] = wLMTangentEta[i]
             for k in range(0,dim):
                 dofs[count] = LM[i,k]
-                #testfunc[count] = wLM[i,k]
+                testfunc_u[count] = wLM[i,k]
                 count+=1
         print("dofs = ",dofs)
-        print("testfunc = ",testfunc)
+        print("testfunc_u = ",testfunc_u)
 
         #############################################################################
         #############################################################################
@@ -216,20 +250,27 @@ for normalvar in range(2):
                 rv_galerkin = 0
                 if (slip == 0): # Inactive
                     rv_galerkin -= ScaleFactor**2 / PenaltyParameter[node] * LMNormal[node] * wLMNormal[node]
-                    rv_galerkin -= ScaleFactor**2 / PenaltyParameter[node] * LMTangentXi[node] * wLMTangentXi[node]
-                    if (dim == 3):
-                        rv_galerkin -= ScaleFactor**2 / PenaltyParameter[node] * LMTangentEta[node] * wLMTangentEta[node]
+                    rv_galerkin -= ScaleFactor**2 / (PenaltyParameter[node] * TangentFactor) * (LMTangent.row(node)).dot(wLMTangent.row(node))
+                    #rv_galerkin -= ScaleFactor**2 / PenaltyParameter[node] * LMTangentXi[node] * wLMTangentXi[node]
+                    #if (dim == 3):
+                        #rv_galerkin -= ScaleFactor**2 / PenaltyParameter[node] * LMTangentEta[node] * wLMTangentEta[node]
                 else:
                     # Normal contact
                     augmented_normal_lm = ScaleFactor * LMNormal[node] + PenaltyParameter[node] * NormalGap[node]
-                    # Frictional contact
-                    augmented_tangent_lm_xi = ScaleFactor * LMTangentXi[node] + TangentFactor * PenaltyParameter[node] * TangentSlipXi[node]
-                    if (dim == 3):
-                        augmented_tangent_lm_eta = ScaleFactor * LMTangentEta[node] + TangentFactor * PenaltyParameter[node] * TangentSlipEta[node]
-                    total_slip = TangentSlipXi[node] * TangentSlaveXi.row(node)
-                    if (dim == 3):
-                        total_slip += TangentSlipEta[node] * TangentSlaveEta.row(node)
-                    augmented_lm = (ScaleFactor * LM.row(node) + PenaltyParameter[node] * NormalGap[node] * NormalSlave.row(node) + TangentFactor * PenaltyParameter[node] * total_slip)
+                    if (slip == 1):
+                        augmented_tangent_lm = mu[node] * augmented_normal_lm * TangentSlave.row(node)
+                        augmented_lm = augmented_normal_lm * NormalSlave.row(node) - augmented_tangent_lm
+                    else:
+                        augmented_tangent_lm = ScaleFactor * LMTangent.row(node) + TangentFactor * PenaltyParameter[node] * TangentSlip.row(node)
+                        augmented_lm = augmented_normal_lm * NormalSlave.row(node) + augmented_tangent_lm
+                    ## Frictional contact
+                    #augmented_tangent_lm_xi = ScaleFactor * LMTangentXi[node] + TangentFactor * PenaltyParameter[node] * TangentSlipXi[node]
+                    #if (dim == 3):
+                        #augmented_tangent_lm_eta = ScaleFactor * LMTangentEta[node] + TangentFactor * PenaltyParameter[node] * TangentSlipEta[node]
+                    #total_slip = TangentSlipXi[node] * TangentSlaveXi.row(node)
+                    #if (dim == 3):
+                        #total_slip += TangentSlipEta[node] * TangentSlaveEta.row(node)
+                    #augmented_lm = (ScaleFactor * LM.row(node) + PenaltyParameter[node] * NormalGap[node] * NormalSlave.row(node) + TangentFactor * PenaltyParameter[node] * total_slip)
                     rv_galerkin += DynamicFactor[node] * (augmented_lm).dot(Dw1Mw2.row(node))
                     if (slip == 1): # Slip
                         # Normal contact
@@ -241,12 +282,14 @@ for normalvar in range(2):
                             #modified_augmented_tangent_lm_eta = augmented_tangent_lm_eta * ScaleFactor * LMTangentEta[node] - mu[node] * augmented_normal_lm * augmented_tangent_lm_eta
                             #rv_galerkin -= (1.0 / (PenaltyParameter[node] * TangentFactor)) * augmented_tangent_lm_eta * wLMTangentEta[node]
                         #modified_augmented_tangent_lm_xi = mu[node] * augmented_normal_lm
-                        modified_augmented_tangent_lm_xi = ScaleFactor * LMTangentXi[node] + mu[node] * augmented_normal_lm
-                        rv_galerkin -= (ScaleFactor / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm_xi * wLMTangentXi[node]
-                        if (dim == 3):
-                            #modified_augmented_tangent_lm_eta = mu[node] * augmented_normal_lm
-                            modified_augmented_tangent_lm_eta = ScaleFactor * LMTangentEta[node] + mu[node] * augmented_normal_lm
-                            rv_galerkin -= (ScaleFactor / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm_eta * wLMTangentEta[node]
+                        #modified_augmented_tangent_lm_xi = ScaleFactor * LMTangentXi[node] + mu[node] * augmented_normal_lm
+                        #rv_galerkin -= (ScaleFactor / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm_xi * wLMTangentXi[node]
+                        #if (dim == 3):
+                            ##modified_augmented_tangent_lm_eta = mu[node] * augmented_normal_lm
+                            #modified_augmented_tangent_lm_eta = ScaleFactor * LMTangentEta[node] + mu[node] * augmented_normal_lm
+                            #rv_galerkin -= (ScaleFactor / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm_eta * wLMTangentEta[node]
+                        modified_augmented_tangent_lm = ScaleFactor * LMTangent.row(node) + augmented_tangent_lm
+                        rv_galerkin -= (ScaleFactor / (PenaltyParameter[node] * TangentFactor)) * modified_augmented_tangent_lm.dot(wLMTangent.row(node))
                     else: # Stick
                         # Normal contact
                         rv_galerkin -= ScaleFactor * NormalGap[node] * wLMNormal[node]
@@ -280,19 +323,22 @@ for normalvar in range(2):
                 # Complete functional
                 rv = Matrix(zeros(1, 1))
                 rv[0,0] = rv_galerkin
-
-                rhs,lhs = Compute_RHS_and_LHS(rv.copy(), testfunc, dofs, False)
+                
+                if (slip == 2): # Stick
+                    rhs,lhs = Compute_RHS_and_LHS(rv.copy(), testfunc_lm, dofs, False)
+                else:
+                    rhs,lhs = Compute_RHS_and_LHS(rv.copy(), testfunc_u, dofs, False)
                 print("LHS= ", lhs.shape)
                 print("RHS= ", rhs.shape)
                 print("LHS and RHS have been created!")
 
-                #initial_index = dim * (2 * nnodes)
-                #if (slip > 0):
-                    #for idim in range(dim):
-                        #lhs[initial_index + dim * node + 0, initial_index + dim * node + idim] = NormalSlave[idim]
-                        #lhs[initial_index + dim * node + 1, initial_index + dim * node + idim] = TangentSlaveXi[idim]
-                        #if (dim == 3):
-                            #lhs[initial_index + dim * node + 2, initial_index + dim * node + idim] = TangentSlaveEta[idim]
+                initial_index = dim * (2 * nnodes)
+                if (slip == 2):
+                    for idim in range(dim):
+                        lhs[initial_index + dim * node + 0, initial_index + dim * node + idim] = NormalSlave[idim]
+                        lhs[initial_index + dim * node + 1, initial_index + dim * node + idim] = TangentSlaveXi[idim]
+                        if (dim == 3):
+                            lhs[initial_index + dim * node + 2, initial_index + dim * node + idim] = TangentSlaveEta[idim]
 
                 initial_tabs = 1
                 lhs_out = OutputMatrix_CollectingFactorsNonZero(lhs, "lhs", mode, initial_tabs, number_dof)
