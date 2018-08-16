@@ -521,7 +521,7 @@ protected:
             noalias(r_velocity_adjoint) = - r_first_response_gradient - prod(r_first_lhs,r_residual_adjoint);
             noalias(r_acceleration_adjoint) = - r_second_response_gradient - prod(r_second_lhs,r_residual_adjoint);
 
-            // Assemble the contributions to the corresponding nodal unkowns.
+            // Assemble the contributions to the corresponding nodal unknowns.
             unsigned int local_index = 0;
             Geometry< Node<3> >& r_geometry = r_element.GetGeometry();
             for (unsigned int i_node = 0; i_node < r_geometry.PointsNumber(); ++i_node) {
@@ -581,7 +581,7 @@ protected:
 
             noalias(r_adjoint_auxiliary) = - prod(r_second_lhs,r_residual_adjoint) - r_second_response_gradient;
 
-            // Assemble the contributions to the corresponding nodal unkowns.
+            // Assemble the contributions to the corresponding nodal unknowns.
             unsigned int local_index = 0;
             Geometry< Node<3> >& r_geometry = r_element.GetGeometry();
             for (unsigned int i_node = 0; i_node < r_geometry.PointsNumber(); ++i_node) {
