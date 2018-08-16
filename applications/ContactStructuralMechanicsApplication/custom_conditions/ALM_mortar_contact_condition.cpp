@@ -523,8 +523,8 @@ void AugmentedLagrangianMethodMortarContactCondition<TDim, TNumNodes, TFrictiona
             ZeroRHS(rRightHandSideVector);
     }
     
-    LOG_MATRIX_PRETTY(rLeftHandSideMatrix)
-    KRATOS_WATCH(rRightHandSideVector)
+//     LOG_MATRIX_PRETTY(rLeftHandSideMatrix)
+//     KRATOS_WATCH(rRightHandSideVector)
 
     KRATOS_CATCH( "" );
 }
