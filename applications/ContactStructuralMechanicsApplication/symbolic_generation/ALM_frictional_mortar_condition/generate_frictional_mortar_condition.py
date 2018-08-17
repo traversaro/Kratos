@@ -111,6 +111,7 @@ for normalvar in range(2):
         # Components definition
         for node in range(nnodes):
             LMNormal[node] = LM.row(node).dot(NormalSlave.row(node))
+            wLMNormal[node] = wLM.row(node).dot(NormalSlave.row(node))
             
             # We calculate the LM tangent resultant
             for idim in range(dim):
