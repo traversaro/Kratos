@@ -25,7 +25,7 @@ namespace Kratos {
         const array_1d<double, 3>& vel         = this->GetGeometry()[0].FastGetSolutionStepValue(VELOCITY);
         const array_1d<double, 3>& delta_displ = this->GetGeometry()[0].FastGetSolutionStepValue(DELTA_DISPLACEMENT);
         const array_1d<double, 3>& ang_vel     = this->GetGeometry()[0].FastGetSolutionStepValue(ANGULAR_VELOCITY);
-        Vector& cont_ini_neigh_area            = this->GetValue(NEIGHBOURS_CONTACT_AREAS);
+        // Vector& cont_ini_neigh_area            = this->GetValue(NEIGHBOURS_CONTACT_AREAS);
         int NeighbourSize = mNeighbourElements.size();
         GetGeometry()[0].GetSolutionStepValue(NEIGHBOUR_SIZE) = NeighbourSize;
 
@@ -76,7 +76,7 @@ namespace Kratos {
             double calculation_area = 0.0;
             const double equiv_shear = equiv_young / (2.0 * (1 + equiv_poisson));
 
-            if (i < mContinuumInitialNeighborsSize) {
+            if (i < (int)mContinuumInitialNeighborsSize) {
                 double area = this->GetProperties()[BEAM_CROSS_SECTION];
                 double other_area = data_buffer.mpOtherParticle->GetProperties()[BEAM_CROSS_SECTION];
                 calculation_area = std::max(area, other_area);
