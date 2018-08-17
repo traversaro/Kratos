@@ -111,7 +111,7 @@ for normalvar in range(2):
         # Components definition
         for node in range(nnodes):
             LMNormal[node] = LM.row(node).dot(NormalSlave.row(node))
-            wLMNormal[node] = wLM.row(node).dot(NormalSlave.row(node))
+            #wLMNormal[node] = wLM.row(node).dot(NormalSlave.row(node))
             
             # We calculate the LM tangent resultant
             for idim in range(dim):
@@ -248,6 +248,14 @@ for normalvar in range(2):
         rhs_string += rhs_template_begin_string
         for node in range(nnodes):
             for slip in range(3):
+                
+                # wLMNormal definition depends of current state
+                if (slip == 2):
+                    wLMNormal = DefineVector('wLMNormal', nnodes)
+                else:
+                    for node in range(nnodes):
+                        wLMNormal[node] = wLM.row(node).dot(NormalSlave.row(node))
+                
                 rv_galerkin = 0
                 if (slip == 0): # Inactive
                     rv_galerkin -= ScaleFactor**2 / PenaltyParameter[node] * LMNormal[node] * wLMNormal[node]
@@ -258,6 +266,7 @@ for normalvar in range(2):
                 else:
                     # Normal contact
                     augmented_normal_lm = ScaleFactor * LMNormal[node] + PenaltyParameter[node] * NormalGap[node]
+                    # Frictional contact
                     if (slip == 1):
                         augmented_tangent_lm = mu[node] * augmented_normal_lm * TangentSlave.row(node)
                         augmented_lm = augmented_normal_lm * NormalSlave.row(node) - augmented_tangent_lm
