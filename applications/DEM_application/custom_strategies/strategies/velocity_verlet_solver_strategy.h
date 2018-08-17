@@ -37,8 +37,8 @@ namespace Kratos
       /// Destructor.
       virtual ~VelocityVerletSolverStrategy()
       {
-         Timer::SetOuputFile("TimesPartialRelease");
-         Timer::PrintTimingInformation();
+         //Timer::SetOuputFile("TimesPartialRelease");
+         //Timer::PrintTimingInformation();
       }
 
       void Initialize() override
