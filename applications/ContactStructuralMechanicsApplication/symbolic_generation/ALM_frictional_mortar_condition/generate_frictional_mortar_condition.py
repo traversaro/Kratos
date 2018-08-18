@@ -111,7 +111,7 @@ for normalvar in range(2):
         # Components definition
         for node in range(nnodes):
             LMNormal[node] = LM.row(node).dot(NormalSlave.row(node))
-            #wLMNormal[node] = wLM.row(node).dot(NormalSlave.row(node))
+            wLMNormal[node] = wLM.row(node).dot(NormalSlave.row(node))
             
             # We calculate the LM tangent resultant
             for idim in range(dim):
@@ -205,8 +205,8 @@ for normalvar in range(2):
             if (dim == 3):
                 TangentSlipEta[node] = delta_time * DDeltax1MDeltax2.row(node).dot(TangentSlaveEta.row(node))
             #TangentSlipXi[node] = delta_time * objective_gap_time_derivative.dot(TangentSlaveXi.row(node))
-            #if (dim == 3):
-                #TangentSlipEta[node] = delta_time * objective_gap_time_derivative.dot(TangentSlaveEta.row(node))
+        # wLMNormal definition depends of current state
+        wLMNormal = DefineVector('wLMNormal', nnodes)
 
         # Define dofs & test function vector
         dofs = Matrix( zeros(number_dof, 1) )
@@ -253,8 +253,8 @@ for normalvar in range(2):
                 if (slip == 2):
                     wLMNormal = DefineVector('wLMNormal', nnodes)
                 else:
-                    for node in range(nnodes):
-                        wLMNormal[node] = wLM.row(node).dot(NormalSlave.row(node))
+                    for jnode in range(nnodes):
+                        wLMNormal[jnode] = wLM.row(jnode).dot(NormalSlave.row(jnode))
                 
                 rv_galerkin = 0
                 if (slip == 0): # Inactive
