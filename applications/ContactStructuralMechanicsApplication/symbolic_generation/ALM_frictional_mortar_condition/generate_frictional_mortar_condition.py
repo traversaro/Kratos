@@ -186,25 +186,30 @@ for normalvar in range(2):
         #DeltaDx1DeltaMx2 = (StandardDOperator - StandardDOperatorold)/delta_time * x1old - (StandardMOperator - StandardMOperatorold)/delta_time * x2old
         #DeltaDx1DeltaMx2 = (StandardDOperator - StandardDOperatorold)/delta_time * x1old - (StandardMOperator - StandardMOperatorold)/delta_time * x2old + (StandardDOperator - StandardDOperatorold)/delta_time * u1 - (StandardMOperator - StandardMOperatorold)/delta_time * u2
         #DDeltax1MDeltax2 = DOperator * x1old/delta_time - MOperator * x2old/delta_time # Cardona, doesn't work
-        DDeltax1MDeltax2 = DOperator * u1/delta_time - MOperator * u2/delta_time
+        #DDeltax1MDeltax2 = DOperator * u1/delta_time - MOperator * u2/delta_time
         #DDeltax1MDeltax2 = StandardDOperator * u1/delta_time - StandardMOperator * u2/delta_time
-        #DDeltax1MDeltax2 = DOperator * (x1 - x1old)/delta_time - MOperator * (x2 - x2old)/delta_time
+        DDeltax1MDeltax2 = DOperator * (x1 - x1old)/delta_time - MOperator * (x2 - x2old)/delta_time
         Dw1Mw2 = DOperator * w1 - MOperator * w2
         for node in range(nnodes):
             NormalGap[node] = - Dx1Mx2.row(node).dot(NormalSlave.row(node))
             #objective_gap_time_derivative = DeltaDu1DeltaMu2.row(node)
-            objective_gap_time_derivative = - DeltaDx1DeltaMx2.row(node)
+            objective_gap_time_derivative = DeltaDx1DeltaMx2.row(node)
+            #gap_time_derivative = - (DDeltax1MDeltax2.row(node))
             gap_time_derivative = - (DDeltax1MDeltax2.row(node) - DDeltax1MDeltax2.row(node).dot(NormalSlave.row(node)) * NormalSlave.row(node))
-            #objective_gap_time_derivative = DDeltax1MDeltax2.row(node)
             #objective_gap_time_derivative = (DDeltax1MDeltax2.row(node) - (DDeltax1MDeltax2.row(node) + DeltaDx1DeltaMx2.row(node)))
             #gap_time_derivative = (DDeltax1MDeltax2.row(node))
             #gap_time_derivative = - (DDeltax1MDeltax2.row(node) + DeltaDx1DeltaMx2.row(node))
+            aux_slip =  objective_gap_time_derivative - objective_gap_time_derivative.dot(NormalSlave.row(node)) * NormalSlave.row(node)
             for idim in range(dim):
-                TangentSlip[node, idim] = delta_time * gap_time_derivative[idim]
-            TangentSlipXi[node] = delta_time * DDeltax1MDeltax2.row(node).dot(TangentSlaveXi.row(node))
+                #TangentSlip[node, idim] = delta_time * gap_time_derivative[idim]
+                TangentSlip[node, idim] = delta_time * aux_slip[idim]
+            TangentSlipXi[node] = - delta_time * DDeltax1MDeltax2.row(node).dot(TangentSlaveXi.row(node))
             if (dim == 3):
-                TangentSlipEta[node] = delta_time * DDeltax1MDeltax2.row(node).dot(TangentSlaveEta.row(node))
+                TangentSlipEta[node] = - delta_time * DDeltax1MDeltax2.row(node).dot(TangentSlaveEta.row(node))
             #TangentSlipXi[node] = delta_time * objective_gap_time_derivative.dot(TangentSlaveXi.row(node))
+            #if (dim == 3):
+                #TangentSlipEta[node] = delta_time * objective_gap_time_derivative.dot(TangentSlaveEta.row(node))
+
         # wLMNormal definition depends of current state
         wLMNormal = DefineVector('wLMNormal', nnodes)
 
@@ -310,9 +315,11 @@ for normalvar in range(2):
                         #if (dim == 3):
                             #modified_augmented_tangent_lm_eta = mu[node] * augmented_normal_lm * TangentFactor * PenaltyParameter[node] * TangentSlipEta[node]
                             #rv_galerkin += modified_augmented_tangent_lm_eta * wLMTangentEta[node]
+                        #rv_galerkin += ScaleFactor * (TangentSlip.row(node)).dot(wLMTangent.row(node))
                         rv_galerkin += ScaleFactor * TangentSlipXi[node] * wLMTangentXi[node]
                         if (dim == 3):
                             rv_galerkin += ScaleFactor * TangentSlipEta[node] * wLMTangentEta[node]
+                            
                         #rv_galerkin += ScaleFactor * TangentSlipXi[node] * wLMTangentXi[node] - ScaleFactor**2/PenaltyParameter[node] * LMTangentXi[node] * wLMTangentXi[node]
                         #if (dim == 3):
                             #rv_galerkin += ScaleFactor * TangentSlipEta[node] * wLMTangentEta[node] - ScaleFactor**2/PenaltyParameter[node] * LMTangentEta[node] * wLMTangentEta[node]
@@ -339,6 +346,8 @@ for normalvar in range(2):
                     rhs,lhs = Compute_RHS_and_LHS(rv.copy(), testfunc_lm, dofs, False)
                 else:
                     rhs,lhs = Compute_RHS_and_LHS(rv.copy(), testfunc_u, dofs, False)
+                #rhs,lhs = Compute_RHS_and_LHS(rv.copy(), testfunc_u, dofs, False)
+                
                 print("LHS= ", lhs.shape)
                 print("RHS= ", rhs.shape)
                 print("LHS and RHS have been created!")
