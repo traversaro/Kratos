@@ -39,6 +39,9 @@
 namespace Kratos
 {
   //specific constitutive models variables must be DEFINED here
+
+  KRATOS_DEFINE_APPLICATION_VARIABLE(CONSTITUTIVE_MODELS_APPLICATION, double,GEL_STRENGTH)
+
 }
 
 #endif	/* KRATOS_CONSTITUTIVE_MODELS_APPLICATION_VARIABLES_H_INCLUDED */

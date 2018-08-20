@@ -13,4 +13,6 @@ namespace Kratos
 {
   //specific constitutive models variables must be CREATED here
 
+  KRATOS_CREATE_VARIABLE(double, GEL_STRENGTH);
+
 }

@@ -1299,18 +1299,20 @@ void UpdatedLagrangianSegregatedFluidElement::CalculateStabilizationTau(ElementD
   double mean_velocity = norm_2(MeanVelocity)/double(number_of_nodes);
 
   // Calculate FIC stabilization coefficient
-  rVariables.Tau = 0;
-  if( mean_velocity != 0 ){
 
-    // Get element properties
-    const double& Density   = GetProperties()[DENSITY];
-    const double& Viscosity = GetProperties()[DYNAMIC_VISCOSITY];
-    const double& TimeStep  = rVariables.GetProcessInfo()[DELTA_TIME];
+  // Get element properties
+  const double& Density   = GetProperties()[DENSITY];
+  const double& Viscosity = GetProperties()[DYNAMIC_VISCOSITY];
+  const double& TimeStep  = rVariables.GetProcessInfo()[DELTA_TIME];
 
-    // Get element size
-    double element_size = rGeometry.AverageEdgeLength();
+  // Get element size
+  double element_size = rGeometry.AverageEdgeLength();
 
-    rVariables.Tau = (element_size * element_size * TimeStep) / ( Density * mean_velocity * TimeStep * element_size + Density * element_size * element_size +  8.0 * Viscosity * TimeStep );
+  rVariables.Tau = (element_size * element_size * TimeStep) / ( Density * mean_velocity * TimeStep * element_size + Density * element_size * element_size +  8.0 * Viscosity * TimeStep );
+
+  if( mean_velocity = 0.0 ){
+
+    rVariables.Tau = 0;
 
   }
 

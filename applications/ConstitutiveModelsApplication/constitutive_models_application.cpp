@@ -14,7 +14,9 @@
 
 
 // Project includes
+#include "includes/define.h"
 #include "constitutive_models_application.h"
+#include "includes/variables.h"
 
 
 namespace Kratos {
@@ -34,6 +36,8 @@ namespace Kratos {
     std::cout << "Initializing KratosConstitutiveModelsApplication... " << std::endl;
 
     //Register Variables (variables created in constitutive_models_application_variables.cpp)
+
+    KRATOS_REGISTER_VARIABLE(GEL_STRENGTH);
 
     //specific constitutive models variables must be REGISTERED here
 

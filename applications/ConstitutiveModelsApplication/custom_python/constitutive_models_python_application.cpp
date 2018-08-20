@@ -37,6 +37,8 @@ PYBIND11_MODULE(KratosConstitutiveModelsApplication,m)
       ;
 
   AddCustomConstitutiveLawsToPython(m);
+
+  KRATOS_REGISTER_IN_PYTHON_VARIABLE(m, GEL_STRENGTH )
 }
 
 

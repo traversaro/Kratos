@@ -1700,11 +1700,11 @@ Vector& FluidElement::CalculateVolumeForce( Vector& rVolumeForce, ElementDataTyp
 
     noalias(rVolumeForce) = ZeroVector(dimension);
 
-    for ( unsigned int j = 0; j < number_of_nodes; j++ )
+    for ( unsigned int j = 0; j < number_of_nodes; ++j )
     {
       if( GetGeometry()[j].SolutionStepsDataHas(VOLUME_ACCELERATION) ){ // it must be checked once at the begining only
        	array_1d<double, 3 >& VolumeAcceleration = GetGeometry()[j].FastGetSolutionStepValue(VOLUME_ACCELERATION);
-        for( unsigned int i = 0; i < dimension; i++ )
+        for( unsigned int i = 0; i < dimension; ++i )
 	  rVolumeForce[i] += rVariables.N[j] * VolumeAcceleration[i] ;
       }
     }
@@ -2379,7 +2379,6 @@ int FluidElement::Check( const ProcessInfo& rCurrentProcessInfo )
     }
     else{
       const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
-
       if( dimension == 3 &&  this->GetProperties().GetValue( CONSTITUTIVE_LAW )->GetStrainSize() != 6 )
 	KRATOS_ERROR <<  "wrong constitutive law used. This is a 3D element. Expected strain size is 6 :: element id " << this->Id() << std::endl;
 
