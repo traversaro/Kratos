@@ -73,7 +73,7 @@ class PfemSolution(MainSolid.Solution):
              "python_module" : "assign_modulus_and_direction_to_nodes_process",
              "kratos_module" : "KratosMultiphysics.SolidMechanicsApplication",
              "Parameters"    : {
-                  "variable_name"   : "VOLUME_ACCELERATION",
+                  "variable_name"   : "GRAVITY",
                   "modulus"         : 9.81,
                   "direction"       : [0.0,-1.0,0.0]
             }
@@ -83,6 +83,7 @@ class PfemSolution(MainSolid.Solution):
         if(self.ProjectParameters.Has("problem_data")):
             if(self.ProjectParameters["problem_data"].Has("gravity_vector")):
                 import math
+
                 #get normalized direction
                 direction   = []
                 scalar_prod = 0
@@ -112,6 +113,7 @@ class PfemSolution(MainSolid.Solution):
 
         model_part_name = self.model.GetMainModelPart().Name
         default_settings["Parameters"].AddEmptyValue("model_part_name").SetString(model_part_name)
+
 
         loads_processes.Append(default_settings)
 

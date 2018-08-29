@@ -21,6 +21,7 @@ include_directories( ${CMAKE_SOURCE_DIR}/kratos )
 include_directories( ${CMAKE_SOURCE_DIR}/applications/DEM_application )
 include_directories( ${CMAKE_SOURCE_DIR}/applications/FluidDynamicsApplication )
 include_directories( ${CMAKE_SOURCE_DIR}/applications/swimming_DEM_application )
+include_directories( ${CMAKE_SOURCE_DIR}/applications/SolidMechanicsApplication )
 
 ## Generate variables with the sources
 set( KRATOS_SWIMMING_DEM_APPLICATION_CORE_SOURCES

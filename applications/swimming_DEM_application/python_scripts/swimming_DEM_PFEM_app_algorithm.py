@@ -65,9 +65,19 @@ class Algorithm(BaseAlgorithm):
                 source_model_part = self.fluid_solution.main_model_part.GetSubModelPart(body_model_part_name)
                 SwimmingDemInPfemUtils().TransferWalls(source_model_part, destination_model_part)
 
+    def TransferGravityFromDisperseToFluid(self):
+        # setting fluid's body force to the same as DEM's
+        if self.pp.CFD_DEM["body_force_on_fluid_option"].GetBool():
+
+            for node in self.fluid_model_part.Nodes:
+                node.SetSolutionStepValue(VOLUME_ACCELERATION_X, 0, self.pp.CFD_DEM["GravityX"].GetDouble())
+                node.SetSolutionStepValue(VOLUME_ACCELERATION_Y, 0, self.pp.CFD_DEM["GravityY"].GetDouble())
+                node.SetSolutionStepValue(VOLUME_ACCELERATION_Z, 0, self.pp.CFD_DEM["GravityZ"].GetDouble())
+
     def FluidInitialize(self):
 
         self.fluid_solution.vars_man=vars_man
+
         self.fluid_solution.Initialize()
         bodies_parts_list = self.fluid_solution.ProjectParameters["model_settings"]["bodies_list"]
         for i in range(bodies_parts_list.size()):
@@ -75,7 +85,10 @@ class Algorithm(BaseAlgorithm):
             if body_model_part_type == "Fluid":
                 body_model_part_name = bodies_parts_list[i]["body_name"].GetString()
                 self.fluid_model_part = self.fluid_solution.main_model_part.GetSubModelPart(body_model_part_name)
-                break
+                self.fluid_model_part.ProcessInfo.SetValue(GRAVITY_X,self.fluid_solution.ProjectParameters["problem_data"]["gravity_vector"][0].GetDouble())
+                self.fluid_model_part.ProcessInfo.SetValue(GRAVITY_Y,self.fluid_solution.ProjectParameters["problem_data"]["gravity_vector"][1].GetDouble())
+                self.fluid_model_part.ProcessInfo.SetValue(GRAVITY_Z,self.fluid_solution.ProjectParameters["problem_data"]["gravity_vector"][2].GetDouble())
+            break
 
     def TransferTimeToFluidSolver(self):
         if self.step < self.GetFirstStepForFluidComputation() or self.stationarity:

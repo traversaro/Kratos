@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, division  # makes Kratos
 # importing the Kratos Library
 from KratosMultiphysics import *
 from KratosMultiphysics.ConstitutiveModelsApplication import *
+#from KratosMultiphysics.FluidDynamicsApplication import *
 from KratosMultiphysics.SwimmingDEMApplication import *
 import weakref
 

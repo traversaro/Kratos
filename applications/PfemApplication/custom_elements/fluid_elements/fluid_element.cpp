@@ -1695,6 +1695,11 @@ Vector& FluidElement::CalculateVolumeForce( Vector& rVolumeForce, ElementDataTyp
     const unsigned int number_of_nodes = GetGeometry().PointsNumber();
     const unsigned int dimension       = GetGeometry().WorkingSpaceDimension();
 
+
+    //if (std::abs(normVA-9.81) > 1e-8 && normVA > 1e-8){
+    //KRATOS_WATCH(normVA)
+    //}
+
     if(rVolumeForce.size() != dimension)
       rVolumeForce.resize(dimension,false);
 
@@ -1702,6 +1707,7 @@ Vector& FluidElement::CalculateVolumeForce( Vector& rVolumeForce, ElementDataTyp
 
     for ( unsigned int j = 0; j < number_of_nodes; ++j )
     {
+        array_1d <double, 3> VA = GetGeometry()[j].FastGetSolutionStepValue(VOLUME_ACCELERATION);
       if( GetGeometry()[j].SolutionStepsDataHas(VOLUME_ACCELERATION) ){ // it must be checked once at the begining only
        	array_1d<double, 3 >& VolumeAcceleration = GetGeometry()[j].FastGetSolutionStepValue(VOLUME_ACCELERATION);
         for( unsigned int i = 0; i < dimension; ++i )

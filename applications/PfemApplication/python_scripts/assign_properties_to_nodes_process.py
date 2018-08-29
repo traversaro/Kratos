@@ -41,6 +41,21 @@ class AssignPropertiesToNodesProcess(KratosMultiphysics.Process):
         self.settings.RemoveValue("model_part_name")
         self.AssignPropertiesProcess = KratosPfem.AssignPropertiesToNodes(self.model_part, self.settings)
 
+        for Element in self.model_part.Elements:
+
+            density = Element.Properties.GetValue(KratosMultiphysics.DENSITY)
+            bulk_modulus = Element.Properties.GetValue(KratosMultiphysics.BULK_MODULUS)
+            viscosity = Element.Properties.GetValue(KratosMultiphysics.DYNAMIC_VISCOSITY)
+            gravity = Element.Properties.GetValue(KratosMultiphysics.GRAVITY)
+
+        for Nodes in self.model_part.Nodes:
+
+            Nodes.SetSolutionStepValue(KratosMultiphysics.DENSITY,density)
+            Nodes.SetSolutionStepValue(KratosMultiphysics.BULK_MODULUS,bulk_modulus)
+            Nodes.SetSolutionStepValue(KratosMultiphysics.VISCOSITY,viscosity)
+            Nodes.SetSolutionStepValue(KratosMultiphysics.GRAVITY,gravity)
+
+
         self.AssignPropertiesProcess.ExecuteInitialize()
 
     def ExecuteInitializeSolutionStep(self):

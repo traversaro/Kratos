@@ -28,9 +28,7 @@ class Solution(MainPfem.PfemSolution):
         self.model  = self._get_model()
         self.main_model_part = self.model.GetMainModelPart()
         self.fluid_model_part = self.main_model_part
-
-
-        #self.fluid_model_part = self.main_model_part
+        self.fluid_model_part.ProcessInfo.SetValue(KratosMultiphysics.GRAVITY,self.ProjectParameters["problem_data"]["gravity_vector"].GetVector())
 
         self.pp.nodal_results = []
         output_settings = self.ProjectParameters["output_configuration"]["result_file_configuration"]

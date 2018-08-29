@@ -3,6 +3,7 @@ import math
 from KratosMultiphysics import *
 #from KratosMultiphysics.IncompressibleFluidApplication import *
 #from KratosMultiphysics.FluidDynamicsApplication import *
+from KratosMultiphysics.PfemApplication import *
 from KratosMultiphysics.DEMApplication import *
 from KratosMultiphysics.SwimmingDEMApplication import *
 import sys

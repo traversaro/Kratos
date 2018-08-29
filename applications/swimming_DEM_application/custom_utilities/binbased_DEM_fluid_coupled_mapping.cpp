@@ -1558,6 +1558,7 @@ void BinBasedDEMFluidCoupledMapping<TDim, TBaseTypeOfSwimmingParticle>::Transfer
 
             if (mTimeAveragingType == 0){
                 noalias(body_force)                         = hydrodynamic_reaction + mGravity;
+
             }
 
             else{
