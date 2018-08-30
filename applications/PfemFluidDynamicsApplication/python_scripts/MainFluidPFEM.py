@@ -231,8 +231,10 @@ class Solution(object):
         print(" [STEP:",self.step," TIME:",self.time,"]")
 
         # processes to be executed at the begining of the solution step
+        print(":: model_processes.ExecuteInitializeSolutionStep() ::")
         self.model_processes.ExecuteInitializeSolutionStep()
 
+        print(":: GraphicalOutputExecuteInitializeSolutionStep() ::")
         self.GraphicalOutputExecuteInitializeSolutionStep()
 
         # solve time step
@@ -252,17 +254,22 @@ class Solution(object):
         
         self.StopTimeMeasuring(self.clock_time,"Solving", False);
 
+        print(":: GraphicalOutputExecuteFinalizeSolutionStep() ::")
         self.GraphicalOutputExecuteFinalizeSolutionStep()            
 
+        print(":: model_processes.ExecuteFinalizeSolutionStep ::")
         # processes to be executed at the end of the solution step
         self.model_processes.ExecuteFinalizeSolutionStep()
-
+        
+        print(":: model_processes.ExecuteBeforeOutputStep ::")
         # processes to be executed before witting the output      
         self.model_processes.ExecuteBeforeOutputStep()
-
+        
+        print(":: GraphicalOutputPrintOutput ::")
         # write output results GiD: (frequency writing is controlled internally)
         self.GraphicalOutputPrintOutput()            
 
+        print(":: model_processes.ExecuteAfterOutputStep ::")
         # processes to be executed after witting the output
         self.model_processes.ExecuteAfterOutputStep()
         

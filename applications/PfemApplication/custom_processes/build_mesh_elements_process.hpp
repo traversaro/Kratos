@@ -109,6 +109,8 @@ namespace Kratos
     virtual void Execute()
     {
       KRATOS_TRY
+	
+      boost::timer process_time;
 
       if( mEchoLevel > 0 )
 	std::cout<<" [ GENERATE NEW ELEMENTS: "<<std::endl;
@@ -311,6 +313,7 @@ namespace Kratos
       if( mEchoLevel > 0 )
 	std::cout<<"   GENERATE NEW ELEMENTS ]; "<<std::endl;
 
+      std::cout << " BUILD MESH ELEMENTS time : " << process_time.elapsed() << std::endl;
 
       KRATOS_CATCH(" ")
     }

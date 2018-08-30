@@ -102,6 +102,9 @@ namespace Kratos
     virtual void Execute()
     {
       KRATOS_TRY
+
+	boost::timer process_time;
+
       
       bool success=false;
 
@@ -122,6 +125,9 @@ namespace Kratos
 	    std::cout<<" [ Search performed in Time = "<<auxiliary.elapsed()<<" ]"<<std::endl;
             //PrintSkin(mrModelPart);
         }
+
+      std::cout << " BUILD MESH BOUNDARY time : " << process_time.elapsed() << std::endl;
+
 
       KRATOS_CATCH(" ")
     }
@@ -188,6 +194,8 @@ namespace Kratos
 
       KRATOS_TRY
 
+	std::cout<<"mesh_boundary BuildCompositeConditions \n"<<std::endl;
+      
       //master conditions must be deleted and set them again in the build
       this->ClearMasterEntities(rModelPart, rTemporaryConditions);
       

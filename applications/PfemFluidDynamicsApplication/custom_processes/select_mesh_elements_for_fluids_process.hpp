@@ -100,6 +100,8 @@ public:
     {
       KRATOS_TRY
 
+	boost::timer process_time;
+
 	if( mEchoLevel > 1 ){
 	  std::cout<<" [ SELECT MESH ELEMENTS in PfemFluid: ("<<mrRemesh.OutMesh.GetNumberOfElements()<<") "<<std::endl;
 	  std::cout<<"MODEL PART InNumberOfElements "<<mrRemesh.InMesh.GetNumberOfElements()<<std::endl;
@@ -495,6 +497,8 @@ public:
 	std::cout<<"   Passed_AlphaShape  :"<<mrRemesh.Info->NumberOfElements<<std::endl;
 	std::cout<<"   SELECT MESH ELEMENTS ]; "<<std::endl;
       }
+
+      std::cout << "SELECT MESH ELEMENTS time : " << process_time.elapsed() << std::endl;
 
       KRATOS_CATCH( "" )
 

@@ -506,6 +506,7 @@ namespace Kratos
     {
 
       KRATOS_TRY
+	boost::timer process_time;
 
       if( mEchoLevel > 0 ){
 	std::cout<<" [ Initial Conditions : "<<rModelPart.Conditions().size()<<std::endl;
@@ -577,17 +578,28 @@ namespace Kratos
 	}
 	  
       }
-         
+
+      std::cout << "UNIQUE SKIN SEARCH time : " << process_time.elapsed() << std::endl;
+
+      boost::timer fill_time;
+
       //control the previous mesh conditions
       std::vector<int> PreservedConditions( TemporaryConditions.size() + 1 );
       std::fill( PreservedConditions.begin(), PreservedConditions.end(), 0 );
-		
+      std::cout << "FILL time : " << fill_time.elapsed() << std::endl;
+
+      boost::timer build_time;
+
       //build new skin for the Modelpart
       this->BuildCompositeConditions(rModelPart, TemporaryConditions, PreservedConditions, ConditionId);
+      std::cout << "BUILD COMPOSITE time : " << build_time.elapsed() << std::endl;
+
+      boost::timer condition_time;
 
       //add other conditions out of the skin space dimension
       this->AddOtherConditions(rModelPart, TemporaryConditions, PreservedConditions, ConditionId);
-	
+      std::cout << "ADD other CONDITION time : " << condition_time.elapsed() << std::endl;
+
       return true;
 
       KRATOS_CATCH( "" )

@@ -110,6 +110,8 @@ public:
 
     KRATOS_TRY
 
+      boost::timer process_time;
+
       if( mEchoLevel > 1 ){
 	std::cout<<" [ REMOVE CLOSE NODES: "<<std::endl;
       }
@@ -208,6 +210,8 @@ public:
       //std::cout<<"   Nodes after  erasing : "<<mrModelPart.Nodes().size()<<std::endl;
       std::cout<<"   REMOVE CLOSE NODES ]; "<<std::endl;
     }
+
+    std::cout << "REMOVE MESH NODES time : " << process_time.elapsed() << std::endl;
 
     KRATOS_CATCH(" ")
       }

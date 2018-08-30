@@ -98,6 +98,8 @@ public:
   {
     KRATOS_TRY
 
+      boost::timer process_time;
+
       if( mEchoLevel > 1 )
 	std::cout<<" [ GENERATE NEW NODES for homomgeneous mesh: "<<std::endl;
 
@@ -175,6 +177,8 @@ public:
 
     if( mEchoLevel > 1 )
       std::cout<<"   GENERATE NEW NODES ]; "<<std::endl;
+
+    std::cout << "GENERATE NEW NODES time : " << process_time.elapsed() << std::endl;
 
     KRATOS_CATCH(" ")
       }
@@ -328,6 +332,10 @@ private:
       }
     }
 
+    if(freesurfaceNodes>0 && rigidNodes>0){
+      penalization=0;
+    }
+    
     double ElementalVolume =  Element.Area();
 
     array_1d<double,3> Edges(3,0.0);
