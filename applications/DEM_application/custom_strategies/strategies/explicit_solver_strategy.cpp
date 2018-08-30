@@ -1088,6 +1088,14 @@ namespace Kratos {
                     }
                 }
             }
+
+            if (submp.Has(EXTERNAL_APPLIED_FORCE)) { // JIG: Backward compatibility, it should be removed in the future
+                rigid_body_element.GetGeometry()[0].FastGetSolutionStepValue(EXTERNAL_APPLIED_FORCE) = submp[EXTERNAL_APPLIED_FORCE];
+            }
+
+            if (submp.Has(EXTERNAL_APPLIED_MOMENT)) { // JIG: Backward compatibility, it should be removed in the future
+                rigid_body_element.GetGeometry()[0].FastGetSolutionStepValue(EXTERNAL_APPLIED_MOMENT) = submp[EXTERNAL_APPLIED_MOMENT];
+            }
         }
         KRATOS_CATCH("")
     }
