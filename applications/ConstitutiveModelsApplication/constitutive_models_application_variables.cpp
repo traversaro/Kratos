@@ -12,6 +12,8 @@
 namespace Kratos
 {
   //specific constitutive models variables must be CREATED here
+  KRATOS_CREATE_VARIABLE(std::string, TEMPERATURE_VARIABLE)
+  KRATOS_CREATE_VARIABLE(std::string, PRESSURE_VARIABLE)
 
   KRATOS_CREATE_VARIABLE(double, GEL_STRENGTH);
 

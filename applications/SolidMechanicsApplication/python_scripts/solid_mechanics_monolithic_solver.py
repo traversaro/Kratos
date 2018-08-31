@@ -8,8 +8,8 @@ import KratosMultiphysics.SolidMechanicsApplication as KratosSolid
 # Check that KratosMultiphysics was imported in the main script
 KratosMultiphysics.CheckForPreviousImport()
 
-def CreateSolver(custom_settings):
-    return MonolithicSolver(custom_settings)
+def CreateSolver(custom_settings, Model):
+    return MonolithicSolver(Model, custom_settings)
 
 #Base class to develop other solvers
 class MonolithicSolver(object):
@@ -38,9 +38,10 @@ class MonolithicSolver(object):
     settings -- Kratos parameters containing solver settings.
     model_part -- the model part used to construct the solver (computing_model_part).
     """
-    def __init__(self, custom_settings):
+    def __init__(self, Model, custom_settings):
         default_settings = KratosMultiphysics.Parameters("""
         {
+            "solving_model_part": "computing_domain",
             "dofs": [],
             "time_integration_settings":{
                 "solution_type": "Dynamic",
@@ -100,9 +101,11 @@ class MonolithicSolver(object):
         self.settings["linear_solver_settings"].ValidateAndAssignDefaults(default_settings["linear_solver_settings"])
         #print("Monolithic Solver Settings",self.settings.PrettyPrintJsonString())
 
+        # Model
+        self.model = Model
+
         # Echo level
         self.echo_level = 0
-
 
     def GetMinimumBufferSize(self):
         buffer_size = self.settings["time_integration_settings"]["buffer_size"].GetInt()
@@ -110,9 +113,6 @@ class MonolithicSolver(object):
         if( buffer_size <= time_integration_order ):
             buffer_size = time_integration_order + 1
         return buffer_size;
-
-    def SetComputingModelPart(self, computing_model_part):
-        self.model_part = computing_model_part
 
 
     def ExecuteInitialize(self):
@@ -156,6 +156,7 @@ class MonolithicSolver(object):
     def Clear(self):
         if self.settings["solving_strategy_settings"]["clear_storage"].GetBool():
             self._get_mechanical_solver().Clear()
+        self._check_reform_dofs()
 
     def Check(self):
         self._get_mechanical_solver().Check()
@@ -183,6 +184,32 @@ class MonolithicSolver(object):
 
     #### Solver internal methods ####
 
+    def _check_reform_dofs(self):
+        if( self._domain_parts_updated() ):
+            if( not self._get_mechanical_solver().GetOptions().Is(KratosSolid.SolverLocalFlags.REFORM_DOFS) ):
+                self._get_mechanical_solver().GetOptions().Set(KratosSolid.SolverLocalFlags.REFORM_DOFS, True)
+                KratosMultiphysics.Logger.PrintInfo(self._class_prefix(), "Set REFORM DOFS: True")
+        else:
+            if( self._get_mechanical_solver().GetOptions().Is(KratosSolid.SolverLocalFlags.REFORM_DOFS) ):
+                self._get_mechanical_solver().GetOptions().Set(KratosSolid.SolverLocalFlags.REFORM_DOFS, False)
+                KratosMultiphysics.Logger.PrintInfo(self._class_prefix(), "Set REFORM DOFS: False")
+
+    def _domain_parts_updated(self):
+        if( self.process_info.Has(KratosSolid.MESHING_STEP_TIME) ):
+            current_time  = self.process_info[KratosMultiphysics.TIME]
+            delta_time    = self.process_info[KratosMultiphysics.DELTA_TIME]
+            previous_time = current_time - delta_time
+
+            #arithmetic floating point tolerance
+            tolerance = delta_time * 0.001
+
+            meshing_step_time = self.process_info[KratosSolid.MESHING_STEP_TIME]
+
+            if( meshing_step_time > previous_time-tolerance and meshing_step_time < previous_time+tolerance ):
+                return True
+
+        return False
+
     def _check_initialized(self):
         if( not self._is_not_restarted() ):
             self._get_solution_scheme().Initialize(self.main_model_part)
@@ -202,12 +229,14 @@ class MonolithicSolver(object):
 
     def _set_model_info(self):
 
-        # Main model part and computing model part
+        # Get solving model part
+        self.model_part = self.model[self.settings["solving_model_part"].GetString()]
+
+        # Main model part from computing model part
         self.main_model_part = self.model_part.GetRootModelPart()
 
         # Process information
         self.process_info = self.main_model_part.ProcessInfo
-
 
     def _set_integration_parameters(self):
         # Add dofs

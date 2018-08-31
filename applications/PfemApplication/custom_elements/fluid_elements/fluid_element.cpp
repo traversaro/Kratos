@@ -541,6 +541,27 @@ unsigned int FluidElement::GetDofsSize()
 //************************************************************************************
 //************************************************************************************
 
+bool FluidElement::IsSliver()
+{
+  //const SizeType number_of_nodes = this->GetGeometry().PointsNumber();
+  //bool is_sliver = true;
+  // for( SizeType i=0; i<number_of_nodes; ++i)
+  // {
+  //   if( this->GetGeometry()[i].IsNot(SELECTED) ){
+  //     is_sliver = false;
+  //     break;
+  //   }
+  // }
+  //return is_sliver;
+
+  return this->Is(SELECTED);
+
+}
+
+
+//************************************************************************************
+//************************************************************************************
+
 void FluidElement::InitializeSystemMatrices(MatrixType& rLeftHandSideMatrix,
 					    VectorType& rRightHandSideVector,
 					    Flags& rCalculationFlags)
@@ -940,7 +961,8 @@ void FluidElement::CalculateRightHandSide( VectorType& rRightHandSideVector, Pro
     LocalSystem.SetRightHandSideVector(rRightHandSideVector);
 
     //Calculate elemental system
-    this->CalculateElementalSystem( LocalSystem, rCurrentProcessInfo );
+    if( !IsSliver() )
+      this->CalculateElementalSystem( LocalSystem, rCurrentProcessInfo );
 
     KRATOS_CATCH( "" )
 }
@@ -973,7 +995,8 @@ void FluidElement::CalculateLeftHandSide( MatrixType& rLeftHandSideMatrix, Proce
     LocalSystem.SetRightHandSideVector(RightHandSideVector);
 
     //Calculate elemental system
-    this->CalculateElementalSystem( LocalSystem, rCurrentProcessInfo );
+    if( !IsSliver() )
+      this->CalculateElementalSystem( LocalSystem, rCurrentProcessInfo );
 
     KRATOS_CATCH( "" )
 }
@@ -1004,7 +1027,8 @@ void FluidElement::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, Vector
     LocalSystem.SetRightHandSideVector(rRightHandSideVector);
 
     //Calculate elemental system
-    this->CalculateElementalSystem( LocalSystem, rCurrentProcessInfo );
+    if( !IsSliver() )
+      this->CalculateElementalSystem( LocalSystem, rCurrentProcessInfo );
 
     bool test_tangent = false;
     if( test_tangent ){
@@ -1199,8 +1223,15 @@ void FluidElement::CalculateAndAddKvvm(MatrixType& rLeftHandSideMatrix,
 {
     KRATOS_TRY
 
-    //contributions to stiffness matrix calculated on the reference config
+    // contributions to stiffness matrix calculated on the reference config
     noalias( rLeftHandSideMatrix ) += rVariables.IntegrationWeight * prod( trans( rVariables.B ), Matrix( prod( rVariables.ConstitutiveMatrix, rVariables.B ) ) ); //to be optimized to remove the temporary
+
+    // optimized matrix triple multiplication: (slower)
+    // for(SizeType i=0; i<rVariables.B.size2(); ++i)
+    //   for(SizeType j=0; j<rVariables.B.size1(); ++j)
+    //     for(SizeType k=0; k<rVariables.B.size1(); ++k)
+    //       for(SizeType l=0; l<rVariables.B.size2(); ++l)
+    //         rLeftHandSideMatrix(i,l) += rVariables.IntegrationWeight * rVariables.B(j,i) * rVariables.ConstitutiveMatrix(j,k) * rVariables.B(k,l);
 
     //std::cout << "Kvvm" << rLeftHandSideMatrix << "(" << this->Id() << ")" << std::endl;
 

@@ -15,11 +15,10 @@
 // System includes
 
 // Project includes
-#include "processes/process.h"
-
 #include "custom_bounding/spatial_bounding_box.hpp"
 #include "custom_utilities/mesh_data_transfer_utilities.hpp"
-
+#include "geometries/triangle_2d_3.h"
+#include "geometries/tetrahedra_3d_4.h"
 #include "delaunay_meshing_application_variables.h"
 
 namespace Kratos
@@ -943,6 +942,18 @@ public:
 
     //writes a list of particles telling if they are set as boundary or not
     void CheckParticles     (ModelPart& rModelPart);
+
+    //computes velocity norms of the geometry
+    bool CheckRelativeVelocities (Geometry<Node<3> >& rGeometry, const double& rRelativeFactor);
+
+    //computes prediction of volume decrease of the geometry
+    bool CheckVolumeDecrease(GeometryType& rVertices, const unsigned int& rDimension,const double& rTolerance,double& VolumeChange);
+
+    //computes prediction of volume after a projection of the displacement geometry
+    double GetMovedVolume(GeometryType& rVertices, const unsigned int& rDimension, double MovementFactor);
+
+    //computes deformation gradient determinant
+    double GetDeformationGradientDeterminant(GeometryType& rVertices, const unsigned int& rDimension);
 
     //*******************************************************************************************
     //*******************************************************************************************
