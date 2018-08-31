@@ -4,9 +4,18 @@
 from __future__ import print_function, absolute_import, division  # makes KratosMultiphysics backward compatible with python 2.6 and 2.7
 # importing the Kratos Library
 from KratosMultiphysics import *
-from KratosMultiphysics.ConstitutiveModelsApplication import *
-#from KratosMultiphysics.FluidDynamicsApplication import *
 from KratosMultiphysics.SwimmingDEMApplication import *
+
+# Importing the solvers (if available)
+try:
+    from KratosMultiphysics.FluidDynamicsApplication import *
+except ImportError:
+    pass
+try:
+    from KratosMultiphysics.ConstitutiveModelsApplication import *
+except ImportError:
+    pass
+
 import weakref
 
 class DerivativesRecoverer:

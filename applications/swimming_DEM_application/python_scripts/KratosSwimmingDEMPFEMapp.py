@@ -11,8 +11,6 @@ import sys
 # Kratos
 from KratosMultiphysics import *
 from KratosMultiphysics.DEMApplication import *
-#from KratosMultiphysics.FluidDynamicsApplication import *
-#from KratosMultiphysics.IncompressibleFluidApplication import *
 from KratosMultiphysics.SwimmingDEMApplication import *
 from KratosMultiphysics.PfemApplication import *
 from KratosMultiphysics.SolidMechanicsApplication import *
