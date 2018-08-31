@@ -13,7 +13,7 @@ import KratosMultiphysics
 import KratosMultiphysics.SolidMechanicsApplication     as KratosSolid
 import KratosMultiphysics.ExternalSolversApplication    as KratosSolvers
 import KratosMultiphysics.PfemApplication               as KratosPfem
-import KratosMultiphysics.PfemSolidMechanicsApplication as KratosPfemSolid
+#import KratosMultiphysics.PfemSolidMechanicsApplication as KratosPfemSolid
 import KratosMultiphysics.ContactMechanicsApplication   as KratosContact
 import MainPfem
 import MainSolid
@@ -67,7 +67,7 @@ class Solution(MainPfem.PfemSolution):
     def _get_solver(self):
         solver_module = __import__(self.ProjectParameters["solver_settings"]["solver_type"].GetString())
         self.AddFluidVariablesBySwimmingDEMAlgorithm()
-        return (solver_module.CreateSolver(self.ProjectParameters["solver_settings"]["Parameters"]))
+        return (solver_module.CreateSolver(self.ProjectParameters["solver_settings"]["Parameters"], self.model.GetModel()))
 
 
     def CalculateNodalArea(self):
