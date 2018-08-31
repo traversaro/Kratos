@@ -1,11 +1,22 @@
 from __future__ import print_function, absolute_import, division #makes KratosMultiphysics backward compatible with python 2.6 and 2.7
 import math
-from KratosMultiphysics import *
-#from KratosMultiphysics.IncompressibleFluidApplication import *
-#from KratosMultiphysics.FluidDynamicsApplication import *
-from KratosMultiphysics.PfemApplication import *
+from KratosMultiphysics import*
 from KratosMultiphysics.DEMApplication import *
 from KratosMultiphysics.SwimmingDEMApplication import *
+
+# Importing the solvers (if available)
+try:
+    from KratosMultiphysics.FluidDynamicsApplication import *
+    Logger.PrintInfo("FluidDynamcisApplication succesfully imported")
+except ImportError:
+    pass
+try:
+    from KratosMultiphysics.PfemApplication import *
+    Logger.PrintInfo("PfemApplication succesfully imported")
+except ImportError:
+    pass
+
+
 import sys
 
 class ProjectionModule:
