@@ -102,9 +102,6 @@ namespace Kratos
     virtual void Execute()
     {
       KRATOS_TRY
-
-	boost::timer process_time;
-
       
       bool success=false;
 
@@ -125,9 +122,6 @@ namespace Kratos
 	    std::cout<<" [ Search performed in Time = "<<auxiliary.elapsed()<<" ]"<<std::endl;
             //PrintSkin(mrModelPart);
         }
-
-      std::cout << " BUILD MESH BOUNDARY time : " << process_time.elapsed() << std::endl;
-
 
       KRATOS_CATCH(" ")
     }
