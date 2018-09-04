@@ -206,11 +206,11 @@ public:
             if (ierr != 0) break;
         }
 
-        for ( ModelPart::ConditionIterator itCond = rModelPart.ConditionsBegin(); itCond != rModelPart.ConditionsEnd(); ++itCond)
-        {
-            ierr = itCond->Check(rCurrentProcessInfo);
-            if (ierr != 0) break;
-        }
+        /* for ( ModelPart::ConditionIterator itCond = rModelPart.ConditionsBegin(); itCond != rModelPart.ConditionsEnd(); ++itCond) */
+        /* { */
+        /*     ierr = itCond->Check(rCurrentProcessInfo); */
+        /*     if (ierr != 0) break; */
+        /* } */
 
         return ierr;
 

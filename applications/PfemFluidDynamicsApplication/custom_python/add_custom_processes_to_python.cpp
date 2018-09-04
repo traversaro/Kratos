@@ -38,6 +38,7 @@
 #include "custom_processes/set_active_flag_process.hpp"
 #include "custom_processes/adaptive_time_interval_process.hpp"
 #include "custom_processes/transfer_model_part_elements_process.hpp"
+#include "custom_processes/build_mesh_boundary_for_fluids_process.hpp"
 
 //Processes
 
@@ -117,6 +118,12 @@ namespace Kratos
      class_<ModelStartEndMeshingForFluidsProcess, bases<ModelStartEndMeshingProcessType>, boost::noncopyable >
 	(
 	 "ModelMeshingForFluids", init<ModelPart&, Flags, int>()
+	 )
+	;
+     
+     class_<BuildMeshBoundaryForFluidsProcess, bases<ProcessBaseType>, boost::noncopyable >
+	(
+	 "BuildMeshBoundaryForFluids", init<ModelPart&, ModelerUtilities::MeshingParameters&, int>()
 	 )
 	;
 
