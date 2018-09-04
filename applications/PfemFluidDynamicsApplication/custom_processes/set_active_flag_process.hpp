@@ -109,9 +109,6 @@ namespace Kratos
     {
 
       KRATOS_TRY
-
-	boost::timer process_time;
-
       
 #pragma omp parallel
 	{
@@ -266,8 +263,6 @@ namespace Kratos
 	    }
 
 	}
-
-      std::cout << "SET ACTIVE FLAG time : " << process_time.elapsed() << std::endl;
 
       KRATOS_CATCH(" ")
 	};
