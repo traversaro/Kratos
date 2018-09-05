@@ -18,6 +18,7 @@
 
 //Utilities
 #include "custom_utilities/formfinding_io_utility.h"
+#include "custom_utilities/assign_material_orientation_utility.h"
 
 
 namespace Kratos
@@ -34,6 +35,12 @@ void  AddCustomUtilitiesToPython(pybind11::module& m)
     .def("PrintModelPart",&FormfindingIOUtility::PrintModelPart)
     .def("ReadPrestressData",&FormfindingIOUtility::ReadPrestressData )
     .def("PrintPrestressData",&FormfindingIOUtility::PrintPrestressData )
+    ;
+
+    class_<AssignMaterialOrientationUtility>(m,"AssignMaterialOrientationUtility")
+    .def(init<ModelPart&>())
+    .def("Execute",&AssignMaterialOrientationUtility::Execute)
+    .def("WriteFiberAngles",&AssignMaterialOrientationUtility::WriteFiberAngles )
     ;
 
 }
