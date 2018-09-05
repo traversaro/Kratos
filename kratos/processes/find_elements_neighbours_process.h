@@ -117,8 +117,7 @@ public:
         for(NodesContainerType::iterator in = rNodes.begin(); in!=rNodes.end(); in++)
         {
             (in->GetValue(NEIGHBOUR_ELEMENTS)).reserve(mavg_elems);
-            WeakPointerVector<Element >& rE = in->GetValue(NEIGHBOUR_ELEMENTS);
-            rE.erase(rE.begin(),rE.end() );
+            in->GetValue(NEIGHBOUR_ELEMENTS).clear();
         }
         for(ElementsContainerType::iterator ie = rElems.begin(); ie!=rElems.end(); ie++)
         {
@@ -127,18 +126,32 @@ public:
                 (ie->GetValue(NEIGHBOUR_ELEMENTS)).reserve(3);
             else
                 (ie->GetValue(NEIGHBOUR_ELEMENTS)).reserve(4);
-            WeakPointerVector<Element >& rE = ie->GetValue(NEIGHBOUR_ELEMENTS);
-            rE.erase(rE.begin(),rE.end() );
+            ie->GetValue(NEIGHBOUR_ELEMENTS).clear();
         }
+
+		//Check for the MMg doing shaddy things
+		for (ElementsContainerType::iterator ie = rElems.begin(); ie != rElems.end(); ie++) {
+			Element::GeometryType& pGeom = ie->GetGeometry();
+			for (unsigned int i = 0; i < pGeom.size(); i++)
+			{
+				if (pGeom[i].GetValue(NEIGHBOUR_ELEMENTS).size() != 0) {
+					std::cout << pGeom[i].Id() << "node  is not in the modelpart. ABOOOOOOORT" << std::endl;
+					std::cout << ie->Id() << " elem is not in the modelpart. ABOOOOOOORT" << std::endl;
+					abort();
+				}
+				//pGeom[i].GetValue(NEIGHBOUR_ELEMENTS).clear();
+			}
+		}
 
         //add the neighbour elements to all the nodes in the mesh
         for(ElementsContainerType::iterator ie = rElems.begin(); ie!=rElems.end(); ie++)
         {
             Element::GeometryType& pGeom = ie->GetGeometry();
-            for(unsigned int i = 0; i < pGeom.size(); i++)
-            {
-                //KRATOS_WATCH( pGeom[i] );
-                (pGeom[i].GetValue(NEIGHBOUR_ELEMENTS)).push_back( Element::WeakPointer( *(ie.base()) ) );
+			for (unsigned int i = 0; i < pGeom.size(); i++)
+			{
+				//KRATOS_WATCH( pGeom[i] );
+				auto insert_elem = Element::WeakPointer(*(ie.base()));
+                (pGeom[i].GetValue(NEIGHBOUR_ELEMENTS)).push_back(insert_elem);
                 //KRATOS_WATCH( (pGeom[i].GetValue(NEIGHBOUR_CONDITIONS)).size() );
             }
         }
@@ -192,14 +205,12 @@ public:
         NodesContainerType& rNodes = mr_model_part.Nodes();
         for(NodesContainerType::iterator in = rNodes.begin(); in!=rNodes.end(); in++)
         {
-            WeakPointerVector<Element >& rE = in->GetValue(NEIGHBOUR_ELEMENTS);
-            rE.erase(rE.begin(),rE.end());
+            in->GetValue(NEIGHBOUR_ELEMENTS).clear();
         }
         ElementsContainerType& rElems = mr_model_part.Elements();
         for(ElementsContainerType::iterator ie = rElems.begin(); ie!=rElems.end(); ie++)
         {
-            WeakPointerVector<Element >& rE = ie->GetValue(NEIGHBOUR_ELEMENTS);
-            rE.erase(rE.begin(),rE.end());
+            ie->GetValue(NEIGHBOUR_ELEMENTS).clear();
         }
 
     }

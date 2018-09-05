@@ -67,6 +67,7 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 		#Wait()
 
 
+
 		# TESTING ***********************************************************
 
 

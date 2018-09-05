@@ -221,7 +221,35 @@ class FEM_Solution(MainSolidFEM.Solution):
 	def InitializeSolutionStep(self):
 
 		# Search neighbours at each step in case of remeshing
+		# if self.step == 67:
+		# 	for elem in self.main_model_part.Elements:
+		# 		print(elem.Id)
+
+		# if self.step == 67:
+		# 	print("**************ELEMENTOS*******************")
+		# 	for elem in self.main_model_part.Elements:
+		# 		print(elem.Id)
+
+		# 	print("**************NODOS*******************")
+		# 	for node in self.main_model_part.Nodes:
+		# 		print(node.Id)
+		# 	# print(self.main_model_part)
+		# 	Wait()
+			
+
+		# if self.step == 67:
+		# 	aux_dict = {}
+		# 	for elem in  self.main_model_part.Elements:
+		# 		aux = []
+		# 		for node in elem.GetNodes():
+		# 			aux.append(node.Id)
+		# 		aux_dict[elem.Id] = aux
+
+		# 	print(aux_dict)
+		# 	Wait()
+
 		neighbour_elemental_finder =  KratosMultiphysics.FindElementalNeighboursProcess(self.main_model_part, 2, 5)
+		neighbour_elemental_finder.ClearNeighbours()
 		neighbour_elemental_finder.Execute()
 
 		# Search the skin nodes for the remeshing
