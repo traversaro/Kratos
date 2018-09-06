@@ -1715,7 +1715,34 @@ void TwoStepUpdatedLagrangianVPElement<3>::CalcEquivalentStrainRate(VectorType &
 				 2.0*SpatialDefRate[5]*SpatialDefRate[5]));
 }
 
-template < > 
+  template < > 
+  double TwoStepUpdatedLagrangianVPElement<2>::CalcNormalProjectionDefRate(const VectorType &SpatialDefRate,
+									   const array_1d<double, 3> NormalVector)
+  {
+  
+    double NormalProjSpatialDefRate=NormalVector[0]*SpatialDefRate[0]*NormalVector[0]+
+      NormalVector[1]*SpatialDefRate[1]*NormalVector[1]+
+      2*NormalVector[0]*SpatialDefRate[2]*NormalVector[1];
+
+    return NormalProjSpatialDefRate;
+  }
+
+  template < > 
+  double TwoStepUpdatedLagrangianVPElement<3>::CalcNormalProjectionDefRate(const VectorType &SpatialDefRate,
+									   const array_1d<double, 3> NormalVector)
+  {
+  
+    double  NormalProjSpatialDefRate=NormalVector[0]*SpatialDefRate[0]*NormalVector[0]+
+      NormalVector[1]*SpatialDefRate[1]*NormalVector[1]+
+      NormalVector[2]*SpatialDefRate[2]*NormalVector[2]+
+      2*NormalVector[0]*SpatialDefRate[3]*NormalVector[1]+
+      2*NormalVector[0]*SpatialDefRate[4]*NormalVector[2]+
+      2*NormalVector[1]*SpatialDefRate[5]*NormalVector[2];
+  
+    return NormalProjSpatialDefRate;
+  }
+
+  template < > 
 double TwoStepUpdatedLagrangianVPElement<2>::CalcNormalProjectionDefRate(VectorType &SpatialDefRate)
 {
   

@@ -369,6 +369,12 @@ namespace Kratos
 				const ShapeFunctionsType& rN,
 				const double Weight);
 
+     void ComputeBoundRHSVectorComplete(VectorType& BoundRHSVector,
+					const double TimeStep,
+					const double BoundRHSCoeffAcc,
+					const double BoundRHSCoeffDev,
+					const VectorType SpatialDefRate);
+     
      void ComputeBoundRHSVector(VectorType& BoundRHSVector,
 				const ShapeFunctionsType& rN,
 				const double TimeStep,
