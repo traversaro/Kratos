@@ -110,7 +110,7 @@ namespace Kratos
       if( mEchoLevel > 0 )
 	std::cout<<" [ Build Boundary on ModelPart ["<<mrModelPart.Name()<<"] ]"<<std::endl;
 
-      success=this->UniqueSkinSearch(mrModelPart);
+      success=UniqueSkinSearch(mrModelPart);
 			    
       if(!success)
 	{
@@ -180,10 +180,105 @@ namespace Kratos
 
 
 
+    bool UniqueSkinSearch( ModelPart& rModelPart )
+    {
+
+      KRATOS_TRY
+
+	if( mEchoLevel > 0 ){
+	  std::cout<<" [ Initial Conditions : "<<rModelPart.Conditions().size()<<std::endl;
+	}
+
+      if( !rModelPart.Elements().size() || (rModelPart.Is(ACTIVE)) ){
+	if( mEchoLevel > 0 ){
+	  std::cout<<" [ Final Conditions   : "<<rModelPart.Conditions().size()<<std::endl;
+	}
+	return true;
+      }
+			
+      //reset the boundary flag in all nodes and check if a remesh process has been performed
+      bool any_node_to_erase = false;
+      for(ModelPart::NodesContainerType::const_iterator in = rModelPart.NodesBegin(); in!=rModelPart.NodesEnd(); in++)
+	{
+	  in->Reset(BOUNDARY);
+
+	  if( any_node_to_erase == false )
+	    if( in->Is(TO_ERASE) )
+	      any_node_to_erase = true;
+	    
+	}
+
+      // //swap conditions for a temporary use
+      // unsigned int ConditionId=1;
+      // ModelPart::ConditionsContainerType TemporaryConditions;
+
+      // //if there are no conditions check main modelpart mesh conditions
+      // if( !rModelPart.Conditions().size() ){
+
+      // 	for(ModelPart::ConditionsContainerType::iterator i_cond = rModelPart.GetParentModelPart()->ConditionsBegin(); i_cond!= rModelPart.GetParentModelPart()->ConditionsEnd(); i_cond++)
+      // 	  {
+      // 	    TemporaryConditions.push_back(*(i_cond.base()));
+      // 	    i_cond->SetId(ConditionId);
+      // 	    ConditionId++;
+      // 	  }
+
+      // }
+      // else{
+
+      // 	TemporaryConditions.reserve(rModelPart.Conditions().size());
+      // 	TemporaryConditions.swap(rModelPart.Conditions());
+
+      // 	//set consecutive ids in the mesh conditions
+      // 	if( any_node_to_erase ){
+      // 	  for(ModelPart::ConditionsContainerType::iterator i_cond = TemporaryConditions.begin(); i_cond!= TemporaryConditions.end(); i_cond++)
+      // 	    {
+      // 	      Geometry< Node<3> >& rConditionGeometry = i_cond->GetGeometry();
+      // 	      for( unsigned int i=0; i<rConditionGeometry.size(); i++ )
+      // 		{
+      // 		  if( rConditionGeometry[i].Is(TO_ERASE)){
+      // 		    i_cond->Set(TO_ERASE);
+      // 		    break;
+      // 		  }
+      // 		}
+	  
+      // 	      i_cond->SetId(ConditionId);
+      // 	      ConditionId++;
+      // 	    }
+      // 	}
+      // 	else{
+      // 	  for(ModelPart::ConditionsContainerType::iterator i_cond = TemporaryConditions.begin(); i_cond!= TemporaryConditions.end(); i_cond++)
+      // 	    {
+
+      // 	      i_cond->SetId(ConditionId);
+      // 	      ConditionId++;
+      // 	    }
+      // 	}
+	  
+      // }
+
+
+      /// /control the previous mesh conditions
+      // std::vector<int> PreservedConditions( TemporaryConditions.size() + 1 );
+      // std::fill( PreservedConditions.begin(), PreservedConditions.end(), 0 );
+
+      //build new skin for the Modelpart
+      this-> SetBoundaryAndFreeSurface(rModelPart);
+	
+      // 	this->BuildCompositeConditions(rModelPart, TemporaryConditions, PreservedConditions, ConditionId);
+
+      // //add other conditions out of the skin space dimension
+      // this->AddOtherConditions(rModelPart, TemporaryConditions, PreservedConditions, ConditionId);
+
+      return true;
+
+      KRATOS_CATCH( "" )
+	}
+    
+
     //**************************************************************************
     //**************************************************************************
 
-    bool BuildCompositeConditions( ModelPart& rModelPart, ModelPart::ConditionsContainerType& rTemporaryConditions, std::vector<int>& rPreservedConditions, unsigned int& rConditionId )
+    bool SetBoundaryAndFreeSurface( ModelPart& rModelPart)
     {
 
       KRATOS_TRY
@@ -268,7 +363,90 @@ namespace Kratos
       KRATOS_CATCH( "" )
     }
 
+    bool BuildCompositeConditions( ModelPart& rModelPart, ModelPart::ConditionsContainerType& rTemporaryConditions, std::vector<int>& rPreservedConditions, unsigned int& rConditionId )
+    {
+      KRATOS_TRY
+	std::cout<<"DO NOT ENTER HERE BuildCompositeConditions BuildCompositeConditions BuildCompositeConditions"<<std::endl;
 
+      //properties to be used in the generation
+      int number_properties = rModelPart.GetParentModelPart()->NumberOfProperties();
+      Properties::Pointer properties = rModelPart.GetParentModelPart()->pGetProperties(number_properties-1);
+      
+      ModelPart::ElementsContainerType::iterator elements_begin  = mrModelPart.ElementsBegin();
+      ModelPart::ElementsContainerType::iterator elements_end    = mrModelPart.ElementsEnd();
+    
+      for(ModelPart::ElementsContainerType::iterator ie = elements_begin; ie != elements_end ; ie++)
+	{
+	  
+	  Geometry< Node<3> >& rElementGeometry = ie->GetGeometry();
+	  
+	  if( rElementGeometry.FacesNumber() >= 3 ){ //3 or 4
+
+	    /*each face is opposite to the corresponding node number so in 2D triangle
+	      0 ----- 1 2
+	      1 ----- 2 0
+	      2 ----- 0 1
+	    */
+
+	    /*each face is opposite to the corresponding node number so in 3D tetrahedron
+	      0 ----- 1 2 3
+	      1 ----- 2 0 3
+	      2 ----- 0 1 3
+	      3 ----- 0 2 1
+	    */
+
+	    //finding boundaries and creating the "skin"
+	    //
+	    //********************************************************************
+
+	    boost::numeric::ublas::matrix<unsigned int> lpofa; //connectivities of points defining faces
+	    boost::numeric::ublas::vector<unsigned int> lnofa; //number of points defining faces
+	 
+	    WeakPointerVector<Element >& rE = ie->GetValue(NEIGHBOUR_ELEMENTS);
+	    
+	    //get matrix nodes in faces
+	    rElementGeometry.NodesInFaces(lpofa);
+	    rElementGeometry.NumberNodesInFaces(lnofa);
+	    
+	    //loop on neighbour elements of an element
+	    unsigned int iface=0;
+	    for(WeakPointerVector< Element >::iterator ne = rE.begin(); ne!=rE.end(); ne++)
+	      {
+
+		unsigned int NumberNodesInFace = lnofa[iface];
+		
+		if (ne->Id() == ie->Id())
+		  {
+
+		    //if no neighbour is present => the face is free surface
+		    bool freeSurfaceFace=false;
+		    for(unsigned int j=1; j<=NumberNodesInFace; j++)
+		      {
+			rElementGeometry[lpofa(j,iface)].Set(BOUNDARY);
+			if(rElementGeometry[lpofa(j,iface)].IsNot(RIGID)){
+			  freeSurfaceFace=true;
+			}
+		      }
+		    if(freeSurfaceFace==true){
+		      for(unsigned int j=1; j<=NumberNodesInFace; j++)
+			{
+			  rElementGeometry[lpofa(j,iface)].Set(FREE_SURFACE);
+			}
+		    }
+
+		    
+		  } //end face condition
+
+		iface+=1;       	    
+
+	      } //end loop neighbours
+	  }
+	}
+
+      return true;
+
+      KRATOS_CATCH( "" )
+    }
 
 
     //**************************************************************************
@@ -277,6 +455,7 @@ namespace Kratos
     bool CheckAcceptedCondition(ModelPart& rModelPart, Condition& rCondition)
     {
       KRATOS_TRY
+	std::cout<<"DO NOT ENTER HERE CheckAcceptedCondition CheckAcceptedCondition CheckAcceptedCondition"<<std::endl;
 
       bool node_not_preserved = false;
       bool condition_not_preserved = false;
@@ -314,6 +493,8 @@ namespace Kratos
     void AddConditionToModelPart(ModelPart& rModelPart, Condition::Pointer pCondition)
     {
       KRATOS_TRY
+	
+	std::cout<<"DO NOT ENTER HERE AddConditionToModelPart AddConditionToModelPart AddConditionToModelPart"<<std::endl;
 	
       //rModelPart.AddCondition(pCondition); //if a Local Id corresponds to a Global Id not added
       rModelPart.Conditions().push_back(pCondition);
@@ -372,7 +553,8 @@ namespace Kratos
     bool FindNodeInCondition(Geometry< Node<3> >& rConditionGeometry,Geometry< Node<3> >& rElementGeometry , boost::numeric::ublas::matrix<unsigned int>& lpofa, boost::numeric::ublas::vector<unsigned int>& lnofa, unsigned int& iface)
     {
       KRATOS_TRY
-      
+      	std::cout<<"DO NOT ENTER HERE FindNodeInCondition FindNodeInCondition FindNodeInCondition"<<std::endl;
+
       // not equivalent geometry sizes for boundary conditions:
       if( rConditionGeometry.size() != lnofa[iface] )
 	return false;

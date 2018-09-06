@@ -39,6 +39,8 @@
 #include "custom_processes/adaptive_time_interval_process.hpp"
 #include "custom_processes/transfer_model_part_elements_process.hpp"
 #include "custom_processes/build_mesh_boundary_for_fluids_process.hpp"
+#include "custom_processes/build_model_part_boundary_for_fluids_process.hpp"
+
 
 //Processes
 
@@ -120,6 +122,15 @@ namespace Kratos
 	 "ModelMeshingForFluids", init<ModelPart&, Flags, int>()
 	 )
 	;
+
+     //***************BOUNDARY**************//
+
+     class_<BuildModelPartBoundaryForFluidsProcess, bases<ProcessBaseType>, boost::noncopyable >
+       (
+	"BuildModelPartBoundaryForFluids", init<ModelPart&, std::string, int>()
+	)
+       .def("SearchConditionMasters", &BuildModelPartBoundaryProcess::SearchConditionMasters)
+       ;
      
      class_<BuildMeshBoundaryForFluidsProcess, bases<ProcessBaseType>, boost::noncopyable >
 	(
