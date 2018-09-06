@@ -20,7 +20,7 @@ import MainSolid
 
 class Solution(MainPfem.PfemSolution):
 
-    def __init__(self, file_parameters = "ProjectParameters.json", file_name = None):
+    def __init__(self, file_parameters = "E:\\Joaquin\\Software\\josep_maria\\Cube\\ProjectParameters.json", file_name = None):
         self.pp = self.ProblemParameters()
         super(Solution,self).__init__(file_parameters,file_name)
 
