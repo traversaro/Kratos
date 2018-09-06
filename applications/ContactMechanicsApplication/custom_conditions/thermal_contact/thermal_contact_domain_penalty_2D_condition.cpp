@@ -87,35 +87,35 @@ ThermalContactDomainPenalty2DCondition::~ThermalContactDomainPenalty2DCondition(
 
 
 void ThermalContactDomainPenalty2DCondition::SetMasterGeometry()
-
 {
-    unsigned int vsize=GetValue(MASTER_ELEMENTS).size();
-    Element::ElementType& MasterElement = GetValue(MASTER_ELEMENTS)[vsize-1];
+    KRATOS_TRY
+    // std::cout<<" MASTER_ELEMENTS "<<GetValue(MASTER_ELEMENTS).size()<<" MASTER_NODES "<<GetValue(MASTER_NODES).size()<<std::endl;
+    Element::ElementType& MasterElement = GetValue(MASTER_ELEMENTS).back();
     mContactVariables.SetMasterElement(MasterElement);
 
-
-    vsize=GetValue(MASTER_NODES).size();
-    Element::NodeType&    MasterNode   = GetValue(MASTER_NODES)[vsize-1];
+    Element::NodeType&    MasterNode   = GetValue(MASTER_NODES).back();
     mContactVariables.SetMasterNode(MasterNode);
 
-
-     int  slave=-1;
+    int  slave=-1;
     for(unsigned int i=0; i<MasterElement.GetGeometry().PointsNumber(); i++)
     {
         if(MasterNode.Id()==MasterElement.GetGeometry()[i].Id())
         {
 	    slave=i;
-
-        }
+	}
     }
 
 
     if(slave>=0)
     {
+	// Clear nodes and slaves before push back quantities
+	mContactVariables.nodes.resize(0);
+	mContactVariables.slaves.resize(0);
 
-        NodesArrayType vertex;
+        //NodesArrayType vertex;
 	mContactVariables.order.resize(GetGeometry().PointsNumber(),false);
 
+	int counter = 0;
         for(unsigned int i=0; i<GetGeometry().PointsNumber(); i++)
         {
             bool iset=false;
@@ -144,9 +144,13 @@ void ThermalContactDomainPenalty2DCondition::SetMasterGeometry()
 		//std::cout<<" order ["<<i<<"] = "<<slave<<std::endl;
                 mContactVariables.slaves.push_back(i);
             }
+
+	    counter += mContactVariables.order[i];
         }
 
 
+	if( counter != 3 )
+	  KRATOS_THROW_ERROR( std::invalid_argument, "Something is Wrong with MASTERNODE and contact order", "" )
 
 	//Permute
 	std::vector<unsigned int> permute (5);
@@ -161,24 +165,21 @@ void ThermalContactDomainPenalty2DCondition::SetMasterGeometry()
 	mContactVariables.nodes.push_back(permute[mContactVariables.slaves.back()+1]);
 	mContactVariables.nodes.push_back(permute[mContactVariables.slaves.back()+2]);
 
-
-	// for(unsigned int i=0; i<MasterElement.GetGeometry().size(); i++)
-        // {
-	//   vertex.push_back(MasterElement.GetGeometry()[i]);
-	// }
-	// mpMasterGeometry= GetGeometry().Create(vertex);
-
 	mContactVariables.SetMasterGeometry( MasterElement.GetGeometry() );
 
     }
     else
     {
-        KRATOS_THROW_ERROR( std::invalid_argument, "MASTERNODE do not belongs to MASTER ELEMENT", "" );
+        KRATOS_THROW_ERROR( std::invalid_argument, "MASTERNODE do not belongs to MASTER ELEMENT", "" )
 
     }
 
+    // std::cout<<" CONTACT ("<<GetGeometry()[0].Id()<<")("<<GetGeometry()[1].Id()<<")("<<GetGeometry()[2].Id()<<")"<<std::endl;
 
+    // std::cout<<" MASTER  ("<<MasterElement.GetGeometry()[0].Id()<<")("<<MasterElement.GetGeometry()[1].Id()<<")("<<MasterElement.GetGeometry()[2].Id()<<")"<<std::endl;
+    KRATOS_CATCH("")
 }
+
 
 //*********************************COMPUTE KINEMATICS*********************************
 //************************************************************************************
@@ -290,7 +291,6 @@ void ThermalContactDomainPenalty2DCondition::CalcProjections(GeneralVariables & 
     rVariables.ThermalGap += T1 * rVariables.ProjectionsVector[node1];
     rVariables.ThermalGap += T2 * rVariables.ProjectionsVector[node2];
 
-
     //CHECK IF THE ELEMENT IS ACTIVE and THERE IS FRICTION:
 
     //Check if is active checking the mechanical force component
@@ -299,13 +299,13 @@ void ThermalContactDomainPenalty2DCondition::CalcProjections(GeneralVariables & 
 
     const unsigned int number_of_nodes = GetGeometry().PointsNumber();
 
-
+    rVariables.Options.Set(ACTIVE,true);
     for ( unsigned int i = 0; i < number_of_nodes; i++ )
     {
 	PointType & ContactForce = GetGeometry()[i].FastGetSolutionStepValue(CONTACT_FORCE);
-	if(norm_2(ContactForce)>0){
-	    rVariables.Options.Set(ACTIVE,true);
-	    break;
+	if(norm_2(ContactForce)==0){
+          rVariables.Options.Set(ACTIVE,false);
+          break;
 	}
     }
 
@@ -318,7 +318,7 @@ void ThermalContactDomainPenalty2DCondition::CalcProjections(GeneralVariables & 
 
     rVariables.RelativeVelocityNorm = norm_2(TangentVelocity);
 
-    PointType & ContactForce = GetGeometry()[slave].FastGetSolutionStepValue(CONTACT_FORCE);
+    const PointType& ContactForce = GetGeometry()[slave].FastGetSolutionStepValue(CONTACT_FORCE);
 
     PointType TangentForce = ContactForce;
     TangentForce -= (inner_prod(ContactForce,rVariables.CurrentSurface.Normal)) * ContactForce;
@@ -342,7 +342,8 @@ double& ThermalContactDomainPenalty2DCondition::CalculateIntegrationWeight(doubl
 
     if ( dimension == 2 ){
       ElementType& MasterElement = mContactVariables.GetMasterElement();
-      rIntegrationWeight *= MasterElement.GetProperties()[THICKNESS];
+      if( MasterElement.GetProperties().Has(THICKNESS) )
+        rIntegrationWeight *= MasterElement.GetProperties()[THICKNESS];
     }
 
     return rIntegrationWeight;
@@ -355,8 +356,8 @@ double& ThermalContactDomainPenalty2DCondition::CalculateIntegrationWeight(doubl
 
 void ThermalContactDomainPenalty2DCondition::CalculateThermalConductionForce (double &F, GeneralVariables& rVariables, unsigned int& ndi)
 {
-	F = mContactVariables.StabilizationFactor * rVariables.ThermalGap * rVariables.ProjectionsVector[ndi];
-	//std::cout<<" Thermal Conduction Force [stab: "<<mContactVariables.StabilizationFactor<<" therma_gap: "<<rVariables.ThermalGap<<" F "<<F<<"]"<<std::endl;
+  F = mContactVariables.StabilizationFactor * rVariables.ThermalGap * rVariables.ProjectionsVector[ndi];
+  //std::cout<<" Thermal Conduction Force [stab: "<<mContactVariables.StabilizationFactor<<" thermal_gap: "<<rVariables.ThermalGap<<" F "<<F<<"]"<<std::endl;
 
 }
 

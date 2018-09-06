@@ -40,13 +40,24 @@ class CompositeSolver(BaseSolver.SegregatedSolver):
 
     def Solve(self):
 
+        # initialize solution step for all solvers
         for solver in self.solvers:
             solver.InitializeSolutionStep()
-            solver.SolveSolutionStep()
 
-        #allows to apply implex and other coupled updates
+        # solver solution step for all solvers
+        is_converged = True
         for solver in self.solvers:
-            solver.FinalizeSolutionStep()
+            if not solver.SolveSolutionStep():
+                is_converged = False
+                break
+
+        if is_converged is True:
+            # finalize solution step for all solvers
+            # allows to apply implex and other coupled updates
+            for solver in self.solvers:
+                solver.FinalizeSolutionStep()
+
+        return is_converged
 
     # step by step:
 
@@ -54,12 +65,14 @@ class CompositeSolver(BaseSolver.SegregatedSolver):
         self.solvers[self.solver_counter].InitializeSolutionStep()
 
     def SolveSolutionStep(self):
-        self.solvers[self.solver_counter].SolveSolutionStep()
+        is_converged  = self.solvers[self.solver_counter].SolveSolutionStep()
 
         if(self.solver_counter == len(self.solvers)):
             self.solver_counter = 0
         else:
             self.solver_counter += 1
+
+        return is_converged
 
     def FinalizeSolutionStep(self):
         self.solvers[self.solver_counter].FinalizeSolutionStep()

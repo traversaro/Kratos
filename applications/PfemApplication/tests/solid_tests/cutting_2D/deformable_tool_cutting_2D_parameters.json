@@ -5,15 +5,19 @@
     "problem_data"             : {
         "domain_type" : "Solid",
         "echo_level"  : 1,
-        "threads"     : 8
+        "threads"     : 4
     },
     "time_settings" : {
-        "time_step" : 5.0e-8,
+        "time_step" : 2.5e-8,
         "end_time"  : 1.0e-4
     },
     "model_settings" : {
 	"model_name" : "Main_Domain",
         "dimension" : 2,
+        "input_file_settings": {
+            "type" : "mdpa",
+            "label": 0
+        },
 	"bodies_list":[{
 	    "body_type": "Solid",
 	    "body_name": "Solid_Piece",
@@ -60,6 +64,7 @@
 		    },
 		    "solving_strategy_settings" : {
 			"line_search"            : true,
+			"line_search_type"       : 0,
 			"implex"                 : false,
 			"compute_reactions"      : true,
 			"reform_dofs_at_each_step" : true,
@@ -71,15 +76,10 @@
 			"residual_absolute_tolerance" : 1e-9
 		    },
 		    "linear_solver_settings"    : {
-                        "solver_type" : "AMGCL",
-	                "krylov_type": "lgmres",
-	                "smoother_type": "ilu0",
-	                "coarsening_type": "ruge_stuben",
-                        "tolerance"   : 1e-7,
-	                "max_iteration" : 5000,
-	                "gmres_krylov_space_dimension":100,
-	                "verbosity"    : 0,
-                        "scaling"     : true
+                        "solver_type" : "SuperLUSolver",
+			"tolerance"   : 1e-7,
+			"max_iteration" : 7000,
+			"scaling"     : true
 		    },
 		    "dofs" : ["DISPLACEMENT","PRESSURE"],
 		    "solving_model_part": "computing_domain"
@@ -115,7 +115,7 @@
 		}
 	    }],
 	    "processes"   : []
-	}        
+	}
     },
     "problem_process_list" : [{
         "help"            : "This process applies meshing to the problem domains",
@@ -182,52 +182,27 @@
                         "on_distance": false,
                         "on_threshold": true,
                         "on_error": false
-                    },              
+                    },
                     "refining_box":{
                         "refine_in_box_only": false,
                         "upper_point": [0,0,0],
                         "lower_point": [0,0,0],
                         "velocity": [0,0,0]
                     }
-                },            
-                "elemental_variables_to_transfer":[ "CAUCHY_STRESS_VECTOR", "DEFORMATION_GRADIENT" ]
-            },{
-                "python_module": "meshing_domain",
-                "model_part_name": "Solid_Tool",
-                "alpha_shape": 2.4,
-                "offset_factor": 1e-6,
-                "meshing_strategy":{
-                    "python_module": "meshing_strategy",
-                    "meshing_frequency": 10,
-                    "remesh": false,
-                    "refine": false,
-                    "reconnect": false,
-                    "transfer": false,
-                    "constrained": true,
-                    "mesh_smoothing": false,
-                    "variables_smoothing": false,
-                    "elemental_variables_to_smooth":[ "DETERMINANT_F" ],
-                    "reference_element_type": "Element2D3N",
-                    "reference_condition_type": "CompositeCondition2D2N"
                 },
-                "spatial_bounding_box":{
-                    "upper_point": [0.0, 0.0, 0.0],
-                    "lower_point": [0.0, 0.0, 0.0],
-                    "velocity": [0.0, 0.0, 0.0]
-                },           
                 "elemental_variables_to_transfer":[ "CAUCHY_STRESS_VECTOR", "DEFORMATION_GRADIENT" ]
             }
          ]
         }
     },{
-        "help"             : "This process applies contact domain search by remeshing outer boundaries",    
-        "kratos_module"    : "KratosMultiphysics.ContactMechanicsApplication",   
+        "help"             : "This process applies contact domain search by remeshing outer boundaries",
+        "kratos_module"    : "KratosMultiphysics.ContactMechanicsApplication",
         "python_module"    : "contact_domain_process",
         "process_name"     : "ContactDomainProcess",
         "Parameters"       : {
             "model_part_name"       : "Main_Domain",
             "meshing_control_type"  : "step",
-            "meshing_frequency"     : 1,
+            "meshing_frequency"     : 2,
             "meshing_before_output" : true,
             "meshing_domains" : [{
                 "python_module": "contact_domain",
@@ -241,7 +216,7 @@
                     "constrained": true,
                     "contact_parameters":{
                         "contact_condition_type": "ContactDomainLMCondition2D3N",
-                        "kratos_module": "KratosMultiphysics.ContactMechanicsApplication",                            
+                        "kratos_module": "KratosMultiphysics.ContactMechanicsApplication",
                         "friction_law_type": "HardeningCoulombFrictionLaw",
                         "variables_of_properties":{
                             "FRICTION_ACTIVE": false,
@@ -298,7 +273,7 @@
         }
     }
     ],
-    "loads_process_list"       : [{       
+    "loads_process_list"       : [{
         "kratos_module"   : "KratosMultiphysics.SolidMechanicsApplication",
         "python_module"   : "assign_modulus_and_direction_to_nodes_process",
         "Parameters"      : {
@@ -310,18 +285,17 @@
         }
     }
     ],
-    "_output_process_list" : [{
-        "help"            : "This process writes restart files",    
-        "kratos_module"   : "KratosMultiphysics.SolidMechanicsApplication",    
+    "output_process_list" : [{
+        "kratos_module"   : "KratosMultiphysics.SolidMechanicsApplication",
         "python_module"   : "restart_process",
         "process_name"    : "RestartProcess",
         "Parameters"      : {
             "model_part_name"     : "Main_Domain",
-            "save_restart"        : false,
-            "restart_file_name"   : "machining_2d_lct",
+            "save_restart"        : true,
+            "restart_file_name"   : "deformable_tool_cutting_2D",
             "restart_file_label"  : "step",
             "output_control_type" : "time",
-            "output_frequency"    : 0,
+            "output_frequency"    : 1.0e-7,
             "json_output"         : false
         }
     }],
@@ -341,8 +315,8 @@
             "skin_output"         : false,
             "plane_output"        : [],
             "nodal_results"       : ["DISPLACEMENT_REACTION","NORMAL","CONTACT_FORCE","PRESSURE","TEMPERATURE","DISPLACEMENT"],
-            "nodal_flags_results" : ["BOUNDARY","ISOLATED","CONTACT"],
-            "gauss_point_results" : ["CAUCHY_STRESS_TENSOR","GREEN_LAGRANGE_STRAIN_TENSOR","VON_MISES_STRESS","PLASTIC_STRAIN","PLASTIC_DISSIPATION"],
+            "nodal_flags_results" : [],
+            "gauss_point_results" : ["CAUCHY_STRESS_TENSOR","GREEN_LAGRANGE_STRAIN_TENSOR","VON_MISES_STRESS","PLASTIC_STRAIN","PLASTIC_DISSIPATION","DELTA_PLASTIC_STRAIN","DELTA_PLASTIC_DISSIPATION"],
             "additional_list_files": [2,5,10,20]
         },
         "point_data_configuration"  : []

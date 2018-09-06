@@ -40,12 +40,17 @@ class ContactDomainProcess(remesh_domains_process.RemeshDomainsProcess):
 
         # execute initialize base class
         if( self.main_model_part.ProcessInfo[KratosDelaunay.INITIALIZED_DOMAINS] == False ):
+            # self.main_model_part.ProcessInfo[KratosDelaunay.INITIALIZED_DOMAINS] == False
             self.InitializeDomains()
+            print(" initialize domains ")
 
         # initialize contact domains
         for domain in self.meshing_domains:
             domain.SetEchoLevel(self.echo_level)
             domain.Initialize()
+
+        if self.restart:
+            self.RemeshDomains()
 
         print(self._class_prefix()+" Ready")
 
@@ -88,7 +93,8 @@ class ContactDomainProcess(remesh_domains_process.RemeshDomainsProcess):
         return KratosContact.ContactModelStructure(self.main_model_part, meshing_options, self.echo_level)
     #
     def SetMeshingStepTime(self):
-        pass
+        current_time = self.main_model_part.ProcessInfo[KratosMultiphysics.TIME]
+        self.main_model_part.ProcessInfo.SetValue(KratosContact.CONTACT_STEP_TIME, current_time)
     #
     def GetVariables(self):
 

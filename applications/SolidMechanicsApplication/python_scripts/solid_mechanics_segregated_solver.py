@@ -65,13 +65,6 @@ class SegregatedSolver(BaseSolver.MonolithicSolver):
 
         self.SetEchoLevel(self.echo_level)
 
-    def GetMinimumBufferSize(self):
-        buffer_size = 2
-        for solver in self.solvers:
-            size = solver.GetMinimumBufferSize()
-            if( size > buffer_size ):
-                buffer_size = size
-        return buffer_size;
 
     def GetVariables(self):
         nodal_variables = []
@@ -87,24 +80,22 @@ class SegregatedSolver(BaseSolver.MonolithicSolver):
     def Clear(self):
         for solver in self.solvers:
             solver.Clear()
-
+               
     #### Solver internal methods ####
 
     def _check_initialized(self):
         if( not self._is_not_restarted() ):
             for solver in self.solvers:
-                solver._get_solution_scheme().Initialize(self.main_model_part)
                 if hasattr(mechanical_solver, 'SetInitializePerformedFlag'):
                     solver._get_mechanical_solver().SetInitializePerformedFlag(True)
                 else:
                     solver._get_mechanical_solver().Set(KratosSolid.SolverLocalFlags.INITIALIZED, True)
 
             if hasattr(mechanical_solver, 'SetInitializePerformedFlag'):
-                self._get_mechanical_solver.SetInitializePerformedFlag(True)
+                self._get_mechanical_solver().SetInitializePerformedFlag(True)
             else:
-                self._get_mechanical_solver.Set(KratosSolid.SolverLocalFlags.INITIALIZED, True)
+                self._get_mechanical_solver().Set(KratosSolid.SolverLocalFlags.INITIALIZED, True)
 
-    #
     def _create_mechanical_solver(self):
         strategies = []
         for solver in self.solvers:
@@ -143,3 +134,12 @@ class SegregatedSolver(BaseSolver.MonolithicSolver):
             component_integration_methods.update(solver_component_integration_methods)
 
         return scalar_integration_methods, component_integration_methods
+
+    #
+    def _get_minimum_buffer_size(self):
+        buffer_size = 2
+        for solver in self.solvers:
+            size = solver._get_minimum_buffer_size()
+            if( size > buffer_size ):
+                buffer_size = size
+        return buffer_size;
