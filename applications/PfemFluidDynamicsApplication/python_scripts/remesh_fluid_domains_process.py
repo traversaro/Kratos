@@ -277,8 +277,6 @@ class RemeshFluidDomainsProcess(KratosMultiphysics.Process):
 
     def NodalChecksAndAssignations(self):
 
-        print("NODAL CHECKS AND ASSIGNATIONS ....")
-
         numFluid=0
         numRigid=0
         numRigidFluid=0
@@ -325,8 +323,6 @@ class RemeshFluidDomainsProcess(KratosMultiphysics.Process):
             print("numIsolated ",numIsolated)
             print("numFreeSurface ",numFreeSurface)
             print("numBlocked ",numBlocked)
-
-        print(".... DONE!")
 
 
     #

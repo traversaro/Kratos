@@ -98,8 +98,6 @@ public:
   {
     KRATOS_TRY
 
-      boost::timer process_time;
-
       if( mEchoLevel > 1 )
 	std::cout<<" [ GENERATE NEW NODES for homomgeneous mesh: "<<std::endl;
 
@@ -177,8 +175,6 @@ public:
 
     if( mEchoLevel > 1 )
       std::cout<<"   GENERATE NEW NODES ]; "<<std::endl;
-
-    std::cout << "GENERATE NEW NODES time : " << process_time.elapsed() << std::endl;
 
     KRATOS_CATCH(" ")
       }

@@ -78,8 +78,6 @@ namespace Kratos
     {
      KRATOS_TRY;
 
-     boost::timer process_time;
-
       const int nel = mrGuestModelPart.Elements().size();
 	
       if(nel != 0)
@@ -95,8 +93,6 @@ namespace Kratos
             }
         }
  
-      std::cout << "TRANFER time : " << process_time.elapsed() << std::endl;
-
       KRATOS_CATCH("");
 
     }

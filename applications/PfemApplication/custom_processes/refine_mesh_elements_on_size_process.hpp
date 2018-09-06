@@ -96,8 +96,6 @@ public:
     {
       KRATOS_TRY
 
-	boost::timer process_time;
-
       if( mEchoLevel > 0 ){
 	std::cout<<" [ SELECT ELEMENTS TO REFINE : "<<std::endl;
 	//std::cout<<"   refine selection "<<std::endl;
@@ -434,8 +432,6 @@ public:
 	std::cout<<"   Visited Elements: "<<id<<" [threshold:"<<refine_on_threshold<<"/size:"<<refine_on_size<<"]"<<std::endl;
 	std::cout<<"   SELECT ELEMENTS TO REFINE ]; "<<std::endl;
       }
-
-        std::cout << "REFINE MESH ELEMENTS ON SIZE time : " << process_time.elapsed() << std::endl;
   
       KRATOS_CATCH(" ")
     }

@@ -111,8 +111,6 @@ namespace Kratos
       KRATOS_TRY
 	std::cout<<" Execute() in AdaptiveTimeIntervalProcess"<<std::endl;
 
-      boost::timer process_time;
-
       ProcessInfo& rCurrentProcessInfo = mrModelPart.GetProcessInfo();
 
       const double initialTimeInterval = rCurrentProcessInfo[INITIAL_DELTA_TIME];	
@@ -209,8 +207,6 @@ namespace Kratos
       if (newTimeInterval<initialTimeInterval){
 	std::cout<<"current time "<<updatedTime<<" time step: new  "<<newTimeInterval<<" previous "<<currentTimeInterval<<" initial  "<<initialTimeInterval<<"\n"<<std::endl;
       }
-
-      std::cout << " ADAPTIVE TIME INTERVATLtime : " << process_time.elapsed() << std::endl;
 
       KRATOS_CATCH("");
 
