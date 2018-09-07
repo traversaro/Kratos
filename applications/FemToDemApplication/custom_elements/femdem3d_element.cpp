@@ -11,7 +11,7 @@
 //
 
 #include "includes/define.h"
-#include <string>
+// #include <string>
 #include "includes/constitutive_law.h"
 #include "custom_constitutive/zarate_law.hpp"
 #include "femdem3d_element.hpp"
@@ -230,11 +230,6 @@ void FemDem3DElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 	damage_element = this->GetNonConvergedDamage();
 	this->SetConvergedDamage(damage_element);
 
-	// if (damage_element > 0.0)
-	// {
-	// 	this->SetValue(IS_DAMAGED, 1);
-	// }
-
 	if (damage_element >= 0.98)
 	{
 		this->Set(ACTIVE, false);
@@ -438,10 +433,7 @@ void FemDem3DElement::CalculateLocalSystem(
 		} // End loop over edges
 
 		double damage_element = this->CalculateElementalDamage(DamagesOnEdges);
-		if (damage_element >= 0.999)
-		{
-			damage_element = 0.999;
-		}
+		if (damage_element >= 0.999) {damage_element = 0.999;}
 		this->SetNonConvergedDamages(damage_element);
 
 		const Vector &StressVector = this->GetValue(STRESS_VECTOR);

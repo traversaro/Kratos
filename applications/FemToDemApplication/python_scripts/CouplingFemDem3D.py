@@ -38,6 +38,10 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 		self.nodal_neighbour_finder = KratosMultiphysics.FindNodalNeighboursProcess(self.FEM_Solution.main_model_part, 4, 5)
 		self.nodal_neighbour_finder.Execute()
 
+		if self.DoRemeshing:
+			self.InitializeMMGvariables()
+			self.RemeshingProcessMMG.ExecuteInitialize()
+
 #============================================================================================================================
 	def SolveSolutionStep(self):
 		
@@ -53,23 +57,6 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 		self.CheckForPossibleIndentations()
 		self.CheckInactiveNodes()
 		self.UpdateDEMVariables()     # We update coordinates, displ and velocities of the DEM according to FEM
-
-
-		# TESTING***********************************************************
-
-		
-		#self.FEM_Solution.main_model_part.AddNodalSolutionStepVariable(KratosFemDem.NODAL_STRESS_VECTOR)
-		#KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 3).Execute()
-
-		#print(self.FEM_Solution.main_model_part.GetNode(25).GetSolutionStepValue(KratosFemDem.NODAL_STRESS_VECTOR))
-		#print(self.FEM_Solution.main_model_part.GetNode(25).GetSolutionStepValue(KratosFemDem.EQUIVALENT_NODAL_STRESS))
-		#print(self.FEM_Solution.main_model_part.GetNode(25).GetSolutionStepValue(KratosMultiphysics.NODAL_AREA))
-		#Wait()
-
-
-
-		# TESTING ***********************************************************
-
 
 		self.DEM_Solution.InitializeTimeStep()
 
@@ -114,14 +101,14 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 		# Print required info
 		self.PrintPlotsFiles()
 
-		# Provisional Eliminar TODO
-		PlotFile = open("ProvisionalTensionDEFacero.txt","a")
-		time = self.FEM_Solution.time
-		Szz = self.FEM_Solution.main_model_part.GetElement(1).GetValue(KratosFemDem.EQUIVALENT_STRESS_VM) #6497
-		Ezz = self.FEM_Solution.main_model_part.GetElement(1).GetValue(KratosFemDem.STRAIN_VECTOR)[2] #0
+		# # Provisional Eliminar TODO
+		# PlotFile = open("ProvisionalTensionDEFacero.txt","a")
+		# time = self.FEM_Solution.time
+		# Szz = self.FEM_Solution.main_model_part.GetElement(1).GetValue(KratosFemDem.EQUIVALENT_STRESS_VM) #6497
+		# Ezz = self.FEM_Solution.main_model_part.GetElement(1).GetValue(KratosFemDem.STRAIN_VECTOR)[2] #0
 
 		# PlotFile.write("{0:.4e}".format(time).rjust(11) +"    " + "{0:.4e}".format(Ezz).rjust(11) + "    " + "{0:.4e}".format(Szz).rjust(11) + "\n")
-		PlotFile.write("{0:.4e}".format(Ezz).rjust(11) + "    " + "{0:.4e}".format(Szz).rjust(11) + "\n")
+		# PlotFile.write("{0:.4e}".format(Ezz).rjust(11) + "    " + "{0:.4e}".format(Szz).rjust(11) + "\n")
 		# Provisional Eliminar TODO
 
 #============================================================================================================================
@@ -152,9 +139,6 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 				dist12  = self.CalculateDistanceBetweenNodes(Element.GetNodes()[1], Element.GetNodes()[2])
 				dist13  = self.CalculateDistanceBetweenNodes(Element.GetNodes()[1], Element.GetNodes()[3])
 				dist23  = self.CalculateDistanceBetweenNodes(Element.GetNodes()[2], Element.GetNodes()[3])
-
-				#print("Elemento: ",Element.Id ," tiene ", NumberOfDEM, " DEMs")
-				#Wait()
 
 				# --------------------- 1ST SCENARIO -----------------------------
 				if NumberOfDEM == 0: # we must create 4 DEM
@@ -194,7 +178,7 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 
 					# DEM generated for this Element
 					Element.SetValue(KratosFemDem.DEM_GENERATED, True)
-
+					Element.Set(KratosMultiphysics.TO_ERASE, True)
 				# --------------------- 2ND SCENARIO -----------------------------
 				elif NumberOfDEM == 3: # we must create 1 DEM
 
@@ -245,6 +229,7 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 
 					# DEM generated for this Element
 					Element.SetValue(KratosFemDem.DEM_GENERATED, True)
+					Element.Set(KratosMultiphysics.TO_ERASE, True)
 
 				# --------------------- 3RD SCENARIO -----------------------------
 				elif NumberOfDEM == 1: # we must create 3 DEM
@@ -371,6 +356,7 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 
 					# DEM generated for this Element
 					Element.SetValue(KratosFemDem.DEM_GENERATED, True)	
+					Element.Set(KratosMultiphysics.TO_ERASE, True)
 
 				# --------------------- 4RD SCENARIO -----------------------------
 				elif NumberOfDEM == 2: # we must create 2 DEM
@@ -525,6 +511,7 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 
 					# DEM generated for this Element
 					Element.SetValue(KratosFemDem.DEM_GENERATED, True)
+					Element.Set(KratosMultiphysics.TO_ERASE, True)
 
 				# --------------------- 5RD SCENARIO -----------------------------
 				elif NumberOfDEM == 4: # we avoid posible indentations
@@ -601,7 +588,12 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 
 					# DEM generated for this Element
 					Element.SetValue(KratosFemDem.DEM_GENERATED, True)
+					Element.Set(KratosMultiphysics.TO_ERASE, True)
 
+				else:
+					raise Exception("Error in generating the dem...")
+
+		self.FEM_Solution.main_model_part.GetRootModelPart().RemoveElementsFromAllLevels(KratosMultiphysics.TO_ERASE)
 
 
 #============================================================================================================================
@@ -735,6 +727,9 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 
 						# DEM generated for this Element -> 4 DEM
 						Element.SetValue(KratosFemDem.DEM_GENERATED, True)
+						Element.Set(KratosMultiphysics.TO_ERASE, True)
+
+		self.FEM_Solution.main_model_part.GetRootModelPart().RemoveElementsFromAllLevels(KratosMultiphysics.TO_ERASE)
 
 
 #============================================================================================================================
@@ -770,15 +765,16 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 				#print("nodo inactivo: ", Id)
 				DEMnode = self.SpheresModelPart.GetNode(Id)
 				node.SetValue(KratosFemDem.INACTIVE_NODE, True)
+				node.Set(KratosMultiphysics.TO_ERASE, True) # added
 				DEMnode.SetValue(KratosFemDem.INACTIVE_NODE, True)
 				DEMnode.Set(KratosMultiphysics.TO_ERASE, True)
 
 			# Reset the value to the next step
 			node.SetValue(KratosFemDem.NUMBER_OF_ACTIVE_ELEMENTS, 0)
 
-			# Remove inactive nodes
-			self.SpheresModelPart.RemoveElementsFromAllLevels(KratosMultiphysics.TO_ERASE)
-
+		# Remove inactive nodes
+		self.SpheresModelPart.RemoveElementsFromAllLevels(KratosMultiphysics.TO_ERASE)
+		self.FEM_Solution.main_model_part.GetRootModelPart().RemoveNodesFromAllLevels(KratosMultiphysics.TO_ERASE) # added
 
 #============================================================================================================================
 	def UpdateDEMVariables(self):

@@ -25,6 +25,7 @@ proc WriteProjectParameters { basename dir problemtypedir TableDict} {
     puts $FileVar "        \"time_step\":            [GiD_AccessValue get gendata Delta_Time],"
 	puts $FileVar "        \"echo_level\":           0"
     puts $FileVar "    \},"
+    
     ## solver_settings
     puts $FileVar "   \"solver_settings\": \{"
     if {[GiD_AccessValue get gendata Solution_Type] eq "Static"} {

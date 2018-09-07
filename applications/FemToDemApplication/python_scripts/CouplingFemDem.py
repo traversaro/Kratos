@@ -85,14 +85,6 @@ class FEMDEM_Solution:
 #============================================================================================================================
     def InitializeSolutionStep(self):
 
-        # for node in self.FEM_Solution.main_model_part.Nodes:
-        #     if node.IsFixed(KratosMultiphysics.DISPLACEMENT_Y):
-        #         print(node.Id)
-
-        # Wait()
-
-
-
         # modified for the remeshing
         self.FEM_Solution.delta_time = self.FEM_Solution.main_model_part.ProcessInfo[KratosMultiphysics.DELTA_TIME]
         self.FEM_Solution.time = self.FEM_Solution.time + self.FEM_Solution.delta_time
@@ -843,23 +835,13 @@ class FEMDEM_Solution:
         KratosFemDem.DemAfterRemeshIdentificatorProcess(self.FEM_Solution.main_model_part).Execute()
 
         # Loop over the elements of the Submodelpart to create the DEM
-        # aux = 0
         for node in self.FEM_Solution.main_model_part.GetSubModelPart("DemAfterRemeshingNodes").Nodes:
             
             Id = node.Id
-            # print(Id)
-            # aux += 1
-
             R = node.GetValue(KratosFemDem.DEM_RADIUS)
             Coordinates = self.GetNodeCoordinates(node)
             self.ParticleCreatorDestructor.FEMDEM_CreateSphericParticle(Coordinates, R, Id)
             node.SetValue(KratosFemDem.IS_DEM, True)
-
-        # self.DEM_Solution.PrintResultsForGid(self.DEM_Solution.time)
-        # self.FEM_Solution.GraphicalOutputPrintOutput()
-
-        # if aux > 0:
-        #     Wait()
 
 #============================================================================================================================
     def CheckIfHasRemeshed(self):

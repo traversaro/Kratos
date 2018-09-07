@@ -70,13 +70,13 @@ class DamageToNodesProcess : public Process
 
         NodeStresses *NodeStressesVector = new NodeStresses[max_id];
 
-        this->StressExtrapolationAndSmoothing(NodeStressesVector);
+        this->DamageExtrapolationAndSmoothing(NodeStressesVector);
 
         delete[] NodeStressesVector;
     }
 
     // --------------------------------------------------------------------
-    void StressExtrapolationAndSmoothing(NodeStresses *pNodeStressesVector)
+    void DamageExtrapolationAndSmoothing(NodeStresses *pNodeStressesVector)
     {
         double damage;
         // Loop over elements to extrapolate the stress to the nodes
@@ -92,7 +92,6 @@ class DamageToNodesProcess : public Process
             {
                 if ((*it)->GetGeometry().PointsNumber() == 3)
                 {
-                    //GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR);
                     damage = (*it)->GetValue(DAMAGE_ELEMENT);
 
                     for (int i = 0; i < 3; i++)
@@ -103,7 +102,6 @@ class DamageToNodesProcess : public Process
                 }
                 else
                 {
-                    //GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR);
                     damage = (*it)->GetValue(DAMAGE_ELEMENT);
 
                     for (int i = 0; i < 4; i++)
