@@ -43,12 +43,6 @@ proc AfterReadGIDProject { filename } {
 #-------------------------------------------------------------------------------
 
 proc BeforeRunCalculation { batfilename basename dir problemtypedir gidexe args } {  
-    
-    #set fp [open "D:/FemDem/applications/FemToDemApplication/custom_problemtype/FemDemKratos.gid/pepe.txt" w]
-    #puts $fp "prueba2"
-    #close $fp
-    # Set Parallel Configuration
-    set paralleltype [GiD_AccessValue get gendata Parallel_Configuration]
 
 #---------------------------------------------------------------
     # Write MDPA
@@ -65,8 +59,10 @@ proc BeforeRunCalculation { batfilename basename dir problemtypedir gidexe args 
     WriteMaterials $basename $dir $problemtypedir $TableDict
 #---------------------------------------------------------------
 
-    # Copy python scripts in the problemdir
-
+    # If MMG remeshing is activated, we copy the .json parameters
+    if {[GiD_AccessValue get gendata Activate_MMG_Remeshing_Technique] eq "true"} {
+        file copy -force [file join $problemtypedir MMGParameters.json] [file join $dir MMGParameters.json]
+    }
 #---------------------------------------------------------------
     
     # For Coupled calculations with DEM elements

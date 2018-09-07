@@ -56,7 +56,7 @@ class DemAfterRemeshIdentificatorProcess : public Process
         for (ModelPart::NodeIterator it = (*p_skin_model_part).NodesBegin(); it != (*p_skin_model_part).NodesEnd(); ++it)
         {
             const double &nodal_damage = it->GetSolutionStepValue(NODAL_DAMAGE);
-            if (nodal_damage > 0.94)
+            if (nodal_damage > 0.95)
             {
                 p_auxiliar_model_part->AddNode(*(it.base()));
             }

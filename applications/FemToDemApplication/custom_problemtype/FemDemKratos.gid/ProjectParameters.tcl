@@ -10,18 +10,11 @@ proc WriteProjectParameters { basename dir problemtypedir TableDict} {
     
     puts $FileVar "\{"
 
-   
     ## AMR data
     puts $FileVar "   \"AMR_data\": \{"
-	puts $FileVar "        \"activate_AMR\":                    [GiD_AccessValue get gendata Activate_AMR]"
-    #puts $FileVar "        \"activate_AMR\":                    [GiD_AccessValue get gendata Activate_AMR],"
-    #puts $FileVar "        \"plane_state\":                    \"[GiD_AccessValue get gendata Plane_state]\","
-    #puts $FileVar "        \"mesh_optimality_criteria\":       \"[GiD_AccessValue get gendata Mesh_Optimality_Criteria]\","
-    #puts $FileVar "        \"permissible_error\":               [GiD_AccessValue get gendata Permissible_Error],"
-    #puts $FileVar "        \"refinement_frequency\":            [GiD_AccessValue get gendata Refinement_Frequency],"
-	#puts $FileVar "        \"Mapping_Procedure\":              \"[GiD_AccessValue get gendata Mapping_Procedure]\","
-    #puts $FileVar "        \"gid_path\":                       \"[GiD_AccessValue get gendata gid_path]\""
+	puts $FileVar "        \"activate_AMR\":                    [GiD_AccessValue get gendata Activate_MMG_Remeshing_Technique]"
     puts $FileVar "    \},"
+    
     ## problem_data
     puts $FileVar "   \"problem_data\": \{"
     puts $FileVar "        \"problem_name\":         \"$basename\","
@@ -30,7 +23,7 @@ proc WriteProjectParameters { basename dir problemtypedir TableDict} {
     puts $FileVar "        \"start_time\":           [GiD_AccessValue get gendata Start_Time],"
     puts $FileVar "        \"end_time\":             [GiD_AccessValue get gendata End_Time],"
     puts $FileVar "        \"time_step\":            [GiD_AccessValue get gendata Delta_Time],"
-	puts $FileVar "        \"echo_level\":           [GiD_AccessValue get gendata Echo_Level]"
+	puts $FileVar "        \"echo_level\":           0"
     puts $FileVar "    \},"
     ## solver_settings
     puts $FileVar "   \"solver_settings\": \{"
@@ -44,7 +37,7 @@ proc WriteProjectParameters { basename dir problemtypedir TableDict} {
         puts $FileVar "            \"time_integration_method\":           \"Implicit\","
         puts $FileVar "            \"scheme_type\":                       \"Newmark\","
     }
-	puts $FileVar "            \"echo_level\":                         [GiD_AccessValue get gendata Echo_Level],"
+	puts $FileVar "            \"echo_level\":                         0,"
     puts $FileVar "            \"model_import_settings\":              \{"
     puts $FileVar "                 \"input_type\":         \"mdpa\","
     puts $FileVar "                 \"input_filename\":     \"$basename\","
@@ -185,11 +178,9 @@ proc WriteProjectParameters { basename dir problemtypedir TableDict} {
     set PutStrings \[
     set iGroup 0
     AppendOutputVariables PutStrings iGroup Write_Strain STRAIN_VECTOR
-    #AppendOutputVariables PutStrings iGroup Write_Predictive_Stress CAUCHY_STRESS_TENSOR
     AppendOutputVariables PutStrings iGroup Write_Predictive_Stress STRESS_VECTOR
     AppendOutputVariables PutStrings iGroup Write_Integrated_Stress STRESS_VECTOR_INTEGRATED
     AppendOutputVariables PutStrings iGroup Write_Damage DAMAGE_ELEMENT
-    AppendOutputVariables PutStrings iGroup Write_Is_Damaged IS_DAMAGED
     AppendOutputVariables PutStrings iGroup Stress_Threshold STRESS_THRESHOLD
 
     if {$iGroup > 0} {
