@@ -10,7 +10,7 @@
         "echo_level"      : 0
     },
     "solver_settings"          : {
-        "solver_type"                        : "static",
+        "solver_type"                        : "primal_static",
         "echo_level"                         : 0,
         "analysis_type"                      : "linear",
         "model_import_settings"              : {
@@ -24,6 +24,7 @@
 		"line_search"                        : false,
         "compute_reactions"					 : true,
         "convergence_criterion"              : "Residual_criterion",
+        "multi_point_constraints_used"       : false,
         "displacement_relative_tolerance"    : 1e-12,
         "displacement_absolute_tolerance"    : 1e-12,
         "residual_relative_tolerance"        : 1e-12,
@@ -66,24 +67,7 @@
         }
     }
     ],
-    "list_other_processes" :[{
-        "kratos_module" : "KratosMultiphysics.HDF5Application",
-        "python_module" : "single_mesh_primal_output_process",
-        "help"          : "",
-        "process_name"  : "",
-        "Parameters" : {
-            "model_part_name" : "Structure",
-            "file_settings" : {
-                "file_access_mode" : "truncate"
-            },
-            "model_part_output_settings" : {
-                "prefix" : "/ModelData"
-            },
-            "nodal_solution_step_data_settings" : {
-                "list_of_variables": ["DISPLACEMENT", "ROTATION"]
-            }
-        }
-    }],
+    "list_other_processes" :[],
     "loads_process_list"       : [{
         "python_module"   : "process_factory",
         "kratos_module" : "KratosMultiphysics",
