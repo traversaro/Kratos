@@ -19,6 +19,11 @@ if(NOT DEFINED ${INCLUDE_TETGEN})
   set(TETGEN_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_modules/tetgen/)
 endif(NOT DEFINED ${INCLUDE_TETGEN})
 
+if(NOT DEFINED ${INCLUDE_QHULL})
+  set(INCLUDE_QHULL ON)
+  set(QHULL_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_libraries/qhull/)
+endif(NOT DEFINED ${INCLUDE_QHULL})
+
 if(${INCLUDE_TRIANGLE} MATCHES ON)
   add_definitions( -DINCLUDE_TRIANGLE )
   add_definitions( -DTRILIBRARY )
@@ -57,6 +62,59 @@ if(${INCLUDE_TETGEN} MATCHES ON)
   add_library( external_tetgen STATIC ${TETGEN_SOURCES} ${UNOPTIMIZED_PREDICATES} )
   #install (FILES ${TETGEN_INSTALL_DIR}/tetgen.h DESTINATION libs)
 endif(${INCLUDE_TETGEN} MATCHES ON)
+
+if(${INCLUDE_QHULL} MATCHES ON)
+  add_definitions( -DINCLUDE_QHULL )
+  include_directories( ${QHULL_INSTALL_DIR}/include ${QHULL_INSTALL_DIR}/lib ${QHULL_INSTALL_DIR}/bin ${QHULL_INSTALL_DIR}/src )
+  #perform platform specific defintions
+  if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    set(MAN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/share/man/man1)
+  endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+  set( QHULL_SOURCES
+    ${QHULL_INSTALL_DIR}/src/libqhull/global.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/stat.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/geom2.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/poly2.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/merge.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/libqhull.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/geom.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/poly.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/qset.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/mem.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/random.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/usermem.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/userprintf.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/io.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/user.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/rboxlib.c
+    ${QHULL_INSTALL_DIR}/src/libqhull/userprintf_rbox.c
+    )
+  set( QHULL_CPP_SOURCES
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/Coordinates.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/PointCoordinates.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/Qhull.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/QhullFacet.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/QhullFacetList.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/QhullFacetSet.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/QhullHyperplane.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/QhullPoint.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/QhullPointSet.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/QhullPoints.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/QhullQh.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/QhullRidge.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/QhullSet.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/QhullStat.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/QhullVertex.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/QhullVertexSet.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/RboxPoints.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/RoadError.cpp
+       ${QHULL_INSTALL_DIR}/src/libqhullcpp/RoadLogEvent.cpp
+       )
+  set( QHULL_DELAUNAY
+       ${QHULL_INSTALL_DIR}/src/qdelaunay/qdelaun.c
+    )
+  add_library( external_qhull STATIC ${QHULL_SOURCES} ${QHULL_CPP_SOURCES} ${QHULL_DELAUNAY})
+endif(${INCLUDE_QHULL} MATCHES ON)
 
 #if(${INCLUDE_TETGEN} MATCHES ON)
 #  add_definitions( -DINCLUDE_TETGEN )
@@ -121,9 +179,13 @@ else(${MSVC})
 endif(${MSVC})
 
 ## define the linkage of libraries
-if( ${INCLUDE_TRIANGLE} MATCHES ON AND ${INCLUDE_TETGEN} MATCHES ON )
-    set(LIBS external_triangle external_tetgen ${MATLIB})
+if(${INCLUDE_TRIANGLE} MATCHES ON AND ${INCLUDE_TETGEN} MATCHES ON AND ${INCLUDE_QHULL} MATCHES ON)
+    set(LIBS external_triangle external_tetgen external_qhull ${MATLIB})
     #set(LIBS external_triangle libextet.a ${MATLIB})
+elseif(${INCLUDE_TETGEN} MATCHES ON AND ${INCLUDE_QHULL} MATCHES ON)
+    set(LIBS external_tetgen external_qhull ${MATLIB})
+elseif(${INCLUDE_QHULL} MATCHES ON)
+    set(LIBS external_qhull ${MATLIB})
 elseif(${INCLUDE_TRIANGLE} MATCHES ON)
     set(LIBS external_triangle ${MATLIB})
 elseif(${INCLUDE_TETGEN} MATCHES ON)
