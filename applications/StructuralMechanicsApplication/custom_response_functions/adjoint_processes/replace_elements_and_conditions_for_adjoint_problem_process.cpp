@@ -199,7 +199,11 @@ namespace Kratos
         // Add here all new adjoint elements or elements which should be ignored by the replacement process
         if(name_current_element == "CrLinearBeamElement3D2N")
             rName = "AdjointFiniteDifferenceCrBeamElement";
+        else if(name_current_element == "CrBeamElement3D2N")
+            rName = "AdjointFiniteDifferenceCrBeamElement";
         else if(name_current_element == "ShellThinElement3D3N")
+            rName = "AdjointFiniteDifferencingShellElement";
+        else if(name_current_element == "ShellThinElementCorotational3D3N")
             rName = "AdjointFiniteDifferencingShellElement";
         else if(name_current_element == "TrussElement3D2N")
             rName = "AdjointFiniteDifferenceTrussElement";
