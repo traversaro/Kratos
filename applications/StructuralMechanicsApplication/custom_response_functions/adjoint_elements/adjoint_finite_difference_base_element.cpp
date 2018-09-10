@@ -434,40 +434,88 @@ void AdjointFiniteDifferencingBaseElement::CalculateStressDisplacementDerivative
     }
 
     // TODO Find a better way of doing this check
-    KRATOS_ERROR_IF(rCurrentProcessInfo.Has(NL_ITERATION_NUMBER))
-        << "This stress displacement derivative computation is only usable for linear cases!" << std::endl;
-
-    for (IndexType i = 0; i < num_nodes; ++i)
+    //KRATOS_ERROR_IF(rCurrentProcessInfo.Has(NL_ITERATION_NUMBER))
+    //    << "This stress displacement derivative computation is only usable for linear cases!" << std::endl;
+    if(!rCurrentProcessInfo.Has(NL_ITERATION_NUMBER))
     {
-        const IndexType index = i * num_dofs_per_node;
-        for(IndexType j = 0; j < primal_solution_variable_list.size(); ++j)
+        for (IndexType i = 0; i < num_nodes; ++i)
         {
-            initial_state_variables[index + j] = mpPrimalElement->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]);
-            mpPrimalElement->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = 0.0;
+            const IndexType index = i * num_dofs_per_node;
+            for(IndexType j = 0; j < primal_solution_variable_list.size(); ++j)
+            {
+                initial_state_variables[index + j] = mpPrimalElement->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]);
+                mpPrimalElement->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = 0.0;
+            }
+        }
+        for (IndexType i = 0; i < num_nodes; ++i)
+        {
+            const IndexType index = i * num_dofs_per_node;
+            for(IndexType j = 0; j < primal_solution_variable_list.size(); ++j)
+            {
+                mpPrimalElement->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = 1.0;
+
+                this->Calculate(rStressVariable, stress_derivatives_vector, rCurrentProcessInfo);
+
+                for(IndexType k = 0; k < stress_derivatives_vector.size(); ++k)
+                    rOutput(index+j, k) = stress_derivatives_vector[k];
+
+                stress_derivatives_vector.clear();
+
+                mpPrimalElement->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = 0.0;
+            }
+        }
+        for (IndexType i = 0; i < num_nodes; ++i)
+        {
+            const IndexType index = i * num_dofs_per_node;
+            for(IndexType j = 0; j < primal_solution_variable_list.size(); ++j)
+                mpPrimalElement->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = initial_state_variables[index + j];
         }
     }
-    for (IndexType i = 0; i < num_nodes; ++i)
+    else
     {
-        const IndexType index = i * num_dofs_per_node;
-        for(IndexType j = 0; j < primal_solution_variable_list.size(); ++j)
+        Vector stress_vector_undist;
+        Vector stress_vector_dist;
+        double initial_value_of_state_variable = 0.0;
+
+        // Get undisturbed stress vector
+        this->Calculate(rStressVariable, stress_vector_undist, rCurrentProcessInfo);
+
+        // Get disturbance measure
+        const double delta = this->GetValue(PERTURBATION_SIZE);
+
+        IndexType index = 0;
+        for (IndexType i = 0; i < num_nodes; ++i)
         {
-            mpPrimalElement->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = 1.0;
+            for(IndexType j = 0; j < primal_solution_variable_list.size(); ++j)
+            {
+                initial_value_of_state_variable = this->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]);
 
-            this->Calculate(rStressVariable, stress_derivatives_vector, rCurrentProcessInfo);
+                this->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = initial_value_of_state_variable + delta;
+                //**
+                ProcessInfo copy_process_info = rCurrentProcessInfo;
+                Vector RHS_dummy;
+                Matrix LHS_dummy;
+                mpPrimalElement->CalculateLocalSystem(LHS_dummy, RHS_dummy, copy_process_info);
+                //**
+                this->Calculate(rStressVariable, stress_vector_dist, rCurrentProcessInfo);
 
-            for(IndexType k = 0; k < stress_derivatives_vector.size(); ++k)
-                rOutput(index+j, k) = stress_derivatives_vector[k];
+                for(IndexType k = 0; k < stress_derivatives_vector.size(); ++k)
+                {
+                    stress_vector_dist[k] -= stress_vector_undist[k];
+                    stress_vector_dist[k] /= delta;
+                    std::cout << stress_vector_undist[k] << std::endl;
+                    rOutput(index,k) = stress_vector_dist[k];
+                }
 
-            stress_derivatives_vector.clear();
+                this->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = initial_value_of_state_variable;
+                stress_vector_dist.clear();
+                ++index;
 
-            mpPrimalElement->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = 0.0;
+                //**
+                mpPrimalElement->CalculateLocalSystem(LHS_dummy, RHS_dummy, copy_process_info);
+                //**
+            }
         }
-    }
-    for (IndexType i = 0; i < num_nodes; ++i)
-    {
-        const IndexType index = i * num_dofs_per_node;
-        for(IndexType j = 0; j < primal_solution_variable_list.size(); ++j)
-            mpPrimalElement->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = initial_state_variables[index + j];
     }
 
     KRATOS_CATCH("")
