@@ -17,6 +17,7 @@
 // Meshers
 #include "custom_meshers/triangular_mesh_2D_mesher.hpp"
 #include "custom_meshers/tetrahedral_mesh_3D_mesher.hpp"
+#include "custom_meshers/qhull_triangular_mesh_2D_mesher.hpp"
 
 // Bounding Boxes
 
