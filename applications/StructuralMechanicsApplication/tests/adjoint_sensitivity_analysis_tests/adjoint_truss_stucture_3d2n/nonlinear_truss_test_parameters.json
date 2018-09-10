@@ -29,7 +29,8 @@
         "max_iteration"                      : 10,
         "problem_domain_sub_model_part_list" : ["Parts_TRUSS_1","Parts_TRUSS_2"],
         "processes_sub_model_part_list"      : ["DISPLACEMENT_BC_DIRICHLET_X_Y_Z","DISPLACEMENT_BC_DIRICHLET_Z","PointLoad2D_BC_NEUMANN"],
-        "rotation_dofs"                      : false
+        "rotation_dofs"                      : false,
+        "move_mesh_flag": false
     },
     "constraints_process_list" : [{
         "python_module" : "assign_vector_variable_process",
