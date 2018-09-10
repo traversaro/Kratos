@@ -96,6 +96,9 @@ public:
     ///@{
 
     /// Execute method is used to execute the Process algorithms.
+  /// This inlet algorithm create a new layer of nodes whenever the inlet boundary moves from its original position more than a prearranged limit.
+  /// The new inlet boundary nodes are created as a clone of the orignal inlet boundary
+  /// The previous inlet nodes, after reaching the limit, are set as FLUID (reset to the INLET flag, and FREE to the velocity)
     virtual void Execute()
   {
     KRATOS_TRY
@@ -239,135 +242,209 @@ private:
 	std::cout<<" CheckAndCreateNewInletLayer "<<std::endl;
     const unsigned int dimension = mrModelPart.ElementsBegin()->GetGeometry().WorkingSpaceDimension();
     double maxSeparation=mrRemesh.Refine->CriticalRadius;
+    
+    std::vector<Node<3>::Pointer > clonedNodes;
+    clonedNodes.clear();
+    clonedNodes.resize(1);
+    unsigned int numberClonedNodes=0;
+    unsigned int sizeClonedNodes=0;
 
     for(ModelPart::NodesContainerType::iterator i_node = mrModelPart.NodesBegin() ; i_node != mrModelPart.NodesEnd() ; i_node++)
       {
-    	// if(i_node->Is(RIGID) && i_node->IsNot(SOLID) && i_node->Is(INLET) ){
     	if(i_node->Is(INLET) ){
-
 	  WeakPointerVector<Element >& neighb_elems = i_node->GetValue(NEIGHBOUR_ELEMENTS);
 	  WeakPointerVector<Node<3> >& rN = i_node->GetValue(NEIGHBOUR_NODES);
-
 	  if((neighb_elems.size()==0 && rN.size()==0) || i_node->Is(RIGID)){
 
 	    const array_1d<double,3>& inletDisplacement = i_node->FastGetSolutionStepValue(DISPLACEMENT);
 	    double distanceFromOrigin=sqrt(inletDisplacement[0]*inletDisplacement[0] + 
 					   inletDisplacement[1]*inletDisplacement[1]);
-	    if(dimension==3){
+ 	    if(dimension==3){
 	      distanceFromOrigin=sqrt(inletDisplacement[0]*inletDisplacement[0] +
 				      inletDisplacement[1]*inletDisplacement[1] +
 				      inletDisplacement[2]*inletDisplacement[2]);
 	    }
 
 	    if(distanceFromOrigin> maxSeparation){
-    	      i_node->X() = i_node->X0();
-    	      i_node->Y() = i_node->Y0();
-    	      i_node->FastGetSolutionStepValue(DISPLACEMENT_X,0)=0;
-    	      i_node->FastGetSolutionStepValue(DISPLACEMENT_Y,0)=0;
-    	      i_node->FastGetSolutionStepValue(DISPLACEMENT_X,1)=0;
-    	      i_node->FastGetSolutionStepValue(DISPLACEMENT_Y,1)=0;
-    	      if(dimension==3){
-    		i_node->Z() = i_node->Z0();
-    		i_node->FastGetSolutionStepValue(DISPLACEMENT_Z,0)=0;
-    		i_node->FastGetSolutionStepValue(DISPLACEMENT_Z,1)=0;
-    	      }
-    	    }
+	      
+	      if(i_node->Is(FLUID)){
+		Node<3>::Pointer pnode = i_node->Clone();
+		sizeClonedNodes=numberClonedNodes+1;
+		clonedNodes.resize(sizeClonedNodes);
+		clonedNodes[numberClonedNodes]=pnode;
+		numberClonedNodes++;
 
-    	  }
-	 
-    	}
+		i_node->Reset(INLET);
+		i_node->Reset(RIGID);
 
+		double velocityX= i_node->FastGetSolutionStepValue(VELOCITY_X,0);
+		double velocityY= i_node->FastGetSolutionStepValue(VELOCITY_Y,0);
+
+		i_node->Free(VELOCITY_X);
+		i_node->Free(VELOCITY_Y);
+		i_node->FastGetSolutionStepValue(VELOCITY_X,0)=velocityX;
+		i_node->FastGetSolutionStepValue(VELOCITY_Y,0)=velocityY;
+		i_node->FastGetSolutionStepValue(VELOCITY_X,1)=velocityX;
+		i_node->FastGetSolutionStepValue(VELOCITY_Y,1)=velocityY;
+
+		i_node->FastGetSolutionStepValue(ACCELERATION_X,0)=0;
+		i_node->FastGetSolutionStepValue(ACCELERATION_X,1)=0;
+		i_node->FastGetSolutionStepValue(ACCELERATION_Y,0)=0;
+		i_node->FastGetSolutionStepValue(ACCELERATION_Y,1)=0;
+
+		if(dimension==3){
+		  double velocityZ= i_node->FastGetSolutionStepValue(VELOCITY_Z,0);
+		  i_node->Free(VELOCITY_Z);
+		  i_node->FastGetSolutionStepValue(VELOCITY_Z,0)=velocityZ;
+		  i_node->FastGetSolutionStepValue(VELOCITY_Z,1)=velocityZ;
+		  i_node->FastGetSolutionStepValue(ACCELERATION_Z,0)=0;
+		  i_node->FastGetSolutionStepValue(ACCELERATION_Z,1)=0;
+		}
+	      }
+	      else{ //these are isolated nodes of the inlet, they will be replaced at theur initial position
+		i_node->X() = i_node->X0();
+		i_node->Y() = i_node->Y0();
+		i_node->FastGetSolutionStepValue(DISPLACEMENT_X,0)=0;
+		i_node->FastGetSolutionStepValue(DISPLACEMENT_Y,0)=0;
+		i_node->FastGetSolutionStepValue(DISPLACEMENT_X,1)=0;
+		i_node->FastGetSolutionStepValue(DISPLACEMENT_Y,1)=0;	
+		if(dimension==3){
+		  i_node->Z() = i_node->Z0();
+		  i_node->FastGetSolutionStepValue(DISPLACEMENT_Z,0)=0;
+		  i_node->FastGetSolutionStepValue(DISPLACEMENT_Z,1)=0;
+		}
+	      }
+	    }
+	  }
+	}
       }
-
-    for(ModelPart::ConditionsContainerType::iterator ic = mrModelPart.ConditionsBegin(); ic!= mrModelPart.ConditionsEnd(); ic++)
+    
+    for(unsigned int i=0 ; i<sizeClonedNodes ; i++)
       {
 
-    	Geometry< Node<3> >& rGeometry = ic->GetGeometry();
-    	unsigned int NumNodes=rGeometry.size();
-    	for (unsigned int n = 0; n < NumNodes; ++n)
-    	  {
-    	    // if(rGeometry[n].Is(RIGID) && rGeometry[n].IsNot(SOLID) && rGeometry[n].Is(INLET) ){
-    	    if(rGeometry[n].Is(INLET) && rGeometry[n].IsNot(RIGID)){
+	Node<3>::Pointer pnode = clonedNodes[i];
 
-    	      const array_1d<double,3>& inletDisplacement =rGeometry[n].FastGetSolutionStepValue(DISPLACEMENT);
-    	      double distanceFromOrigin=sqrt(inletDisplacement[0]*inletDisplacement[0] + 
-    					     inletDisplacement[1]*inletDisplacement[1]);
-    	      if(dimension==3){
-    		distanceFromOrigin=sqrt(inletDisplacement[0]*inletDisplacement[0] +
-    					inletDisplacement[1]*inletDisplacement[1] +
-    					inletDisplacement[2]*inletDisplacement[2]);
-    	      }
+	double NodeIdParent = ModelerUtilities::GetMaxNodeId( *(mrModelPart.GetParentModelPart()) );
+	double NodeId = ModelerUtilities::GetMaxNodeId(mrModelPart);
+	unsigned int id =NodeIdParent + 1 ; //total model part node size
 
-    	      if(distanceFromOrigin> maxSeparation){
-
-		  Node<3>::Pointer pnode = rGeometry[n].Clone();
-		  double NodeIdParent = ModelerUtilities::GetMaxNodeId( *(mrModelPart.GetParentModelPart()) );
-		  double NodeId = ModelerUtilities::GetMaxNodeId(mrModelPart);
-		  unsigned int id =NodeIdParent + 1 ; //total model part node size
-
-		  if(NodeId>NodeIdParent){
-		    id =NodeId + 1;
-		    std::cout<<"initial_node_size  "<<id<<std::endl;
-		  }
-		  pnode->SetId(id);
-
-		  pnode->X() = pnode->X0();
-		  pnode->Y() = pnode->Y0();
-		  pnode->FastGetSolutionStepValue(DISPLACEMENT_X,0)=0;
-		  pnode->FastGetSolutionStepValue(DISPLACEMENT_Y,0)=0;
-		  pnode->FastGetSolutionStepValue(DISPLACEMENT_X,1)=0;
-		  pnode->FastGetSolutionStepValue(DISPLACEMENT_Y,1)=0;
-		  if(dimension==3){
-		    pnode->Z() = pnode->Z0();
-		    pnode->FastGetSolutionStepValue(DISPLACEMENT_Z,0)=0;
-		    pnode->FastGetSolutionStepValue(DISPLACEMENT_Z,1)=0;
-		  }
-
-
-		  pnode->Set(INLET); //inlet node
-		  mrRemesh.NodalPreIds.push_back( pnode->Id() );
-		  mrModelPart.AddNode(pnode);
-
-		  rGeometry[n].Reset(INLET);
-		  rGeometry[n].Reset(RIGID);
-		  if(rGeometry[n].IsNot(FLUID)){
-		    std::cout<<"this node was not fluid  "<<std::endl;
-		    rGeometry[n].Set(FLUID);
-		    pnode->Set(FLUID);
-		    pnode->Reset(RIGID);
-		  }
-		  double velocityX= rGeometry[n].FastGetSolutionStepValue(VELOCITY_X,0);
-		  double velocityY= rGeometry[n].FastGetSolutionStepValue(VELOCITY_Y,0);
-
-		  rGeometry[n].Free(VELOCITY_X);
-		  rGeometry[n].Free(VELOCITY_Y);
-		  rGeometry[n].FastGetSolutionStepValue(VELOCITY_X,0)=velocityX;
-		  rGeometry[n].FastGetSolutionStepValue(VELOCITY_Y,0)=velocityY;
-		  rGeometry[n].FastGetSolutionStepValue(VELOCITY_X,1)=velocityX;
-		  rGeometry[n].FastGetSolutionStepValue(VELOCITY_Y,1)=velocityY;
-
-		  rGeometry[n].FastGetSolutionStepValue(ACCELERATION_X,0)=0;
-		  rGeometry[n].FastGetSolutionStepValue(ACCELERATION_X,1)=0;
-		  rGeometry[n].FastGetSolutionStepValue(ACCELERATION_Y,0)=0;
-		  rGeometry[n].FastGetSolutionStepValue(ACCELERATION_Y,1)=0;
-
-		  if(dimension==3){
-		    double velocityZ= rGeometry[n].FastGetSolutionStepValue(VELOCITY_Z,0);
-		    rGeometry[n].Free(VELOCITY_Z);
-		    rGeometry[n].FastGetSolutionStepValue(VELOCITY_Z,0)=velocityZ;
-		    rGeometry[n].FastGetSolutionStepValue(VELOCITY_Z,1)=velocityZ;
-		    rGeometry[n].FastGetSolutionStepValue(ACCELERATION_Z,0)=0;
-		    rGeometry[n].FastGetSolutionStepValue(ACCELERATION_Z,1)=0;
-		  }
+	if(NodeId>NodeIdParent){
+	  id =NodeId + 1;
+	}
 	
+	pnode->SetId(id);
+	pnode->X() = pnode->X0();
+	pnode->Y() = pnode->Y0();
+	pnode->FastGetSolutionStepValue(DISPLACEMENT_X,0)=0;
+	pnode->FastGetSolutionStepValue(DISPLACEMENT_Y,0)=0;
+	pnode->FastGetSolutionStepValue(DISPLACEMENT_X,1)=0;
+	pnode->FastGetSolutionStepValue(DISPLACEMENT_Y,1)=0;
+	
+	if(dimension==3){
+	  pnode->Z() = pnode->Z0();
+	  pnode->FastGetSolutionStepValue(DISPLACEMENT_Z,0)=0;
+	  pnode->FastGetSolutionStepValue(DISPLACEMENT_Z,1)=0;
+	}
 
-    	      }
-	 
-    	    }
-    	  }
+	pnode->Set(INLET); //inlet node
+
+	mrRemesh.NodalPreIds.push_back( pnode->Id() );
+
+	mrModelPart.AddNode(pnode);
 
 
       }
+
+    
+    
+    // for(ModelPart::ConditionsContainerType::iterator ic = mrModelPart.ConditionsBegin(); ic!= mrModelPart.ConditionsEnd(); ic++)
+    //   {
+    // 	Geometry< Node<3> >& rGeometry = ic->GetGeometry();
+    // 	unsigned int NumNodes=rGeometry.size();
+    // 	for (unsigned int n = 0; n < NumNodes; ++n)
+    // 	  {
+    // 	    // if(rGeometry[n].Is(RIGID) && rGeometry[n].IsNot(SOLID) && rGeometry[n].Is(INLET) ){
+    // 	    if(rGeometry[n].Is(INLET) && rGeometry[n].IsNot(RIGID)){
+
+    // 	      const array_1d<double,3>& inletDisplacement =rGeometry[n].FastGetSolutionStepValue(DISPLACEMENT);
+    // 	      double distanceFromOrigin=sqrt(inletDisplacement[0]*inletDisplacement[0] + 
+    // 					     inletDisplacement[1]*inletDisplacement[1]);
+    // 	      if(dimension==3){
+    // 		distanceFromOrigin=sqrt(inletDisplacement[0]*inletDisplacement[0] +
+    // 					inletDisplacement[1]*inletDisplacement[1] +
+    // 					inletDisplacement[2]*inletDisplacement[2]);
+    // 	      }
+
+    // 	      if(distanceFromOrigin> maxSeparation){
+
+    // 		  Node<3>::Pointer pnode = rGeometry[n].Clone();
+    // 		  double NodeIdParent = ModelerUtilities::GetMaxNodeId( *(mrModelPart.GetParentModelPart()) );
+    // 		  double NodeId = ModelerUtilities::GetMaxNodeId(mrModelPart);
+    // 		  unsigned int id =NodeIdParent + 1 ; //total model part node size
+
+    // 		  if(NodeId>NodeIdParent){
+    // 		    id =NodeId + 1;
+    // 		    std::cout<<"initial_node_size  "<<id<<std::endl;
+    // 		  }
+    // 		  pnode->SetId(id);
+
+    // 		  pnode->X() = pnode->X0();
+    // 		  pnode->Y() = pnode->Y0();
+    // 		  pnode->FastGetSolutionStepValue(DISPLACEMENT_X,0)=0;
+    // 		  pnode->FastGetSolutionStepValue(DISPLACEMENT_Y,0)=0;
+    // 		  pnode->FastGetSolutionStepValue(DISPLACEMENT_X,1)=0;
+    // 		  pnode->FastGetSolutionStepValue(DISPLACEMENT_Y,1)=0;
+    // 		  if(dimension==3){
+    // 		    pnode->Z() = pnode->Z0();
+    // 		    pnode->FastGetSolutionStepValue(DISPLACEMENT_Z,0)=0;
+    // 		    pnode->FastGetSolutionStepValue(DISPLACEMENT_Z,1)=0;
+    // 		  }
+
+
+    // 		  pnode->Set(INLET); //inlet node
+    // 		  mrRemesh.NodalPreIds.push_back( pnode->Id() );
+    // 		  mrModelPart.AddNode(pnode);
+
+    // 		  rGeometry[n].Reset(INLET);
+    // 		  rGeometry[n].Reset(RIGID);
+    // 		  if(rGeometry[n].IsNot(FLUID)){
+    // 		    std::cout<<"this node was not fluid  "<<std::endl;
+    // 		    rGeometry[n].Set(FLUID);
+    // 		    pnode->Set(FLUID);
+    // 		    pnode->Reset(RIGID);
+    // 		  }
+    // 		  double velocityX= rGeometry[n].FastGetSolutionStepValue(VELOCITY_X,0);
+    // 		  double velocityY= rGeometry[n].FastGetSolutionStepValue(VELOCITY_Y,0);
+
+    // 		  rGeometry[n].Free(VELOCITY_X);
+    // 		  rGeometry[n].Free(VELOCITY_Y);
+    // 		  rGeometry[n].FastGetSolutionStepValue(VELOCITY_X,0)=velocityX;
+    // 		  rGeometry[n].FastGetSolutionStepValue(VELOCITY_Y,0)=velocityY;
+    // 		  rGeometry[n].FastGetSolutionStepValue(VELOCITY_X,1)=velocityX;
+    // 		  rGeometry[n].FastGetSolutionStepValue(VELOCITY_Y,1)=velocityY;
+
+    // 		  rGeometry[n].FastGetSolutionStepValue(ACCELERATION_X,0)=0;
+    // 		  rGeometry[n].FastGetSolutionStepValue(ACCELERATION_X,1)=0;
+    // 		  rGeometry[n].FastGetSolutionStepValue(ACCELERATION_Y,0)=0;
+    // 		  rGeometry[n].FastGetSolutionStepValue(ACCELERATION_Y,1)=0;
+
+    // 		  if(dimension==3){
+    // 		    double velocityZ= rGeometry[n].FastGetSolutionStepValue(VELOCITY_Z,0);
+    // 		    rGeometry[n].Free(VELOCITY_Z);
+    // 		    rGeometry[n].FastGetSolutionStepValue(VELOCITY_Z,0)=velocityZ;
+    // 		    rGeometry[n].FastGetSolutionStepValue(VELOCITY_Z,1)=velocityZ;
+    // 		    rGeometry[n].FastGetSolutionStepValue(ACCELERATION_Z,0)=0;
+    // 		    rGeometry[n].FastGetSolutionStepValue(ACCELERATION_Z,1)=0;
+    // 		  }
+	
+
+    // 	      }
+	 
+    // 	    }
+    // 	  }
+
+
+    //   }
  
     KRATOS_CATCH( "" )
       }
