@@ -1,0 +1,175 @@
+{
+    "problem_data"             : {
+        "problem_name"    : "Shell_Q3_Thin_nonlinear_static_test",
+        "model_part_name" : "Structure",
+        "domain_size"     : 3,
+        "parallel_type"   : "OpenMP",
+        "time_step"       : 1.0,
+        "start_time"      : 0.0,
+        "end_time"        : 1.0,
+        "echo_level"      : 0
+    },
+    "solver_settings"          : {
+        "solver_type"                  : "adjoint_static",
+        "analysis_type"                : "linear",
+        "compute_reactions"			   : false,
+        "move_mesh_flag"                    : false,
+        "scheme_settings" : {
+            "scheme_type"              : "adjoint_structural"
+        },
+        "response_function_settings" : {
+            "response_type"     : "adjoint_nodal_displacement",
+            "use_kratos"        : true,
+            "gradient_mode"     : "semi_analytic",
+            "sensitivity_model_part_name" :"Parts_surface",
+            "nodal_sensitivity_variables"  : ["SHAPE"],
+            "element_sensitivity_variables"  : ["THICKNESS"],
+            "condition_sensitivity_variables"  : [],
+            "step_size"         : 1.0e-6,
+            "traced_element_id"    : 2,
+            "stress_type"       : "MXX",
+            "stress_treatment"  : "mean",
+            "stress_location"   : 1,
+            "traced_node_id"       : 6,
+            "traced_dof"        : "DISPLACEMENT_Y"
+        },
+        "computing_model_part_name" : "computing_domain",
+        "linear_solver_settings"       : {
+            "solver_type"         : "Super_LU"
+        },
+        "model_import_settings"              : {
+            "input_type"       : "mdpa",
+            "input_filename"   : "Shell_Q3_Thin_nonlinear_static_test"
+        },
+        "material_import_settings"           : {
+            "materials_filename" : "Shell_Q3_Thin_nonlinear_static_test_materials.json"
+        },
+        "problem_domain_sub_model_part_list" : ["Parts_surface"],
+        "processes_sub_model_part_list"      : ["DISPLACEMENT_hinged_edges","DISPLACEMENT_XY_sym","DISPLACEMENT_YZ_sym","DISPLACEMENT_point_load","ROTATION_XY_sym","ROTATION_YZ_sym"],
+        "rotation_dofs"                      : true,
+        "echo_level"                   : 0
+    },
+    "constraints_process_list" : [{
+        "python_module" : "assign_vector_variable_process",
+        "kratos_module" : "KratosMultiphysics",
+        "help"          : "This process fixes the selected components of a given vector variable",
+        "process_name"  : "AssignVectorVariableProcess",
+        "Parameters"    : {
+            "mesh_id"         : 0,
+            "model_part_name" : "DISPLACEMENT_hinged_edges",
+            "variable_name"   : "ADJOINT_DISPLACEMENT",
+            "value"           : [0.0,0.0,0.0],
+            "interval"        : [0.0,"End"]
+        }
+    },{
+        "python_module" : "assign_vector_variable_process",
+        "kratos_module" : "KratosMultiphysics",
+        "help"          : "This process fixes the selected components of a given vector variable",
+        "process_name"  : "AssignVectorVariableProcess",
+        "Parameters"    : {
+            "mesh_id"         : 0,
+            "model_part_name" : "DISPLACEMENT_XY_sym",
+            "variable_name"   : "ADJOINT_DISPLACEMENT",
+            "value"           : [null,null,0.0],
+            "interval"        : [0.0,"End"]
+        }
+    },{
+        "python_module" : "assign_vector_variable_process",
+        "kratos_module" : "KratosMultiphysics",
+        "help"          : "This process fixes the selected components of a given vector variable",
+        "process_name"  : "AssignVectorVariableProcess",
+        "Parameters"    : {
+            "mesh_id"         : 0,
+            "model_part_name" : "DISPLACEMENT_YZ_sym",
+            "variable_name"   : "ADJOINT_DISPLACEMENT",
+            "value"           : [0.0,null,null],
+            "interval"        : [0.0,"End"]
+        }
+    },{
+        "python_module" : "assign_vector_variable_process",
+        "kratos_module" : "KratosMultiphysics",
+        "help"          : "This process fixes the selected components of a given vector variable",
+        "process_name"  : "AssignVectorVariableProcess",
+        "Parameters"    : {
+            "mesh_id"         : 0,
+            "model_part_name" : "ROTATION_XY_sym",
+            "variable_name"   : "ADJOINT_ROTATION",
+            "value"           : [0.0,0.0,null],
+            "interval"        : [0.0,"End"]
+        }
+    },{
+        "python_module" : "assign_vector_variable_process",
+        "kratos_module" : "KratosMultiphysics",
+        "help"          : "This process fixes the selected components of a given vector variable",
+        "process_name"  : "AssignVectorVariableProcess",
+        "Parameters"    : {
+            "mesh_id"         : 0,
+            "model_part_name" : "ROTATION_YZ_sym",
+            "variable_name"   : "ADJOINT_ROTATION",
+            "value"           : [null,0.0,0.0],
+            "interval"        : [0.0,"End"]
+        }
+    }],
+    "loads_process_list"       : [],
+    "restart_options"          : {
+        "SaveRestart"      : false,
+        "RestartFrequency" : 0,
+        "LoadRestart"      : false,
+        "Restart_Step"     : 0
+    },
+    "constraints_data"         : {
+        "incremental_load"         : false,
+        "incremental_displacement" : false
+    },
+    "material_import_settings" : {
+        "materials_filename" : "Shell_Q3_Thin_nonlinear_static_test_materials.json"
+    },
+	"_list_other_processes": [
+    {
+        "python_module"   : "from_json_check_result_process",
+        "kratos_module" : "KratosMultiphysics",
+        "help"                  : "",
+        "process_name"          : "FromJsonCheckResultProcess",
+        "Parameters"            : {
+            "check_variables"  : ["REACTION_Y"],
+            "input_file_name"  : "Shell_Q3_Thin_nonlinear_static_test_results.json",
+            "model_part_name"  : "DISPLACEMENT_point_load",
+            "time_frequency"   : 0.01
+        }
+    }
+    ],
+    "_json_output_process" : [
+    {
+        "python_module"   : "json_output_process",
+        "kratos_module" : "KratosMultiphysics",
+        "help"                  : "",
+        "process_name"          : "JsonOutputProcess",
+        "Parameters"            : {
+            "output_variables" : ["REACTION_Y"],
+            "output_file_name" : "Shell_Q3_Thin_nonlinear_static_test_results.json",
+            "model_part_name"  : "DISPLACEMENT_point_load",
+            "time_frequency"   : 0.01
+        }
+    }
+    ],
+    "output_configuration": {
+        "result_file_configuration": {
+            "gidpost_flags": {
+                "GiDPostMode": "GiD_PostAscii",
+                "WriteDeformedMeshFlag": "WriteDeformed",
+                "WriteConditionsFlag": "WriteConditions",
+                "MultiFileFlag": "SingleFile"
+            },
+            "file_label": "step",
+            "output_control_type": "step",
+            "output_frequency": 1,
+            "body_output": true,
+            "node_output": false,
+            "skin_output": false,
+            "plane_output": [],
+            "nodal_results": ["DISPLACEMENT","ADJOINT_DISPLACEMENT","SHAPE_SENSITIVITY"],
+            "gauss_point_results": []
+        },
+        "point_data_configuration": []
+    }
+}
