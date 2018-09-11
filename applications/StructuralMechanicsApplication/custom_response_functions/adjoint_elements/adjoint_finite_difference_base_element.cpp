@@ -488,9 +488,9 @@ void AdjointFiniteDifferencingBaseElement::CalculateStressDisplacementDerivative
         {
             for(IndexType j = 0; j < primal_solution_variable_list.size(); ++j)
             {
-                initial_value_of_state_variable = this->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]);
+                initial_value_of_state_variable = mpPrimalElement->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]);
 
-                this->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = initial_value_of_state_variable + delta;
+                mpPrimalElement->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = initial_value_of_state_variable + delta;
                 //**
                 ProcessInfo copy_process_info = rCurrentProcessInfo;
                 Vector RHS_dummy;
@@ -503,11 +503,10 @@ void AdjointFiniteDifferencingBaseElement::CalculateStressDisplacementDerivative
                 {
                     stress_vector_dist[k] -= stress_vector_undist[k];
                     stress_vector_dist[k] /= delta;
-                    std::cout << stress_vector_undist[k] << std::endl;
                     rOutput(index,k) = stress_vector_dist[k];
                 }
 
-                this->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = initial_value_of_state_variable;
+                mpPrimalElement->GetGeometry()[i].FastGetSolutionStepValue(primal_solution_variable_list[j]) = initial_value_of_state_variable;
                 stress_vector_dist.clear();
                 ++index;
 
