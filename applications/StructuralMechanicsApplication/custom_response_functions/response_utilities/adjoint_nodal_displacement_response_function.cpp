@@ -117,6 +117,10 @@ namespace Kratos
 
         if( rAdjointElem.Id() == mpNeighboringElement->Id() )
         {
+            ModelPart dummy_model_part;
+            const double my_response_value = this->CalculateValue(dummy_model_part);
+            std::cout << std::setprecision(10) << my_response_value << " ******************************************" << std::endl;
+
             DofsVectorType dofs_of_element;
             mpNeighboringElement->GetDofList(dofs_of_element,rProcessInfo);
 
