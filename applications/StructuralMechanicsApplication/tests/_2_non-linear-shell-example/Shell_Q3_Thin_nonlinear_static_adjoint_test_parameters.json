@@ -26,7 +26,7 @@
             "element_sensitivity_variables"  : ["THICKNESS"],
             "condition_sensitivity_variables"  : [],
             "step_size"         : 1.0e-6,
-            "traced_element_id"    : 2,
+            "traced_element_id"    : 52,
             "stress_type"       : "MXX",
             "stress_treatment"  : "mean",
             "stress_location"   : 1,
@@ -83,6 +83,19 @@
             "model_part_name" : "DISPLACEMENT_YZ_sym",
             "variable_name"   : "ADJOINT_DISPLACEMENT",
             "value"           : [0.0,null,null],
+            "interval"        : [0.0,"End"]
+        }
+    },
+    {
+        "python_module" : "assign_vector_variable_process",
+        "kratos_module" : "KratosMultiphysics",
+        "help"          : "This process fixes the selected components of a given vector variable",
+        "process_name"  : "AssignVectorVariableProcess",
+        "Parameters"    : {
+            "mesh_id"         : 0,
+            "model_part_name" : "DISPLACEMENT_point_load",
+            "variable_name"   : "ADJOINT_DISPLACEMENT",
+            "value"           : [0.0,"-0.1",0.0],
             "interval"        : [0.0,"End"]
         }
     },{
@@ -152,24 +165,24 @@
         }
     }
     ],
-    "output_configuration": {
-        "result_file_configuration": {
-            "gidpost_flags": {
-                "GiDPostMode": "GiD_PostAscii",
-                "WriteDeformedMeshFlag": "WriteDeformed",
-                "WriteConditionsFlag": "WriteConditions",
-                "MultiFileFlag": "SingleFile"
+    "output_configuration"     : {
+        "result_file_configuration" : {
+            "gidpost_flags"       : {
+                "GiDPostMode"           : "GiD_PostAscii",
+                "WriteDeformedMeshFlag" : "WriteUndeformed",
+                "WriteConditionsFlag"   : "WriteConditions",
+                "MultiFileFlag"         : "SingleFile"
             },
-            "file_label": "step",
-            "output_control_type": "step",
-            "output_frequency": 1,
-            "body_output": true,
-            "node_output": false,
-            "skin_output": false,
-            "plane_output": [],
-            "nodal_results": ["DISPLACEMENT","ADJOINT_DISPLACEMENT","SHAPE_SENSITIVITY"],
-            "gauss_point_results": []
+            "file_label"          : "step",
+            "output_control_type" : "step",
+            "output_frequency"    : 1,
+            "body_output"         : true,
+            "node_output"         : false,
+            "skin_output"         : false,
+            "plane_output"        : [],
+            "nodal_results"       : ["ADJOINT_DISPLACEMENT", "DISPLACEMENT", "SHAPE_SENSITIVITY"],
+            "gauss_point_results" : ["THICKNESS_SENSITIVITY"]
         },
-        "point_data_configuration": []
+        "point_data_configuration"  : []
     }
 }
