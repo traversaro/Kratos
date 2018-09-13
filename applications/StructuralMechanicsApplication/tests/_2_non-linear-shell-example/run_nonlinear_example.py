@@ -15,11 +15,11 @@ with open("Shell_Q3_Thin_nonlinear_static_adjoint_test_parameters.json",'r') as 
 # construct primal and adjoint analysis
 my_analysis_model = Model()
 primal_analysis = structural_mechanics_analysis.StructuralMechanicsAnalysis(my_analysis_model, ProjectParametersPrimal)
-
+adjoint_analysis = structural_mechanics_analysis.StructuralMechanicsAnalysis(my_analysis_model, ProjectParametersAdjoint)
 
 # run analysis
 primal_analysis.Run()
-adjoint_analysis = structural_mechanics_analysis.StructuralMechanicsAnalysis(my_analysis_model, ProjectParametersAdjoint)
+
 print("")
 print("------------------------------------")
 print("Finished primal problem!")
