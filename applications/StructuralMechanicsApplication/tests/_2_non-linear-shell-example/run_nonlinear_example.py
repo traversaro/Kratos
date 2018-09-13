@@ -6,19 +6,26 @@ from KratosMultiphysics import *
 from KratosMultiphysics.StructuralMechanicsApplication import *
 import structural_mechanics_analysis
 
+# read parameter files
 with open("Shell_Q3_Thin_nonlinear_static_test_parameters.json",'r') as parameter_file:
     ProjectParametersPrimal = Parameters( parameter_file.read())
-
-my_analysis_model = Model()
-primal_analysis = structural_mechanics_analysis.StructuralMechanicsAnalysis(my_analysis_model, ProjectParametersPrimal)
-primal_analysis.Run()
-
-print("Finished primal problem!")
-
 with open("Shell_Q3_Thin_nonlinear_static_adjoint_test_parameters.json",'r') as parameter_file:
     ProjectParametersAdjoint = Parameters( parameter_file.read())
 
+# construct primal and adjoint analysis
+my_analysis_model = Model()
+primal_analysis = structural_mechanics_analysis.StructuralMechanicsAnalysis(my_analysis_model, ProjectParametersPrimal)
+
+
+# run analysis
+primal_analysis.Run()
 adjoint_analysis = structural_mechanics_analysis.StructuralMechanicsAnalysis(my_analysis_model, ProjectParametersAdjoint)
+print("")
+print("------------------------------------")
+print("Finished primal problem!")
+print("------------------------------------")
+print("")
+
 adjoint_analysis.Run()
 
 
