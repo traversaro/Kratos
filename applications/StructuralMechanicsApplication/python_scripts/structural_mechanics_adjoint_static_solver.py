@@ -28,6 +28,7 @@ class StructuralMechanicsAdjointStaticSolver(structural_mechanics_solver.Mechani
 
         self.validate_and_transfer_matching_settings(custom_settings, adjoint_settings)
         self.scheme_settings = adjoint_settings["scheme_settings"]
+        #self.model_part_import_settings = custom_settings["model_import_settings"]
 
         self.response_function_settings = custom_settings["response_function_settings"].Clone()
         custom_settings.RemoveValue("response_function_settings")
@@ -37,12 +38,25 @@ class StructuralMechanicsAdjointStaticSolver(structural_mechanics_solver.Mechani
 
     def AddVariables(self):
         super(StructuralMechanicsAdjointStaticSolver, self).AddVariables()
-        #self.main_model_part.AddNodalSolutionStepVariable(StructuralMechanicsApplication.ADJOINT_DISPLACEMENT)
-        #if self.settings["rotation_dofs"].GetBool():
-        #    self.main_model_part.AddNodalSolutionStepVariable(StructuralMechanicsApplication.ADJOINT_ROTATION)
-        ## TODO evaluate if these variables should be historical
-        #self.main_model_part.AddNodalSolutionStepVariable(KratosMultiphysics.SHAPE_SENSITIVITY)
-        #self.main_model_part.AddNodalSolutionStepVariable(StructuralMechanicsApplication.POINT_LOAD_SENSITIVITY)
+
+        #input_type = self.model_part_import_settings["input_type"].GetString()
+
+        #if(input_type == "use_input_model_part"):
+        #    check_variable_list = [StructuralMechanicsApplication.ADJOINT_DISPLACEMENT, StructuralMechanicsApplication.ADJOINT_ROTATION,
+        #    KratosMultiphysics.SHAPE_SENSITIVITY, StructuralMechanicsApplication.POINT_LOAD_SENSITIVITY]
+        #    for var in check_variable_list:
+        #        if not self.main_model_part.HasNodalSolutionStepVariable(var):
+        #            err_msg  = 'ModelPart "' + self.main_model_part.Name + '" does not have'
+        #            err_msg += ' "' + var.Name() + '" as SolutionStepVariable!'
+        #            raise Exception(err_msg)
+        #elif(input_type == "mdpa"):
+        self.main_model_part.AddNodalSolutionStepVariable(StructuralMechanicsApplication.ADJOINT_DISPLACEMENT)
+        if self.settings["rotation_dofs"].GetBool():
+            self.main_model_part.AddNodalSolutionStepVariable(StructuralMechanicsApplication.ADJOINT_ROTATION)
+        # TODO evaluate if these variables should be historical
+        self.main_model_part.AddNodalSolutionStepVariable(KratosMultiphysics.SHAPE_SENSITIVITY)
+        self.main_model_part.AddNodalSolutionStepVariable(StructuralMechanicsApplication.POINT_LOAD_SENSITIVITY)
+
         self.print_on_rank_zero("::[AdjointMechanicalSolver]:: ", "Variables ADDED")
 
     def PrepareModelPart(self):
