@@ -11,7 +11,6 @@
 //
 
 #include "includes/define.h"
-// #include <string>
 #include "includes/constitutive_law.h"
 #include "custom_constitutive/zarate_law.hpp"
 #include "femdem3d_element.hpp"

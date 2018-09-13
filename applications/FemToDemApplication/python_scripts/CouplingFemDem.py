@@ -281,7 +281,8 @@ class FEMDEM_Solution:
                         Element.GetNodes()[0].SetValue(KratosMultiphysics.RADIUS, Radius1)
 
                         # look to the node 2 --------------
-                        Radius2 = self.GetMinimumValue(dist01-Radius1, dist12*0.5)
+                        # Radius2 = self.GetMinimumValue(dist01-Radius1, dist12*0.5)
+                        Radius2 = dist01-Radius1
                         Coordinates2 = self.GetNodeCoordinates(Element.GetNodes()[1])
                         Id2 = Element.GetNodes()[1].Id
 
@@ -364,7 +365,8 @@ class FEMDEM_Solution:
                         # --------------
                         if localId == 0:
 
-                            R1 = self.GetMinimumValue(dist01-RadiusOfDem, dist12*0.5)
+                            # R1 = self.GetMinimumValue(dist01-RadiusOfDem, dist12*0.5)
+                            R1 = dist01-RadiusOfDem
                             R2 = self.GetMinimumValue(dist02-RadiusOfDem, dist12-R1)
 
                             Coordinates1 = self.GetNodeCoordinates(Element.GetNodes()[1])
@@ -383,7 +385,8 @@ class FEMDEM_Solution:
                         # --------------
                         elif localId == 1:
 
-                            R0 = self.GetMinimumValue(dist01-RadiusOfDem, dist02*0.5)
+                            # R0 = self.GetMinimumValue(dist01-RadiusOfDem, dist02*0.5)
+                            R0 = dist01-RadiusOfDem
                             R2 = self.GetMinimumValue(dist12-RadiusOfDem, dist02-R0)
 
                             Coordinates0 = self.GetNodeCoordinates(Element.GetNodes()[0])
@@ -402,7 +405,8 @@ class FEMDEM_Solution:
                         # --------------
                         elif localId == 2:
 
-                            R0 = self.GetMinimumValue(dist02-RadiusOfDem, dist01*0.5)
+                            # R0 = self.GetMinimumValue(dist02-RadiusOfDem, dist01*0.5)
+                            R0 = dist02-RadiusOfDem
                             R1 = self.GetMinimumValue(dist12-RadiusOfDem, dist01-R0)
 
                             Coordinates0 = self.GetNodeCoordinates(Element.GetNodes()[0])
@@ -438,7 +442,7 @@ class FEMDEM_Solution:
 
                         # Check the 3 edges of the element
                         if R0 + R1 > dist01:
-                            R0 = self.GetMinimumValue(R0, dist01*0.5)
+                            # R0 = self.GetMinimumValue(R0, dist01*0.5)
                             R1 = dist01 - R0
 
                             # assign the new radius to the DEM nodes
@@ -448,7 +452,7 @@ class FEMDEM_Solution:
                             Element.GetNodes()[1].SetValue(KratosMultiphysics.RADIUS, R1)
 
                         if R0 + R2 > dist02:
-                            R0 = self.GetMinimumValue(R0, 0.5*dist02)
+                            # R0 = self.GetMinimumValue(R0, 0.5*dist02)
                             R2 = dist02 - R0
 
                             # assign the new radius to the DEM nodes
@@ -458,7 +462,7 @@ class FEMDEM_Solution:
                             Element.GetNodes()[2].SetValue(KratosMultiphysics.RADIUS, R2)
 
                         if R1 + R2 > dist12:
-                            R1 = self.GetMinimumValue(R1, 0.5*dist12)
+                            # R1 = self.GetMinimumValue(R1, 0.5*dist12)
                             R2 = dist12 - R1
 
                             # assign the new radius to the DEM nodes
@@ -473,6 +477,9 @@ class FEMDEM_Solution:
 
                     else:
                         raise Exception("Not possible")
+
+                elif is_active == False and DEM_Generated == True:
+                    Element.Set(KratosMultiphysics.TO_ERASE, True)
 
         self.FEM_Solution.main_model_part.GetRootModelPart().RemoveElementsFromAllLevels(KratosMultiphysics.TO_ERASE)
 
@@ -540,9 +547,9 @@ class FEMDEM_Solution:
 
                 # DEM generated for this Element
                 Element.SetValue(KratosFemDem.DEM_GENERATED, True)
-                Element.Set(KratosMultiphysics.TO_ERASE, True)
+                # Element.Set(KratosMultiphysics.TO_ERASE, True)
         
-        self.FEM_Solution.main_model_part.GetRootModelPart().RemoveElementsFromAllLevels(KratosMultiphysics.TO_ERASE)
+        # self.FEM_Solution.main_model_part.GetRootModelPart().RemoveElementsFromAllLevels(KratosMultiphysics.TO_ERASE)
 
 
 #============================================================================================================================
