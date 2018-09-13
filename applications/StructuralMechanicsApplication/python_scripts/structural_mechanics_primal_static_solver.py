@@ -32,6 +32,6 @@ class StaticMechanicalPrimalSolver(structural_mechanics_static_solver.StaticMech
         self.main_model_part.AddNodalSolutionStepVariable(KratosMultiphysics.SHAPE_SENSITIVITY)
         self.main_model_part.AddNodalSolutionStepVariable(StructuralMechanicsApplication.POINT_LOAD_SENSITIVITY)
 
-        self.print_on_rank_zero("::[StaticMechanicalPrimalSolver]:: ", "Variables ADDED")
+        self.print_on_rank_zero("::[StaticMechanicalPrimalSolver]:: ", " Adjoint variables ADDED")
 
 
