@@ -364,250 +364,265 @@ void ShellThinElement3D4N::CalculateOnIntegrationPoints(
     std::vector<double>& rValues,
     const ProcessInfo& rCurrentProcessInfo)
 {
-    KRATOS_TRY;
-
-    int caseId = -1;
-    if (rVariable == TSAI_WU_RESERVE_FACTOR)
+    if (rVariable == THICKNESS)
     {
-        caseId = 10;
-    }
-    else if (rVariable == SHEAR_ANGLE)
-    {
-        caseId = 40;
-    }
-    else if (rVariable == VON_MISES_STRESS ||
-        rVariable == VON_MISES_STRESS_TOP_SURFACE ||
-        rVariable == VON_MISES_STRESS_MIDDLE_SURFACE ||
-        rVariable == VON_MISES_STRESS_BOTTOM_SURFACE)
-    {
-        caseId = 20;
-    }
-    else if (rVariable == SHELL_ELEMENT_MEMBRANE_ENERGY ||
-        SHELL_ELEMENT_MEMBRANE_ENERGY_FRACTION ||
-        SHELL_ELEMENT_BENDING_ENERGY ||
-        SHELL_ELEMENT_BENDING_ENERGY_FRACTION ||
-        SHELL_ELEMENT_SHEAR_ENERGY ||
-        SHELL_ELEMENT_SHEAR_ENERGY_FRACTION)
-    {
-        caseId = 30;
-    }
-
-    if (caseId > 19)
-    {
-        // resize output
         SizeType size = 4;
         if (rValues.size() != size)
             rValues.resize(size);
 
-        // Compute the local coordinate system.
-        ShellQ4_LocalCoordinateSystem localCoordinateSystem(
-            mpCoordinateTransformation->CreateLocalCoordinateSystem());
-        ShellQ4_LocalCoordinateSystem referenceCoordinateSystem(
-            mpCoordinateTransformation->CreateReferenceCoordinateSystem());
+        const double thickness = ShellUtilities::GetThickness(GetProperties());
 
-        // Initialize common calculation variables
-        CalculationData data(localCoordinateSystem,
-            referenceCoordinateSystem, rCurrentProcessInfo);
-        data.CalculateLHS = false;
-        data.CalculateRHS = true;
-        InitializeCalculationData(data);
+        for (IndexType i=0; i<4; ++i)
+            rValues[i] = thickness;
 
-        // Get the current displacements in global coordinate system and
-        // transform to reference local system
-        MatrixType Rdisp(24, 24);
-        referenceCoordinateSystem.ComputeTotalRotationMatrix(Rdisp);
-        if (referenceCoordinateSystem.IsWarped()) {
-            MatrixType W(24, 24);
-            referenceCoordinateSystem.ComputeTotalWarpageMatrix(W);
-            Rdisp = prod(W, Rdisp);
-        }
-        data.localDisplacements = prod(Rdisp, data.globalDisplacements);
-
-
-        // loop over gauss points
-        for (unsigned int gauss_point = 0; gauss_point < size; ++gauss_point)
-        {
-            // Compute all strain-displacement matrices
-            data.gpIndex = gauss_point;
-            CalculateBMatrix(data);
-
-            // Calculate strain vectors in local coordinate system
-            noalias(data.generalizedStrains) =
-                prod(data.B, data.localDisplacements);
-
-            // Calculate the response of the Cross Section
-            ShellCrossSection::Pointer & section = mSections[gauss_point];
-            CalculateSectionResponse(data);
-
-            double resultDouble = 0.0;
-
-            if (caseId == 30)
-            {
-                // Energy calcs - these haven't been verified or tested yet.
-                CalculateShellElementEnergy(data, rVariable, resultDouble);
-            }
-            else if (caseId == 20)
-            {
-                //Von mises calcs
-
-                // recover stresses
-                CalculateStressesFromForceResultants(data.generalizedStresses,
-                    section->GetThickness(GetProperties()));
-
-                // account for orientation
-                if (section->GetOrientationAngle() != 0.0)
-                {
-                    Matrix R(6, 6);
-                    section->GetRotationMatrixForGeneralizedStresses
-                    (-(section->GetOrientationAngle()), R);
-                    data.generalizedStresses = prod(R, data.generalizedStresses);
-                }
-
-                CalculateVonMisesStress(data, rVariable, resultDouble);
-            }
-            else if (caseId == 40)
-            {
-                resultDouble = std::atan(0.5*data.generalizedStrains[2]) * 180 / Kratos::Globals::Pi;
-            }
-            else
-            {
-                KRATOS_ERROR <<
-                    "Error: ELEMENT ShellThinElement3D4N, METHOD CalculateOnIntegrationPoints(double)"
-                    << std::endl;
-            }
-
-            // store the result calculated
-            rValues[gauss_point] = resultDouble;
-        }
-    }
-    else if (rVariable == TSAI_WU_RESERVE_FACTOR)
-    {
-        // resize output
-        SizeType size = 4;
-        if (rValues.size() != size)
-            rValues.resize(size);
-
-        //CalculationData data = SetupStressOrStrainCalculation(rCurrentProcessInfo);
-        // Compute the local coordinate system.
-        ShellQ4_LocalCoordinateSystem localCoordinateSystem(
-            mpCoordinateTransformation->CreateLocalCoordinateSystem());
-        ShellQ4_LocalCoordinateSystem referenceCoordinateSystem(
-            mpCoordinateTransformation->CreateReferenceCoordinateSystem());
-
-        // Initialize common calculation variables
-        CalculationData data(localCoordinateSystem,
-            referenceCoordinateSystem, rCurrentProcessInfo);
-        data.CalculateLHS = true;
-        data.CalculateRHS = true;
-        InitializeCalculationData(data);
-
-        // Get the current displacements in global coordinate system and
-        // transform to reference local system
-        MatrixType Rdisp(24, 24);
-        referenceCoordinateSystem.ComputeTotalRotationMatrix(Rdisp);
-        if (referenceCoordinateSystem.IsWarped()) {
-            MatrixType W(24, 24);
-            referenceCoordinateSystem.ComputeTotalWarpageMatrix(W);
-            Rdisp = prod(W, Rdisp);
-        }
-        data.localDisplacements = prod(Rdisp, data.globalDisplacements);
-
-
-        // Get all laminae strengths
-        const PropertiesType & props = GetProperties();
-        ShellCrossSection::Pointer & section = mSections[0];
-        std::vector<Matrix> Laminae_Strengths =
-                            std::vector<Matrix>(section->NumberOfPlies());
-        for (unsigned int ply = 0; ply < section->NumberOfPlies(); ply++)
-        {
-            Laminae_Strengths[ply].resize(3, 3, 0.0);
-            Laminae_Strengths[ply].clear();
-        }
-        section->GetLaminaeStrengths(Laminae_Strengths,props);
-
-        // Define variables
-        Matrix R(6, 6);
-        double total_rotation = 0.0;
-
-        // Gauss Loop
-        for (unsigned int gauss_point = 0; gauss_point < size; gauss_point++)
-        {
-            // Compute all strain-displacement matrices
-            data.gpIndex = gauss_point;
-            CalculateBMatrix(data);
-
-            // Calculate strain vectors in local coordinate system
-            noalias(data.generalizedStrains) = prod(data.B, data.localDisplacements);
-
-            // Retrieve ply orientations
-            section = mSections[gauss_point];
-            Vector ply_orientation(section->NumberOfPlies());
-            section->GetLaminaeOrientation(props, ply_orientation);
-
-            //Calculate lamina stresses
-            CalculateLaminaStrains(data);
-            CalculateLaminaStresses(data);
-
-            // Rotate lamina stress from element CS to section CS, and then
-            // to lamina angle to lamina material principal directions
-            for (unsigned int ply = 0; ply < section->NumberOfPlies(); ply++)
-            {
-                total_rotation = -ply_orientation[ply] - (section->GetOrientationAngle());
-                section->GetRotationMatrixForGeneralizedStresses(total_rotation, R);
-                //top surface of current ply
-                data.rlaminateStresses[2*ply] = prod(R, data.rlaminateStresses[2*ply]);
-                //bottom surface of current ply
-                data.rlaminateStresses[2 * ply +1] = prod(R, data.rlaminateStresses[2 * ply +1]);
-            }
-
-            // Calculate Tsai-Wu criterion for each ply, take min of all plies
-            double min_tsai_wu = 0.0;
-            double temp_tsai_wu = 0.0;
-            for (unsigned int ply = 0; ply < section->NumberOfPlies(); ply++)
-            {
-                temp_tsai_wu = CalculateTsaiWuPlaneStress(data, Laminae_Strengths[ply],ply);
-                if (ply == 0)
-                {
-                    min_tsai_wu = temp_tsai_wu;
-                }
-                else if (temp_tsai_wu < min_tsai_wu)
-                {
-                    min_tsai_wu = temp_tsai_wu;
-                }
-            }
-
-            // Output min Tsai-Wu result
-            rValues[gauss_point] = min_tsai_wu;
-
-        }// Gauss loop
-    }
-    else
-    {
-        SizeType size = GetGeometry().size();
-        if (rValues.size() != size)
-            rValues.resize(size);
-
-        std::vector<double> temp(size);
-
-        for (SizeType i = 0; i < size; i++)
-            mSections[i]->GetValue(rVariable, GetProperties(), temp[i]);
-
-        const Matrix & shapeFunctions = GetGeometry().ShapeFunctionsValues();
-        Vector N(size);
-
-        for (SizeType i = 0; i < size; i++)
-        {
-            noalias(N) = row(shapeFunctions, i);
-            double& ival = rValues[i];
-            ival = 0.0;
-            for (SizeType j = 0; j < size; j++)
-            {
-                ival += N(j) * temp[j];
-            }
-        }
+        // std::cout << "Elem # " << Id() << " | thickness: " << thickness << std::endl;
     }
 
-    KRATOS_CATCH("");
+
+    // KRATOS_TRY;
+
+    // int caseId = -1;
+    // if (rVariable == TSAI_WU_RESERVE_FACTOR)
+    // {
+    //     caseId = 10;
+    // }
+    // else if (rVariable == SHEAR_ANGLE)
+    // {
+    //     caseId = 40;
+    // }
+    // else if (rVariable == VON_MISES_STRESS ||
+    //     rVariable == VON_MISES_STRESS_TOP_SURFACE ||
+    //     rVariable == VON_MISES_STRESS_MIDDLE_SURFACE ||
+    //     rVariable == VON_MISES_STRESS_BOTTOM_SURFACE)
+    // {
+    //     caseId = 20;
+    // }
+    // else if (rVariable == SHELL_ELEMENT_MEMBRANE_ENERGY ||
+    //     SHELL_ELEMENT_MEMBRANE_ENERGY_FRACTION ||
+    //     SHELL_ELEMENT_BENDING_ENERGY ||
+    //     SHELL_ELEMENT_BENDING_ENERGY_FRACTION ||
+    //     SHELL_ELEMENT_SHEAR_ENERGY ||
+    //     SHELL_ELEMENT_SHEAR_ENERGY_FRACTION)
+    // {
+    //     caseId = 30;
+    // }
+
+    // if (caseId > 19)
+    // {
+    //     // resize output
+    //     SizeType size = 4;
+    //     if (rValues.size() != size)
+    //         rValues.resize(size);
+
+    //     // Compute the local coordinate system.
+    //     ShellQ4_LocalCoordinateSystem localCoordinateSystem(
+    //         mpCoordinateTransformation->CreateLocalCoordinateSystem());
+    //     ShellQ4_LocalCoordinateSystem referenceCoordinateSystem(
+    //         mpCoordinateTransformation->CreateReferenceCoordinateSystem());
+
+    //     // Initialize common calculation variables
+    //     CalculationData data(localCoordinateSystem,
+    //         referenceCoordinateSystem, rCurrentProcessInfo);
+    //     data.CalculateLHS = false;
+    //     data.CalculateRHS = true;
+    //     InitializeCalculationData(data);
+
+    //     // Get the current displacements in global coordinate system and
+    //     // transform to reference local system
+    //     MatrixType Rdisp(24, 24);
+    //     referenceCoordinateSystem.ComputeTotalRotationMatrix(Rdisp);
+    //     if (referenceCoordinateSystem.IsWarped()) {
+    //         MatrixType W(24, 24);
+    //         referenceCoordinateSystem.ComputeTotalWarpageMatrix(W);
+    //         Rdisp = prod(W, Rdisp);
+    //     }
+    //     data.localDisplacements = prod(Rdisp, data.globalDisplacements);
+
+
+    //     // loop over gauss points
+    //     for (unsigned int gauss_point = 0; gauss_point < size; ++gauss_point)
+    //     {
+    //         // Compute all strain-displacement matrices
+    //         data.gpIndex = gauss_point;
+    //         CalculateBMatrix(data);
+
+    //         // Calculate strain vectors in local coordinate system
+    //         noalias(data.generalizedStrains) =
+    //             prod(data.B, data.localDisplacements);
+
+    //         // Calculate the response of the Cross Section
+    //         ShellCrossSection::Pointer & section = mSections[gauss_point];
+    //         CalculateSectionResponse(data);
+
+    //         double resultDouble = 0.0;
+
+    //         if (caseId == 30)
+    //         {
+    //             // Energy calcs - these haven't been verified or tested yet.
+    //             CalculateShellElementEnergy(data, rVariable, resultDouble);
+    //         }
+    //         else if (caseId == 20)
+    //         {
+    //             //Von mises calcs
+
+    //             // recover stresses
+    //             CalculateStressesFromForceResultants(data.generalizedStresses,
+    //                 section->GetThickness(GetProperties()));
+
+    //             // account for orientation
+    //             if (section->GetOrientationAngle() != 0.0)
+    //             {
+    //                 Matrix R(6, 6);
+    //                 section->GetRotationMatrixForGeneralizedStresses
+    //                 (-(section->GetOrientationAngle()), R);
+    //                 data.generalizedStresses = prod(R, data.generalizedStresses);
+    //             }
+
+    //             CalculateVonMisesStress(data, rVariable, resultDouble);
+    //         }
+    //         else if (caseId == 40)
+    //         {
+    //             resultDouble = std::atan(0.5*data.generalizedStrains[2]) * 180 / Kratos::Globals::Pi;
+    //         }
+    //         else
+    //         {
+    //             KRATOS_ERROR <<
+    //                 "Error: ELEMENT ShellThinElement3D4N, METHOD CalculateOnIntegrationPoints(double)"
+    //                 << std::endl;
+    //         }
+
+    //         // store the result calculated
+    //         rValues[gauss_point] = resultDouble;
+    //     }
+    // }
+    // else if (rVariable == TSAI_WU_RESERVE_FACTOR)
+    // {
+    //     // resize output
+    //     SizeType size = 4;
+    //     if (rValues.size() != size)
+    //         rValues.resize(size);
+
+    //     //CalculationData data = SetupStressOrStrainCalculation(rCurrentProcessInfo);
+    //     // Compute the local coordinate system.
+    //     ShellQ4_LocalCoordinateSystem localCoordinateSystem(
+    //         mpCoordinateTransformation->CreateLocalCoordinateSystem());
+    //     ShellQ4_LocalCoordinateSystem referenceCoordinateSystem(
+    //         mpCoordinateTransformation->CreateReferenceCoordinateSystem());
+
+    //     // Initialize common calculation variables
+    //     CalculationData data(localCoordinateSystem,
+    //         referenceCoordinateSystem, rCurrentProcessInfo);
+    //     data.CalculateLHS = true;
+    //     data.CalculateRHS = true;
+    //     InitializeCalculationData(data);
+
+    //     // Get the current displacements in global coordinate system and
+    //     // transform to reference local system
+    //     MatrixType Rdisp(24, 24);
+    //     referenceCoordinateSystem.ComputeTotalRotationMatrix(Rdisp);
+    //     if (referenceCoordinateSystem.IsWarped()) {
+    //         MatrixType W(24, 24);
+    //         referenceCoordinateSystem.ComputeTotalWarpageMatrix(W);
+    //         Rdisp = prod(W, Rdisp);
+    //     }
+    //     data.localDisplacements = prod(Rdisp, data.globalDisplacements);
+
+
+    //     // Get all laminae strengths
+    //     const PropertiesType & props = GetProperties();
+    //     ShellCrossSection::Pointer & section = mSections[0];
+    //     std::vector<Matrix> Laminae_Strengths =
+    //                         std::vector<Matrix>(section->NumberOfPlies());
+    //     for (unsigned int ply = 0; ply < section->NumberOfPlies(); ply++)
+    //     {
+    //         Laminae_Strengths[ply].resize(3, 3, 0.0);
+    //         Laminae_Strengths[ply].clear();
+    //     }
+    //     section->GetLaminaeStrengths(Laminae_Strengths,props);
+
+    //     // Define variables
+    //     Matrix R(6, 6);
+    //     double total_rotation = 0.0;
+
+    //     // Gauss Loop
+    //     for (unsigned int gauss_point = 0; gauss_point < size; gauss_point++)
+    //     {
+    //         // Compute all strain-displacement matrices
+    //         data.gpIndex = gauss_point;
+    //         CalculateBMatrix(data);
+
+    //         // Calculate strain vectors in local coordinate system
+    //         noalias(data.generalizedStrains) = prod(data.B, data.localDisplacements);
+
+    //         // Retrieve ply orientations
+    //         section = mSections[gauss_point];
+    //         Vector ply_orientation(section->NumberOfPlies());
+    //         section->GetLaminaeOrientation(props, ply_orientation);
+
+    //         //Calculate lamina stresses
+    //         CalculateLaminaStrains(data);
+    //         CalculateLaminaStresses(data);
+
+    //         // Rotate lamina stress from element CS to section CS, and then
+    //         // to lamina angle to lamina material principal directions
+    //         for (unsigned int ply = 0; ply < section->NumberOfPlies(); ply++)
+    //         {
+    //             total_rotation = -ply_orientation[ply] - (section->GetOrientationAngle());
+    //             section->GetRotationMatrixForGeneralizedStresses(total_rotation, R);
+    //             //top surface of current ply
+    //             data.rlaminateStresses[2*ply] = prod(R, data.rlaminateStresses[2*ply]);
+    //             //bottom surface of current ply
+    //             data.rlaminateStresses[2 * ply +1] = prod(R, data.rlaminateStresses[2 * ply +1]);
+    //         }
+
+    //         // Calculate Tsai-Wu criterion for each ply, take min of all plies
+    //         double min_tsai_wu = 0.0;
+    //         double temp_tsai_wu = 0.0;
+    //         for (unsigned int ply = 0; ply < section->NumberOfPlies(); ply++)
+    //         {
+    //             temp_tsai_wu = CalculateTsaiWuPlaneStress(data, Laminae_Strengths[ply],ply);
+    //             if (ply == 0)
+    //             {
+    //                 min_tsai_wu = temp_tsai_wu;
+    //             }
+    //             else if (temp_tsai_wu < min_tsai_wu)
+    //             {
+    //                 min_tsai_wu = temp_tsai_wu;
+    //             }
+    //         }
+
+    //         // Output min Tsai-Wu result
+    //         rValues[gauss_point] = min_tsai_wu;
+
+    //     }// Gauss loop
+    // }
+    // else
+    // {
+    //     SizeType size = GetGeometry().size();
+    //     if (rValues.size() != size)
+    //         rValues.resize(size);
+
+    //     std::vector<double> temp(size);
+
+    //     for (SizeType i = 0; i < size; i++)
+    //         mSections[i]->GetValue(rVariable, GetProperties(), temp[i]);
+
+    //     const Matrix & shapeFunctions = GetGeometry().ShapeFunctionsValues();
+    //     Vector N(size);
+
+    //     for (SizeType i = 0; i < size; i++)
+    //     {
+    //         noalias(N) = row(shapeFunctions, i);
+    //         double& ival = rValues[i];
+    //         ival = 0.0;
+    //         for (SizeType j = 0; j < size; j++)
+    //         {
+    //             ival += N(j) * temp[j];
+    //         }
+    //     }
+    // }
+
+    // KRATOS_CATCH("");
 }
 
 void ShellThinElement3D4N::CalculateOnIntegrationPoints(

@@ -116,7 +116,7 @@ public:
             for ( ModelPart::ElementsContainerType::iterator it = mMeshElements.begin();
                     it != mMeshElements.end(); ++it )
             {
-                int prop_id = (it)->GetProperties().Id();
+                int prop_id = 1;
                 if (max_id < prop_id) max_id = prop_id;
             }
             if (max_id > 10000)
@@ -128,7 +128,7 @@ public:
             for ( ModelPart::ElementsContainerType::iterator it = mMeshElements.begin();
                     it != mMeshElements.end(); ++it )
             {
-                int prop_id = (it)->GetProperties().Id();
+                int prop_id = 1;
                 elements_per_layer[prop_id] += 1;
             }
             //std::cout << "start printing elements" <<std::endl;
@@ -185,14 +185,14 @@ public:
                             nodes_id[1] = (it)->GetGeometry() [1].Id();
                             nodes_id[2] = (it)->GetGeometry() [2].Id();
                         }
-                        nodes_id[ (it)->GetGeometry().size()]= (it)->GetProperties().Id()+1;
+                        nodes_id[ (it)->GetGeometry().size()]= 1+1;
 
                         bool element_is_active = true;
                         if ((it)->IsDefined(ACTIVE))
                             element_is_active = (it)->Is(ACTIVE);
 
                         if (element_is_active)
-                            if ((it)->GetProperties().Id()==current_layer)
+                            if (1==current_layer)
                                 GiD_fWriteElementMat ( MeshFile, (it)->Id(), nodes_id);
 
                     }
@@ -210,7 +210,7 @@ public:
             for ( ModelPart::ConditionsContainerType::iterator it = mMeshConditions.begin();
                     it != mMeshConditions.end(); ++it )
             {
-                int prop_id = (it)->GetProperties().Id();
+                int prop_id = 1;
                 if (max_id < prop_id) max_id = prop_id;
             }
             if (max_id > 10000)
@@ -220,7 +220,7 @@ public:
             for ( ModelPart::ConditionsContainerType::iterator it = mMeshConditions.begin();
                     it != mMeshConditions.end(); ++it )
             {
-                int prop_id = (it)->GetProperties().Id();
+                int prop_id = 1;
                 conditions_per_layer[prop_id] += 1;
             }
             //std::cout << "start printing conditions" <<std::endl;
@@ -287,14 +287,14 @@ public:
                             nodes_id[18] = (it)->GetGeometry() [14].Id();
                             nodes_id[19] = (it)->GetGeometry() [15].Id();
                         }
-                        nodes_id[ (it)->GetGeometry().size()]= (it)->GetProperties().Id()+1;
+                        nodes_id[ (it)->GetGeometry().size()]= 1+1;
 
                         bool element_is_active = true;
                         if ((it)->IsDefined(ACTIVE))
                             element_is_active = (it)->Is(ACTIVE);
 
                         if (element_is_active)
-                            if ((it)->GetProperties().Id()==current_layer)
+                            if (1==current_layer)
                                 GiD_fWriteElementMat ( MeshFile, (it)->Id(), nodes_id);
                     }
                     delete [] nodes_id;
