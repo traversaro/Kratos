@@ -225,6 +225,8 @@ virtual double GetParticleMaxStress();
 void   SetParticleMaxStressFromProperties(double* particle_max_stress);
 virtual double GetParticleGamma();
 void   SetParticleGammaFromProperties(double* particle_gamma);
+virtual double GetLevelOfFouling();
+void   SetLevelOfFoulingFromProperties(double* level_of_fouling);
 
 array_1d<double, 3>& GetForce();
 

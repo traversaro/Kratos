@@ -2007,6 +2007,7 @@ double SphericParticle::GetParticleKTangential()                                
 double SphericParticle::GetParticleContactRadius()                                               { return GetFastProperties()->GetParticleContactRadius();     }
 double SphericParticle::GetParticleMaxStress()                                                   { return GetFastProperties()->GetParticleMaxStress();         }
 double SphericParticle::GetParticleGamma()                                                       { return GetFastProperties()->GetParticleGamma();             }
+double SphericParticle::GetLevelOfFouling()                                                      { return GetFastProperties()->GetLevelOfFouling();            }
 
 array_1d<double, 3>& SphericParticle::GetForce()                                                 { return GetGeometry()[0].FastGetSolutionStepValue(TOTAL_FORCES);}
 double&              SphericParticle::GetElasticEnergy()                                         { return mElasticEnergy; }
@@ -2028,6 +2029,7 @@ void   SphericParticle::SetParticleKTangentialFromProperties(double* particle_k_
 void   SphericParticle::SetParticleContactRadiusFromProperties(double* particle_contact_radius) { GetFastProperties()->SetParticleContactRadiusFromProperties( particle_contact_radius); }
 void   SphericParticle::SetParticleMaxStressFromProperties(double* particle_max_stress)  { GetFastProperties()->SetParticleMaxStressFromProperties( particle_max_stress);   }
 void   SphericParticle::SetParticleGammaFromProperties(double* particle_gamma)           { GetFastProperties()->SetParticleGammaFromProperties( particle_gamma);            }
+void   SphericParticle::SetLevelOfFoulingFromProperties(double* level_of_fouling)        { GetFastProperties()->SetLevelOfFoulingFromProperties( level_of_fouling);   }
 
 DEMDiscontinuumConstitutiveLaw::Pointer SphericParticle::GetConstitutiveLawPointer(){return mDiscontinuumConstitutiveLaw;}
 

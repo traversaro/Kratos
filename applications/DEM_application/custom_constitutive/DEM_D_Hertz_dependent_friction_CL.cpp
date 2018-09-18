@@ -47,8 +47,11 @@ namespace Kratos {
         const double other_shear_modulus = 0.5 * other_young / (1.0 + other_poisson);
         equiv_shear                      = 1.0 / ((2.0 - my_poisson)/my_shear_modulus + (2.0 - other_poisson)/other_shear_modulus);
 
+        //Level of fouling in case it is considered
+        equiv_level_of_fouling = 0.5 * ((1.0 + element1->GetLevelOfFouling()) + (1.0 + element2->GetLevelOfFouling()));
+
         //Normal and Tangent elastic constants
-        const double sqrt_equiv_radius_and_indentation = sqrt(equiv_radius * indentation);
+        const double sqrt_equiv_radius_and_indentation = equiv_level_of_fouling * sqrt(equiv_radius * indentation);
         mKn = 2.0 * equiv_young * sqrt_equiv_radius_and_indentation;
         mKt = 4.0 * equiv_shear * mKn / equiv_young;
     }
@@ -144,8 +147,11 @@ namespace Kratos {
         const double walls_shear_modulus = 0.5 * walls_young / (1.0 + walls_poisson);
         equiv_shear                      = 1.0 / ((2.0 - my_poisson)/my_shear_modulus + (2.0 - walls_poisson)/walls_shear_modulus);
 
+        //Level of fouling in case it is considered
+        equiv_level_of_fouling = 1.0 + element->GetLevelOfFouling();
+
         //Normal and Tangent elastic constants
-        const double sqrt_equiv_radius_and_indentation = sqrt(effective_radius * indentation);
+        const double sqrt_equiv_radius_and_indentation = equiv_level_of_fouling * sqrt(effective_radius * indentation);
         mKn = 2.0 * equiv_young * sqrt_equiv_radius_and_indentation;
         mKt = 4.0 * equiv_shear * mKn / equiv_young;
     }

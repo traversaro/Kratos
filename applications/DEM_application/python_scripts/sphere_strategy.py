@@ -502,6 +502,10 @@ class ExplicitStrategy(object):
                 gamma = self.GammaForHertzThornton(coefficient_of_restitution)
                 write_gamma = True
 
+            if (type_of_law == 'Dependent_friction'):
+                if not properties.Has(LEVEL_OF_FOULING):
+                    properties[LEVEL_OF_FOULING] = 0.0
+
             else:
                 pass
 
