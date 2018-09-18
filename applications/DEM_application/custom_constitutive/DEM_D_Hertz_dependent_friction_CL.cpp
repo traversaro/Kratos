@@ -29,8 +29,8 @@ namespace Kratos {
 
     void DEM_D_Hertz_dependent_friction::InitializeDependentContact(SphericParticle* const element1, SphericParticle* const element2, double& equiv_radius, double& equiv_young, double& equiv_shear, const double indentation) {
         //Get equivalent Radius
-        const double my_radius       = 1.2 * element1->GetRadius();
-        const double other_radius    = 1.2 * element2->GetRadius();
+        const double my_radius       = element1->GetRadius();
+        const double other_radius    = element2->GetRadius();
         const double radius_sum      = my_radius + other_radius;
         const double radius_sum_inv  = 1.0 / radius_sum;
         equiv_radius                 = my_radius * other_radius * radius_sum_inv;
