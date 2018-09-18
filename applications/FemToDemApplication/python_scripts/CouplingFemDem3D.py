@@ -110,6 +110,14 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 		self.FEM_Solution.solver.Solve()
 		########################################################
 
+		# print(self.FEM_Solution.main_model_part.GetProperties()[1][KratosFemDem.YIELD_STRESS_T])
+		# print(self.FEM_Solution.main_model_part.GetProperties()[2][KratosFemDem.YIELD_STRESS_T])
+
+		# for elem in self.FEM_Solution.main_model_part.Elements:
+		# 	print(KratosMultiphysics.GetPropertiesFromElement(elem))
+
+		Wait()
+
 		self.GenerateDEM()            # we create the new DEM of this time step
 		self.SpheresModelPart = self.ParticleCreatorDestructor.GetSpheresModelPart()
 		self.CheckForPossibleIndentations()

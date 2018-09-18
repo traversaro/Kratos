@@ -261,6 +261,9 @@ void FemDem3DElement::InitializeNonLinearIteration(ProcessInfo &rCurrentProcessI
 	const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
 	unsigned int voigt_size = dimension * (dimension + 1) / 2;
 
+	// KRATOS_WATCH(this->GetProperties()[YIELD_STRESS_T])
+
+
 	Vector StrainVector(voigt_size);
 	noalias(StrainVector) = ZeroVector(voigt_size);
 	Vector StressVector(voigt_size);
