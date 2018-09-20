@@ -243,6 +243,6 @@ class BoundingSurfaceYieldCriterion
 
 }  // namespace Kratos.
 
-#endif // KRATOS_MODIFIED_CAM_CLAY_YIELD_CRITERION_H_INCLUDED  defined 
+#endif // KRATOS_BOUNDING_SURFACE_YIELD_CRITERION_H_INCLUDED  defined 
 
 

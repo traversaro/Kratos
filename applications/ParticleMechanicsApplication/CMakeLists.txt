@@ -46,10 +46,12 @@ set( KRATOS_PARTICLE_MECHANICS_APPLICATION_SOURCES
 	###yield criteria
         ${CMAKE_CURRENT_SOURCE_DIR}/custom_constitutive/yield_criteria/mc_yield_criterion.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_constitutive/yield_criteria/modified_cam_clay_yield_criterion.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_constitutive/yield_criteria/bounding_surface_yield_criterion.cpp
 
 	###yield criteria
         ${CMAKE_CURRENT_SOURCE_DIR}/custom_constitutive/hardening_laws/exponential_strain_softening_law.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_constitutive/hardening_laws/cam_clay_hardening_law.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_constitutive/hardening_laws/bounding_surface_hardening_law.cpp
         
         ###flow rules
         ${CMAKE_CURRENT_SOURCE_DIR}/custom_constitutive/flow_rules/MPM_flow_rule.cpp
