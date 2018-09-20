@@ -155,8 +155,7 @@ double BoundingSurfaceYieldCriterion::CalculateCriticalStateLineSlope(const doub
 
 double BoundingSurfaceYieldCriterion::GetAlphaParameter()
 {
-    double shear_M = this->GetHardeningLaw().GetProperties()[CRITICAL_STATE_LINE];
-    
+    const double shear_M = this->GetHardeningLaw().GetProperties()[CRITICAL_STATE_LINE];
     const double phi_csl = (3.0 * shear_M) / (6.0 + shear_M);
     const double alpha   = (3.0 - std::sin(phi_csl)) / (3.0 + std::sin(phi_csl));
     
