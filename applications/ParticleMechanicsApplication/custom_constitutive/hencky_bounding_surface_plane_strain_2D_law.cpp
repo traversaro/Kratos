@@ -31,8 +31,8 @@ namespace Kratos
 HenckyBoundingSurfacePlasticPlaneStrain2DLaw::HenckyBoundingSurfacePlasticPlaneStrain2DLaw()
     : HenckyElasticPlasticPlaneStrain2DLaw()
 {
-    mpHardeningLaw   = HardeningLaw::Pointer( new CamClayHardeningLaw() );
-    mpYieldCriterion = YieldCriterion::Pointer( new ModifiedCamClayYieldCriterion(mpHardeningLaw) );
+    mpHardeningLaw   = HardeningLaw::Pointer( new BoundingSurfaceHardeningLaw() );
+    mpYieldCriterion = YieldCriterion::Pointer( new BoundingSurfaceYieldCriterion(mpHardeningLaw) );
     mpMPMFlowRule    = MPMFlowRule::Pointer( new BorjaCamClayPlasticFlowRule(mpYieldCriterion) );
 }
 
@@ -43,7 +43,7 @@ HenckyBoundingSurfacePlasticPlaneStrain2DLaw::HenckyBoundingSurfacePlasticPlaneS
 HenckyBoundingSurfacePlasticPlaneStrain2DLaw::HenckyBoundingSurfacePlasticPlaneStrain2DLaw(FlowRulePointer pMPMFlowRule, YieldCriterionPointer pYieldCriterion, HardeningLawPointer pHardeningLaw)
 {
     mpHardeningLaw    =  pHardeningLaw;
-    mpYieldCriterion  =  YieldCriterion::Pointer( new ModifiedCamClayYieldCriterion(mpHardeningLaw) );
+    mpYieldCriterion  =  YieldCriterion::Pointer( new BoundingSurfaceYieldCriterion(mpHardeningLaw) );
     mpMPMFlowRule     =  pMPMFlowRule;
 }
 
