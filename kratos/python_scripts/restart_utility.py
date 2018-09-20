@@ -116,6 +116,11 @@ class RestartUtility(object):
             if not os.path.isdir(folder_path) and self.model_part.GetCommunicator().MyPID() == 0:
                 os.makedirs(folder_path)
             self.model_part.GetCommunicator().Barrier()
+            # Due to network latency the folder might not be visible on all ranks yet
+            # in this case wait one second to not crash the serializer in the next step
+            if not os.path.isdir(folder_path):
+                from time import sleep
+                sleep(1)
 
         if self.restart_control_type_is_time:
             time = self.model_part.ProcessInfo[KratosMultiphysics.TIME]
