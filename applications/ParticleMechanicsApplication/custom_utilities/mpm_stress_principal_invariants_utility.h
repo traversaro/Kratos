@@ -126,6 +126,33 @@ namespace Kratos
                   J2 = std::sqrt( J2/2.0 );
             }
 
+            static inline void CalculateStressInvariants( const Vector& rStress, double& I1, double& J2, double& rLodeAngle)
+            {
+                  // CalculateStressInvariants - for I1 and J2
+                  CalculateStressInvariants( rStress, I1, J2);
+                  
+                  // Compute deviatoric stress
+                  Matrix deviatoric_stress_tensor = MathUtils<double>::StressVectorToTensor( rStress); 
+                  for (unsigned int i = 0; i < 3; ++i)
+                        deviatoric_stress_tensor(i,i) -= I1;
+
+                  // Compute Lode Angle
+                  rLodeAngle = MathUtils<double>::Det(deviatoric_stress_tensor); // J_3 = det(deviatoric_stress_tensor)
+                  rLodeAngle = -1.0 * rLodeAngle / 2.0 * std::pow(3.0/J2, 1.5);
+
+                  double epsilon = 1.0e-9;
+                  if ( std::abs(J2) < epsilon ) {                                               // if J2 is 0
+                        rLodeAngle = GetPI() / 6.0;
+                  } 
+                  else if ( std::abs( rLodeAngle ) > (1.0 - epsilon) ) {                        // if current rLodeAngle magnitude is larger than 1.0
+                        rLodeAngle = ( GetPI() / 6.0 ) * rLodeAngle / std::abs(rLodeAngle);
+                  }                 
+                  else {                                                                        // otherwise
+                        rLodeAngle = std::asin( rLodeAngle ) / 3.0;
+                  }
+
+            }
+
             static double GetPI()
             {
                   return std::atan(1.0)*4.0;
