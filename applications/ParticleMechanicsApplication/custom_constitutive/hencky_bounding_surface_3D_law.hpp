@@ -20,7 +20,7 @@
 
 // Project includes
 #include "custom_constitutive/hencky_plastic_3d_law.hpp"
-#include "custom_constitutive/flow_rules/borja_cam_clay_plastic_flow_rule.hpp"
+#include "custom_constitutive/flow_rules/bounding_surface_plastic_flow_rule.hpp"
 #include "custom_constitutive/yield_criteria/bounding_surface_yield_criterion.hpp"
 #include "custom_constitutive/hardening_laws/bounding_surface_hardening_law.hpp"
 

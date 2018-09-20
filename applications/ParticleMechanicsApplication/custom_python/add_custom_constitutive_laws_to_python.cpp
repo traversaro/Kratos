@@ -43,6 +43,7 @@
 #include "custom_constitutive/flow_rules/mc_plastic_flow_rule.hpp"
 #include "custom_constitutive/flow_rules/mc_strain_softening_plastic_flow_rule.hpp"
 #include "custom_constitutive/flow_rules/borja_cam_clay_plastic_flow_rule.hpp"
+#include "custom_constitutive/flow_rules/bounding_surface_plastic_flow_rule.hpp"
 #include "custom_constitutive/flow_rules/bingham_viscoplastic_flow_rule.hpp"
 #include "custom_constitutive/flow_rules/viscoplastic_flow_rule.hpp"
 

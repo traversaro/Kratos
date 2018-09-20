@@ -33,7 +33,7 @@ HenckyBoundingSurfacePlasticPlaneStrain2DLaw::HenckyBoundingSurfacePlasticPlaneS
 {
     mpHardeningLaw   = HardeningLaw::Pointer( new BoundingSurfaceHardeningLaw() );
     mpYieldCriterion = YieldCriterion::Pointer( new BoundingSurfaceYieldCriterion(mpHardeningLaw) );
-    mpMPMFlowRule    = MPMFlowRule::Pointer( new BorjaCamClayPlasticFlowRule(mpYieldCriterion) );
+    mpMPMFlowRule    = MPMFlowRule::Pointer( new BoundingSurfacePlasticFlowRule(mpYieldCriterion) );
 }
 
 
