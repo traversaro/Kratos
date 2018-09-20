@@ -56,6 +56,8 @@
 #include "custom_constitutive/hencky_mc_strain_softening_3D_law.hpp"
 #include "custom_constitutive/hencky_borja_cam_clay_plane_strain_2D_law.hpp"
 #include "custom_constitutive/hencky_borja_cam_clay_3D_law.hpp"
+#include "custom_constitutive/hencky_bounding_surface_plane_strain_2D_law.hpp"
+#include "custom_constitutive/hencky_bounding_surface_3D_law.hpp"
 
 //---flow rules
 #include "custom_constitutive/flow_rules/viscoplastic_flow_rule.hpp"
@@ -244,6 +246,9 @@ private:
     // CL: Borja Cam Clay
     const HenckyBorjaCamClayPlastic3DLaw                    mHenckyBorjaCamClayPlastic3DLaw;
     const HenckyBorjaCamClayPlasticPlaneStrain2DLaw         mHenckyBorjaCamClayPlasticPlaneStrain2DLaw;
+    // CL: Bounding Surface Plasticity
+    const HenckyBoundingSurfacePlastic3DLaw                 mHenckyBoundingSurfacePlastic3DLaw;
+    const HenckyBoundingSurfacePlasticPlaneStrain2DLaw      mHenckyBoundingSurfacePlasticPlaneStrain2DLaw;
 
     // Flow Rules
     const ViscoplasticFlowRule                      mViscoplasticFlowRule;

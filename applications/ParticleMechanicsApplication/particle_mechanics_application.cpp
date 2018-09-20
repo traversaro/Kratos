@@ -197,6 +197,9 @@ namespace Kratos
         // CL: Borja Cam Clay
         KRATOS_REGISTER_CONSTITUTIVE_LAW("HenckyBorjaCamClayPlastic3DLaw", mHenckyBorjaCamClayPlastic3DLaw);
         KRATOS_REGISTER_CONSTITUTIVE_LAW("HenckyBorjaCamClayPlasticPlaneStrain2DLaw", mHenckyBorjaCamClayPlasticPlaneStrain2DLaw);
+        // CL: Bounding Surface Plasticity
+        KRATOS_REGISTER_CONSTITUTIVE_LAW("HenckyBoundingSurfacePlastic3DLaw", mHenckyBoundingSurfacePlastic3DLaw);
+        KRATOS_REGISTER_CONSTITUTIVE_LAW("HenckyBoundingSurfacePlasticPlaneStrain2DLaw", mHenckyBoundingSurfacePlasticPlaneStrain2DLaw);
 
         //Register Flow Rules
         Serializer::Register("MCPlasticFlowRule", mMCPlasticFlowRule);

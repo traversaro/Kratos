@@ -55,6 +55,8 @@
 #include "custom_constitutive/hencky_mc_strain_softening_plane_strain_2D_law.hpp"
 #include "custom_constitutive/hencky_borja_cam_clay_3D_law.hpp"
 #include "custom_constitutive/hencky_borja_cam_clay_plane_strain_2D_law.hpp"
+#include "custom_constitutive/hencky_bounding_surface_3D_law.hpp"
+#include "custom_constitutive/hencky_bounding_surface_plane_strain_2D_law.hpp"
 
 namespace Kratos
 {
@@ -145,6 +147,19 @@ void  AddCustomConstitutiveLawsToPython(pybind11::module& m)
 
     class_< HenckyBorjaCamClayPlastic3DLaw, typename HenckyBorjaCamClayPlastic3DLaw::Pointer, ConstitutiveLaw >
     (m, "HenckyBorjaCamClayPlastic3DLaw")
+    .def(init<>() )
+    .def( init<MPMFlowRulePointer, YieldCriterionPointer, HardeningLawPointer>() )
+    ;
+
+    // Hencky Bounding Surface Plasticity
+    class_< HenckyBoundingSurfacePlasticPlaneStrain2DLaw, typename HenckyBoundingSurfacePlasticPlaneStrain2DLaw::Pointer, ConstitutiveLaw >
+    (m, "HenckyBoundingSurfacePlasticPlaneStrain2DLaw")
+    .def(init<>() )
+    .def( init<MPMFlowRulePointer, YieldCriterionPointer, HardeningLawPointer>() )
+    ;
+
+    class_< HenckyBoundingSurfacePlastic3DLaw, typename HenckyBoundingSurfacePlastic3DLaw::Pointer, ConstitutiveLaw >
+    (m, "HenckyBoundingSurfacePlastic3DLaw")
     .def(init<>() )
     .def( init<MPMFlowRulePointer, YieldCriterionPointer, HardeningLawPointer>() )
     ;
