@@ -22,6 +22,7 @@
 #include "custom_utilities/mpm_stress_principal_invariants_utility.h"
 #include "custom_constitutive/yield_criteria/bounding_surface_yield_criterion.hpp"
 #include "includes/mat_variables.h"
+#include "particle_mechanics_application_variables.h"
 
 
 namespace Kratos
@@ -76,20 +77,28 @@ BoundingSurfaceYieldCriterion::~BoundingSurfaceYieldCriterion()
 //************************* CALCULATE YIELD FUNCTION  ******************
 //**********************************************************************
 
-double& BoundingSurfaceYieldCriterion::CalculateYieldCondition(double& rStateFunction, const Vector& rStressVector, const double& rAlpha, const double& rOldPreconsolidationPressure)
+// This function calculate either Bounding Surface or Loading Surface depends on the given input rStressVector and rPreconsolidationPressure
+double& BoundingSurfaceYieldCriterion::CalculateYieldCondition(double& rStateFunction, const Vector& rStressVector, const double& rPreconsolidationPressure)
 {
-    double mean_stress_p, deviatoric_q;
-    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants( rStressVector, mean_stress_p, deviatoric_q);
-    deviatoric_q *= std::sqrt(3.0); //Q = sqrt(3) * J2
+    // Compute three invariants
+    double mean_stress_p, deviatoric_q, lode_angle;
+    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants( rStressVector, mean_stress_p, deviatoric_q, lode_angle);
+    mean_stress_p *= -1.0;           //P = - 1 * (I1/3) 
+    deviatoric_q  *= std::sqrt(3.0); //Q = sqrt(3) * J2
 
-    const double shear_M = this->GetHardeningLaw().GetProperties()[CRITICAL_STATE_LINE];
+    // Compute M_cs
+    const bool fix_csl_M = this->GetHardeningLaw().GetProperties()[IS_CSL_FIX];
+    double shear_M       = this->GetHardeningLaw().GetProperties()[CRITICAL_STATE_LINE];
+    if (!fix_csl_M)
+        shear_M = this->CalculateCriticalStateLineSlope(lode_angle);
 
-    double preconsolidation_stress = 0.0;
-    preconsolidation_stress = mpHardeningLaw->CalculateHardening(preconsolidation_stress, rAlpha, rOldPreconsolidationPressure);
-    
-    // f = (Q/M)² + P (P - P_c)
-    rStateFunction = std::pow(deviatoric_q/shear_M, 2);
-    rStateFunction += (mean_stress_p * (mean_stress_p - preconsolidation_stress) );
+    // Get constants
+    const double curvature_N = this->GetHardeningLaw().GetProperties()[BOUNDING_SURFACE_CURVATURE];
+    const double ratio_R     = this->GetHardeningLaw().GetProperties()[MODEL_PARAMETER];
+
+    // f = (Q/MP)^N - ln(P_c/P)/ln(R)
+    rStateFunction  = std::pow(deviatoric_q/(shear_M*mean_stress_p), curvature_N);
+    rStateFunction -= std::log(rPreconsolidationPressure/mean_stress_p) / std::log(ratio_R);
 
     return rStateFunction;
 }
@@ -97,39 +106,63 @@ double& BoundingSurfaceYieldCriterion::CalculateYieldCondition(double& rStateFun
 
 //*******************************CALCULATE FIRST YIELD FUNCTION DERIVATIVE *****************
 //************************************************************************************
-void BoundingSurfaceYieldCriterion::CalculateYieldFunctionDerivative(const Vector& rStressVector, Vector& rFirstDerivative, const double& rAlpha, const double& rOldPreconsolidationPressure)
+void BoundingSurfaceYieldCriterion::CalculateYieldFunctionDerivative(const Vector& rStressVector, Vector& rFirstDerivative)
 {
-    double mean_stress_p, deviatoric_q;
+    // Compute three invariants
+    double mean_stress_p, deviatoric_q, lode_angle;
+    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants( rStressVector, mean_stress_p, deviatoric_q, lode_angle);
+    mean_stress_p *= -1.0;           //P = - 1 * (I1/3) 
+    deviatoric_q  *= std::sqrt(3.0); //Q = sqrt(3) * J2
 
-    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants( rStressVector, mean_stress_p, deviatoric_q);
-    deviatoric_q *= std::sqrt(3.0); //Q = sqrt(3) * J2
+    // Compute M_cs
+    const bool fix_csl_M = this->GetHardeningLaw().GetProperties()[IS_CSL_FIX];
+    double shear_M       = this->GetHardeningLaw().GetProperties()[CRITICAL_STATE_LINE];
+    if (!fix_csl_M)
+        shear_M = this->CalculateCriticalStateLineSlope(lode_angle);
 
-    const double shear_M = this->GetHardeningLaw().GetProperties()[CRITICAL_STATE_LINE];
+    // Get constants
+    const double curvature_N = this->GetHardeningLaw().GetProperties()[BOUNDING_SURFACE_CURVATURE];
+    const double ratio_R     = this->GetHardeningLaw().GetProperties()[MODEL_PARAMETER];
+    const double alpha       = this->GetAlphaParameter();
 
-    double preconsolidation_stress = 0.0;
-    preconsolidation_stress = mpHardeningLaw->CalculateHardening(preconsolidation_stress, rAlpha, rOldPreconsolidationPressure);
+    const double aux_multiplier = std::pow( deviatoric_q / (shear_M*mean_stress_p), curvature_N) ;
 
     rFirstDerivative.resize(3, false);
-    rFirstDerivative[0] = 2.0 * mean_stress_p - preconsolidation_stress; // (df/dP)
-    rFirstDerivative[1] = 2.0 * deviatoric_q / std::pow(shear_M, 2);         // (df/dQ)
-    rFirstDerivative[2] = - mean_stress_p;                              // (df/dP_c)
+    // (df/dP)
+    rFirstDerivative[0]  = -curvature_N / mean_stress_p * aux_multiplier + 1.0 / (mean_stress_p * std::log(ratio_R)); 
+    // (df/dQ)
+    rFirstDerivative[1]  =  curvature_N / deviatoric_q  * aux_multiplier;         
+    // (df/dØ)
+    rFirstDerivative[2]  = -3.0/4.0 * curvature_N * aux_multiplier;
+    rFirstDerivative[2] *= (1.0 - std::pow(alpha, 4)) * std::cos(3.0 * lode_angle) / (1.0 + std::pow(alpha, 4) - (1 - std::pow(alpha, 4)) * std::sin(3.0 * lode_angle) );
+                                  
 }
 
-//*******************************CALCULATE SECOND YIELD FUNCTION DERIVATIVE *****************
-//************************************************************************************
-void BoundingSurfaceYieldCriterion::CalculateYieldFunctionSecondDerivative(const Vector& rStressVector, Vector& rSecondDerivative)
+
+double BoundingSurfaceYieldCriterion::CalculateCriticalStateLineSlope(const double& rLodeAngle)
 {
-    const double shear_M = this->GetHardeningLaw().GetProperties()[CRITICAL_STATE_LINE];
+    double shear_M = this->GetHardeningLaw().GetProperties()[CRITICAL_STATE_LINE];
+    const double alpha = this->GetAlphaParameter();
 
-    rSecondDerivative.resize(6, false);
-    rSecondDerivative[0] = 2.0 ;                        // (df²/dP²)  
-    rSecondDerivative[1] = 2.0 / std::pow(shear_M, 2) ; // (df²/dQ²)  
-    rSecondDerivative[2] = 0.0 ;                        // (df²/dP_c²)
-    rSecondDerivative[3] = 0.0 ;                        // (df²/dPdQ)  
-    rSecondDerivative[4] = 0.0 ;                        // (df²/dQdP_c)  
-    rSecondDerivative[5] =-1.0 ;                        // (df²/dPdP_c)
+    const double aux_multiplier = 2.0 * std::pow(alpha, 4) / (1.0 + std::pow(alpha, 4) - (1 - std::pow(alpha, 4)) * std::sin(3.0 * rLodeAngle) );
+    shear_M *= std::pow(aux_multiplier, 0.25);
 
+    KRATOS_ERROR_IF(shear_M < 0.0) << "Warning:: the slope of critical state line is negative!" << std::endl;
+
+    return shear_M;
 }
+
+
+double BoundingSurfaceYieldCriterion::GetAlphaParameter()
+{
+    double shear_M = this->GetHardeningLaw().GetProperties()[CRITICAL_STATE_LINE];
+    
+    const double phi_csl = (3.0 * shear_M) / (6.0 + shear_M);
+    const double alpha   = (3.0 - std::sin(phi_csl)) / (3.0 + std::sin(phi_csl));
+    
+    return alpha;
+}
+
 
 double BoundingSurfaceYieldCriterion::GetPI()
 {

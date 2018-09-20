@@ -89,11 +89,9 @@ class BoundingSurfaceYieldCriterion
         ///@name Operations
         ///@{
 
-        double& CalculateYieldCondition(double & rStateFunction, const Vector& rStressVector, const double& rAlpha, const double& rOldPreconsolidationPressure) override;
+        double& CalculateYieldCondition(double & rStateFunction, const Vector& rStressVector, const double& rPreconsolidationPressure) override;
 
-        void CalculateYieldFunctionDerivative(const Vector& rStressVector, Vector& rFirstDerivative, const double& rAlpha, const double& rOldPreconsolidationPressure) override;
-
-        void CalculateYieldFunctionSecondDerivative(const Vector& rStressVector, Vector& rSecondDerivative) override;
+        void CalculateYieldFunctionDerivative(const Vector& rStressVector, Vector& rFirstDerivative) override;
 
         ///@}
         ///@name Access
@@ -129,7 +127,9 @@ class BoundingSurfaceYieldCriterion
     protected:
         ///@name Protected static Member Variables
         ///@{
+        double GetAlphaParameter();
 
+        double CalculateCriticalStateLineSlope(const double& rLodeAngle);
 
         ///@}
         ///@name Protected member Variables
