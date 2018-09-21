@@ -11,22 +11,21 @@
 //                   Philipp Bucher
 //
 
-
 #if !defined(KRATOS_BASE_MESHMOVING_STRATEGY_H_INCLUDED )
 #define  KRATOS_BASE_MESHMOVING_STRATEGY_H_INCLUDED
 
 
-
 // System includes
-#include <string>
-#include <iostream>
 
 
 // External includes
 
 
 // Project includes
+#include "includes/kratos_parameters.h"
 #include "solving_strategies/strategies/solving_strategy.h"
+#include "custom_utilities/move_mesh_utilities.h"
+#include "custom_utilities/mesh_velocity_calculation_utility.h"
 
 
 namespace Kratos
@@ -67,17 +66,31 @@ public:
     KRATOS_CLASS_POINTER_DEFINITION(BaseMeshMovingStrategy);
 
     typedef SolvingStrategy<TSparseSpace, TDenseSpace, TLinearSolver> BaseType;
+    typedef Kratos::unique_ptr<MeshVelocityCalculationUtility> MeshVelCalcUtilPtrType;
 
     ///@}
     ///@name Life Cycle
     ///@{
 
     /// Default constructor.
-    BaseMeshMovingStrategy(){}
+    BaseMeshMovingStrategy(ModelPart& rMeshMovingModelPart,
+                           Parameters MeshVolocityCalculationParameters,
+                           const bool ReformDofSetAtEachStep) :
+        SolvingStrategy<TSparseSpace, TDenseSpace, TLinearSolver>(rMeshMovingModelPart),
+        mReformDofSetAtEachStep(ReformDofSetAtEachStep)
+    {
+        const bool mCalculateMeshVelocities =
+            MeshVolocityCalculationParameters["calculate_mesh_velocities"].GetBool()
+
+        if (mCalculateMeshVelocities) {
+            mpMeshVelocityCalculationUtility = Kratos::make_unique<MeshVelocityCalculationUtility>(
+                BaseType::GetModelPart(),
+                MeshVolocityCalculationParameters);
+        }
+    }
 
     /// Destructor.
-    virtual ~BaseMeshMovingStrategy(){}
-
+    ~BaseMeshMovingStrategy() override {}
 
     ///@}
     ///@name Operators
@@ -87,6 +100,30 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+    bool SolveSolutionStep() override
+    {
+        MoveMeshUtilities::SetMeshToInitialConfiguration(
+            BaseType::GetModelPart().GetCommunicator().LocalMesh().Nodes());
+
+        // here the Mesh-Movement-Method specific operations are performed
+        ComputeMeshMovement();
+
+        if (mCalculateMeshVelocities) {
+            KRATOS_DEBUG_ERROR_IF_NOT(mpMeshVelocityCalculationUtility)
+                << "mpMeshVelocityCalculationUtility is a nullptr!" << std::endl;
+            mpMeshVelocityCalculationUtility->CalculateMeshVelocities();
+        }
+
+        MoveMeshUtilities::MoveMesh(
+            BaseType::GetModelPart().GetCommunicator().LocalMesh().Nodes());
+
+        if (mReformDofSetAtEachStep) {
+            Clear();
+        }
+
+        return true;
+    }
 
 
     ///@}
@@ -102,20 +139,6 @@ public:
     ///@}
     ///@name Input and output
     ///@{
-
-    /// Turn back information as a string.
-    virtual std::string Info() const
-    {
-        std::stringstream buffer;
-        buffer << "BaseMeshMovingStrategy" ;
-        return buffer.str();
-    }
-
-    /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const {rOStream << "BaseMeshMovingStrategy";}
-
-    /// Print object's data.
-    virtual void PrintData(std::ostream& rOStream) const {}
 
 
     ///@}
@@ -134,6 +157,9 @@ protected:
     ///@name Protected member Variables
     ///@{
 
+    MeshVelCalcUtilPtrType mpMeshVelocityCalculationUtility = nullptr;
+    bool mReformDofSetAtEachStep;
+    bool mCalculateMeshVelocities;
 
     ///@}
     ///@name Protected Operators
@@ -143,6 +169,9 @@ protected:
     ///@}
     ///@name Protected Operations
     ///@{
+
+    // here the Mesh-Movement-Method specific operations are performed
+    virtual void ComputeMeshMovement() = 0;
 
 
     ///@}
@@ -218,20 +247,6 @@ private:
 ///@{
 
 
-/// input stream function
-inline std::istream& operator >> (std::istream& rIStream,
-                BaseMeshMovingStrategy& rThis){}
-
-/// output stream function
-inline std::ostream& operator << (std::ostream& rOStream,
-                const BaseMeshMovingStrategy& rThis)
-{
-    rThis.PrintInfo(rOStream);
-    rOStream << std::endl;
-    rThis.PrintData(rOStream);
-
-    return rOStream;
-}
 ///@}
 
 ///@} addtogroup block
