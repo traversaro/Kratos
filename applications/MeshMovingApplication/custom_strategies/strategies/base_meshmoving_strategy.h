@@ -22,10 +22,8 @@
 
 
 // Project includes
-#include "includes/kratos_parameters.h"
 #include "solving_strategies/strategies/solving_strategy.h"
 #include "custom_utilities/move_mesh_utilities.h"
-#include "custom_utilities/mesh_velocity_calculation_utility.h"
 
 
 namespace Kratos

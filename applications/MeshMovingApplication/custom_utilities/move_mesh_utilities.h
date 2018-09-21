@@ -9,6 +9,7 @@
 // kratos/license.txt
 //
 //  Main authors:    Andreas Winterstein (a.winterstein@tum.de)
+//                   Philipp Bucher
 //
 
 #if !defined(KRATOS_MESHMOVING_UTILITIES_H_INCLUDED)
@@ -19,11 +20,21 @@
 // External includes
 
 // Project includes
-#include "mesh_moving_application.h"
-#include "includes/define.h"
+#include "mesh_moving_application.h" // TODO needed?
 #include "includes/model_part.h"
+#include "includes/kratos_parameters.h"
 
 namespace Kratos {
+
+class MeshVelocityCalculationUtility
+{
+    public:
+
+
+    private:
+
+};
+
 namespace MoveMeshUtilities {
 
 typedef Element BaseType;
