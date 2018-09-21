@@ -198,6 +198,9 @@ private:
     ///@name Member Variables
     ///@{
 
+    BaseTypePointer pStrategyX;
+    BaseTypePointer pStrategyY;
+    BaseTypePointer pStrategyZ;
 
     ///@}
     ///@name Private Operators
