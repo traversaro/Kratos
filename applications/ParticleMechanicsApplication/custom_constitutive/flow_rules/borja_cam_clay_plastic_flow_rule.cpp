@@ -100,10 +100,10 @@ void BorjaCamClayPlasticFlowRule::InitializeMaterial(YieldCriterionPointer& pYie
 
 // Initiate Material Parameters which are allowed to change
 void BorjaCamClayPlasticFlowRule::InitializeMaterialParameters(){
-    const double swelling_slope = mpYieldCriterion->GetHardeningLaw().GetProperties()[SWELLING_SLOPE];
-    const double other_slope    = mpYieldCriterion->GetHardeningLaw().GetProperties()[NORMAL_COMPRESSION_SLOPE];
+    const double swelling_slope = GetProperties()[SWELLING_SLOPE];
+    const double other_slope    = GetProperties()[NORMAL_COMPRESSION_SLOPE];
 
-    mMaterialParameters.PreconsolidationPressure = mpYieldCriterion->GetHardeningLaw().GetProperties()[PRE_CONSOLIDATION_STRESS];
+    mMaterialParameters.PreconsolidationPressure = GetProperties()[PRE_CONSOLIDATION_STRESS];
     mMaterialParameters.PlasticHardeningModulus  = mMaterialParameters.PreconsolidationPressure/ (other_slope-swelling_slope);
     mMaterialParameters.ConsistencyParameter     = 0.0;
 }
@@ -229,8 +229,8 @@ bool BorjaCamClayPlasticFlowRule::CalculateConsistencyCondition(RadialReturnVari
     Vector principal_strain_vector = ZeroVector(3);
 
     // Initialize Material parameters
-    const double swelling_slope = mpYieldCriterion->GetHardeningLaw().GetProperties()[SWELLING_SLOPE];
-    const double other_slope    = mpYieldCriterion->GetHardeningLaw().GetProperties()[NORMAL_COMPRESSION_SLOPE];
+    const double swelling_slope = GetProperties()[SWELLING_SLOPE];
+    const double other_slope    = GetProperties()[NORMAL_COMPRESSION_SLOPE];
 
     // Begin Newton Iteration
     while(!converged)
@@ -328,7 +328,7 @@ void BorjaCamClayPlasticFlowRule::CalculateLHSMatrix(Matrix& rLHSMatrix, const V
 void BorjaCamClayPlasticFlowRule::CalculateHessianMatrix_2x2(Matrix& rHessianMatrix)
 {
     // Material parameters
-    const double shear_M = mpYieldCriterion->GetHardeningLaw().GetProperties()[CRITICAL_STATE_LINE];
+    const double shear_M = GetProperties()[CRITICAL_STATE_LINE];
 
     // Assemble matrix
     rHessianMatrix(0,0) = 2.0;
@@ -341,14 +341,14 @@ void BorjaCamClayPlasticFlowRule::CalculateHessianMatrix_2x2(Matrix& rHessianMat
 void BorjaCamClayPlasticFlowRule::ComputeElasticMatrix_2X2(const Vector& rPrincipalStressVector, const double& rVolumetricStrain, const double& rDeviatoricStrain, Matrix& rElasticMatrix)
 {
     // Material parameters
-    const double swelling_slope = mpYieldCriterion->GetHardeningLaw().GetProperties()[SWELLING_SLOPE];
-    const double alpha_shear = mpYieldCriterion->GetHardeningLaw().GetProperties()[ALPHA_SHEAR];
+    const double swelling_slope = GetProperties()[SWELLING_SLOPE];
+    const double alpha_shear    = GetProperties()[ALPHA_SHEAR];
 
-    double ref_pressure = mpYieldCriterion->GetHardeningLaw().GetProperties()[PRE_CONSOLIDATION_STRESS];
-    const double ocr = mpYieldCriterion->GetHardeningLaw().GetProperties()[OVER_CONSOLIDATION_RATIO];
+    double ref_pressure = GetProperties()[PRE_CONSOLIDATION_STRESS];
+    const double ocr    = GetProperties()[OVER_CONSOLIDATION_RATIO];
     ref_pressure /= ocr;
 
-    const double constant_shear_modulus = mpYieldCriterion->GetHardeningLaw().GetProperties()[INITIAL_SHEAR_MODULUS];
+    const double constant_shear_modulus = GetProperties()[INITIAL_SHEAR_MODULUS];
     const double shear_modulus = alpha_shear * ref_pressure * std::exp( -(rVolumetricStrain - mInitialVolumetricStrain) / swelling_slope);
 
     // Decompose principal_stress
@@ -467,11 +467,11 @@ void BorjaCamClayPlasticFlowRule::CalculatePrincipalStressVector(Vector& rPrinci
 // Function calculate Mean Stress from given volumetric_strain and deviatoric_strain
 void BorjaCamClayPlasticFlowRule::CalculateMeanStress(const double& rVolumetricStrain, const double& rDeviatoricStrain, double& rMeanStress)
 {
-    const double swelling_slope = mpYieldCriterion->GetHardeningLaw().GetProperties()[SWELLING_SLOPE];
-    const double alpha_shear    = mpYieldCriterion->GetHardeningLaw().GetProperties()[ALPHA_SHEAR];
+    const double swelling_slope = GetProperties()[SWELLING_SLOPE];
+    const double alpha_shear    = GetProperties()[ALPHA_SHEAR];
 
-    double ref_pressure = mpYieldCriterion->GetHardeningLaw().GetProperties()[PRE_CONSOLIDATION_STRESS];
-    const double ocr = mpYieldCriterion->GetHardeningLaw().GetProperties()[OVER_CONSOLIDATION_RATIO];
+    double ref_pressure = GetProperties()[PRE_CONSOLIDATION_STRESS];
+    const double ocr    = GetProperties()[OVER_CONSOLIDATION_RATIO];
     ref_pressure /= ocr;
 
     rMeanStress = ref_pressure * std::exp( -(rVolumetricStrain - mInitialVolumetricStrain) / swelling_slope) * (1.0 + 1.5 * alpha_shear * std::pow(rDeviatoricStrain, 2) / swelling_slope);
@@ -482,13 +482,13 @@ void BorjaCamClayPlasticFlowRule::CalculateMeanStress(const double& rVolumetricS
 // Function calculate DeviatoricStressVector from given volumetric_strain and deviatoric_strain_vector
 void BorjaCamClayPlasticFlowRule::CalculateDeviatoricStress(const double& rVolumetricStrain, const Vector & rDeviatoricStrainVector, Vector& rDeviatoricStress)
 {
-    double ref_pressure = mpYieldCriterion->GetHardeningLaw().GetProperties()[PRE_CONSOLIDATION_STRESS];
-    const double ocr = mpYieldCriterion->GetHardeningLaw().GetProperties()[OVER_CONSOLIDATION_RATIO];
+    double ref_pressure = GetProperties()[PRE_CONSOLIDATION_STRESS];
+    const double ocr    = GetProperties()[OVER_CONSOLIDATION_RATIO];
     ref_pressure /= ocr;    
     
-    const double swelling_slope = mpYieldCriterion->GetHardeningLaw().GetProperties()[SWELLING_SLOPE];
-    const double alpha_shear    = mpYieldCriterion->GetHardeningLaw().GetProperties()[ALPHA_SHEAR];
-    const double constant_shear_modulus = mpYieldCriterion->GetHardeningLaw().GetProperties()[INITIAL_SHEAR_MODULUS];
+    const double swelling_slope = GetProperties()[SWELLING_SLOPE];
+    const double alpha_shear    = GetProperties()[ALPHA_SHEAR];
+    const double constant_shear_modulus = GetProperties()[INITIAL_SHEAR_MODULUS];
 
     rDeviatoricStress = rDeviatoricStrainVector;
     const double shear_modulus = alpha_shear * ref_pressure * std::exp( -(rVolumetricStrain - mInitialVolumetricStrain) / swelling_slope);
@@ -740,8 +740,8 @@ void BorjaCamClayPlasticFlowRule::UpdateStateVariables(const Vector rPrincipalSt
     mpYieldCriterion->CalculateYieldFunctionSecondDerivative(rPrincipalStress, mStateFunctionSecondDerivative);
     
     // Update plastic hardening modulus k_p
-    const double swelling_slope = mpYieldCriterion->GetHardeningLaw().GetProperties()[SWELLING_SLOPE];
-    const double other_slope    = mpYieldCriterion->GetHardeningLaw().GetProperties()[NORMAL_COMPRESSION_SLOPE];
+    const double swelling_slope = GetProperties()[SWELLING_SLOPE];
+    const double other_slope    = GetProperties()[NORMAL_COMPRESSION_SLOPE];
     double k_p = mpYieldCriterion->GetHardeningLaw().CalculateHardening(k_p, rAlpha, mMaterialParameters.PreconsolidationPressure);
     k_p *= 1.0 / (other_slope-swelling_slope);
     mMaterialParameters.PlasticHardeningModulus = k_p;

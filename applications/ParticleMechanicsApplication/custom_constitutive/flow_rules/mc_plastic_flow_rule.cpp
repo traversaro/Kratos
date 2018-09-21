@@ -94,9 +94,9 @@ void MCPlasticFlowRule::InitializeMaterial(YieldCriterionPointer& pYieldCriterio
 
 // Initialize material parameters which are able to change
 void MCPlasticFlowRule::InitializeMaterialParameters(){
-    mMaterialParameters.Cohesion      = mpYieldCriterion->GetHardeningLaw().GetProperties()[COHESION];
-    mMaterialParameters.FrictionAngle = mpYieldCriterion->GetHardeningLaw().GetProperties()[INTERNAL_FRICTION_ANGLE];
-    mMaterialParameters.DilatancyAngle= mpYieldCriterion->GetHardeningLaw().GetProperties()[INTERNAL_DILATANCY_ANGLE];
+    mMaterialParameters.Cohesion       = GetProperties()[COHESION];
+    mMaterialParameters.FrictionAngle  = GetProperties()[INTERNAL_FRICTION_ANGLE];
+    mMaterialParameters.DilatancyAngle = GetProperties()[INTERNAL_DILATANCY_ANGLE];
 }
 
 bool MCPlasticFlowRule::CalculateReturnMapping( RadialReturnVariables& rReturnMappingVariables, const Matrix& rIncrementalDeformationGradient, Matrix& rStressMatrix, Matrix& rNewElasticLeftCauchyGreen)
@@ -315,8 +315,8 @@ bool MCPlasticFlowRule::CalculateConsistencyCondition(RadialReturnVariables& rRe
 void MCPlasticFlowRule::ComputeElasticMatrix_3X3(const RadialReturnVariables& rReturnMappingVariables, Matrix& rElasticMatrix)
 {
 
-    const double young_modulus  = mpYieldCriterion->GetHardeningLaw().GetProperties()[YOUNG_MODULUS];
-    const double poisson_ratio  = mpYieldCriterion->GetHardeningLaw().GetProperties()[POISSON_RATIO];
+    const double young_modulus = GetProperties()[YOUNG_MODULUS];
+    const double poisson_ratio = GetProperties()[POISSON_RATIO];
 
     const double diagonal    = young_modulus/(1.0+poisson_ratio)/(1.0-2.0*poisson_ratio) * (1.0-poisson_ratio);
     const double nondiagonal = young_modulus/(1.0+poisson_ratio)/(1.0-2.0*poisson_ratio) * ( poisson_ratio);
@@ -339,8 +339,8 @@ void MCPlasticFlowRule::ComputeElasticMatrix_3X3(const RadialReturnVariables& rR
 
 void MCPlasticFlowRule::CalculateInverseElasticMatrix(const RadialReturnVariables& rReturnMappingVariables, Matrix& rInverseElasticMatrix)
 {
-    const double young_modulus  = mpYieldCriterion->GetHardeningLaw().GetProperties()[YOUNG_MODULUS];
-    const double poisson_ratio  = mpYieldCriterion->GetHardeningLaw().GetProperties()[POISSON_RATIO];
+    const double young_modulus = GetProperties()[YOUNG_MODULUS];
+    const double poisson_ratio = GetProperties()[POISSON_RATIO];
 
     const double lame_lambda  = (young_modulus*poisson_ratio)/((1+poisson_ratio)*(1-2*poisson_ratio));
     const double lame_mu      =  young_modulus/(2*(1+poisson_ratio));
@@ -366,8 +366,8 @@ void MCPlasticFlowRule::CalculateInverseElasticMatrix(const RadialReturnVariable
 
 void MCPlasticFlowRule::CalculateElasticMatrix(const RadialReturnVariables& rReturnMappingVariables, Matrix& rElasticMatrix)
 {
-    const double young_modulus = mpYieldCriterion->GetHardeningLaw().GetProperties()[YOUNG_MODULUS];
-    const double poisson_ratio = mpYieldCriterion->GetHardeningLaw().GetProperties()[POISSON_RATIO];
+    const double young_modulus = GetProperties()[YOUNG_MODULUS];
+    const double poisson_ratio = GetProperties()[POISSON_RATIO];
     
     const double diagonal    = young_modulus/(1.0+poisson_ratio)/(1.0-2.0*poisson_ratio) * (1.0-poisson_ratio);
     const double nondiagonal = young_modulus/(1.0+poisson_ratio)/(1.0-2.0*poisson_ratio) * ( poisson_ratio);
@@ -404,8 +404,8 @@ void MCPlasticFlowRule::CalculatePrincipalStressTrial(const RadialReturnVariable
 
     // Calculate the elastic matrix
     Matrix ElasticMatrix = ZeroMatrix(3,3);
-    const double young_modulus = mpYieldCriterion->GetHardeningLaw().GetProperties()[YOUNG_MODULUS];
-    const double poisson_ratio = mpYieldCriterion->GetHardeningLaw().GetProperties()[POISSON_RATIO];
+    const double young_modulus = GetProperties()[YOUNG_MODULUS];
+    const double poisson_ratio = GetProperties()[POISSON_RATIO];
     const double diagonal    = young_modulus/(1.0+poisson_ratio)/(1.0-2.0*poisson_ratio) * (1.0-poisson_ratio);
     const double nondiagonal = young_modulus/(1.0+poisson_ratio)/(1.0-2.0*poisson_ratio) * ( poisson_ratio);
 
@@ -612,8 +612,8 @@ void MCPlasticFlowRule::ComputeElastoPlasticTangentMatrix(const RadialReturnVari
 void MCPlasticFlowRule::CalculateElastoPlasticMatrix(const RadialReturnVariables& rReturnMappingVariables, unsigned int& rRegion, Vector& DiffPrincipalStress, Matrix& rDep)
 {
     
-    const double young_modulus      = mpYieldCriterion->GetHardeningLaw().GetProperties()[YOUNG_MODULUS];
-    const double poisson_ratio      = mpYieldCriterion->GetHardeningLaw().GetProperties()[POISSON_RATIO];
+    const double young_modulus = GetProperties()[YOUNG_MODULUS];
+    const double poisson_ratio = GetProperties()[POISSON_RATIO];
     const double shear_contribution = young_modulus/(1.0+poisson_ratio)/2.0;
 
     const double friction_angle  = mMaterialParameters.FrictionAngle; 
