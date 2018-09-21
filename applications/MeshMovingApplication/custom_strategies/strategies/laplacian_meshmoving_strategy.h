@@ -5,327 +5,250 @@
 //                   Multi-Physics
 //
 //  License:		 BSD License
-//					 Kratos default license:
-// kratos/license.txt
+//					 Kratos default license: kratos/license.txt
 //
-//  Main authors:    Andreas Winterstein (a.winterstein@tum.de)
+//  Main authors:    Andreas Winterstein
+//                   Philipp Bucher
 //
 
-#if !defined(KRATOS_NEW_LAPLACIAN_MESHMOVING_STRATEGY)
-#define KRATOS_NEW_LAPLACIAN_MESHMOVING_STRATEGY
+#if !defined(KRATOS_LAPLACIAN_MESHMOVING_STRATEGY_H_INCLUDED )
+#define  KRATOS_LAPLACIAN_MESHMOVING_STRATEGY_H_INCLUDED
 
-/* System includes */
 
-/* External includes */
+// System includes
 
-/* Project includes */
-#include "mesh_moving_application.h"
-#include "custom_elements/laplacian_meshmoving_element.h"
-#include "custom_utilities/move_mesh_utilities.h"
-#include "processes/find_nodal_neighbours_process.h"
-#include "solving_strategies/builder_and_solvers/residualbased_elimination_builder_and_solver_componentwise.h"
-#include "solving_strategies/schemes/residualbased_incrementalupdate_static_scheme.h"
-#include "solving_strategies/strategies/residualbased_linear_strategy.h"
-#include "solving_strategies/strategies/solving_strategy.h"
 
-namespace Kratos {
+// External includes
 
-/**@name Kratos Globals */
-/*@{ */
 
-/*@} */
-/**@name Type Definitions */
-/*@{ */
+// Project includes
+#include "base_meshmoving_strategy.h"
 
-/*@} */
 
-/**@name  Enum's */
-/*@{ */
+namespace Kratos
+{
+///@addtogroup ApplicationNameApplication
+///@{
 
-/*@} */
-/**@name  Functions */
-/*@{ */
+///@name Kratos Globals
+///@{
 
-/*@} */
-/**@name Kratos Classes */
-/*@{ */
+///@}
+///@name Type Definitions
+///@{
+
+///@}
+///@name  Enum's
+///@{
+
+///@}
+///@name  Functions
+///@{
+
+///@}
+///@name Kratos Classes
+///@{
 
 /// Short class definition.
-/**   Detail class definition.
+/** Detail class definition.
  */
 template <class TSparseSpace, class TDenseSpace, class TLinearSolver>
-class LaplacianMeshMovingStrategy
-    : public SolvingStrategy<TSparseSpace, TDenseSpace, TLinearSolver> {
-
+class LaplacianMeshMovingStrategy : public BaseMeshMovingStrategy<TSparseSpace, TDenseSpace, TLinearSolver>
+{
 public:
-  /**@name Type Definitions */
-  /*@{ */
+    ///@name Type Definitions
+    ///@{
 
-  /** Counted pointer of ClassName */
-  KRATOS_CLASS_POINTER_DEFINITION(LaplacianMeshMovingStrategy);
+    /// Pointer definition of LaplacianMeshMovingStrategy
+    KRATOS_CLASS_POINTER_DEFINITION(LaplacianMeshMovingStrategy);
 
-  typedef SolvingStrategy<TSparseSpace, TDenseSpace, TLinearSolver> BaseType;
-  typedef typename BaseType::TBuilderAndSolverType TBuilderAndSolverType;
-  typedef Scheme<TSparseSpace, TDenseSpace> SchemeType;
+    typedef SolvingStrategy<TSparseSpace, TDenseSpace, TLinearSolver> BaseType;
+    typedef BaseType::Pointer BaseTypePointer;
 
-  /*@} */
-  /**@name Life Cycle
-   */
-  /*@{ */
+    ///@}
+    ///@name Life Cycle
+    ///@{
 
-  LaplacianMeshMovingStrategy(ModelPart &ModelPart,
-                              typename TLinearSolver::Pointer pNewLinearSolver,
-                              int TimeOrder = 1,
-                              bool ReformDofSetAtEachStep = false,
-                              bool ComputeReactions = false,
-                              bool CalculateMeshVelocities = true,
-                              int EchoLevel = 0)
-      : SolvingStrategy<TSparseSpace, TDenseSpace, TLinearSolver>(ModelPart) {
+    /// Default constructor.
+    LaplacianMeshMovingStrategy(ModelPart& rMeshMovingModelPart,
+                                Parameters MeshVolocityCalculationParameters,
+                                const bool ReformDofSetAtEachStep,
+                                BaseTypePointer pStrategyX)
+                                BaseTypePointer pStrategyY)
+                                BaseTypePointer pStrategyZ = nullptr) :
+        BaseMeshMovingStrategy<TSparseSpace, TDenseSpace, TLinearSolver>(
+            rMeshMovingModelPart,
+            MeshVolocityCalculationParameters,
+            ReformDofSetAtEachStep),
+            mpStrategyX(pStrategyX),
+            mpStrategyY(pStrategyY),
+            mpStrategyZ(pStrategyZ)
+    { }
 
-    KRATOS_TRY;
+    /// Destructor.
+    ~LaplacianMeshMovingStrategy() override {}
 
-    mreform_dof_set_at_each_step = ReformDofSetAtEachStep;
-    mecho_level = EchoLevel;
-    mcompute_reactions = ComputeReactions;
-    mcalculate_mesh_velocities = CalculateMeshVelocities;
-    mtime_order = TimeOrder;
-    bool calculate_norm_dx_flag = false;
+    ///@}
+    ///@name Operators
+    ///@{
 
-    typename SchemeType::Pointer pscheme = typename SchemeType::Pointer(
-        new ResidualBasedIncrementalUpdateStaticScheme<TSparseSpace,
-                                                       TDenseSpace>());
 
-    const std::string element_type = "LaplacianMeshMovingElement";
-    mpmesh_model_part = MoveMeshUtilities::GenerateMeshPart(
-        BaseType::GetModelPart(), element_type);
+    ///@}
+    ///@name Operations
+    ///@{
 
-    typedef typename Kratos::VariableComponent<
-        Kratos::VectorComponentAdaptor<Kratos::array_1d<double, 3>>>
-        VarComponent;
-
-    mpbuilder_and_solver_x = typename TBuilderAndSolverType::Pointer(
-        new ResidualBasedEliminationBuilderAndSolverComponentwise<
-            TSparseSpace, TDenseSpace, TLinearSolver, VarComponent>(
-            pNewLinearSolver, MESH_DISPLACEMENT_X));
-
-    mpbuilder_and_solver_y = typename TBuilderAndSolverType::Pointer(
-        new ResidualBasedEliminationBuilderAndSolverComponentwise<
-            TSparseSpace, TDenseSpace, TLinearSolver, VarComponent>(
-            pNewLinearSolver, MESH_DISPLACEMENT_Y));
-
-    mpbuilder_and_solver_z = typename TBuilderAndSolverType::Pointer(
-        new ResidualBasedEliminationBuilderAndSolverComponentwise<
-            TSparseSpace, TDenseSpace, TLinearSolver, VarComponent>(
-            pNewLinearSolver, MESH_DISPLACEMENT_Z));
-
-    mstrategy_x = typename BaseType::Pointer(
-        new ResidualBasedLinearStrategy<TSparseSpace, TDenseSpace,
-                                        TLinearSolver>(
-            *mpmesh_model_part, pscheme, pNewLinearSolver,
-            mpbuilder_and_solver_x, ComputeReactions,
-            mreform_dof_set_at_each_step, calculate_norm_dx_flag));
-
-    mstrategy_x->SetEchoLevel(mecho_level);
-
-    mstrategy_y = typename BaseType::Pointer(
-        new ResidualBasedLinearStrategy<TSparseSpace, TDenseSpace,
-                                        TLinearSolver>(
-            *mpmesh_model_part, pscheme, pNewLinearSolver,
-            mpbuilder_and_solver_y, ComputeReactions,
-            mreform_dof_set_at_each_step, calculate_norm_dx_flag));
-
-    mstrategy_y->SetEchoLevel(mecho_level);
-
-    mstrategy_z = typename BaseType::Pointer(
-        new ResidualBasedLinearStrategy<TSparseSpace, TDenseSpace,
-                                        TLinearSolver>(
-            *mpmesh_model_part, pscheme, pNewLinearSolver,
-            mpbuilder_and_solver_z, ComputeReactions,
-            mreform_dof_set_at_each_step, calculate_norm_dx_flag));
-
-    mstrategy_z->SetEchoLevel(mecho_level);
-
-    KRATOS_CATCH("")
-  }
-
-  virtual ~LaplacianMeshMovingStrategy(){
-
-  };
-
-  void Initialize() override {
-    unsigned int n_average_elements = 10;
-    unsigned int n_average_nodes = 10;
-    FindNodalNeighboursProcess find_nodal_neighbours_process =
-        FindNodalNeighboursProcess(*mpmesh_model_part, n_average_elements,
-                                   n_average_nodes);
-    find_nodal_neighbours_process.Execute();
-  }
-
-  double Solve() override {
-    KRATOS_TRY;
-
-    ProcessInfo &rCurrentProcessInfo = (mpmesh_model_part)->GetProcessInfo();
-
-    MoveMeshUtilities::SetMeshToInitialConfiguration(
-        mpmesh_model_part->GetCommunicator().LocalMesh().Nodes());
-
-    unsigned int dimension =
-        BaseType::GetModelPart().GetProcessInfo()[DOMAIN_SIZE];
-
-    if (dimension == 2) {
-      // X DIRECTION
-      rCurrentProcessInfo[LAPLACIAN_DIRECTION] = 1;
-      mstrategy_x->Solve();
-      // Y DIRECTION
-      rCurrentProcessInfo[LAPLACIAN_DIRECTION] = 2;
-      mstrategy_y->Solve();
-    } else {
-      // X DIRECTION
-      rCurrentProcessInfo[LAPLACIAN_DIRECTION] = 1;
-      mstrategy_x->Solve();
-      // Y DIRECTION
-      rCurrentProcessInfo[LAPLACIAN_DIRECTION] = 2;
-      mstrategy_y->Solve();
-      // Z DIRECTION
-      rCurrentProcessInfo[LAPLACIAN_DIRECTION] = 3;
-      mstrategy_z->Solve();
-    }
-    // Update FEM-base
-    const double delta_time =
-        BaseType::GetModelPart().GetProcessInfo()[DELTA_TIME];
-
-    if (mcalculate_mesh_velocities == true)
-        MoveMeshUtilities::CalculateMeshVelocities(mpmesh_model_part.get(), mtime_order,
-                                                   delta_time);
-    MoveMeshUtilities::MoveMesh(
-        mpmesh_model_part->GetCommunicator().LocalMesh().Nodes());
-
-    if (mreform_dof_set_at_each_step == true)
+    void Initialize() override
     {
-        mstrategy_x->Clear();
-        mstrategy_y->Clear();
-        mstrategy_z->Clear();
+        mpStrategyX->Initialize();
+        mpStrategyY->Initialize();
+        if (mpStrategyZ) mpStrategyZ->Initialize();
     }
 
-    return 0.0;
+    void Clear() override
+    {
+        mpStrategyX->Clear();
+        mpStrategyY->Clear();
+        if (mpStrategyZ) mpStrategyZ->Clear();
+    }
 
-    KRATOS_CATCH("");
-  }
+    ///@}
+    ///@name Access
+    ///@{
 
-  void UpdateReferenceMesh()
-  {
-  MoveMeshUtilities::UpdateReferenceMesh(BaseType::GetModelPart());
-  }
 
-  /*@} */
-  /**@name Operators
-   */
-  /*@{ */
+    ///@}
+    ///@name Inquiry
+    ///@{
 
-  /*@} */
-  /**@name Operations */
-  /*@{ */
 
-  /*@} */
-  /**@name Access */
-  /*@{ */
+    ///@}
+    ///@name Input and output
+    ///@{
 
-  /*@} */
-  /**@name Inquiry */
-  /*@{ */
 
-  /*@} */
-  /**@name Friends */
-  /*@{ */
+    ///@}
+    ///@name Friends
+    ///@{
 
-  /*@} */
+
+    ///@}
 
 protected:
-  /**@name Protected static Member Variables */
-  /*@{ */
+    ///@name Protected static Member Variables
+    ///@{
 
-  /*@} */
-  /**@name Protected member Variables */
-  /*@{ */
 
-  /*@} */
-  /**@name Protected Operators*/
-  /*@{ */
+    ///@}
+    ///@name Protected member Variables
+    ///@{
 
-  /*@} */
-  /**@name Protected Operations*/
-  /*@{ */
 
-  /*@} */
-  /**@name Protected  Access */
-  /*@{ */
+    ///@}
+    ///@name Protected Operators
+    ///@{
 
-  /*@} */
-  /**@name Protected Inquiry */
-  /*@{ */
 
-  /*@} */
-  /**@name Protected LifeCycle */
-  /*@{ */
+    ///@}
+    ///@name Protected Operations
+    ///@{
 
-  /*@} */
+    void ComputeMeshMovement() override
+    {
+        ProcessInfo& r_process_info = BaseType::GetModelPart().GetProcessInfo();
+        const std::size_t dimension = r_process_info[DOMAIN_SIZE];
+
+        // X DIRECTION
+        r_process_info[LAPLACIAN_DIRECTION] = 1;
+        mpStrategyX->Solve();
+        // Y DIRECTION
+        r_process_info[LAPLACIAN_DIRECTION] = 2;
+        mpStrategyY->Solve();
+
+        if (dimension == 3) { // TODO use domain size to check or check if nullptr
+            // Z DIRECTION
+            r_process_info[LAPLACIAN_DIRECTION] = 3;
+            mpStrategyZ->Solve();
+        }
+    }
+
+
+    ///@}
+    ///@name Protected  Access
+    ///@{
+
+
+    ///@}
+    ///@name Protected Inquiry
+    ///@{
+
+
+    ///@}
+    ///@name Protected LifeCycle
+    ///@{
+
+
+    ///@}
 
 private:
-  /**@name Static Member Variables */
-  /*@{ */
+    ///@name Static Member Variables
+    ///@{
 
-  /*@} */
-  /**@name Member Variables */
-  /*@{ */
-  std::unique_ptr<ModelPart> mpmesh_model_part;
 
-  typename BaseType::Pointer mstrategy_x;
-  typename BaseType::Pointer mstrategy_y;
-  typename BaseType::Pointer mstrategy_z;
-  typename TBuilderAndSolverType::Pointer mpbuilder_and_solver_x;
-  typename TBuilderAndSolverType::Pointer mpbuilder_and_solver_y;
-  typename TBuilderAndSolverType::Pointer mpbuilder_and_solver_z;
+    ///@}
+    ///@name Member Variables
+    ///@{
 
-  bool mreform_dof_set_at_each_step;
-  bool mcompute_reactions;
-  int mtime_order;
-  int mecho_level;
-  bool mcalculate_mesh_velocities;
 
-  /*@} */
-  /**@name Private Operators*/
-  /*@{ */
+    ///@}
+    ///@name Private Operators
+    ///@{
 
-  /*@} */
-  /**@name Private Operations*/
-  /*@{ */
-  /*@} */
-  /**@name Private  Access */
-  /*@{ */
 
-  /*@} */
-  /**@name Private Inquiry */
-  /*@{ */
+    ///@}
+    ///@name Private Operations
+    ///@{
 
-  /*@} */
-  /**@name Unaccessible methods */
-  /*@{ */
 
-  /** Copy constructor.
-   */
-  LaplacianMeshMovingStrategy(const LaplacianMeshMovingStrategy &Other);
+    ///@}
+    ///@name Private  Access
+    ///@{
 
-  /*@} */
 
-}; /* Class LaplacianMeshMovingStrategy */
+    ///@}
+    ///@name Private Inquiry
+    ///@{
 
-/*@} */
 
-/**@name Type Definitions */
-/*@{ */
+    ///@}
+    ///@name Un accessible methods
+    ///@{
 
-/*@} */
-}
-/* namespace Kratos.*/
+    /// Assignment operator.
+    LaplacianMeshMovingStrategy& operator=(LaplacianMeshMovingStrategy const& rOther){}
 
-#endif /* KRATOS_NEW_LAPLACIAN_MESHMOVING_STRATEGY  defined */
+    /// Copy constructor.
+    LaplacianMeshMovingStrategy(LaplacianMeshMovingStrategy const& rOther){}
+
+
+    ///@}
+
+}; // Class LaplacianMeshMovingStrategy
+
+///@}
+
+///@name Type Definitions
+///@{
+
+
+///@}
+///@name Input and output
+///@{
+
+
+///@}
+
+///@} addtogroup block
+
+}  // namespace Kratos.
+
+#endif // KRATOS_LAPLACIAN_MESHMOVING_STRATEGY_H_INCLUDED  defined
