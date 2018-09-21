@@ -53,7 +53,7 @@ namespace Kratos
 /** Detail class definition.
  */
 template <class TSparseSpace, class TDenseSpace, class TLinearSolver>
-class StructuralMeshMovingStrategy : public BaseMeshMovingStrategy<TSparseSpace, TDenseSpace, TLinearSolver>
+class StructuralMeshMovingStrategy : public StructuralMeshMovingStrategy<TSparseSpace, TDenseSpace, TLinearSolver>
 {
 public:
     ///@name Type Definitions
@@ -74,7 +74,7 @@ public:
                                 Parameters MeshVolocityCalculationParameters,
                                 const bool ReformDofSetAtEachStep,
                                 BaseTypePointer pStrategy) :
-        BaseMeshMovingStrategy<TSparseSpace, TDenseSpace, TLinearSolver>(
+        StructuralMeshMovingStrategy<TSparseSpace, TDenseSpace, TLinearSolver>(
             rMeshMovingModelPart,
             MeshVolocityCalculationParameters,
             ReformDofSetAtEachStep),
@@ -84,10 +84,15 @@ public:
     /// Destructor.
     ~StructuralMeshMovingStrategy() override {}
 
+    /// Deleted copy constructor.
+    StructuralMeshMovingStrategy(StructuralMeshMovingStrategy const& rOther) = delete;
+
     ///@}
     ///@name Operators
     ///@{
 
+    /// Deleted assignment operator.
+    StructuralMeshMovingStrategy& operator=(StructuralMeshMovingStrategy const& rOther) = delete;
 
     ///@}
     ///@name Operations
@@ -200,12 +205,6 @@ private:
     ///@}
     ///@name Un accessible methods
     ///@{
-
-    /// Assignment operator.
-    StructuralMeshMovingStrategy& operator=(StructuralMeshMovingStrategy const& rOther){}
-
-    /// Copy constructor.
-    StructuralMeshMovingStrategy(StructuralMeshMovingStrategy const& rOther){}
 
 
     ///@}

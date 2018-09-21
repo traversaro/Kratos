@@ -53,7 +53,7 @@ namespace Kratos
 /** Detail class definition.
  */
 template <class TSparseSpace, class TDenseSpace, class TLinearSolver>
-class LaplacianMeshMovingStrategy : public BaseMeshMovingStrategy<TSparseSpace, TDenseSpace, TLinearSolver>
+class LaplacianMeshMovingStrategy : public LaplacianMeshMovingStrategy<TSparseSpace, TDenseSpace, TLinearSolver>
 {
 public:
     ///@name Type Definitions
@@ -76,7 +76,7 @@ public:
                                 BaseTypePointer pStrategyX)
                                 BaseTypePointer pStrategyY)
                                 BaseTypePointer pStrategyZ = nullptr) :
-        BaseMeshMovingStrategy<TSparseSpace, TDenseSpace, TLinearSolver>(
+        LaplacianMeshMovingStrategy<TSparseSpace, TDenseSpace, TLinearSolver>(
             rMeshMovingModelPart,
             MeshVolocityCalculationParameters,
             ReformDofSetAtEachStep),
@@ -88,10 +88,15 @@ public:
     /// Destructor.
     ~LaplacianMeshMovingStrategy() override {}
 
+    /// Deleted copy constructor.
+    LaplacianMeshMovingStrategy(LaplacianMeshMovingStrategy const& rOther) = delete;
+
     ///@}
     ///@name Operators
     ///@{
 
+    /// Deleted assignment operator.
+    LaplacianMeshMovingStrategy& operator=(LaplacianMeshMovingStrategy const& rOther) = delete;
 
     ///@}
     ///@name Operations
@@ -171,7 +176,6 @@ protected:
         }
     }
 
-
     ///@}
     ///@name Protected  Access
     ///@{
@@ -225,12 +229,6 @@ private:
     ///@}
     ///@name Un accessible methods
     ///@{
-
-    /// Assignment operator.
-    LaplacianMeshMovingStrategy& operator=(LaplacianMeshMovingStrategy const& rOther){}
-
-    /// Copy constructor.
-    LaplacianMeshMovingStrategy(LaplacianMeshMovingStrategy const& rOther){}
 
 
     ///@}

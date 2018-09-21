@@ -92,10 +92,15 @@ public:
     /// Destructor.
     ~BaseMeshMovingStrategy() override {}
 
+    /// Deleted copy constructor.
+    BaseMeshMovingStrategy(BaseMeshMovingStrategy const& rOther) = delete;
+
     ///@}
     ///@name Operators
     ///@{
 
+    /// Deleted assignment operator.
+    BaseMeshMovingStrategy& operator=(BaseMeshMovingStrategy const& rOther) = delete;
 
     ///@}
     ///@name Operations
@@ -173,7 +178,6 @@ protected:
     // here the Mesh-Movement-Method specific operations are performed
     virtual void ComputeMeshMovement() = 0;
 
-
     ///@}
     ///@name Protected  Access
     ///@{
@@ -224,12 +228,6 @@ private:
     ///@}
     ///@name Un accessible methods
     ///@{
-
-    /// Assignment operator.
-    BaseMeshMovingStrategy& operator=(BaseMeshMovingStrategy const& rOther){}
-
-    /// Copy constructor.
-    BaseMeshMovingStrategy(BaseMeshMovingStrategy const& rOther){}
 
 
     ///@}
