@@ -64,7 +64,9 @@ class MeshSolverBase(PythonSolver):
             "time_order" : 2,
             "reform_dofs_each_step"     : false,
             "compute_reactions"         : false,
-            "calculate_mesh_velocities" : true
+            "mesh_velocity_calculation  : {
+                "calculate_mesh_velocities" : true
+            }
         }""")
 
         self.settings.ValidateAndAssignDefaults(default_settings)
@@ -205,6 +207,7 @@ class MeshSolverBase(PythonSolver):
         modeler = KratosMultiphysics.ConnectivityPreserveModeler()
         domain_size = self.settings["domain_size"]
         # TODO how to select geometry, i.e. does the name have to be the exact one?
+        # => I think the same problem is solved in the FluidSolver
         if self.domain_size == 2:
             modeler.GenerateModelPart(self.mesh_model_part,
                                       mesh_motion_model_part
