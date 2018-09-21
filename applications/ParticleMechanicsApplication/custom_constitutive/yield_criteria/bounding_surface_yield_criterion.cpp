@@ -83,8 +83,7 @@ double& BoundingSurfaceYieldCriterion::CalculateYieldCondition(double& rStateFun
     // Compute three invariants
     double mean_stress_p, deviatoric_q, lode_angle;
     MPMStressPrincipalInvariantsUtility::CalculateStressInvariants( rStressVector, mean_stress_p, deviatoric_q, lode_angle);
-    mean_stress_p *= -1.0;           //P = - 1 * (I1/3) 
-    deviatoric_q  *= std::sqrt(3.0); //Q = sqrt(3) * J2
+    mean_stress_p *= -1.0;  // Using negative definition
 
     // Compute M_cs
     const bool fix_csl_M = this->GetHardeningLaw().GetProperties()[IS_CSL_FIX];
@@ -111,8 +110,7 @@ void BoundingSurfaceYieldCriterion::CalculateYieldFunctionDerivative(const Vecto
     // Compute three invariants
     double mean_stress_p, deviatoric_q, lode_angle;
     MPMStressPrincipalInvariantsUtility::CalculateStressInvariants( rStressVector, mean_stress_p, deviatoric_q, lode_angle);
-    mean_stress_p *= -1.0;           //P = - 1 * (I1/3) 
-    deviatoric_q  *= std::sqrt(3.0); //Q = sqrt(3) * J2
+    mean_stress_p *= -1.0;  // Using negative definition
 
     // Compute M_cs
     const bool fix_csl_M = this->GetHardeningLaw().GetProperties()[IS_CSL_FIX];

@@ -81,7 +81,6 @@ double& ModifiedCamClayYieldCriterion::CalculateYieldCondition(double& rStateFun
 {
     double mean_stress_p, deviatoric_q;
     MPMStressPrincipalInvariantsUtility::CalculateStressInvariants( rStressVector, mean_stress_p, deviatoric_q);
-    deviatoric_q *= std::sqrt(3.0); //Q = sqrt(3) * J2
 
     const double shear_M = this->GetHardeningLaw().GetProperties()[CRITICAL_STATE_LINE];
 
@@ -101,9 +100,7 @@ double& ModifiedCamClayYieldCriterion::CalculateYieldCondition(double& rStateFun
 void ModifiedCamClayYieldCriterion::CalculateYieldFunctionDerivative(const Vector& rStressVector, Vector& rFirstDerivative, const double& rAlpha, const double& rOldPreconsolidationPressure)
 {
     double mean_stress_p, deviatoric_q;
-
     MPMStressPrincipalInvariantsUtility::CalculateStressInvariants( rStressVector, mean_stress_p, deviatoric_q);
-    deviatoric_q *= std::sqrt(3.0); //Q = sqrt(3) * J2
 
     const double shear_M = this->GetHardeningLaw().GetProperties()[CRITICAL_STATE_LINE];
 

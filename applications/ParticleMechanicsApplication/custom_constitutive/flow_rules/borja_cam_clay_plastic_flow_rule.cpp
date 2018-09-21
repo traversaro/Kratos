@@ -354,7 +354,6 @@ void BorjaCamClayPlasticFlowRule::ComputeElasticMatrix_2X2(const Vector& rPrinci
     // Decompose principal_stress
     double mean_stress_p, deviatoric_q;
     MPMStressPrincipalInvariantsUtility::CalculateStressInvariants( rPrincipalStressVector, mean_stress_p, deviatoric_q);
-    deviatoric_q *= std::sqrt(3.0); //Q = sqrt(3) * J2
 
     // Assemble matrix
     rElasticMatrix(0,0) = - mean_stress_p / swelling_slope;
@@ -544,7 +543,6 @@ void BorjaCamClayPlasticFlowRule::ComputeElastoPlasticTangentMatrix(const Radial
     Vector principal_stress_vector = mPrincipalStressUpdated;
     double mean_stress_p, deviatoric_q;
     MPMStressPrincipalInvariantsUtility::CalculateStressInvariants( principal_stress_vector, mean_stress_p, deviatoric_q);
-    deviatoric_q *= std::sqrt(3.0); //Q = sqrt(3) * J2
 
     // Compute StrainComponents and direction -- with check if deviatoric_strain == 0
     double volumetric_strain, deviatoric_strain;
