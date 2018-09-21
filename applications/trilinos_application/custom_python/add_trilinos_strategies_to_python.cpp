@@ -188,23 +188,6 @@ void AddStrategies(pybind11::module& m)
     class_< TrilinosNewtonRaphsonStrategy , typename TrilinosNewtonRaphsonStrategy::Pointer, TrilinosBaseSolvingStrategyType >
     (m,"TrilinosNewtonRaphsonStrategy").def(init< ModelPart&, TrilinosBaseSchemeType::Pointer, TrilinosLinearSolverType::Pointer, TrilinosConvergenceCriteria::Pointer, TrilinosBuilderAndSolverType::Pointer, int, bool, bool, bool >())
     ;
-
-    // Mesh Moving ********************************************************************************************
-    typedef TrilinosSpace<Epetra_FECrsMatrix, Epetra_FEVector> TrilinosSparseSpaceType;
-    typedef UblasSpace<double, Matrix, Vector> TrilinosLocalSpaceType;
-
-    using TrilinosLaplacianMeshMovingStrategyType = TrilinosLaplacianMeshMovingStrategy< TrilinosSparseSpaceType, TrilinosLocalSpaceType, TrilinosLinearSolverType >;
-    class_< TrilinosLaplacianMeshMovingStrategyType, typename TrilinosLaplacianMeshMovingStrategyType::Pointer, TrilinosBaseSolvingStrategyType >
-    (m,"TrilinosLaplacianMeshMovingStrategy").def(init<Epetra_MpiComm&, ModelPart&, TrilinosLinearSolverType::Pointer, int, bool, bool, bool, int >() )
-    .def("CalculateMeshVelocities", &TrilinosLaplacianMeshMovingStrategyType::CalculateMeshVelocities)
-    ;
-
-    using TrilinosStructuralMeshMovingStrategyType = TrilinosStructuralMeshMovingStrategy< TrilinosSparseSpaceType, TrilinosLocalSpaceType, TrilinosLinearSolverType >;
-    class_< TrilinosStructuralMeshMovingStrategyType, typename TrilinosStructuralMeshMovingStrategyType::Pointer, TrilinosBaseSolvingStrategyType  >
-    (m,"TrilinosStructuralMeshMovingStrategy").def(init<Epetra_MpiComm&, ModelPart&, TrilinosLinearSolverType::Pointer, int, bool, bool, bool, int >() )
-    .def("CalculateMeshVelocities", &TrilinosStructuralMeshMovingStrategyType::CalculateMeshVelocities)
-    ;
-
 }
 
 } // namespace Python.
