@@ -127,7 +127,7 @@ class MeshSolverBase(PythonSolver):
         self.get_mesh_motion_solving_strategy().Predict()
 
     def SolveSolutionStep(self):
-        self.get_mesh_motion_solving_strategy().Solve() # Calling Solve bcs this is what is currently implemented in the MeshSolverStrategies
+        self.get_mesh_motion_solving_strategy().SolveSolutionStep()
 
     def SetEchoLevel(self, level):
         self.get_mesh_motion_solving_strategy().SetEchoLevel(level)
