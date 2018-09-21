@@ -29,11 +29,15 @@ namespace Kratos {
 class MeshVelocityCalculationUtility
 {
 public:
+    MeshVelocityCalculationUtility(ModelPart& rMeshMovingModelPart,
+                                   Parameters MeshVolocityCalculationParameters);
+
     void CalculateMeshVelocities();
 
 
 private:
-
+    ModelPart& rModelPart;
+    Parameters MeshVolocityCalculationParameter;
 };
 
 namespace MoveMeshUtilities {

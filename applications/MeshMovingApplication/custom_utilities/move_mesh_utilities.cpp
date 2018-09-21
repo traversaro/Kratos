@@ -9,6 +9,7 @@
 // kratos/license.txt
 //
 //  Main authors:    Andreas Winterstein (a.winterstein@tum.de)
+//                   Philipp Bucher
 //
 
 // System includes
@@ -19,6 +20,13 @@
 #include "move_mesh_utilities.h"
 
 namespace Kratos {
+
+MeshVelocityCalculationUtility::MeshVelocityCalculationUtility(ModelPart& rMeshMovingModelPart,
+                                   Parameters MeshVolocityCalculationParameters)
+{
+    // default params ...
+
+}
 
 void MeshVelocityCalculationUtility::CalculateMeshVelocities()
 {
