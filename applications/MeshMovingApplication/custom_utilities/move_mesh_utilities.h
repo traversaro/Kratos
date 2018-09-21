@@ -28,10 +28,11 @@ namespace Kratos {
 
 class MeshVelocityCalculationUtility
 {
-    public:
+public:
+    void CalculateMeshVelocities();
 
 
-    private:
+private:
 
 };
 
@@ -54,9 +55,6 @@ void CalculateMeshVelocities(ModelPart* pMeshModelPart,
 void MoveMesh(const ModelPart::NodesContainerType &rNodes);
 
 void SetMeshToInitialConfiguration(const ModelPart::NodesContainerType &rNodes);
-
-std::unique_ptr<ModelPart> GenerateMeshPart(ModelPart &rModelPart,
-                                    const std::string &rElementName);
 
 void UpdateReferenceMesh(ModelPart &rModelPart);
 

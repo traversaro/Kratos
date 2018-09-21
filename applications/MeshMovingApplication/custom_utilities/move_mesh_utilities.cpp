@@ -19,6 +19,12 @@
 #include "move_mesh_utilities.h"
 
 namespace Kratos {
+
+void MeshVelocityCalculationUtility::CalculateMeshVelocities()
+{
+
+}
+
 namespace MoveMeshUtilities {
 
 //******************************************************************************
@@ -101,7 +107,7 @@ void CalculateMeshVelocities(ModelPart &rMeshModelPart,
 void MoveMesh(const ModelPart::NodesContainerType &rNodes) {
   KRATOS_TRY;
 
-  for (auto &rnode : rNodes) {
+  for (auto &rnode : rNodes) { // TODO OMP
     noalias(rnode.Coordinates()) = rnode.GetInitialPosition()
                      + rnode.FastGetSolutionStepValue(MESH_DISPLACEMENT);
   }
@@ -115,7 +121,7 @@ void SetMeshToInitialConfiguration(
     const ModelPart::NodesContainerType &rNodes) {
   KRATOS_TRY;
 
-  for (auto &rnode : rNodes) {
+  for (auto &rnode : rNodes) { // TODO OMP
     noalias(rnode.Coordinates()) = rnode.GetInitialPosition();
   }
 
@@ -124,38 +130,7 @@ void SetMeshToInitialConfiguration(
 
 //******************************************************************************
 //******************************************************************************
-std::unique_ptr<ModelPart> GenerateMeshPart(ModelPart &rModelPart,
-                                    const std::string &rElementName) {
-  KRATOS_TRY;
-
-  std::unique_ptr<ModelPart> pmesh_model_part = Kratos::make_unique<ModelPart>("MeshPart", 1);
-
-  // initializing mesh nodes and variables
-  pmesh_model_part->Nodes() = rModelPart.Nodes();
-
-  // creating mesh elements
-  ModelPart::ElementsContainerType &rmesh_elements =
-      pmesh_model_part->Elements();
-
-  const Element &r_reference_element =
-      KratosComponents<Element>::Get(rElementName);
-
-  for (int i = 0; i < (int)rModelPart.Elements().size(); i++) {
-    ModelPart::ElementsContainerType::iterator it =
-        rModelPart.ElementsBegin() + i;
-    Element::Pointer p_element = r_reference_element.Create(
-        it->Id(), it->pGetGeometry(), it->pGetProperties());
-    rmesh_elements.push_back(p_element);
-  }
-
-  return std::move(pmesh_model_part);
-
-  KRATOS_CATCH("");
-}
-
-//******************************************************************************
-//******************************************************************************
-  void UpdateReferenceMesh(ModelPart &rModelPart)
+  void UpdateReferenceMesh(ModelPart &rModelPart) // TODO is this still needed?
 {
 
   for (ModelPart::NodeIterator i = rModelPart.NodesBegin();
