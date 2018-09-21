@@ -145,7 +145,7 @@ double BoundingSurfaceYieldCriterion::CalculateCriticalStateLineSlope(const doub
     const double aux_multiplier = 2.0 * std::pow(alpha, 4) / (1.0 + std::pow(alpha, 4) - (1 - std::pow(alpha, 4)) * std::sin(3.0 * rLodeAngle) );
     shear_M *= std::pow(aux_multiplier, 0.25);
 
-    KRATOS_ERROR_IF(shear_M < 0.0) << "Warning:: the slope of critical state line is negative!" << std::endl;
+    KRATOS_ERROR_IF(shear_M < 0.0) << "The slope of critical state line is negative! M_cs = " << shear_M << std::endl;
 
     return shear_M;
 }
