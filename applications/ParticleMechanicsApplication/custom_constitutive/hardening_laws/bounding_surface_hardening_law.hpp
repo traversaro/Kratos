@@ -84,7 +84,7 @@ public:
     ///@name Operations
     ///@{
 
-    double& CalculateHardening(double &rHardening, const double &rAlpha, const double rOldPreconsolidationPressure) override;
+    double& CalculateHardening(double &rHardening, const double &rAlpha, const Variable<double>& rThisVariable) override;
 	
     ///@}
     ///@name Access

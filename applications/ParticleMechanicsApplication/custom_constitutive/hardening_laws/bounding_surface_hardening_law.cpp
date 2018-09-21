@@ -68,12 +68,9 @@ BoundingSurfaceHardeningLaw::~BoundingSurfaceHardeningLaw()
 //*******************************CALCULATE TOTAL HARDENING****************************
 //************************************************************************************
 
-double& BoundingSurfaceHardeningLaw::CalculateHardening(double &rHardening, const double &rAlpha, const double rOldPreconsolidationPressure)
+double& BoundingSurfaceHardeningLaw::CalculateHardening(double &rHardening, const double &rAlpha, const Variable<double>& rThisVariable)
 {
-    const double swelling_slope = GetProperties()[SWELLING_SLOPE];
-    const double other_slope    = GetProperties()[NORMAL_COMPRESSION_SLOPE];
 
-    rHardening = rOldPreconsolidationPressure * (std::exp (- rAlpha / (other_slope-swelling_slope) ) ) ;
     return rHardening;
 }
   
