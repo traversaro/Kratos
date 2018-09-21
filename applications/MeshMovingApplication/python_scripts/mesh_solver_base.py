@@ -180,6 +180,12 @@ class MeshSolverBase(PythonSolver):
             self._mesh_motion_solving_strategy = self._create_mesh_motion_solving_strategy()
         return self._mesh_motion_solving_strategy
 
+    def get_mesh_motion_model_part(self):
+        if not hasattr(self, '_mesh_motion_model_part'):
+            self._mesh_motion_model_part = self._create_mesh_motion_model_part()
+        return self._mesh_motion_model_part
+
+
     #### Private functions ####
 
     def _create_linear_solver(self):
@@ -193,6 +199,23 @@ class MeshSolverBase(PythonSolver):
         The mesh motion solving strategy must provide the functions defined in SolutionStrategy.
         """
         raise Exception("Mesh motion solving strategy must be created by the derived class.")
+
+    def _create_mesh_motion_model_part(self):
+        mesh_motion_model_part = KratosMultiphysics.ModelPart("MeshMoving")
+        modeler = KratosMultiphysics.ConnectivityPreserveModeler()
+        domain_size = self.settings["domain_size"]
+        # TODO how to select geometry, i.e. does the name have to be the exact one?
+        if self.domain_size == 2:
+            modeler.GenerateModelPart(self.mesh_model_part,
+                                      mesh_motion_model_part
+                                      self.element_name,
+                                      "Condition2D")
+        else:
+            modeler.GenerateModelPart(self.mesh_model_part,
+                                      mesh_motion_model_part
+                                      self.element_name,
+                                      "Condition3D")
+        return mesh_motion_model_part
 
     def _set_and_fill_buffer(self):
         """Prepare nodal solution step data containers and time step information. """
