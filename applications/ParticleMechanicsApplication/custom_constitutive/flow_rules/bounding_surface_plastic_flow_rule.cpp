@@ -192,6 +192,29 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnV
     return converged;
 }
 
+void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative)
+{
+    double mean_stress_p, deviatoric_q;
+    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(rPrincipalStressVector, mean_stress_p, deviatoric_q);
+    mean_stress_p *= -1.0;  // p is defined negative
+
+    double lode_angle_IP;
+    MPMStressPrincipalInvariantsUtility::CalculateThirdStressInvariant(rImagePointPrincipalStressVector, lode_angle_IP);
+
+    // Get material parameters
+    const double parameter_A = GetProperties()[MODEL_PARAMETER_A];
+    const double shear_M     = this->CalculateCriticalStateLineSlope(lode_angle_IP);
+    const double direction_T = this->GetDirectionParameter(rPrincipalStressVector, rImagePointPrincipalStressVector); 
+    const double alpha       = this->GetAlphaParameter();
+
+    rFirstDerivative = ZeroVector(3);
+    rFirstDerivative[0]  = parameter_A * (shear_M - direction_T * (deviatoric_q/mean_stress_p));
+    rFirstDerivative[1]  = direction_T;
+    rFirstDerivative[2]  = - direction_T * 3.0/4.0 * deviatoric_q;
+    rFirstDerivative[2] *= (1.0 - std::pow(alpha, 4)) * std::cos(3.0 * lode_angle_IP) / (1.0 + std::pow(alpha, 4) - (1 - std::pow(alpha, 4)) * std::sin(3.0 * lode_angle_IP) );
+
+}
+
 void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix_3X3(const Vector& rPrincipalStressVector, const double& rVolumetricStrain, const double& rDeviatoricStrain, Matrix& rElasticMatrix)
 {
     // Assemble rElasticMatrix matrix
@@ -379,6 +402,37 @@ bool BoundingSurfacePlasticFlowRule::UpdateInternalVariables( RadialReturnVariab
     mInternalVariables.AccumulatedPlasticDeviatoricStrain += deviatoric_strain;
 
     return true;
+}
+
+double BoundingSurfacePlasticFlowRule::CalculateCriticalStateLineSlope(const double& rLodeAngle)
+{
+    double shear_M = GetProperties()[CRITICAL_STATE_LINE];
+    const double alpha = this->GetAlphaParameter();
+
+    const double aux_multiplier = 2.0 * std::pow(alpha, 4) / (1.0 + std::pow(alpha, 4) - (1 - std::pow(alpha, 4)) * std::sin(3.0 * rLodeAngle) );
+    shear_M *= std::pow(aux_multiplier, 0.25);
+
+    KRATOS_ERROR_IF(shear_M < 0.0) << "The slope of critical state line is negative! M_cs = " << shear_M << std::endl;
+
+    return shear_M;
+}
+
+double BoundingSurfacePlasticFlowRule::GetDirectionParameter(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector)
+{
+    double direction_T = -1.0;
+
+    //TODO: implement how to compute direction_T, still unknown
+
+    return direction_T;
+}
+
+double BoundingSurfacePlasticFlowRule::GetAlphaParameter()
+{
+    const double shear_M = GetProperties()[CRITICAL_STATE_LINE];
+    const double phi_csl = (3.0 * shear_M) / (6.0 + shear_M);
+    const double alpha   = (3.0 - std::sin(phi_csl)) / (3.0 + std::sin(phi_csl));
+    
+    return alpha;
 }
 
 double BoundingSurfacePlasticFlowRule::GetPI()

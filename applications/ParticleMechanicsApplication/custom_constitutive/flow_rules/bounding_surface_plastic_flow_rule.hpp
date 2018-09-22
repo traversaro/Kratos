@@ -217,6 +217,14 @@ protected:
 
     void CalculateTransformationMatrix(const Matrix& rMainDirection, Matrix& rA);
 
+    void CalculatePlasticPotentialDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative);
+
+    double CalculateCriticalStateLineSlope(const double& rLodeAngle);
+
+    double GetAlphaParameter();
+
+    double GetDirectionParameter(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector);
+
     double GetPI();
   
     //virtual void GetPrincipalStressAndStrain(Vector& PrincipalStresses, Vector& PrincipalStrains);
