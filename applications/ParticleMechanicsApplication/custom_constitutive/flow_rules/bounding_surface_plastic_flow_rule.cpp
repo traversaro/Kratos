@@ -419,11 +419,36 @@ double BoundingSurfacePlasticFlowRule::CalculateCriticalStateLineSlope(const dou
 
 double BoundingSurfacePlasticFlowRule::GetDirectionParameter(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector)
 {
-    double direction_T = -1.0;
+    double direction_T;
 
-    //TODO: implement how to compute direction_T, still unknown
+    // Compute angle of stress reference axis and the stress point
+    const double gamma_angle    = this->GetDirectionAngle(rPrincipalStressVector);
+    const double gamma_angle_IP = this->GetDirectionAngle(rImagePointPrincipalStressVector);
+
+    if (std::abs(gamma_angle - gamma_angle_IP) < 0.5 * this->GetPI())
+        direction_T = 1.0;
+    else if (std::abs(gamma_angle - gamma_angle_IP) >= 0.5 * this->GetPI())
+        direction_T = -1.0;
+    else
+        KRATOS_ERROR << "There is a problem with angles gamma_angle = " << gamma_angle <<  ", gamma_angle_IP = " << gamma_angle_IP << std::endl;
 
     return direction_T;
+}
+
+double BoundingSurfacePlasticFlowRule::GetDirectionAngle(const Vector& rPrincipalStressVector)
+{
+    double angle = std::acos(1/std::sqrt(3.0));
+    const double aux   = 2.0 * rPrincipalStressVector[2] - rPrincipalStressVector[1] - rPrincipalStressVector[0];
+    const double aux_2 = rPrincipalStressVector[1] - rPrincipalStressVector[0];
+    if(std::abs(aux) > 0.0)
+    {
+        if(rPrincipalStressVector[2] >= 0.0)
+            angle = std::atan(std::sqrt(3.0)*aux_2/aux) + 2.0 * GetPI();
+        else
+            angle = std::atan(std::sqrt(3.0)*aux_2/aux) + GetPI();
+    }
+
+    return angle;
 }
 
 double BoundingSurfacePlasticFlowRule::GetAlphaParameter()

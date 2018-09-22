@@ -225,6 +225,8 @@ protected:
 
     double GetDirectionParameter(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector);
 
+    double GetDirectionAngle(const Vector& rPrincipalStressVector);
+
     double GetPI();
   
     //virtual void GetPrincipalStressAndStrain(Vector& PrincipalStresses, Vector& PrincipalStrains);
