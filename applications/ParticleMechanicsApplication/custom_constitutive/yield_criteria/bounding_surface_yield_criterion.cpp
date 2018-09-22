@@ -93,7 +93,7 @@ double& BoundingSurfaceYieldCriterion::CalculateYieldCondition(double& rStateFun
 
     // Get constants
     const double curvature_N = this->GetHardeningLaw().GetProperties()[BOUNDING_SURFACE_CURVATURE];
-    const double ratio_R     = this->GetHardeningLaw().GetProperties()[MODEL_PARAMETER];
+    const double ratio_R     = this->GetHardeningLaw().GetProperties()[MODEL_PARAMETER_R];
 
     // f = (Q/MP)^N - ln(P_c/P)/ln(R)
     rStateFunction  = std::pow(deviatoric_q/(shear_M*mean_stress_p), curvature_N);
@@ -120,7 +120,7 @@ void BoundingSurfaceYieldCriterion::CalculateYieldFunctionDerivative(const Vecto
 
     // Get constants
     const double curvature_N = this->GetHardeningLaw().GetProperties()[BOUNDING_SURFACE_CURVATURE];
-    const double ratio_R     = this->GetHardeningLaw().GetProperties()[MODEL_PARAMETER];
+    const double ratio_R     = this->GetHardeningLaw().GetProperties()[MODEL_PARAMETER_R];
     const double alpha       = this->GetAlphaParameter();
 
     const double aux_multiplier = std::pow( deviatoric_q / (shear_M*mean_stress_p), curvature_N) ;
