@@ -27,55 +27,121 @@ namespace Kratos {
     // DEM-DEM INTERACTION //
     /////////////////////////
 
-    void DEM_D_Hertz_dependent_friction::InitializeDependentContact(SphericParticle* const element1, SphericParticle* const element2, double& equiv_radius, double& equiv_young, double& equiv_shear, const double indentation) {
+    void DEM_D_Hertz_dependent_friction::InitializeDependentContact(double equiv_radius, const double equiv_young, const double equiv_shear, const double indentation) {
+        //Normal and Tangent elastic constants
+        const double sqrt_equiv_radius_and_indentation = sqrt(equiv_radius * indentation);
+        mKn = 2.0 * equiv_young * sqrt_equiv_radius_and_indentation;
+        mKt = 4.0 * equiv_shear * mKn / equiv_young;
+    }
+
+    void DEM_D_Hertz_dependent_friction::DamageContact(SphericParticle* const element1, SphericParticle* const element2, double equiv_radius, const double equiv_level_of_fouling, const double equiv_young, const double equiv_shear, double indentation, const double normal_contact_force) {
+        //Get new Equivalent Radius
+        double equiv_radius_prev = equiv_radius;
+        equiv_radius    = (equiv_young * sqrt(6 * normal_contact_force)) / (pow(Globals::Pi * element1->GetParticleMaxStress(),1.5));
+        const double AlphaFunction = element1->GetProperties()[ALPHA_FUNCTION];
+
+        double offset = (equiv_radius - equiv_radius_prev) * AlphaFunction;
+        if (indentation > (2.0 * offset)) indentation = indentation - (2.0 * offset);
+        else {
+            KRATOS_WATCH("HELLO-DEM")
+            indentation = 0.0;
+        }
+
+        for (unsigned int i = 0; element1->mNeighbourElements.size(); i++) {
+            if (element1->mNeighbourElements[i]->Id() == element2->Id()) {
+                element1->mNeighbourContactRadius[i] = equiv_radius;
+                element1->mNeighbourIndentation[i] = indentation;
+                break;
+            }
+        }
+
+        // double offset = 0.0;
+
+        // for (unsigned int i = 0; element1->mNeighbourElements.size(); i++) {
+        //     if (element1->mNeighbourElements[i]->Id() == element2->Id()){
+        //         if (element1->mNeighbourContactRadius[i] == 0.0) {
+        //             offset = (equiv_radius - equiv_level_of_fouling * element1->GetParticleContactRadius()) * AlphaFunction;
+        //         }
+        //         else {
+        //             element1->mNeighbourContactRadius[i] = equiv_radius;
+        //             offset = (equiv_radius - element1->mNeighbourContactRadius[i]) * AlphaFunction;
+        //         }
+        //         break;
+        //     }
+        // }
+
+        // if (indentation > (2 * offset)) indentation -= (2 * offset);
+        // if (indentation > offset) indentation -= offset;
+        // else indentation = 0.0;
+
+        //New Normal and Tangent elastic constants
+        const double sqrt_equiv_radius_and_indentation = sqrt(equiv_radius * indentation);
+        mKn = 2.0 * equiv_young * sqrt_equiv_radius_and_indentation;
+        mKt = 4.0 * equiv_shear * mKn / equiv_young;
+    }
+
+    void DEM_D_Hertz_dependent_friction::CalculateForces(const ProcessInfo& r_process_info,
+                                                      const double OldLocalElasticContactForce[3],
+                                                      double LocalElasticContactForce[3],
+                                                      double LocalDeltDisp[3],
+                                                      double LocalRelVel[3],
+                                                      double indentation,
+                                                      double previous_indentation,
+                                                      double ViscoDampingLocalContactForce[3],
+                                                      double& cohesive_force,
+                                                      SphericParticle* element1,
+                                                      SphericParticle* element2,
+                                                      bool& sliding,
+                                                      double LocalCoordSystem[3][3]) {
         //Get equivalent Radius
-        const double my_radius       = element1->GetRadius();
-        const double other_radius    = element2->GetRadius();
-        const double radius_sum      = my_radius + other_radius;
-        const double radius_sum_inv  = 1.0 / radius_sum;
-        equiv_radius                 = my_radius * other_radius * radius_sum_inv;
+        const double my_radius      = element1->GetParticleContactRadius();
+        const double other_radius   = element2->GetParticleContactRadius();
+        const double radius_sum     = my_radius + other_radius;
+        const double radius_sum_inv = 1.0 / radius_sum;
+        double equiv_radius         = my_radius * other_radius * radius_sum_inv;
+
+        //Level of fouling in case it is considered
+        const double equiv_level_of_fouling = 0.5 * ((1.0 + element1->GetLevelOfFouling()) + (1.0 + element2->GetLevelOfFouling()));
+
+        for (unsigned int i = 0; element1->mNeighbourElements.size(); i++) {
+            if (element1->mNeighbourElements[i]->Id() == element2->Id()) {
+                if (element1->mNeighbourContactRadius[i] > equiv_radius) {
+                    equiv_radius = equiv_level_of_fouling * element1->mNeighbourContactRadius[i];
+                }
+                else {
+                    equiv_radius = equiv_level_of_fouling * equiv_radius;
+                }
+                if (element1->mNeighbourIndentation[i] > 0.0) {
+                    indentation = element1->mNeighbourIndentation[i];
+                }
+                break;
+            }
+        }
 
         //Get equivalent Young's Modulus
         const double my_young        = element1->GetYoung();
         const double other_young     = element2->GetYoung();
         const double my_poisson      = element1->GetPoisson();
         const double other_poisson   = element2->GetPoisson();
-        equiv_young                  = my_young * other_young / (other_young * (1.0 - my_poisson * my_poisson) + my_young * (1.0 - other_poisson * other_poisson));
+        const double equiv_young     = my_young * other_young / (other_young * (1.0 - my_poisson * my_poisson) + my_young * (1.0 - other_poisson * other_poisson));
 
         //Get equivalent Shear Modulus
-        const double my_shear_modulus    = 0.5 * my_young / (1.0 + my_poisson);
+        const double my_shear_modulus = 0.5 * my_young / (1.0 + my_poisson);
         const double other_shear_modulus = 0.5 * other_young / (1.0 + other_poisson);
-        equiv_shear                      = 1.0 / ((2.0 - my_poisson)/my_shear_modulus + (2.0 - other_poisson)/other_shear_modulus);
+        const double equiv_shear = 1.0 / ((2.0 - my_poisson)/my_shear_modulus + (2.0 - other_poisson)/other_shear_modulus);
 
-        //Level of fouling in case it is considered
-        double equiv_level_of_fouling = 0.5 * ((1.0 + element1->GetLevelOfFouling()) + (1.0 + element2->GetLevelOfFouling()));
+        InitializeDependentContact(equiv_radius, equiv_young, equiv_shear, indentation);
 
-        //Normal and Tangent elastic constants
-        const double sqrt_equiv_radius_and_indentation = equiv_level_of_fouling * sqrt(equiv_radius * indentation);
-        mKn = 2.0 * equiv_young * sqrt_equiv_radius_and_indentation;
-        mKt = 4.0 * equiv_shear * mKn / equiv_young;
-    }
-
-    void DEM_D_Hertz_dependent_friction::CalculateForces(const ProcessInfo& r_process_info,
-                                                                const double OldLocalElasticContactForce[3],
-                                                                double LocalElasticContactForce[3],
-                                                                double LocalDeltDisp[3],
-                                                                double LocalRelVel[3],
-                                                                double indentation,
-                                                                double previous_indentation,
-                                                                double ViscoDampingLocalContactForce[3],
-                                                                double& cohesive_force,
-                                                                SphericParticle* element1,
-                                                                SphericParticle* element2,
-                                                                bool& sliding,
-                                                                double LocalCoordSystem[3][3]) {
-
-        double equiv_radius, equiv_young, equiv_shear;
-
-        InitializeDependentContact(element1, element2, equiv_radius, equiv_young, equiv_shear, indentation);
-
-        LocalElasticContactForce[2]  = CalculateNormalForce(element1, element2, indentation, LocalCoordSystem);
+        LocalElasticContactForce[2]  = CalculateNormalForce(indentation);
         cohesive_force               = CalculateCohesiveNormalForce(element1, element2, indentation);
+
+        double contact_stress = (3 * LocalElasticContactForce[2]) / (2 * Globals::Pi * equiv_radius * indentation);
+
+        if (contact_stress > element1->GetParticleMaxStress()) {
+            DamageContact(element1, element2, equiv_radius, equiv_level_of_fouling, equiv_young, equiv_shear, indentation, LocalElasticContactForce[2]);
+            LocalElasticContactForce[2] = CalculateNormalForce(indentation);
+            cohesive_force              = CalculateCohesiveNormalForce(element1, element2, indentation);
+        }
 
         CalculateViscoDampingForce(LocalRelVel, ViscoDampingLocalContactForce, element1, element2);
 
@@ -131,27 +197,56 @@ namespace Kratos {
     // DEM-FEM INTERACTION //
     /////////////////////////
 
-    void DEM_D_Hertz_dependent_friction::InitializeDependentContactWithFEM(SphericParticle* const element, Condition* const wall, double& effective_radius, double& equiv_young, double& equiv_shear, const double indentation) {
-        //Get effective Radius
-        effective_radius                 = element->GetRadius();
-
-        //Get equivalent Young's Modulus
-        const double my_young            = element->GetYoung();
-        const double walls_young         = wall->GetProperties()[YOUNG_MODULUS];
-        const double my_poisson          = element->GetPoisson();
-        const double walls_poisson       = wall->GetProperties()[POISSON_RATIO];
-        equiv_young                      = my_young * walls_young / (walls_young * (1.0 - my_poisson * my_poisson) + my_young * (1.0 - walls_poisson * walls_poisson));
-
-        //Get equivalent Shear Modulus
-        const double my_shear_modulus    = 0.5 * my_young / (1.0 + my_poisson);
-        const double walls_shear_modulus = 0.5 * walls_young / (1.0 + walls_poisson);
-        equiv_shear                      = 1.0 / ((2.0 - my_poisson)/my_shear_modulus + (2.0 - walls_poisson)/walls_shear_modulus);
-
-        //Level of fouling in case it is considered
-        double equiv_level_of_fouling = 1.0 + element->GetLevelOfFouling();
-
+    void DEM_D_Hertz_dependent_friction::InitializeDependentContactWithFEM(double effective_radius, const double equiv_young, const double equiv_shear, const double indentation) {
         //Normal and Tangent elastic constants
-        const double sqrt_equiv_radius_and_indentation = equiv_level_of_fouling * sqrt(effective_radius * indentation);
+        const double sqrt_equiv_radius_and_indentation = sqrt(effective_radius * indentation);
+        mKn = 2.0 * equiv_young * sqrt_equiv_radius_and_indentation;
+        mKt = 4.0 * equiv_shear * mKn / equiv_young;
+    }
+
+    void DEM_D_Hertz_dependent_friction::DamageContactWithFEM(SphericParticle* const element, Condition* const wall, double effective_radius, const double equiv_level_of_fouling, const double equiv_young, const double equiv_shear, double indentation, const double normal_contact_force) {
+        double effective_radius_prev = effective_radius;
+        //Get new Equivalent Radius
+        effective_radius    = (equiv_young * sqrt(6 * normal_contact_force)) / (pow(Globals::Pi * element->GetParticleMaxStress(),1.5));
+
+        const double AlphaFunction = element->GetProperties()[ALPHA_FUNCTION];
+
+        double offset = (effective_radius - effective_radius_prev) * AlphaFunction;
+
+        if (indentation > offset) indentation = indentation - offset;
+        else {
+            KRATOS_WATCH("HELLO-FEM")
+            indentation = 0.0;
+        }
+
+        for (unsigned int i = 0; element->mNeighbourRigidFaces.size(); i++) {
+            if (element->mNeighbourRigidFaces[i]->Id() == wall->Id()) {
+                element->mNeighbourRigidContactRadius[i] = effective_radius;
+                element->mNeighbourRigidIndentation[i] = indentation;
+                break;
+            }
+        }
+
+        // double offset = 0.0;
+
+        // for (unsigned int i = 0; element->mNeighbourRigidFaces.size(); i++) {
+        //     if (element->mNeighbourRigidFaces[i]->Id() == wall->Id()){
+        //         if (element->mNeighbourRigidContactRadius[i] == 0.0) {
+        //             offset = (effective_radius - equiv_level_of_fouling * element->GetParticleContactRadius()) * AlphaFunction;
+        //         }
+        //         else {
+        //             element->mNeighbourRigidContactRadius[i] = effective_radius;
+        //             offset = (effective_radius - element->mNeighbourRigidContactRadius[i]) * AlphaFunction;
+        //         }
+        //         break;
+        //     }
+        // }
+
+        // if (indentation > offset) indentation -= offset;
+        // else indentation = 0.0;
+
+        //New Normal and Tangent elastic constants
+        const double sqrt_equiv_radius_and_indentation = sqrt(effective_radius * indentation);
         mKn = 2.0 * equiv_young * sqrt_equiv_radius_and_indentation;
         mKt = 4.0 * equiv_shear * mKn / equiv_young;
     }
@@ -169,12 +264,51 @@ namespace Kratos {
                                                                        Condition* const wall,
                                                                        bool& sliding) {
 
-        double effective_radius, equiv_young, equiv_shear;
+        //Get effective Radius
+        double effective_radius    = element->GetParticleContactRadius();
 
-        InitializeDependentContactWithFEM(element, wall, effective_radius, equiv_young, equiv_shear, indentation);
+        //Level of fouling in case it is considered
+        double equiv_level_of_fouling = 1.0 + element->GetLevelOfFouling();
 
-        LocalElasticContactForce[2] = CalculateNormalForce(element, wall, indentation);
+        for (unsigned int i = 0; element->mNeighbourRigidFaces.size(); i++) {
+            if (element->mNeighbourRigidFaces[i]->Id() == wall->Id()) {
+                if (element->mNeighbourRigidContactRadius[i] > effective_radius) {
+                    effective_radius = equiv_level_of_fouling * element->mNeighbourRigidContactRadius[i];
+                }
+                else {
+                    effective_radius = equiv_level_of_fouling * effective_radius;
+                }
+                if (element->mNeighbourRigidIndentation[i] > 0.0) {
+                    indentation = element->mNeighbourRigidIndentation[i];
+                }
+                break;
+            }
+        }
+
+        //Get equivalent Young's Modulus
+        const double my_young            = element->GetYoung();
+        const double walls_young         = wall->GetProperties()[YOUNG_MODULUS];
+        const double my_poisson          = element->GetPoisson();
+        const double walls_poisson       = wall->GetProperties()[POISSON_RATIO];
+        const double equiv_young         = my_young * walls_young / (walls_young * (1.0 - my_poisson * my_poisson) + my_young * (1.0 - walls_poisson * walls_poisson));
+
+        //Get equivalent Shear Modulus
+        const double my_shear_modulus    = 0.5 * my_young / (1.0 + my_poisson);
+        const double walls_shear_modulus = 0.5 * walls_young / (1.0 + walls_poisson);
+        const double equiv_shear         = 1.0 / ((2.0 - my_poisson)/my_shear_modulus + (2.0 - walls_poisson)/walls_shear_modulus);
+
+        InitializeDependentContactWithFEM(effective_radius, equiv_young, equiv_shear, indentation);
+
+        LocalElasticContactForce[2] = CalculateNormalForce(indentation);
         cohesive_force              = CalculateCohesiveNormalForceWithFEM(element, wall, indentation);
+
+        double contact_stress = (3 * LocalElasticContactForce[2]) / (2 * Globals::Pi * effective_radius * indentation);
+
+        if (contact_stress > element->GetParticleMaxStress()) {
+            DamageContactWithFEM(element, wall, effective_radius, equiv_level_of_fouling, equiv_young, equiv_shear, indentation, LocalElasticContactForce[2]);
+            LocalElasticContactForce[2] = CalculateNormalForce(indentation);
+            cohesive_force              = CalculateCohesiveNormalForceWithFEM(element, wall, indentation);
+        }
 
         CalculateViscoDampingForceWithFEM(LocalRelVel, ViscoDampingLocalContactForce, element, wall);
 

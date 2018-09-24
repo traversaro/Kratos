@@ -111,6 +111,10 @@ SphericParticle& SphericParticle::operator=(const SphericParticle& rOther) {
     mNeighbourRigidFacesElasticContactForce = rOther.mNeighbourRigidFacesElasticContactForce;
     mNeighbourElasticContactForces = rOther.mNeighbourElasticContactForces;
     mNeighbourElasticExtraContactForces = rOther.mNeighbourElasticExtraContactForces;
+    mNeighbourContactRadius = rOther.mNeighbourContactRadius;
+    mNeighbourRigidContactRadius = rOther.mNeighbourRigidContactRadius;
+    mNeighbourIndentation = rOther.mNeighbourIndentation;
+    mNeighbourRigidIndentation = rOther.mNeighbourRigidIndentation;
     mContactMoment = rOther.mContactMoment;
     mPartialRepresentativeVolume = rOther.mPartialRepresentativeVolume; //TODO: to continuum!
     mFemOldNeighbourIds = rOther.mFemOldNeighbourIds;
@@ -377,17 +381,23 @@ void SphericParticle::ComputeNewNeighboursHistoricalData(DenseVector<int>& mTemp
                                                          std::vector<array_1d<double, 3> >& mTempNeighbourElasticContactForces)
 {
     std::vector<array_1d<double, 3> > mTempNeighbourElasticExtraContactForces;
+    std::vector<double> mTempNeighbourContactRadius;
+    std::vector<double> mTempNeighbourIndentation;
     unsigned int new_size = mNeighbourElements.size();
     array_1d<double, 3> vector_of_zeros = ZeroVector(3);
     mTempNeighboursIds.resize(new_size);
     mTempNeighbourElasticContactForces.resize(new_size);
     mTempNeighbourElasticExtraContactForces.resize(new_size);
+    mTempNeighbourContactRadius.resize(new_size);
+    mTempNeighbourIndentation.resize(new_size);
 
     DenseVector<int>& vector_of_ids_of_neighbours = GetValue(NEIGHBOUR_IDS);
 
     for (unsigned int i = 0; i < new_size; i++) {
         noalias(mTempNeighbourElasticContactForces[i]) = vector_of_zeros;
         noalias(mTempNeighbourElasticExtraContactForces[i]) = vector_of_zeros;
+        mTempNeighbourContactRadius[i] = 0.0;
+        mTempNeighbourIndentation[i] = 0.0;
 
         if (mNeighbourElements[i] == NULL) { // This is required by the continuum sphere which reorders the neighbors
             mTempNeighboursIds[i] = -1;
@@ -400,6 +410,8 @@ void SphericParticle::ComputeNewNeighboursHistoricalData(DenseVector<int>& mTemp
             if (int(mTempNeighboursIds[i]) == vector_of_ids_of_neighbours[j] && vector_of_ids_of_neighbours[j] != -1) {
                 noalias(mTempNeighbourElasticContactForces[i]) = mNeighbourElasticContactForces[j];
                 noalias(mTempNeighbourElasticExtraContactForces[i]) = mNeighbourElasticExtraContactForces[j]; //TODO: remove this from discontinuum!!
+                mTempNeighbourContactRadius[i] = mNeighbourContactRadius[j];
+                mTempNeighbourIndentation[i] = mNeighbourIndentation[j];
                 break;
             }
         }
@@ -408,6 +420,8 @@ void SphericParticle::ComputeNewNeighboursHistoricalData(DenseVector<int>& mTemp
     vector_of_ids_of_neighbours.swap(mTempNeighboursIds);
     mNeighbourElasticContactForces.swap(mTempNeighbourElasticContactForces);
     mNeighbourElasticExtraContactForces.swap(mTempNeighbourElasticExtraContactForces);
+    mNeighbourContactRadius.swap(mTempNeighbourContactRadius);
+    mNeighbourIndentation.swap(mTempNeighbourIndentation);
 }
 
 void SphericParticle::ComputeNewRigidFaceNeighboursHistoricalData()
@@ -418,11 +432,15 @@ void SphericParticle::ComputeNewRigidFaceNeighboursHistoricalData()
     std::vector<int> temp_neighbours_ids(new_size); //these two temporal vectors are very small, saving them as a member of the particle loses time (usually they consist on 1 member).
     std::vector<array_1d<double, 3> > temp_neighbours_elastic_contact_forces(new_size);
     std::vector<array_1d<double, 3> > temp_neighbours_contact_forces(new_size);
+    std::vector<double> temp_contact_radius(new_size);
+    std::vector<double> temp_indentation(new_size);
 
     for (unsigned int i = 0; i<rNeighbours.size(); i++){
 
         noalias(temp_neighbours_elastic_contact_forces[i]) = vector_of_zeros;
         noalias(temp_neighbours_contact_forces[i]) = vector_of_zeros;
+        temp_contact_radius[i] = 0.0;
+        temp_indentation[i] = 0.0;
 
         if (rNeighbours[i] == NULL) { // This is required by the continuum sphere which reorders the neighbors
             temp_neighbours_ids[i] = -1;
@@ -435,6 +453,8 @@ void SphericParticle::ComputeNewRigidFaceNeighboursHistoricalData()
             if (static_cast<int>(temp_neighbours_ids[i]) == mFemOldNeighbourIds[j] && mFemOldNeighbourIds[j] != -1) {
                 noalias(temp_neighbours_elastic_contact_forces[i]) = mNeighbourRigidFacesElasticContactForce[j];
                 noalias(temp_neighbours_contact_forces[i]) = mNeighbourRigidFacesTotalContactForce[j];
+                temp_contact_radius[i] = mNeighbourRigidContactRadius[j];
+                temp_indentation[i] = mNeighbourRigidIndentation[j];
                 break;
             }
         }
@@ -443,6 +463,8 @@ void SphericParticle::ComputeNewRigidFaceNeighboursHistoricalData()
     mFemOldNeighbourIds.swap(temp_neighbours_ids);
     mNeighbourRigidFacesElasticContactForce.swap(temp_neighbours_elastic_contact_forces);
     mNeighbourRigidFacesTotalContactForce.swap(temp_neighbours_contact_forces);
+    mNeighbourRigidContactRadius.swap(temp_contact_radius);
+    mNeighbourRigidIndentation.swap(temp_indentation);
 }
 
 void SphericParticle::EquationIdVector(EquationIdVectorType& rResult, ProcessInfo& r_process_info){}
