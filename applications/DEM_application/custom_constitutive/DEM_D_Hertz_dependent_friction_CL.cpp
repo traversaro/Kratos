@@ -27,17 +27,17 @@ namespace Kratos {
     // DEM-DEM INTERACTION //
     /////////////////////////
 
-    void DEM_D_Hertz_dependent_friction::InitializeDependentContact(double equiv_radius, const double equiv_young, const double equiv_shear, const double indentation) {
+    void DEM_D_Hertz_dependent_friction::InitializeDependentContact(double equiv_radius, const double equiv_level_of_fouling, const double equiv_young, const double equiv_shear, const double indentation) {
         //Normal and Tangent elastic constants
-        const double sqrt_equiv_radius_and_indentation = sqrt(equiv_radius * indentation);
+        const double sqrt_equiv_radius_and_indentation = sqrt(equiv_level_of_fouling * equiv_radius * indentation);
         mKn = 2.0 * equiv_young * sqrt_equiv_radius_and_indentation;
         mKt = 4.0 * equiv_shear * mKn / equiv_young;
     }
 
     void DEM_D_Hertz_dependent_friction::DamageContact(SphericParticle* const element1, SphericParticle* const element2, double equiv_radius, const double equiv_level_of_fouling, const double equiv_young, const double equiv_shear, double indentation, const double normal_contact_force) {
         //Get new Equivalent Radius
-        double equiv_radius_prev = equiv_radius;
-        equiv_radius    = (equiv_young * sqrt(6 * normal_contact_force)) / (pow(Globals::Pi * element1->GetParticleMaxStress(),1.5));
+        double equiv_radius_prev = equiv_level_of_fouling * equiv_radius;
+        equiv_radius = (equiv_young * sqrt(6 * normal_contact_force)) / (pow(Globals::Pi * element1->GetParticleMaxStress(),1.5));
         const double AlphaFunction = element1->GetProperties()[ALPHA_FUNCTION];
 
         double offset = (equiv_radius - equiv_radius_prev) * AlphaFunction;
@@ -47,7 +47,7 @@ namespace Kratos {
 
         for (unsigned int i = 0; element1->mNeighbourElements.size(); i++) {
             if (element1->mNeighbourElements[i]->Id() == element2->Id()) {
-                element1->mNeighbourContactRadius[i] = equiv_radius;
+                element1->mNeighbourContactRadius[i] = equiv_radius / equiv_level_of_fouling;
                 element1->mNeighbourIndentation[i] = indentation;
                 break;
             }
@@ -98,16 +98,10 @@ namespace Kratos {
         const double radius_sum_inv = 1.0 / radius_sum;
         double equiv_radius         = my_radius * other_radius * radius_sum_inv;
 
-        //Level of fouling in case it is considered
-        const double equiv_level_of_fouling = 0.5 * ((1.0 + element1->GetLevelOfFouling()) + (1.0 + element2->GetLevelOfFouling()));
-
         for (unsigned int i = 0; element1->mNeighbourElements.size(); i++) {
             if (element1->mNeighbourElements[i]->Id() == element2->Id()) {
                 if (element1->mNeighbourContactRadius[i] > equiv_radius) {
-                    equiv_radius = equiv_level_of_fouling * element1->mNeighbourContactRadius[i];
-                }
-                else {
-                    equiv_radius = equiv_level_of_fouling * equiv_radius;
+                    equiv_radius = element1->mNeighbourContactRadius[i];
                 }
                 if (element1->mNeighbourIndentation[i] > 0.0) {
                     double previous_indentation_temp = previous_indentation;
@@ -132,12 +126,15 @@ namespace Kratos {
             const double other_shear_modulus = 0.5 * other_young / (1.0 + other_poisson);
             const double equiv_shear = 1.0 / ((2.0 - my_poisson)/my_shear_modulus + (2.0 - other_poisson)/other_shear_modulus);
 
-            InitializeDependentContact(equiv_radius, equiv_young, equiv_shear, indentation);
+            //Level of fouling in case it is considered
+            const double equiv_level_of_fouling = 0.5 * ((1.0 + element1->GetLevelOfFouling()) + (1.0 + element2->GetLevelOfFouling()));
+
+            InitializeDependentContact(equiv_radius, equiv_level_of_fouling, equiv_young, equiv_shear, indentation);
 
             LocalElasticContactForce[2] = CalculateNormalForce(indentation);
             cohesive_force              = CalculateCohesiveNormalForce(element1, element2, indentation);
 
-            double contact_stress = (3 * LocalElasticContactForce[2]) / (2 * Globals::Pi * equiv_radius * indentation);
+            double contact_stress = (3 * LocalElasticContactForce[2]) / (2 * Globals::Pi * equiv_level_of_fouling * equiv_radius * indentation);
 
             if (contact_stress > element1->GetParticleMaxStress()) {
                 DamageContact(element1, element2, equiv_radius, equiv_level_of_fouling, equiv_young, equiv_shear, indentation, LocalElasticContactForce[2]);
@@ -199,15 +196,15 @@ namespace Kratos {
     // DEM-FEM INTERACTION //
     /////////////////////////
 
-    void DEM_D_Hertz_dependent_friction::InitializeDependentContactWithFEM(double effective_radius, const double equiv_young, const double equiv_shear, const double indentation) {
+    void DEM_D_Hertz_dependent_friction::InitializeDependentContactWithFEM(double effective_radius, const double equiv_level_of_fouling, const double equiv_young, const double equiv_shear, const double indentation) {
         //Normal and Tangent elastic constants
-        const double sqrt_equiv_radius_and_indentation = sqrt(effective_radius * indentation);
+        const double sqrt_equiv_radius_and_indentation = sqrt(equiv_level_of_fouling * effective_radius * indentation);
         mKn = 2.0 * equiv_young * sqrt_equiv_radius_and_indentation;
         mKt = 4.0 * equiv_shear * mKn / equiv_young;
     }
 
     void DEM_D_Hertz_dependent_friction::DamageContactWithFEM(SphericParticle* const element, Condition* const wall, double effective_radius, const double equiv_level_of_fouling, const double equiv_young, const double equiv_shear, double indentation, const double normal_contact_force) {
-        double effective_radius_prev = effective_radius;
+        double effective_radius_prev = equiv_level_of_fouling * effective_radius;
         //Get new Equivalent Radius
         effective_radius    = (equiv_young * sqrt(6 * normal_contact_force)) / (pow(Globals::Pi * element->GetParticleMaxStress(),1.5));
 
@@ -220,7 +217,7 @@ namespace Kratos {
 
         for (unsigned int i = 0; element->mNeighbourRigidFaces.size(); i++) {
             if (element->mNeighbourRigidFaces[i]->Id() == wall->Id()) {
-                element->mNeighbourRigidContactRadius[i] = effective_radius;
+                element->mNeighbourRigidContactRadius[i] = effective_radius / equiv_level_of_fouling;
                 element->mNeighbourRigidIndentation[i] = indentation;
                 break;
             }
@@ -266,16 +263,13 @@ namespace Kratos {
         //Get effective Radius
         double effective_radius    = element->GetParticleContactRadius();
 
-        //Level of fouling in case it is considered
-        double equiv_level_of_fouling = 1.0 + element->GetLevelOfFouling();
-
         for (unsigned int i = 0; element->mNeighbourRigidFaces.size(); i++) {
             if (element->mNeighbourRigidFaces[i]->Id() == wall->Id()) {
                 if (element->mNeighbourRigidContactRadius[i] > effective_radius) {
-                    effective_radius = equiv_level_of_fouling * element->mNeighbourRigidContactRadius[i];
+                    effective_radius = element->mNeighbourRigidContactRadius[i];
                 }
                 else {
-                    effective_radius = equiv_level_of_fouling * effective_radius;
+                    effective_radius = effective_radius;
                 }
                 if (element->mNeighbourRigidIndentation[i] > 0.0) {
                     double previous_indentation_temp = previous_indentation;
@@ -300,12 +294,16 @@ namespace Kratos {
             const double walls_shear_modulus = 0.5 * walls_young / (1.0 + walls_poisson);
             const double equiv_shear         = 1.0 / ((2.0 - my_poisson)/my_shear_modulus + (2.0 - walls_poisson)/walls_shear_modulus);
 
-            InitializeDependentContactWithFEM(effective_radius, equiv_young, equiv_shear, indentation);
+
+            //Level of fouling in case it is considered
+            const double equiv_level_of_fouling = 1.0 + element->GetLevelOfFouling();
+
+            InitializeDependentContactWithFEM(effective_radius, equiv_level_of_fouling, equiv_young, equiv_shear, indentation);
 
             LocalElasticContactForce[2] = CalculateNormalForce(indentation);
             cohesive_force              = CalculateCohesiveNormalForceWithFEM(element, wall, indentation);
 
-            double contact_stress = (3 * LocalElasticContactForce[2]) / (2 * Globals::Pi * effective_radius * indentation);
+            double contact_stress = (3 * LocalElasticContactForce[2]) / (2 * Globals::Pi * equiv_level_of_fouling * effective_radius * indentation);
 
             if (contact_stress > element->GetParticleMaxStress()) {
                 DamageContactWithFEM(element, wall, effective_radius, equiv_level_of_fouling, equiv_young, equiv_shear, indentation, LocalElasticContactForce[2]);

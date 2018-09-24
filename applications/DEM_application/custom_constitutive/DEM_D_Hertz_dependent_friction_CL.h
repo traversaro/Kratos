@@ -31,11 +31,11 @@ namespace Kratos {
 
         DEMDiscontinuumConstitutiveLaw::Pointer Clone() const override;
 
-        void InitializeDependentContact(double equiv_radius, const double equiv_young, const double equiv_shear, const double indentation);
+        void InitializeDependentContact(double equiv_radius, const double equiv_level_of_fouling, const double equiv_young, const double equiv_shear, const double indentation);
 
         void DamageContact(SphericParticle* const element1, SphericParticle* const element2, double equiv_radius, const double equiv_level_of_fouling, const double equiv_young, const double equiv_shear, double indentation, const double normal_contact_force);
 
-        void InitializeDependentContactWithFEM(double effective_radius, const double equiv_young, const double equiv_shear, const double indentation);
+        void InitializeDependentContactWithFEM(double effective_radius, const double equiv_level_of_fouling, const double equiv_young, const double equiv_shear, const double indentation);
 
         void DamageContactWithFEM(SphericParticle* const element, Condition* const wall, double effective_radius, const double equiv_level_of_fouling, const double equiv_young, const double equiv_shear, double indentation, const double normal_contact_force);
 
