@@ -41,11 +41,9 @@ namespace Kratos {
         const double AlphaFunction = element1->GetProperties()[ALPHA_FUNCTION];
 
         double offset = (equiv_radius - equiv_radius_prev) * AlphaFunction;
-        if (indentation > (2.0 * offset)) indentation = indentation - (2.0 * offset);
-        else {
-            KRATOS_WATCH("HELLO-DEM")
-            indentation = 0.0;
-        }
+
+        if (indentation > offset) indentation = indentation - offset;
+        else indentation = 0.0;
 
         for (unsigned int i = 0; element1->mNeighbourElements.size(); i++) {
             if (element1->mNeighbourElements[i]->Id() == element2->Id()) {
@@ -112,63 +110,67 @@ namespace Kratos {
                     equiv_radius = equiv_level_of_fouling * equiv_radius;
                 }
                 if (element1->mNeighbourIndentation[i] > 0.0) {
-                    indentation = element1->mNeighbourIndentation[i];
+                    double previous_indentation_temp = previous_indentation;
+                    previous_indentation = element1->mNeighbourIndentation[i];
+                    indentation = previous_indentation + (indentation - previous_indentation_temp);
+                    if (indentation < 0.0) indentation = 0.0;
                 }
                 break;
             }
         }
 
-        //Get equivalent Young's Modulus
-        const double my_young        = element1->GetYoung();
-        const double other_young     = element2->GetYoung();
-        const double my_poisson      = element1->GetPoisson();
-        const double other_poisson   = element2->GetPoisson();
-        const double equiv_young     = my_young * other_young / (other_young * (1.0 - my_poisson * my_poisson) + my_young * (1.0 - other_poisson * other_poisson));
+        if (indentation > 0.0) {
+            //Get equivalent Young's Modulus
+            const double my_young        = element1->GetYoung();
+            const double other_young     = element2->GetYoung();
+            const double my_poisson      = element1->GetPoisson();
+            const double other_poisson   = element2->GetPoisson();
+            const double equiv_young     = my_young * other_young / (other_young * (1.0 - my_poisson * my_poisson) + my_young * (1.0 - other_poisson * other_poisson));
 
-        //Get equivalent Shear Modulus
-        const double my_shear_modulus = 0.5 * my_young / (1.0 + my_poisson);
-        const double other_shear_modulus = 0.5 * other_young / (1.0 + other_poisson);
-        const double equiv_shear = 1.0 / ((2.0 - my_poisson)/my_shear_modulus + (2.0 - other_poisson)/other_shear_modulus);
+            //Get equivalent Shear Modulus
+            const double my_shear_modulus = 0.5 * my_young / (1.0 + my_poisson);
+            const double other_shear_modulus = 0.5 * other_young / (1.0 + other_poisson);
+            const double equiv_shear = 1.0 / ((2.0 - my_poisson)/my_shear_modulus + (2.0 - other_poisson)/other_shear_modulus);
 
-        InitializeDependentContact(equiv_radius, equiv_young, equiv_shear, indentation);
+            InitializeDependentContact(equiv_radius, equiv_young, equiv_shear, indentation);
 
-        LocalElasticContactForce[2]  = CalculateNormalForce(indentation);
-        cohesive_force               = CalculateCohesiveNormalForce(element1, element2, indentation);
-
-        double contact_stress = (3 * LocalElasticContactForce[2]) / (2 * Globals::Pi * equiv_radius * indentation);
-
-        if (contact_stress > element1->GetParticleMaxStress()) {
-            DamageContact(element1, element2, equiv_radius, equiv_level_of_fouling, equiv_young, equiv_shear, indentation, LocalElasticContactForce[2]);
             LocalElasticContactForce[2] = CalculateNormalForce(indentation);
             cohesive_force              = CalculateCohesiveNormalForce(element1, element2, indentation);
+
+            double contact_stress = (3 * LocalElasticContactForce[2]) / (2 * Globals::Pi * equiv_radius * indentation);
+
+            if (contact_stress > element1->GetParticleMaxStress()) {
+                DamageContact(element1, element2, equiv_radius, equiv_level_of_fouling, equiv_young, equiv_shear, indentation, LocalElasticContactForce[2]);
+                LocalElasticContactForce[2] = CalculateNormalForce(indentation);
+                cohesive_force              = CalculateCohesiveNormalForce(element1, element2, indentation);
+            }
+
+            CalculateViscoDampingForce(LocalRelVel, ViscoDampingLocalContactForce, element1, element2);
+
+            double normal_contact_force = LocalElasticContactForce[2] + ViscoDampingLocalContactForce[2];
+
+            if (normal_contact_force < 0.0) {
+                normal_contact_force = 0.0;
+                ViscoDampingLocalContactForce[2] = -1.0 * LocalElasticContactForce[2];
+            }
+
+            double AuxElasticShearForce;
+            double MaximumAdmisibleShearForce;
+
+            CalculateTangentialForce(normal_contact_force, OldLocalElasticContactForce, LocalElasticContactForce, ViscoDampingLocalContactForce, LocalDeltDisp,
+                                     sliding, element1, element2, equiv_radius, equiv_young, indentation, previous_indentation, AuxElasticShearForce, MaximumAdmisibleShearForce);
+
+            double& elastic_energy = element1->GetElasticEnergy();
+            CalculateElasticEnergyDEM(elastic_energy, indentation, LocalElasticContactForce);
+
+            if(sliding && MaximumAdmisibleShearForce != 0.0){
+                double& inelastic_frictional_energy = element1->GetInelasticFrictionalEnergy();
+                CalculateInelasticFrictionalEnergyDEM(inelastic_frictional_energy, AuxElasticShearForce, LocalElasticContactForce);
+            }
+
+            double& inelastic_viscodamping_energy = element1->GetInelasticViscodampingEnergy();
+            CalculateInelasticViscodampingEnergyDEM(inelastic_viscodamping_energy, ViscoDampingLocalContactForce, LocalDeltDisp);
         }
-
-        CalculateViscoDampingForce(LocalRelVel, ViscoDampingLocalContactForce, element1, element2);
-
-        double normal_contact_force = LocalElasticContactForce[2] + ViscoDampingLocalContactForce[2];
-
-        if (normal_contact_force < 0.0) {
-            normal_contact_force = 0.0;
-            ViscoDampingLocalContactForce[2] = -1.0 * LocalElasticContactForce[2];
-        }
-
-        double AuxElasticShearForce;
-        double MaximumAdmisibleShearForce;
-
-        CalculateTangentialForce(normal_contact_force, OldLocalElasticContactForce, LocalElasticContactForce, ViscoDampingLocalContactForce, LocalDeltDisp,
-                                 sliding, element1, element2, equiv_radius, equiv_young, indentation, previous_indentation, AuxElasticShearForce, MaximumAdmisibleShearForce);
-
-        double& elastic_energy = element1->GetElasticEnergy();
-        CalculateElasticEnergyDEM(elastic_energy, indentation, LocalElasticContactForce);
-
-        if(sliding && MaximumAdmisibleShearForce != 0.0){
-            double& inelastic_frictional_energy = element1->GetInelasticFrictionalEnergy();
-            CalculateInelasticFrictionalEnergyDEM(inelastic_frictional_energy, AuxElasticShearForce, LocalElasticContactForce);
-        }
-
-        double& inelastic_viscodamping_energy = element1->GetInelasticViscodampingEnergy();
-        CalculateInelasticViscodampingEnergyDEM(inelastic_viscodamping_energy, ViscoDampingLocalContactForce, LocalDeltDisp);
-
     }
 
     void DEM_D_Hertz_dependent_friction::CalculateViscoDampingForce(double LocalRelVel[3],
@@ -214,10 +216,7 @@ namespace Kratos {
         double offset = (effective_radius - effective_radius_prev) * AlphaFunction;
 
         if (indentation > offset) indentation = indentation - offset;
-        else {
-            KRATOS_WATCH("HELLO-FEM")
-            indentation = 0.0;
-        }
+        else indentation = 0.0;
 
         for (unsigned int i = 0; element->mNeighbourRigidFaces.size(); i++) {
             if (element->mNeighbourRigidFaces[i]->Id() == wall->Id()) {
@@ -279,62 +278,67 @@ namespace Kratos {
                     effective_radius = equiv_level_of_fouling * effective_radius;
                 }
                 if (element->mNeighbourRigidIndentation[i] > 0.0) {
-                    indentation = element->mNeighbourRigidIndentation[i];
+                    double previous_indentation_temp = previous_indentation;
+                    previous_indentation = element->mNeighbourRigidIndentation[i];
+                    indentation = previous_indentation + (indentation - previous_indentation_temp);
+                    if (indentation < 0.0) indentation = 0.0;
                 }
                 break;
             }
         }
 
-        //Get equivalent Young's Modulus
-        const double my_young            = element->GetYoung();
-        const double walls_young         = wall->GetProperties()[YOUNG_MODULUS];
-        const double my_poisson          = element->GetPoisson();
-        const double walls_poisson       = wall->GetProperties()[POISSON_RATIO];
-        const double equiv_young         = my_young * walls_young / (walls_young * (1.0 - my_poisson * my_poisson) + my_young * (1.0 - walls_poisson * walls_poisson));
+        if (indentation > 0.0) {
+            //Get equivalent Young's Modulus
+            const double my_young            = element->GetYoung();
+            const double walls_young         = wall->GetProperties()[YOUNG_MODULUS];
+            const double my_poisson          = element->GetPoisson();
+            const double walls_poisson       = wall->GetProperties()[POISSON_RATIO];
+            const double equiv_young         = my_young * walls_young / (walls_young * (1.0 - my_poisson * my_poisson) + my_young * (1.0 - walls_poisson * walls_poisson));
 
-        //Get equivalent Shear Modulus
-        const double my_shear_modulus    = 0.5 * my_young / (1.0 + my_poisson);
-        const double walls_shear_modulus = 0.5 * walls_young / (1.0 + walls_poisson);
-        const double equiv_shear         = 1.0 / ((2.0 - my_poisson)/my_shear_modulus + (2.0 - walls_poisson)/walls_shear_modulus);
+            //Get equivalent Shear Modulus
+            const double my_shear_modulus    = 0.5 * my_young / (1.0 + my_poisson);
+            const double walls_shear_modulus = 0.5 * walls_young / (1.0 + walls_poisson);
+            const double equiv_shear         = 1.0 / ((2.0 - my_poisson)/my_shear_modulus + (2.0 - walls_poisson)/walls_shear_modulus);
 
-        InitializeDependentContactWithFEM(effective_radius, equiv_young, equiv_shear, indentation);
+            InitializeDependentContactWithFEM(effective_radius, equiv_young, equiv_shear, indentation);
 
-        LocalElasticContactForce[2] = CalculateNormalForce(indentation);
-        cohesive_force              = CalculateCohesiveNormalForceWithFEM(element, wall, indentation);
-
-        double contact_stress = (3 * LocalElasticContactForce[2]) / (2 * Globals::Pi * effective_radius * indentation);
-
-        if (contact_stress > element->GetParticleMaxStress()) {
-            DamageContactWithFEM(element, wall, effective_radius, equiv_level_of_fouling, equiv_young, equiv_shear, indentation, LocalElasticContactForce[2]);
             LocalElasticContactForce[2] = CalculateNormalForce(indentation);
             cohesive_force              = CalculateCohesiveNormalForceWithFEM(element, wall, indentation);
+
+            double contact_stress = (3 * LocalElasticContactForce[2]) / (2 * Globals::Pi * effective_radius * indentation);
+
+            if (contact_stress > element->GetParticleMaxStress()) {
+                DamageContactWithFEM(element, wall, effective_radius, equiv_level_of_fouling, equiv_young, equiv_shear, indentation, LocalElasticContactForce[2]);
+                LocalElasticContactForce[2] = CalculateNormalForce(indentation);
+                cohesive_force              = CalculateCohesiveNormalForceWithFEM(element, wall, indentation);
+            }
+
+            CalculateViscoDampingForceWithFEM(LocalRelVel, ViscoDampingLocalContactForce, element, wall);
+
+            double normal_contact_force = LocalElasticContactForce[2] + ViscoDampingLocalContactForce[2];
+
+            if (normal_contact_force < 0.0) {
+                normal_contact_force = 0.0;
+                ViscoDampingLocalContactForce[2] = -1.0 * LocalElasticContactForce[2];
+            }
+
+            double AuxElasticShearForce;
+            double MaximumAdmisibleShearForce;
+
+            CalculateTangentialForceWithFEM(normal_contact_force, OldLocalElasticContactForce, LocalElasticContactForce, ViscoDampingLocalContactForce, LocalDeltDisp,
+                                            sliding, element, wall, effective_radius, equiv_young, indentation, previous_indentation, AuxElasticShearForce, MaximumAdmisibleShearForce);
+
+            double& elastic_energy = element->GetElasticEnergy();
+            CalculateElasticEnergyFEM(elastic_energy, indentation, LocalElasticContactForce);//MSIMSI
+
+            if(sliding && MaximumAdmisibleShearForce != 0.0){
+                double& inelastic_frictional_energy = element->GetInelasticFrictionalEnergy();
+                CalculateInelasticFrictionalEnergyFEM(inelastic_frictional_energy, AuxElasticShearForce, LocalElasticContactForce);
+            }
+
+            double& inelastic_viscodamping_energy = element->GetInelasticViscodampingEnergy();
+            CalculateInelasticViscodampingEnergyFEM(inelastic_viscodamping_energy, ViscoDampingLocalContactForce, LocalDeltDisp);
         }
-
-        CalculateViscoDampingForceWithFEM(LocalRelVel, ViscoDampingLocalContactForce, element, wall);
-
-        double normal_contact_force = LocalElasticContactForce[2] + ViscoDampingLocalContactForce[2];
-
-        if (normal_contact_force < 0.0) {
-            normal_contact_force = 0.0;
-            ViscoDampingLocalContactForce[2] = -1.0 * LocalElasticContactForce[2];
-        }
-
-        double AuxElasticShearForce;
-        double MaximumAdmisibleShearForce;
-
-        CalculateTangentialForceWithFEM(normal_contact_force, OldLocalElasticContactForce, LocalElasticContactForce, ViscoDampingLocalContactForce, LocalDeltDisp,
-                                        sliding, element, wall, effective_radius, equiv_young, indentation, previous_indentation, AuxElasticShearForce, MaximumAdmisibleShearForce);
-
-        double& elastic_energy = element->GetElasticEnergy();
-        CalculateElasticEnergyFEM(elastic_energy, indentation, LocalElasticContactForce);//MSIMSI
-
-        if(sliding && MaximumAdmisibleShearForce != 0.0){
-            double& inelastic_frictional_energy = element->GetInelasticFrictionalEnergy();
-            CalculateInelasticFrictionalEnergyFEM(inelastic_frictional_energy, AuxElasticShearForce, LocalElasticContactForce);
-        }
-
-        double& inelastic_viscodamping_energy = element->GetInelasticViscodampingEnergy();
-        CalculateInelasticViscodampingEnergyFEM(inelastic_viscodamping_energy, ViscoDampingLocalContactForce, LocalDeltDisp);
     }
 
     void DEM_D_Hertz_dependent_friction::CalculateTangentialForce(const double normal_contact_force,
