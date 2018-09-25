@@ -217,7 +217,11 @@ protected:
 
     void CalculateTransformationMatrix(const Matrix& rMainDirection, Matrix& rA);
 
+    void CalculateYieldSurfaceDerivatives(const Vector& rPrincipalStressVector, Vector& rFirstDerivative);
+
     void CalculatePlasticPotentialDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative);
+
+    void CalculatePlasticPotentialInvariantDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative);
 
     double CalculateCriticalStateLineSlope(const double& rLodeAngle);
 

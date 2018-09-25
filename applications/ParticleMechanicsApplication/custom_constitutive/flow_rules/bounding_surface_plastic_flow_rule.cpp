@@ -192,7 +192,36 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnV
     return converged;
 }
 
+void BoundingSurfacePlasticFlowRule::CalculateYieldSurfaceDerivatives(const Vector& rPrincipalStressVector, Vector& rFirstDerivative)
+{
+    // Compute yield surface derivatives with respect to stress invariants: p, q, and ø
+    Vector invariant_derivatives;
+    mpYieldCriterion->CalculateYieldFunctionDerivative(rPrincipalStressVector, invariant_derivatives);
+
+    // Compute stress invariant derivatives with respect to current principal stress state
+    Vector dp_dsigma, dq_dsigma, dtheta_dsigma;
+    MPMStressPrincipalInvariantsUtility::CalculateDerivativeVectors(rPrincipalStressVector, dp_dsigma, dq_dsigma, dtheta_dsigma);
+
+    // Compute first derivative by chain rule
+    rFirstDerivative = invariant_derivatives[0] * dp_dsigma + invariant_derivatives[1] * dq_dsigma + invariant_derivatives[2] * dtheta_dsigma;
+
+}
+
 void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative)
+{
+    // Compute plastic potential derivatives with respect to stress invariants: p, q, and ø
+    Vector invariant_derivatives;
+    this->CalculatePlasticPotentialInvariantDerivatives(rPrincipalStressVector, rImagePointPrincipalStressVector, invariant_derivatives);
+
+    // Compute stress invariant derivatives with respect to current principal stress state
+    Vector dp_dsigma, dq_dsigma, dtheta_dsigma;
+    MPMStressPrincipalInvariantsUtility::CalculateDerivativeVectors(rPrincipalStressVector, dp_dsigma, dq_dsigma, dtheta_dsigma);
+
+    // Compute first derivative by chain rule
+    rFirstDerivative = invariant_derivatives[0] * dp_dsigma + invariant_derivatives[1] * dq_dsigma + invariant_derivatives[2] * dtheta_dsigma;
+}
+
+void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative)
 {
     double mean_stress_p, deviatoric_q, lode_angle;
     MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(rPrincipalStressVector, mean_stress_p, deviatoric_q, lode_angle);
