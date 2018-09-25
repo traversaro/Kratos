@@ -42,13 +42,11 @@ namespace Kratos {
 
         double offset = (equiv_radius - equiv_radius_prev) * AlphaFunction;
 
-        if (indentation > offset) indentation = indentation - offset;
-        else indentation = 0.0;
-
         for (unsigned int i = 0; element1->mNeighbourElements.size(); i++) {
             if (element1->mNeighbourElements[i]->Id() == element2->Id()) {
                 element1->mNeighbourContactRadius[i] = equiv_radius / equiv_level_of_fouling;
-                element1->mNeighbourIndentation[i] = indentation;
+                if (indentation > offset) element1->mNeighbourIndentation[i] = indentation - offset;
+                else element1->mNeighbourIndentation[i] = 0.0;
                 break;
             }
         }
@@ -212,13 +210,11 @@ namespace Kratos {
 
         double offset = (effective_radius - effective_radius_prev) * AlphaFunction;
 
-        if (indentation > offset) indentation = indentation - offset;
-        else indentation = 0.0;
-
         for (unsigned int i = 0; element->mNeighbourRigidFaces.size(); i++) {
             if (element->mNeighbourRigidFaces[i]->Id() == wall->Id()) {
                 element->mNeighbourRigidContactRadius[i] = effective_radius / equiv_level_of_fouling;
-                element->mNeighbourRigidIndentation[i] = indentation;
+                if (indentation > offset) element->mNeighbourRigidContactRadius[i] = indentation - offset;
+                else element->mNeighbourRigidContactRadius[i] = 0.0;
                 break;
             }
         }
