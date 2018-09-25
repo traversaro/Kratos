@@ -13,9 +13,6 @@
 #if !defined(KRATOS_FEMDEM3D_ELEMENT_H_INCLUDED)
 #define KRATOS_FEMDEM3D_ELEMENT_H_INCLUDED
 
-#include "custom_constitutive/zarate_law.hpp"
-#include "includes/constitutive_law.h"
-#include "includes/element.h"
 #include "custom_elements/solid_elements/small_displacement_element.hpp"
 
 namespace Kratos

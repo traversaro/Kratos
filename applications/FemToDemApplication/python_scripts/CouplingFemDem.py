@@ -829,7 +829,6 @@ class FEMDEM_Solution:
         ZeroVector3[2] = 0.0
 
         for node in self.FEM_Solution.main_model_part.Nodes:
-            node.SetValue(MeshingApplication.MMG_METRIC, ZeroVector3)
             node.SetValue(MeshingApplication.AUXILIAR_GRADIENT, ZeroVector3)
 
 #============================================================================================================================

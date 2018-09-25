@@ -19,11 +19,11 @@ set( KRATOS_FEM_TO_DEM_APPLICATION_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_constitutive_laws_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_strategies_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_processes_to_python.cpp
-	#${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/zaratipito_element.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_constitutive/zarate_law.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/femdem2d_element.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/femdem3d_element.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/romfemdem3d_element.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/femdem3d_large_displacement_element.cpp
 )
 
 # define library Kratos which defines the basic python interface

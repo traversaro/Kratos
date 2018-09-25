@@ -11,8 +11,6 @@
 //
 
 #include "includes/define.h"
-#include "includes/constitutive_law.h"
-#include "custom_constitutive/zarate_law.hpp"
 #include "femdem3d_element.hpp"
 #include "includes/element.h"
 #include "includes/node.h"
@@ -799,7 +797,6 @@ void FemDem3DElement::CalculateOnIntegrationPoints(
 		rOutput.resize(1);
 		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++)
 		{
-			//rOutput[PointNumber] = double(this->Get_Convergeddamage());
 			rOutput[PointNumber] = double(this->GetValue(DAMAGE_ELEMENT));
 		}
 	}
@@ -948,6 +945,7 @@ void FemDem3DElement::Get2MinValues(Vector &MaxValues, double a, double b, doubl
 	MaxValues[0] = V[1];
 	MaxValues[1] = V[0];
 }
+
 double FemDem3DElement::CalculateI1Invariant(Vector StressVector)
 {
 	return StressVector[0] + StressVector[1] + StressVector[2];
@@ -982,12 +980,14 @@ double FemDem3DElement::CalculateJ2Invariant(const Vector Deviator)
 	return 0.5 * (Deviator[0] * Deviator[0] + Deviator[1] * Deviator[1] + Deviator[2] * Deviator[2]) +
 		   (Deviator[3] * Deviator[3] + Deviator[4] * Deviator[4] + Deviator[5] * Deviator[5]);
 }
+
 double FemDem3DElement::CalculateJ3Invariant(const Vector Deviator)
 {
 	return Deviator[0] * (Deviator[1] * Deviator[2] - Deviator[4] * Deviator[4]) +
 		   Deviator[3] * (-Deviator[3] * Deviator[2] + Deviator[5] * Deviator[4]) +
 		   Deviator[5] * (Deviator[3] * Deviator[4] - Deviator[5] * Deviator[1]);
 }
+
 double FemDem3DElement::CalculateLodeAngle(double J2, double J3)
 {
 	double sint3;
@@ -1391,7 +1391,7 @@ void FemDem3DElement::DruckerPragerCriterion(
 	}
 
 	double c_max, c_threshold;
-	c_max = std::abs(sigma_t * (3 + std::sin(friction_angle)) / (3 * std::sin(friction_angle) - 3));
+	c_max = std::abs(sigma_t * (3.0 + std::sin(friction_angle)) / (3.0 * std::sin(friction_angle) - 3.0));
 
 	double I1, J2;
 	I1 = CalculateI1Invariant(StressVector);
