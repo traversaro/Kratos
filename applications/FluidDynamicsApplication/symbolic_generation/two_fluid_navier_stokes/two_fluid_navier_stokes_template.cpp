@@ -286,6 +286,7 @@ void TwoFluidNavierStokes<TwoFluidNavierStokesData<2, 3>>::ComputeGaussPointLHSC
     const double bdf0 = rData.bdf0;
 
     const double dyn_tau = rData.DynamicTau;
+    const double K_darcy = rData.DarcyTerm;
 
     const auto vconv = rData.Velocity - rData.MeshVelocity;
 
@@ -316,6 +317,7 @@ void TwoFluidNavierStokes<TwoFluidNavierStokesData<3, 4>>::ComputeGaussPointLHSC
 
     const double rho = rData.Density;
     const double mu = rData.EffectiveViscosity;
+    const double K_darcy = rData.DarcyTerm;
 
     const double h = rData.ElementSize;
 
@@ -362,6 +364,7 @@ void TwoFluidNavierStokes<TwoFluidNavierStokesData<2, 3>>::ComputeGaussPointRHSC
     const double bdf2 = rData.bdf2;
 
     const double dyn_tau = rData.DynamicTau;
+    const double K_darcy = rData.DarcyTerm;
 
     const auto &v = rData.Velocity;
     const auto &vn = rData.Velocity_OldStep1;
@@ -404,6 +407,7 @@ void TwoFluidNavierStokes<TwoFluidNavierStokesData<3, 4>>::ComputeGaussPointRHSC
     const double bdf2 = rData.bdf2;
 
     const double dyn_tau = rData.DynamicTau;
+    const double K_darcy = rData.DarcyTerm;
 
     const auto &v = rData.Velocity;
     const auto &vn = rData.Velocity_OldStep1;
@@ -449,6 +453,7 @@ void TwoFluidNavierStokes<TwoFluidNavierStokesData<2, 3>>::ComputeGaussPointEnri
     const double bdf2 = rData.bdf2;
 
     const double dyn_tau = rData.DynamicTau;
+    const double K_darcy = rData.DarcyTerm;
 
     const auto &v = rData.Velocity;
     const auto &vn = rData.Velocity_OldStep1;
@@ -509,6 +514,7 @@ void TwoFluidNavierStokes<TwoFluidNavierStokesData<3, 4>>::ComputeGaussPointEnri
     const double bdf2 = rData.bdf2;
 
     const double dyn_tau = rData.DynamicTau;
+    const double K_darcy = rData.DarcyTerm;
 
     const auto &v = rData.Velocity;
     const auto &vn = rData.Velocity_OldStep1;
