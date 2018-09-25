@@ -192,6 +192,7 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnV
     return converged;
 }
 
+// Function that compute derivative of yield surface (either F or f) with respect to principal stresses
 void BoundingSurfacePlasticFlowRule::CalculateYieldSurfaceDerivatives(const Vector& rPrincipalStressVector, Vector& rFirstDerivative)
 {
     // Compute yield surface derivatives with respect to stress invariants: p, q, and ø
@@ -207,6 +208,7 @@ void BoundingSurfacePlasticFlowRule::CalculateYieldSurfaceDerivatives(const Vect
 
 }
 
+// Function that compute derivative of plastic potential g with respect to principal stresses
 void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative)
 {
     // Compute plastic potential derivatives with respect to stress invariants: p, q, and ø
@@ -221,6 +223,7 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialDerivatives(const 
     rFirstDerivative = invariant_derivatives[0] * dp_dsigma + invariant_derivatives[1] * dq_dsigma + invariant_derivatives[2] * dtheta_dsigma;
 }
 
+// Function that compute derivative of plastic potential g with respect to stress invariants: p, q, and ø
 void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative)
 {
     double mean_stress_p, deviatoric_q, lode_angle;
@@ -241,6 +244,7 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantDerivativ
 
 }
 
+// Function that compute elastic matrix D_e
 void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix_3X3(const double& rMainStressP, Matrix& rElasticMatrix)
 {
     const double poisson_ratio  = GetProperties()[POISSON_RATIO];
@@ -263,10 +267,28 @@ void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix_3X3(const double& rMai
     
 }
 
-void BoundingSurfacePlasticFlowRule::ComputePlasticMatrix_3X3(const Vector& rPrincipalStressVector, const double& rVolumetricStrain, const double& rDeviatoricStrain, const Matrix& rElasticMatrix, Matrix& rPlasticMatrix)
+// Function that compute elastic matrix D_p = D_e m n^T D_e / (n^T D_e m + h)
+void BoundingSurfacePlasticFlowRule::ComputePlasticMatrix_3X3(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, Matrix& rPlasticMatrix)
 {
+    // Compute multiplications
+    const Vector aux_De_m  = prod(rElasticMatrix, rDirectionM);
+    const Vector aux_nT_De = prod(trans(rDirectionN), rElasticMatrix);
+
+    // Compute denominator
+    double denominator = MathUtils<double>::Dot(trans(rDirectionN),aux_De_m) + rHardening;
+    if (std::abs(denominator) < 1.e-9) denominator = 1.e-9;
+
     // Arrange rPlasticMatrix matrix
     rPlasticMatrix = ZeroMatrix(3);
+    for (unsigned int i=0; i<3; i++)
+    {
+        for (unsigned int j=0; j<3; j++)
+        {
+            rPlasticMatrix(i,j) = aux_De_m[i] * aux_nT_De[j];
+        }
+    }
+    rPlasticMatrix *= 1.0 / denominator;
+
 }
 
 // Compute Trial elastic principal stress matrix from Trial elastic principal strain matrix

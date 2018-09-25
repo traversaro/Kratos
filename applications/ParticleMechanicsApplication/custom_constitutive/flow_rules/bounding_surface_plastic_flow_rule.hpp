@@ -212,7 +212,7 @@ protected:
  
     void ComputeElasticMatrix_3X3(const double& rMainStressP, Matrix& rElasticMatrix);
 
-    void ComputePlasticMatrix_3X3(const Vector& rPrincipalStressVector, const double& rVolumetricStrain, const double& rDeviatoricStrain, const Matrix& rElasticMatrix, Matrix& rPlasticMatrix);
+    void ComputePlasticMatrix_3X3(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, Matrix& rPlasticMatrix);
 
     void ReturnStressFromPrincipalAxis(const Matrix& rEigenVectors, const Vector& rPrincipalStress, Matrix& rStressMatrix);
 
