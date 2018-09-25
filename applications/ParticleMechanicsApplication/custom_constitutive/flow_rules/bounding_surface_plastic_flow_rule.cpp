@@ -194,16 +194,13 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnV
 
 void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative)
 {
-    double mean_stress_p, deviatoric_q;
-    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(rPrincipalStressVector, mean_stress_p, deviatoric_q);
+    double mean_stress_p, deviatoric_q, lode_angle;
+    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(rPrincipalStressVector, mean_stress_p, deviatoric_q, lode_angle);
     mean_stress_p *= -1.0;  // p is defined negative
-
-    double lode_angle_IP;
-    MPMStressPrincipalInvariantsUtility::CalculateThirdStressInvariant(rImagePointPrincipalStressVector, lode_angle_IP);
 
     // Get material parameters
     const double parameter_A = GetProperties()[MODEL_PARAMETER_A];
-    const double shear_M     = this->CalculateCriticalStateLineSlope(lode_angle_IP);
+    const double shear_M     = this->CalculateCriticalStateLineSlope(lode_angle);
     const double direction_T = this->GetDirectionParameter(rPrincipalStressVector, rImagePointPrincipalStressVector); 
     const double alpha       = this->GetAlphaParameter();
 
@@ -211,7 +208,7 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialDerivatives(const 
     rFirstDerivative[0]  = parameter_A * (shear_M - direction_T * (deviatoric_q/mean_stress_p));
     rFirstDerivative[1]  = direction_T;
     rFirstDerivative[2]  = - direction_T * 3.0/4.0 * deviatoric_q;
-    rFirstDerivative[2] *= (1.0 - std::pow(alpha, 4)) * std::cos(3.0 * lode_angle_IP) / (1.0 + std::pow(alpha, 4) - (1 - std::pow(alpha, 4)) * std::sin(3.0 * lode_angle_IP) );
+    rFirstDerivative[2] *= (1.0 - std::pow(alpha, 4)) * std::cos(3.0 * lode_angle) / (1.0 + std::pow(alpha, 4) - (1 - std::pow(alpha, 4)) * std::sin(3.0 * lode_angle) );
 
 }
 
