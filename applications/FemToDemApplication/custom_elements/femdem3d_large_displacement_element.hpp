@@ -47,6 +47,12 @@ class FemDem3DLargeDisplacementElement : public FemDem3DElement
     void FinalizeNonLinearIteration(ProcessInfo &CurrentProcessInfo);
 	void CalculateLocalSystem(MatrixType &rLeftHandSideMatrix, VectorType &rRightHandSideVector,
 							  ProcessInfo &rCurrentProcessInfo);
+    int GetStrainSize(){return 6;}
+    double CalculateDerivativesOnReferenceConfiguration(Matrix& rJ0,
+                                                        Matrix& rInvJ0,
+                                                        Matrix& rDN_DX,
+                                                        const IndexType PointNumber,
+                                                        IntegrationMethod ThisIntegrationMethod);
 
 
 

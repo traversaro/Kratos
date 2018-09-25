@@ -93,12 +93,96 @@ void FemDem3DLargeDisplacementElement::CalculateLocalSystem(
 	VectorType &rRightHandSideVector,
 	ProcessInfo &rCurrentProcessInfo)
 {
-    
+    const SizeType number_of_nodes = this->GetGeometry().size();
+    const SizeType dimension = this->GetGeometry().WorkingSpaceDimension();
+    const auto strain_size = GetStrainSize();
+
+    // Kinematic variables
+    Matrix B, F, DN_DX, InvJ0, J, J0;
+    double detJ0, detF, detJ;
+
+    const SizeType mat_size = number_of_nodes * dimension;
+
+    if (rLeftHandSideMatrix.size1() != mat_size)
+        rLeftHandSideMatrix.resize(mat_size, mat_size, false);
+
+    noalias(rLeftHandSideMatrix) = ZeroMatrix(mat_size, mat_size); //resetting LHS
+
+    // Resizing as needed the RHS
+    if (rRightHandSideVector.size() != mat_size)
+        rRightHandSideVector.resize(mat_size, false);
+
+    rRightHandSideVector = ZeroVector(mat_size); //resetting RHS
+
+    // Reading integration points
+    const GeometryType::IntegrationPointsArrayType& integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
+
+	Matrix DeltaPosition(number_of_nodes, dimension);
+	noalias(DeltaPosition) = ZeroMatrix(number_of_nodes, dimension);
+	DeltaPosition = this->CalculateDeltaPosition(DeltaPosition);
+
+   
+    // Loop over Gauss Points
+    for ( IndexType point_number = 0; point_number < integration_points.size(); ++point_number ) {
+		J = this->GetGeometry().Jacobian(J, point_number, mThisIntegrationMethod);
+        detJ0 = this->CalculateDerivativesOnReferenceConfiguration(J0, InvJ0, DN_DX, point_number, mThisIntegrationMethod);
+
+        double IntegrationWeight = integration_points[point_number].Weight() * detJ0;
+        const Matrix &Ncontainer = GetGeometry().ShapeFunctionsValues(mThisIntegrationMethod);
+		Vector N = row(Ncontainer, point_number);
+
+        Vector VolumeForce = ZeroVector(dimension);
+		VolumeForce = this->CalculateVolumeForce(VolumeForce, N);
+		// Taking into account Volume Force into de RHS
+		for (unsigned int i = 0; i < number_of_nodes; i++) {
+			int index = dimension * i;
+			for (unsigned int j = 0; j < dimension; j++) {
+				rRightHandSideVector[index + j] += IntegrationWeight * N[i] * VolumeForce[j];
+			}
+		}
+
+        
+        //GeometryUtils::DeformationGradient(J, rThisKinematicVariables.InvJ0,
+        //                                   rThisKinematicVariables.F);
+        //CalculateB(rThisKinematicVariables.B, rThisKinematicVariables.F,
+        //           rThisKinematicVariables.DN_DX);
+
+
+
+
+
+    }
 }
+
+double FemDem3DLargeDisplacementElement::CalculateDerivativesOnReferenceConfiguration(
+    Matrix& rJ0,
+    Matrix& rInvJ0,
+    Matrix& rDN_DX,
+    const IndexType PointNumber,
+    IntegrationMethod ThisIntegrationMethod
+    )
+{
+    //GeometryType& r_geom = GetGeometry();
+    //GeometryUtils::JacobianOnInitialConfiguration(
+    //    r_geom,
+    //    r_geom.IntegrationPoints(ThisIntegrationMethod)[PointNumber], rJ0);
+    //double detJ0;
+    //MathUtils<double>::InvertMatrix(rJ0, rInvJ0, detJ0);
+    //const Matrix& rDN_De = GetGeometry().ShapeFunctionsLocalGradients(ThisIntegrationMethod)[PointNumber];
+    //GeometryUtils::ShapeFunctionsGradients(rDN_De, rInvJ0, rDN_DX);
+    //return detJ0;
+
+	return 0;
+}
+
 
 void FemDem3DLargeDisplacementElement::FinalizeNonLinearIteration(ProcessInfo &CurrentProcessInfo)
 {
 }
+
+
+
+
 
 
 } // namespace Kratos
