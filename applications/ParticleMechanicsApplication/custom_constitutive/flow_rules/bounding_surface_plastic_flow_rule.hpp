@@ -79,11 +79,12 @@ public:
 
     struct MaterialParameters
     {
+        double SpecificVolume;
 
     public:
         void PrintInfo()
         {
-            // KRATOS_INFO("MPMFlowRule.MaterialParameters") << "PreconsolidationPressure = " <<  PreconsolidationPressure  << std::endl;
+            KRATOS_INFO("MPMFlowRule.MaterialParameters") << "SpecificVolume = " <<  SpecificVolume  << std::endl;
         }
 
     };
@@ -209,7 +210,7 @@ protected:
     
     bool CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, Vector& rPrincipalStress, Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated);
  
-    void ComputeElasticMatrix_3X3(const Vector& rPrincipalStressVector, const double& rVolumetricStrain, const double& rDeviatoricStrain, Matrix& rElasticMatrix);
+    void ComputeElasticMatrix_3X3(const double& rMainStressP, Matrix& rElasticMatrix);
 
     void ComputePlasticMatrix_3X3(const Vector& rPrincipalStressVector, const double& rVolumetricStrain, const double& rDeviatoricStrain, const Matrix& rElasticMatrix, Matrix& rPlasticMatrix);
 

@@ -100,7 +100,7 @@ void BoundingSurfacePlasticFlowRule::InitializeMaterial(YieldCriterionPointer& p
 
 // Initiate Material Parameters which are allowed to change
 void BoundingSurfacePlasticFlowRule::InitializeMaterialParameters(){
-
+    mMaterialParameters.SpecificVolume = GetProperties()[SPECIFIC_VOLUME_REFERENCE];
 }
 
 
@@ -241,10 +241,26 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantDerivativ
 
 }
 
-void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix_3X3(const Vector& rPrincipalStressVector, const double& rVolumetricStrain, const double& rDeviatoricStrain, Matrix& rElasticMatrix)
+void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix_3X3(const double& rMainStressP, Matrix& rElasticMatrix)
 {
+    const double poisson_ratio  = GetProperties()[POISSON_RATIO];
+    const double swelling_slope = GetProperties()[SWELLING_SLOPE];
+
+    const double bulk_modulus   = mMaterialParameters.SpecificVolume * rMainStressP / abs(swelling_slope);
+    const double shear_modulus  = (3.0 * (1.0 - (2.0 * poisson_ratio)) * mMaterialParameters.SpecificVolume * rMainStressP)/(2.0 * (1.0 + poisson_ratio)*abs(swelling_slope));
+    const double lame_parameter = bulk_modulus - 2.0/3.0 * shear_modulus;
+
     // Assemble rElasticMatrix matrix
     rElasticMatrix = ZeroMatrix(3);
+    for (unsigned int i=0; i<3; i++)
+    {
+        for (unsigned int j=0; j<3; j++)
+        {
+            if (i==j) rElasticMatrix(i,j) = lame_parameter + 2.0 * shear_modulus;
+            else rElasticMatrix(i,j) = lame_parameter;
+        }
+    }
+    
 }
 
 void BoundingSurfacePlasticFlowRule::ComputePlasticMatrix_3X3(const Vector& rPrincipalStressVector, const double& rVolumetricStrain, const double& rDeviatoricStrain, const Matrix& rElasticMatrix, Matrix& rPlasticMatrix)
@@ -277,6 +293,14 @@ void BoundingSurfacePlasticFlowRule::CalculatePrincipalStressTrial(const RadialR
 // Function to compute Principal Stress Vector from Principal Strain Vector
 void BoundingSurfacePlasticFlowRule::CalculatePrincipalStressVector(Vector& rPrincipalStrain, Vector& rPrincipalStress)
 {
+    double mean_stress_p, deviatoric_q;
+    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(rPrincipalStress, mean_stress_p, deviatoric_q);
+
+    // Calculate elastic matrix
+    Matrix elastic_matrix_D_e;
+    this->ComputeElasticMatrix_3X3(mean_stress_p, elastic_matrix_D_e);
+
+    rPrincipalStress = prod(elastic_matrix_D_e, rPrincipalStrain);
 
 }
 
