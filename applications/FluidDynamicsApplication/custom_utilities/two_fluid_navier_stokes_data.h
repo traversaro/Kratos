@@ -356,7 +356,7 @@ void ComputeDarcyTerm()
     array_1d<double, 3> advec_velocity(3, 0.0);
     for (size_t i = 0; i < TNumNodes; i++) {
         for (size_t j = 0; j < TDim; j++) {
-            advec_velocity[j] += N[i] * (Velocity(i, j) - MeshVelocity(i, j));
+            advec_velocity[j] += this->N[i] * (Velocity(i, j) - MeshVelocity(i, j));
         }
     }
     const double advec_velocity_norm = MathUtils<double>::Norm(advec_velocity);
