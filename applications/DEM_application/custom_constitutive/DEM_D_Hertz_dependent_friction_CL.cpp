@@ -36,39 +36,25 @@ namespace Kratos {
 
     void DEM_D_Hertz_dependent_friction::DamageContact(SphericParticle* const element1, SphericParticle* const element2, double equiv_radius, const double equiv_level_of_fouling, const double equiv_young, const double equiv_shear, double indentation, const double normal_contact_force) {
         //Get new Equivalent Radius
-        double equiv_radius_prev = equiv_level_of_fouling * equiv_radius;
-        equiv_radius = (equiv_young * sqrt(6 * normal_contact_force)) / (pow(Globals::Pi * element1->GetParticleMaxStress(),1.5));
-        const double AlphaFunction = element1->GetProperties()[ALPHA_FUNCTION];
+        equiv_radius = equiv_level_of_fouling * equiv_radius;
+        double equiv_radius_new = (equiv_young * sqrt(6 * normal_contact_force)) / (pow(Globals::Pi * element1->GetParticleMaxStress(),1.5));
 
-        double offset = (equiv_radius - equiv_radius_prev) * AlphaFunction;
+        double offset = 0.0;
+        if (equiv_radius_new > equiv_radius) {
+            const double AlphaFunction = element1->GetProperties()[ALPHA_FUNCTION];
+            offset = (equiv_radius_new - equiv_radius) * AlphaFunction;
 
-        for (unsigned int i = 0; element1->mNeighbourElements.size(); i++) {
-            if (element1->mNeighbourElements[i]->Id() == element2->Id()) {
-                element1->mNeighbourContactRadius[i] = equiv_radius / equiv_level_of_fouling;
-                if (indentation > offset) element1->mNeighbourIndentation[i] = indentation - offset;
-                else element1->mNeighbourIndentation[i] = 0.0;
-                break;
+            equiv_radius = equiv_radius_new;
+
+            for (unsigned int i = 0; element1->mNeighbourElements.size(); i++) {
+                if (element1->mNeighbourElements[i]->Id() == element2->Id()) {
+                    element1->mNeighbourContactRadius[i] = equiv_radius / equiv_level_of_fouling;
+                    if (indentation > offset) element1->mNeighbourContactRadius[i] = indentation - offset;
+                    else element1->mNeighbourContactRadius[i] = 0.0;
+                    break;
+                }
             }
         }
-
-        // double offset = 0.0;
-
-        // for (unsigned int i = 0; element1->mNeighbourElements.size(); i++) {
-        //     if (element1->mNeighbourElements[i]->Id() == element2->Id()){
-        //         if (element1->mNeighbourContactRadius[i] == 0.0) {
-        //             offset = (equiv_radius - equiv_level_of_fouling * element1->GetParticleContactRadius()) * AlphaFunction;
-        //         }
-        //         else {
-        //             element1->mNeighbourContactRadius[i] = equiv_radius;
-        //             offset = (equiv_radius - element1->mNeighbourContactRadius[i]) * AlphaFunction;
-        //         }
-        //         break;
-        //     }
-        // }
-
-        // if (indentation > (2 * offset)) indentation -= (2 * offset);
-        // if (indentation > offset) indentation -= offset;
-        // else indentation = 0.0;
 
         //New Normal and Tangent elastic constants
         const double sqrt_equiv_radius_and_indentation = sqrt(equiv_radius * indentation);
@@ -100,11 +86,7 @@ namespace Kratos {
             if (element1->mNeighbourElements[i]->Id() == element2->Id()) {
                 if (element1->mNeighbourContactRadius[i] > equiv_radius) {
                     equiv_radius = element1->mNeighbourContactRadius[i];
-                }
-                if (element1->mNeighbourIndentation[i] > 0.0) {
-                    double previous_indentation_temp = previous_indentation;
-                    previous_indentation = element1->mNeighbourIndentation[i];
-                    indentation = previous_indentation + (indentation - previous_indentation_temp);
+                    indentation = element1->mNeighbourIndentation[i] + (indentation - previous_indentation);
                     if (indentation < 0.0) indentation = 0.0;
                 }
                 break;
@@ -202,40 +184,26 @@ namespace Kratos {
     }
 
     void DEM_D_Hertz_dependent_friction::DamageContactWithFEM(SphericParticle* const element, Condition* const wall, double effective_radius, const double equiv_level_of_fouling, const double equiv_young, const double equiv_shear, double indentation, const double normal_contact_force) {
-        double effective_radius_prev = equiv_level_of_fouling * effective_radius;
+        effective_radius = equiv_level_of_fouling * effective_radius;
         //Get new Equivalent Radius
-        effective_radius    = (equiv_young * sqrt(6 * normal_contact_force)) / (pow(Globals::Pi * element->GetParticleMaxStress(),1.5));
+        double effective_radius_new = (equiv_young * sqrt(6 * normal_contact_force)) / (pow(Globals::Pi * element->GetParticleMaxStress(),1.5));
 
-        const double AlphaFunction = element->GetProperties()[ALPHA_FUNCTION];
+        double offset = 0.0;
+        if (effective_radius_new > effective_radius) {
+            const double AlphaFunction = element->GetProperties()[ALPHA_FUNCTION];
+            offset = (effective_radius_new - effective_radius) * AlphaFunction;
 
-        double offset = (effective_radius - effective_radius_prev) * AlphaFunction;
+            effective_radius = effective_radius_new;
 
-        for (unsigned int i = 0; element->mNeighbourRigidFaces.size(); i++) {
-            if (element->mNeighbourRigidFaces[i]->Id() == wall->Id()) {
-                element->mNeighbourRigidContactRadius[i] = effective_radius / equiv_level_of_fouling;
-                if (indentation > offset) element->mNeighbourRigidContactRadius[i] = indentation - offset;
-                else element->mNeighbourRigidContactRadius[i] = 0.0;
-                break;
+            for (unsigned int i = 0; element->mNeighbourRigidFaces.size(); i++) {
+                if (element->mNeighbourRigidFaces[i]->Id() == wall->Id()) {
+                    element->mNeighbourRigidContactRadius[i] = effective_radius / equiv_level_of_fouling;
+                    if (indentation > offset) element->mNeighbourRigidContactRadius[i] = indentation - offset;
+                    else element->mNeighbourRigidContactRadius[i] = 0.0;
+                    break;
+                }
             }
         }
-
-        // double offset = 0.0;
-
-        // for (unsigned int i = 0; element->mNeighbourRigidFaces.size(); i++) {
-        //     if (element->mNeighbourRigidFaces[i]->Id() == wall->Id()){
-        //         if (element->mNeighbourRigidContactRadius[i] == 0.0) {
-        //             offset = (effective_radius - equiv_level_of_fouling * element->GetParticleContactRadius()) * AlphaFunction;
-        //         }
-        //         else {
-        //             element->mNeighbourRigidContactRadius[i] = effective_radius;
-        //             offset = (effective_radius - element->mNeighbourRigidContactRadius[i]) * AlphaFunction;
-        //         }
-        //         break;
-        //     }
-        // }
-
-        // if (indentation > offset) indentation -= offset;
-        // else indentation = 0.0;
 
         //New Normal and Tangent elastic constants
         const double sqrt_equiv_radius_and_indentation = sqrt(effective_radius * indentation);
@@ -263,14 +231,7 @@ namespace Kratos {
             if (element->mNeighbourRigidFaces[i]->Id() == wall->Id()) {
                 if (element->mNeighbourRigidContactRadius[i] > effective_radius) {
                     effective_radius = element->mNeighbourRigidContactRadius[i];
-                }
-                else {
-                    effective_radius = effective_radius;
-                }
-                if (element->mNeighbourRigidIndentation[i] > 0.0) {
-                    double previous_indentation_temp = previous_indentation;
-                    previous_indentation = element->mNeighbourRigidIndentation[i];
-                    indentation = previous_indentation + (indentation - previous_indentation_temp);
+                    indentation = element->mNeighbourRigidIndentation[i] + (indentation - previous_indentation);
                     if (indentation < 0.0) indentation = 0.0;
                 }
                 break;
