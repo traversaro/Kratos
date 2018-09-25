@@ -71,7 +71,8 @@ public:
     typedef Node<3>                                             NodeType;
     ///Type for nodes container
     typedef PointerVectorSet<NodeType, IndexedObject> NodesContainerType;
-
+    ///Type for size
+    typedef GeometryData::SizeType                              SizeType;
 
     /// Counted pointer of RigidBodyElement
     KRATOS_CLASS_POINTER_DEFINITION( RigidBodyElement );
@@ -85,13 +86,10 @@ protected:
      */
     KRATOS_DEFINE_LOCAL_FLAG( COMPUTE_RHS_VECTOR );
     KRATOS_DEFINE_LOCAL_FLAG( COMPUTE_LHS_MATRIX );
-    KRATOS_DEFINE_LOCAL_FLAG( COMPUTE_RHS_VECTOR_WITH_COMPONENTS );
-    KRATOS_DEFINE_LOCAL_FLAG( COMPUTE_LHS_MATRIX_WITH_COMPONENTS );
 
     /**
      * Parameters to be used to store section properties
      */
-
     struct RigidBodyProperties
     {
       double Mass;                            // Mass of the Rigid Body
@@ -101,13 +99,39 @@ protected:
     /**
      * Parameters to be used in the Element as they are. Direct interface to Parameters Struct
      */
-
     struct ElementVariables
     {
-        //section properties
-        RigidBodyProperties RigidBody;
+     private:
 
-        Matrix DeltaPosition;
+      //variables including all integration points
+      const ProcessInfo* pProcessInfo;
+
+     public:
+      
+      //section properties
+      RigidBodyProperties RigidBody;
+      Vector VolumeForce;
+      Matrix DeltaPosition;
+      
+      void SetProcessInfo(const ProcessInfo& rProcessInfo)
+      {
+        pProcessInfo=&rProcessInfo;
+      }
+
+      const ProcessInfo& GetProcessInfo()
+      {
+        return *pProcessInfo;
+      }
+      
+      void Initialize(const unsigned int& dimension, const ProcessInfo& rProcessInfo)
+      {
+        VolumeForce.resize(dimension);
+        noalias(VolumeForce) = ZeroVector(dimension);
+        DeltaPosition.resize(1,dimension,false);
+        noalias(DeltaPosition) = ZeroMatrix(1, dimension);
+        pProcessInfo=&rProcessInfo;
+      }
+      
     };
 
 
@@ -224,26 +248,6 @@ public:
      */
     void GetSecondDerivativesVector(Vector& rValues, int Step = 0) override;
 
-    //on integration points:
-    /**
-     * Access for variables on Integration points.
-     * This gives access to variables stored in the constitutive law on each integration point.
-     * Specialisations of element.h (e.g. the TotalLagrangian) must specify the actual
-     * interface to the constitutive law!
-     * Note, that these functions expect a std::vector of values for the
-     * specified variable type that contains a value for each integration point!
-     * SetValueOnIntegrationPoints: set the values for given Variable.
-     * GetValueOnIntegrationPoints: get the values for given Variable.
-     */
-
-    //GET:
-    /**
-     * Get on rVariable a Vector Value from the Element Constitutive Law
-     */
-    void GetValueOnIntegrationPoints( const Variable< array_1d<double, 3 > >& rVariable,
-				      std::vector< array_1d<double, 3 > >& rValues,
-				      const ProcessInfo& rCurrentProcessInfo ) override;
-
 
     //************* STARTING - ENDING  METHODS
 
@@ -358,14 +362,6 @@ public:
      */
     void AddExplicitContribution(const VectorType& rRHSVector, const Variable<VectorType>& rRHSVariable, Variable<array_1d<double,3> >& rDestinationVariable, const ProcessInfo& rCurrentProcessInfo) override;
 
-    //on integration points:
-    /**
-     * Calculate a double Variable on the Element Constitutive Law
-     */
-    void CalculateOnIntegrationPoints( const Variable< array_1d<double, 3 > >& rVariable,
-                                       std::vector< array_1d<double, 3 > >& Output,
-                                       const ProcessInfo& rCurrentProcessInfo) override;
-
 
     //************************************************************************************
     //************************************************************************************
@@ -377,6 +373,7 @@ public:
      * @param rCurrentProcessInfo
      */
     int Check(const ProcessInfo& rCurrentProcessInfo) override;
+
     ///@}
     ///@name Access
     ///@{
@@ -437,13 +434,17 @@ protected:
     ///@{
 
 
-
+    /**
+     * Calculates the elemental contributions
+     */
+    virtual void CalculateElementalSystem(LocalSystemComponents& rLocalSystem,
+                                          ProcessInfo& rCurrentProcessInfo);
+    
     /**
      * Calculates the elemental dynamic contributions
-      */
-    void CalculateDynamicSystem( LocalSystemComponents& rLocalSystem,
-				 ProcessInfo& rCurrentProcessInfo );
-
+     */
+    void CalculateDynamicSystem(LocalSystemComponents& rLocalSystem,
+                                ProcessInfo& rCurrentProcessInfo);
 
     /**
      * Initialize System Matrices
@@ -470,39 +471,40 @@ protected:
 
 
     /**
-     * Initialize Element General Variables
-     */
-    virtual void InitializeElementVariables(ElementVariables & rVariables, const ProcessInfo& rCurrentProcessInfo);
-
-
-    /**
      * Calculation of the Rigid Body Properties
      */
     void CalculateRigidBodyProperties(RigidBodyProperties & rRigidBody);
 
 
+    /**
+      * Calculation of the Tangent Matrix
+      */
+    virtual void CalculateAndAddLHS(MatrixType& rLeftHandSideMatrix,
+                                    ElementVariables& rVariables);
 
+    /**
+      * Calculation of the Force Vector
+      */
+    virtual void CalculateAndAddRHS(VectorType& rRightHandSideVector,
+                                    ElementVariables& rVariables);
+    
     /**
      * Calculation of the External Forces Vector. Fe = N * t + N * b
      */
     virtual void CalculateAndAddExternalForces(VectorType& rRightHandSideVector,
-					       ElementVariables& rVariables,
-					       Vector& rVolumeForce);
-
+					       ElementVariables& rVariables);
 
     /**
       * Calculation of the Tangent Intertia Matrix
       */
     virtual void CalculateAndAddInertiaLHS(MatrixType& rLeftHandSideMatrix,
-					   ElementVariables& rVariables,
-					   ProcessInfo& rCurrentProcessInfo);
+					   ElementVariables& rVariables);
 
     /**
       * Calculation of the Inertial Forces Vector
       */
     virtual void CalculateAndAddInertiaRHS(VectorType& rRightHandSideVector,
-					   ElementVariables& rVariables,
-					   ProcessInfo& rCurrentProcessInfo);
+					   ElementVariables& rVariables);
 
 
     /**
@@ -521,6 +523,11 @@ protected:
       * Update rigid body nodes and positions
       */
     virtual void UpdateRigidBodyNodes(ProcessInfo& rCurrentProcessInfo);
+
+    /**
+     * Get element size from the dofs
+     */
+    virtual SizeType GetDofsSize();
 
 
     ///@}
@@ -572,4 +579,3 @@ private:
 
 } // namespace Kratos.
 #endif //  KRATOS_RIGID_BODY_ELEMENT_H_INCLUDED defined
-
