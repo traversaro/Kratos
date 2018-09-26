@@ -93,8 +93,7 @@ FemDem3DElement::~FemDem3DElement()
 
 void FemDem3DElement::InitializeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 {
-	if (this->GetIteration() == 0)
-	{
+	if (this->GetIteration() == 0) {
 		this->ComputeEdgeNeighbours(rCurrentProcessInfo);
 		this->CalculateLchar();
 		this->IterationPlus();
@@ -129,8 +128,7 @@ void FemDem3DElement::ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo)
 	this->SetNodeIndexes(nodes_indexes);
 
 	// Loop over EDGES to assign the elements that share that edge -> Fill mEdgeNeighboursContainer
-	for (int edge = 0; edge < 6; edge++)
-	{
+	for (int edge = 0; edge < 6; edge++) {
 		int NodeIndex1 = nodes_indexes(edge, 0);
 		int NodeIndex2 = nodes_indexes(edge, 1);
 
@@ -143,18 +141,15 @@ void FemDem3DElement::ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo)
 
 		std::vector<Element *> edge_shared_elements_node_1;
 		// Loop over neigh elements of the node 1
-		for (int neigh_elem = 0; neigh_elem < neigh_of_node_1.size(); neigh_elem++)
-		{
+		for (int neigh_elem = 0; neigh_elem < neigh_of_node_1.size(); neigh_elem++) {
 			// Nodes of the neigh element
 			Geometry<Node<3>> &NodesNeighElem = neigh_of_node_1[neigh_elem].GetGeometry();
 
 			// Loop over the nodes of the neigh element
-			for (int neigh_elem_node = 0; neigh_elem_node < 4; neigh_elem_node++)
-			{
+			for (int neigh_elem_node = 0; neigh_elem_node < 4; neigh_elem_node++) {
 				int NeighElementNodeId = NodesNeighElem[neigh_elem_node].Id();
 
-				if (NeighElementNodeId == NodeId2 & this->Id() != neigh_of_node_1[neigh_elem].Id())
-				{
+				if (NeighElementNodeId == NodeId2 & this->Id() != neigh_of_node_1[neigh_elem].Id()) {
 					edge_shared_elements_node_1.push_back(&neigh_of_node_1[neigh_elem]); // ( [] returns an Element object!!)
 				}
 			}
@@ -162,18 +157,15 @@ void FemDem3DElement::ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo)
 
 		std::vector<Element *> edge_shared_elements_node_2;
 		// Loop over neigh elements of the node 2
-		for (int neigh_elem = 0; neigh_elem < neigh_of_node_2.size(); neigh_elem++)
-		{
+		for (int neigh_elem = 0; neigh_elem < neigh_of_node_2.size(); neigh_elem++) {
 			// Nodes of the neigh element
 			Geometry<Node<3>> &NodesNeighElem = neigh_of_node_2[neigh_elem].GetGeometry();
 
 			// Loop over the nodes of the neigh element
-			for (int neigh_elem_node = 0; neigh_elem_node < 4; neigh_elem_node++)
-			{
+			for (int neigh_elem_node = 0; neigh_elem_node < 4; neigh_elem_node++) {
 				int NeighElementNodeId = NodesNeighElem[neigh_elem_node].Id();
 
-				if (NeighElementNodeId == NodeId1 & this->Id() != neigh_of_node_2[neigh_elem].Id())
-				{
+				if (NeighElementNodeId == NodeId1 & this->Id() != neigh_of_node_2[neigh_elem].Id()) {
 					edge_shared_elements_node_2.push_back(&neigh_of_node_2[neigh_elem]);
 				}
 			}
@@ -183,12 +175,10 @@ void FemDem3DElement::ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo)
 		std::vector<Element *> edge_shared_elements = edge_shared_elements_node_1;
 
 		// Add the neigh elements from the node 2
-		for (int i = 0; i < edge_shared_elements_node_2.size(); i++)
-		{
+		for (int i = 0; i < edge_shared_elements_node_2.size(); i++) {
 			int aux = 0;
 
-			for (int j = 0; j < edge_shared_elements.size(); j++)
-			{
+			for (int j = 0; j < edge_shared_elements.size(); j++) {
 				if (edge_shared_elements_node_2[i]->Id() == edge_shared_elements[j]->Id())
 					aux++;
 			}
@@ -212,14 +202,12 @@ void FemDem3DElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 	this->SetToZeroIteration();
 
 	//Loop over edges
-	for (int cont = 0; cont < 6; cont++)
-	{
+	for (int cont = 0; cont < 6; cont++) {
 		this->SetConvergedDamages(this->GetNonConvergedDamages(cont), cont);
 		this->SetConvergedEquivalentStress(this->GetNonConvergedEquivalentStress(cont), cont);
 		current_equivalent_stress = this->GetConvergedEquivalentStress(cont);
 		
-		if (current_equivalent_stress > this->GetThreshold(cont))
-		{
+		if (current_equivalent_stress > this->GetThreshold(cont)) {
 			this->SetThreshold(current_equivalent_stress, cont);
 		}
 
@@ -228,8 +216,7 @@ void FemDem3DElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 	damage_element = this->GetNonConvergedDamage();
 	this->SetConvergedDamage(damage_element);
 
-	if (damage_element >= 0.98)
-	{
+	if (damage_element >= 0.98) {
 		this->Set(ACTIVE, false);
 		double old_threshold = this->GetValue(STRESS_THRESHOLD);
 		this->SetValue(INITIAL_THRESHOLD, old_threshold);
@@ -240,10 +227,9 @@ void FemDem3DElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 
 	// Reset the nodal force flag for the next time step
 	Geometry<Node<3>> &NodesElement = this->GetGeometry();
-	for (int i = 0; i < 3; i++)
-	{
-		#pragma omp critical
-		{
+
+	for (int i = 0; i < 3; i++) {
+		#pragma omp critical {
 			NodesElement[i].SetValue(NODAL_FORCE_APPLIED, false);
 		}
 	}
@@ -258,9 +244,6 @@ void FemDem3DElement::InitializeNonLinearIteration(ProcessInfo &rCurrentProcessI
 	const unsigned int number_of_nodes = GetGeometry().size();
 	const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
 	unsigned int voigt_size = dimension * (dimension + 1) / 2;
-
-	// KRATOS_WATCH(this->GetProperties()[YIELD_STRESS_T])
-
 
 	Vector StrainVector(voigt_size);
 	noalias(StrainVector) = ZeroVector(voigt_size);
@@ -302,8 +285,7 @@ void FemDem3DElement::InitializeNonLinearIteration(ProcessInfo &rCurrentProcessI
 	J = GetGeometry().Jacobian(J, mThisIntegrationMethod, DeltaPosition);
 
 	// Loop Over Integration Points
-	for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++)
-	{
+	for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
 		Matrix InvJ(dimension, dimension);
 		noalias(InvJ) = ZeroMatrix(dimension, dimension);
 		double detJ = 0;
@@ -383,8 +365,7 @@ void FemDem3DElement::CalculateLocalSystem(
 	noalias(J[0]) = ZeroMatrix(dimension, dimension);
 	J = GetGeometry().Jacobian(J, mThisIntegrationMethod, DeltaPosition);
 
-	for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++)
-	{
+	for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
 		const Matrix &Ncontainer = GetGeometry().ShapeFunctionsValues(mThisIntegrationMethod);
 		Vector N = row(Ncontainer, PointNumber);
 
@@ -399,10 +380,8 @@ void FemDem3DElement::CalculateLocalSystem(
 		Vector DamagesOnEdges = ZeroVector(6);
 
 		// Loop over edges of the element
-		for (int edge = 0; edge < 6; edge++)
-		{
+		for (int edge = 0; edge < 6; edge++) {
 			std::vector<Element *> EdgeNeighbours = this->GetEdgeNeighbourElements(edge);
-
 			Vector AverageStressVector, AverageStrainVector, IntegratedStressVectorOnEdge;
 
 			this->CalculateAverageStressOnEdge(AverageStressVector, EdgeNeighbours);
@@ -419,7 +398,8 @@ void FemDem3DElement::CalculateLocalSystem(
 		} // End loop over edges
 
 		double damage_element = this->CalculateElementalDamage(DamagesOnEdges);
-		if (damage_element >= 0.999) {damage_element = 0.999;}
+		if (damage_element >= 0.999)
+			damage_element = 0.999;
 		this->SetNonConvergedDamages(damage_element);
 
 		const Vector &StressVector = this->GetValue(STRESS_VECTOR);
@@ -437,11 +417,9 @@ void FemDem3DElement::CalculateLocalSystem(
 		VolumeForce = this->CalculateVolumeForce(VolumeForce, N);
 
 		// RHS
-		for (unsigned int i = 0; i < number_of_nodes; i++)
-		{
+		for (unsigned int i = 0; i < number_of_nodes; i++) {
 			int index = dimension * i;
-			for (unsigned int j = 0; j < dimension; j++)
-			{
+			for (unsigned int j = 0; j < dimension; j++) {
 				rRightHandSideVector[index + j] += IntegrationWeight * N[i] * VolumeForce[j];
 			}
 		}
@@ -457,23 +435,19 @@ void FemDem3DElement::CalculateLocalSystem(
 		noalias(rRightHandSideVector) += NodalRHS;
 	}
 	KRATOS_CATCH("")
-	//*****************************
 }
 
 void FemDem3DElement::AddDEMContactForces(Vector &rNodalRHS)
 {
-	#pragma omp critical
-	{
+	#pragma omp critical {
 		Geometry<Node<3>> &NodesElement = this->GetGeometry();
 
 		// Loop Over nodes to apply the DEM contact forces to the FEM
-		for (int i = 0; i < 4; i++)
-		{
+		for (int i = 0; i < 4; i++) {
 			bool IsDEM = NodesElement[i].GetValue(IS_DEM);
 			bool NodalForceApplied = NodesElement[i].GetValue(NODAL_FORCE_APPLIED);
 
-			if (IsDEM == true && NodalForceApplied == false)
-			{
+			if (IsDEM == true && NodalForceApplied == false) {
 				const double ForceX = NodesElement[i].GetValue(NODAL_FORCE_X);
 				const double ForceY = NodesElement[i].GetValue(NODAL_FORCE_Y);
 				const double ForceZ = NodesElement[i].GetValue(NODAL_FORCE_Z);
@@ -494,8 +468,7 @@ void FemDem3DElement::CalculateDeformationMatrix(Matrix &rB, const Matrix &rDN_D
 	const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
 	unsigned int voigt_size = dimension * (dimension + 1) / 2;
 
-	for (unsigned int i = 0; i < number_of_nodes; i++)
-	{
+	for (unsigned int i = 0; i < number_of_nodes; i++) {
 		unsigned int index = 3 * i;
 
 		rB(0, index + 0) = rDN_DX(i, 0);
@@ -543,6 +516,7 @@ void FemDem3DElement::CalculateDN_DX(Matrix &rDN_DX, int PointNumber)
 {
 	const unsigned int number_of_nodes = GetGeometry().size();
 	const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
+	
 	//reading integration points
 	const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(mThisIntegrationMethod);
 
@@ -551,6 +525,7 @@ void FemDem3DElement::CalculateDN_DX(Matrix &rDN_DX, int PointNumber)
 
 	//get the shape functions parent coordinates derivative [dN/d�] (for the order of the default integration method)
 	const GeometryType::ShapeFunctionsGradientsType &DN_De = GetGeometry().ShapeFunctionsLocalGradients(mThisIntegrationMethod);
+	
 	//calculate delta position (here coincides with the current displacement)
 	Matrix DeltaPosition = ZeroMatrix(number_of_nodes, dimension);
 	DeltaPosition = this->CalculateDeltaPosition(DeltaPosition);
@@ -560,15 +535,13 @@ void FemDem3DElement::CalculateDN_DX(Matrix &rDN_DX, int PointNumber)
 	J.resize(1, false);
 	J[0] = ZeroMatrix(1, 1);
 	J = GetGeometry().Jacobian(J, mThisIntegrationMethod, DeltaPosition);
-	//a.-compute element kinematics
 
 	//calculating the inverse of the jacobian for this integration point[d�/dx_n]
 	Matrix InvJ = ZeroMatrix(dimension, dimension);
-	double detJ = 0;
+	double detJ;
 	MathUtils<double>::InvertMatrix(J[PointNumber], InvJ, detJ);
 
-	if (detJ < 0)
-		KRATOS_THROW_ERROR(std::invalid_argument, " SMALL DISPLACEMENT ELEMENT INVERTED: |J|<0 ) detJ = ", detJ)
+	KRATOS_ERROR_IF(detJ < 0) << " SMALL DISPLACEMENT ELEMENT INVERTED: |J|<0 ) detJ = "<< detJ << std::endl;
 
 	//compute cartesian derivatives for this integration point  [dN/dx_n]
 	rDN_DX = prod(DN_De[PointNumber], InvJ);
@@ -583,8 +556,7 @@ void FemDem3DElement::CalculateInfinitesimalStrain(Vector &rStrainVector, const 
 
 	Matrix H = zero_matrix<double>(dimension); //[dU/dx_n]
 
-	for (unsigned int i = 0; i < number_of_nodes; i++)
-	{
+	for (unsigned int i = 0; i < number_of_nodes; i++) {
 		array_1d<double, 3> &Displacement = GetGeometry()[i].FastGetSolutionStepValue(DISPLACEMENT);
 
 		H(0, 0) += Displacement[0] * rDN_DX(i, 0);
@@ -615,12 +587,16 @@ void FemDem3DElement::CalculateInfinitesimalStrain(Vector &rStrainVector, const 
 void FemDem3DElement::CalculateStressVector(
 	Vector &rStressVector,
 	const Matrix &rConstitutiveMAtrix,
-	const Vector &rInfinitesimalStrainVector)
+	const Vector &rInfinitesimalStrainVector
+	)
 {
 	noalias(rStressVector) = prod(rConstitutiveMAtrix, rInfinitesimalStrainVector);
 }
 
-void FemDem3DElement::CalculatePrincipalStresses(Vector &rPrincipalStressVector, const Vector &StressVector)
+void FemDem3DElement::CalculatePrincipalStresses(
+	Vector &rPrincipalStressVector, 
+	const Vector &StressVector
+	)
 {
 	rPrincipalStressVector.resize(3);
 	const double I1 = this->CalculateI1Invariant(StressVector);
@@ -631,12 +607,10 @@ void FemDem3DElement::CalculatePrincipalStresses(Vector &rPrincipalStressVector,
 	const double Num = (2.0 * II1 - 9.0 * I2) * I1 + 27.0 * I3;
 	const double Denom = (II1 - 3.0 * I2);
 
-	if (Denom != 0.0)
-	{
+	if (Denom != 0.0) {
 		double phi = Num / (2.0 * Denom * std::sqrt(Denom));
 
-		if (std::abs(phi) > 1.0)
-		{
+		if (std::abs(phi) > 1.0) {
 			if (phi > 0.0)
 				phi = 1.0;
 			else
@@ -652,9 +626,7 @@ void FemDem3DElement::CalculatePrincipalStresses(Vector &rPrincipalStressVector,
 		rPrincipalStressVector[0] = aux2 + aux1 * std::cos(phi);
 		rPrincipalStressVector[1] = aux2 + aux1 * std::cos(phi - 2.09439510239);
 		rPrincipalStressVector[2] = aux2 + aux1 * std::cos(phi - 4.18879020478);
-	}
-	else
-	{
+	} else {
 		rPrincipalStressVector = ZeroVector(3);
 	}
 }
@@ -681,10 +653,11 @@ void FemDem3DElement::CalculateAverageStressOnEdge(
 	Vector &rAverageVector,
 	const std::vector<Element *> VectorOfElems)
 {
+	KRATOS_TRY
+
 	Vector CurrentElementStress = this->GetValue(STRESS_VECTOR);
 	rAverageVector = CurrentElementStress;
 	int counter = 0;
-	//KRATOS_WATCH(this->Id())
 
 	for (int elem = 0; elem < VectorOfElems.size(); elem++)
 	{
@@ -702,12 +675,16 @@ void FemDem3DElement::CalculateAverageStressOnEdge(
 		}
 	}
 	rAverageVector /= (counter + 1);
+
+	KRATOS_CATCH("")
 }
 
 void FemDem3DElement::CalculateAverageStrainOnEdge(
 	Vector &rAverageVector,
 	const std::vector<Element *> VectorOfElems)
 {
+	KRATOS_TRY
+
 	Vector CurrentElementStress = this->GetValue(STRAIN_VECTOR);
 	rAverageVector = CurrentElementStress;
 	int counter = 0;
@@ -728,6 +705,8 @@ void FemDem3DElement::CalculateAverageStrainOnEdge(
 		}
 	}
 	rAverageVector /= (counter + 1);
+
+	KRATOS_CATCH("")
 }
 
 // Double values
