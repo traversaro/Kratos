@@ -198,14 +198,13 @@ void FemDem3DElement::ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo)
 
 void FemDem3DElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 {
-	double current_equivalent_stress = 0.0, damage_element = 0.0;
 	this->SetToZeroIteration();
 
 	//Loop over edges
 	for (int cont = 0; cont < 6; cont++) {
 		this->SetConvergedDamages(this->GetNonConvergedDamages(cont), cont);
 		this->SetConvergedEquivalentStress(this->GetNonConvergedEquivalentStress(cont), cont);
-		current_equivalent_stress = this->GetConvergedEquivalentStress(cont);
+		const double current_equivalent_stress = this->GetConvergedEquivalentStress(cont);
 		
 		if (current_equivalent_stress > this->GetThreshold(cont)) {
 			this->SetThreshold(current_equivalent_stress, cont);
@@ -213,7 +212,7 @@ void FemDem3DElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 
 	} // End Loop over edges
 
-	damage_element = this->GetNonConvergedDamage();
+	const double damage_element = this->GetNonConvergedDamage();
 	this->SetConvergedDamage(damage_element);
 
 	if (damage_element >= 0.98) {
@@ -229,7 +228,8 @@ void FemDem3DElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 	Geometry<Node<3>> &NodesElement = this->GetGeometry();
 
 	for (int i = 0; i < 3; i++) {
-		#pragma omp critical {
+		#pragma omp critical 
+		{
 			NodesElement[i].SetValue(NODAL_FORCE_APPLIED, false);
 		}
 	}
@@ -439,7 +439,8 @@ void FemDem3DElement::CalculateLocalSystem(
 
 void FemDem3DElement::AddDEMContactForces(Vector &rNodalRHS)
 {
-	#pragma omp critical {
+	#pragma omp critical 
+	{
 		Geometry<Node<3>> &NodesElement = this->GetGeometry();
 
 		// Loop Over nodes to apply the DEM contact forces to the FEM
@@ -970,16 +971,18 @@ double FemDem3DElement::CalculateJ3Invariant(const Vector Deviator)
 double FemDem3DElement::CalculateLodeAngle(double J2, double J3)
 {
 	double sint3;
-	sint3 = (-3.0 * std::sqrt(3.0) * J3) / (2.0 * J2 * std::sqrt(J2));
-	if (sint3 < -0.95)
-	{
-		sint3 = -1.0;
+
+	if (std::abs(J2) > 1.0e-24) {
+		sint3 = (-3.0 * std::sqrt(3.0) * J3) / (2.0 * J2 * std::sqrt(J2));
+		if (sint3 < -0.95) {
+			sint3 = -1.0;
+		} else if (sint3 > 0.95) {
+			sint3 = 1.0;
+		}
+		return std::asin(sint3) / 3.0;
+	} else {
+		return 0.0;
 	}
-	if (sint3 > 0.95)
-	{
-		sint3 = 1.0;
-	}
-	return std::asin(sint3) / 3.0;
 }
 
 void FemDem3DElement::CalculateMassMatrix(MatrixType &rMassMatrix, ProcessInfo &rCurrentProcessInfo)
@@ -1162,30 +1165,19 @@ void FemDem3DElement::IntegrateStressDamageMechanics(
 	int cont,
 	double l_char)
 {
-	const std::string yield_surface = this->GetProperties()[YIELD_SURFACE];
+	const std::string& yield_surface = this->GetProperties()[YIELD_SURFACE];
 
-	if (yield_surface == "ModifiedMohrCoulomb")
-	{
+	if (yield_surface == "ModifiedMohrCoulomb") {
 		this->ModifiedMohrCoulombCriterion(rIntegratedStress, rdamage, StressVector, cont, l_char);
-	}
-	else if (yield_surface == "SimoJu")
-	{
+	} else if (yield_surface == "SimoJu") {
 		this->SimoJuCriterion(rIntegratedStress, rdamage, StrainVector, StressVector, cont, l_char);
-	}
-	else if (yield_surface == "Rankine")
-	{
+	} else if (yield_surface == "Rankine") {
 		this->RankineCriterion(rIntegratedStress, rdamage, StressVector, cont, l_char);
-	}
-	else if (yield_surface == "DruckerPrager")
-	{
+	} else if (yield_surface == "DruckerPrager") {
 		this->DruckerPragerCriterion(rIntegratedStress, rdamage, StressVector, cont, l_char);
-	}
-	else if (yield_surface == "RankineFragile")
-	{
+	} else if (yield_surface == "RankineFragile") {
 		this->RankineFragileLaw(rIntegratedStress, rdamage, StressVector, cont, l_char);
-	}
-	else
-	{
+	} else {
 		KRATOS_ERROR << " Yield Surface not defined ";
 	}
 }
@@ -1195,88 +1187,74 @@ void FemDem3DElement::ModifiedMohrCoulombCriterion(
 	double &rdamage,
 	const Vector &StressVector,
 	int cont,
-	double l_char)
+	double l_char
+	)
 {
 	rIntegratedStress.resize(6);
-
-	double sigma_c = 0.0, sigma_t = 0.0, friction_angle = 0.0, E = 0.0, Gt = 0.0;
-	sigma_c = this->GetProperties()[YIELD_STRESS_C];
-	sigma_t = this->GetProperties()[YIELD_STRESS_T];
-	friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * 3.14159265359 / 180.0; // In radians!
-	E = this->GetProperties()[YOUNG_MODULUS];
-	Gt = this->GetProperties()[FRAC_ENERGY_T];
+	const double sigma_c = this->GetProperties()[YIELD_STRESS_C];
+	const double sigma_t = this->GetProperties()[YIELD_STRESS_T];
+	double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * 3.14159265359 / 180.0; // In radians!
+	const double E = this->GetProperties()[YOUNG_MODULUS];
+	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
 
 	// Check input variables
-	if (friction_angle < 1e-24)
-	{
+	if (friction_angle < 1e-24) {
 		friction_angle = 32 * 3.14159 / 180;
 		std::cout << "Friction Angle not defined, assumed equal to 32 deg " << std::endl;
 	}
-	if (sigma_c < 1e-24)
-	{
+	if (sigma_c < 1e-24) {
 		KRATOS_ERROR << " ERROR: Yield stress in compression not defined, include YIELD_STRESS_C in .mdpa ";
 	}
-	if (sigma_t < 1e-24)
-	{
+	if (sigma_t < 1e-24) {
 		KRATOS_ERROR << " ERROR: Yield stress in tension not defined, include YIELD_STRESS_T in .mdpa ";
 	}
-	if (Gt < 1e-24)
-	{
+	if (Gt < 1e-24) {
 		KRATOS_ERROR << " ERROR: Fracture Energy not defined in the model part, include FRAC_ENERGY_T in .mdpa ";
 	}
 
-	double K1, K2, K3, Rmorh, R, alpha_r, c_max, theta, c_threshold;
-	R = std::abs(sigma_c / sigma_t);
-	Rmorh = std::pow(std::tan((3.14159265359 / 4.0) + friction_angle / 2.0), 2.0);
-	alpha_r = R / Rmorh;
-	c_max = std::abs(sigma_c);
-	double sinphi = std::sin(friction_angle);
+	const double R = std::abs(sigma_c / sigma_t);
+	const double Rmorh = std::pow(std::tan((3.14159265359 / 4.0) + friction_angle / 2.0), 2.0);
+	const double alpha_r = R / Rmorh;
+	const double c_max = std::abs(sigma_c);
+	const double sinphi = std::sin(friction_angle);
 
-	double I1, J2, J3;
-	I1 = this->CalculateI1Invariant(StressVector);
+	const double I1 = this->CalculateI1Invariant(StressVector);
 	Vector Deviator = ZeroVector(6);
 	this->CalculateDeviatorVector(Deviator, StressVector, I1);
-	J2 = this->CalculateJ2Invariant(Deviator);
-	J3 = this->CalculateJ3Invariant(Deviator);
-	K1 = 0.5 * (1 + alpha_r) - 0.5 * (1 - alpha_r) * sinphi;
-	K2 = 0.5 * (1 + alpha_r) - 0.5 * (1 - alpha_r) / sinphi;
-	K3 = 0.5 * (1 + alpha_r) * sinphi - 0.5 * (1 - alpha_r);
+	const double J2 = this->CalculateJ2Invariant(Deviator);
+	const double J3 = this->CalculateJ3Invariant(Deviator);
+	const double K1 = 0.5 * (1 + alpha_r) - 0.5 * (1 - alpha_r) * sinphi;
+	const double K2 = 0.5 * (1 + alpha_r) - 0.5 * (1 - alpha_r) / sinphi;
+	const double K3 = 0.5 * (1 + alpha_r) * sinphi - 0.5 * (1 - alpha_r);
 
-	double n = sigma_c / sigma_t;
-	double A = 1.00 / (n * n * Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
-	if (A < 0)
-	{
-		KRATOS_THROW_ERROR(std::invalid_argument, " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T", A)
-	}
+	const double n = sigma_c / sigma_t;
+	const double A = 1.00 / (n * n * Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
 
-	double f = 0.0, F = 0.0; /// F = f-c = 0 classical definition of yield surface
+	KRATOS_ERROR_IF(A < 0.0) << "Fracture energy too low..."<< std::endl;
+
+	double f, F; /// F = f-c = 0 classical definition of yield surface
 
 	// Check Modified Mohr-Coulomb criterion
-	if (I1 == 0.0)
-	{
+	if (I1 == 0.0) {
 		f = 0.0;
-	}
-	else
-	{
-		theta = CalculateLodeAngle(J2, J3);
-		f = (2.00 * std::tan(3.14159265359 * 0.25 + friction_angle * 0.5) / std::cos(friction_angle)) * ((I1 * K3 / 3.0) + std::sqrt(J2) * (K1 * std::cos(theta) - K2 * std::sin(theta) * sinphi / std::sqrt(3.0)));
+	} else {
+		const double theta = CalculateLodeAngle(J2, J3);
+		f = (2.00 * std::tan(3.14159265359 * 0.25 + friction_angle * 0.5) / std::cos(friction_angle)) *
+			((I1 * K3 / 3.0) + std::sqrt(J2) * (K1 * std::cos(theta) - K2 * std::sin(theta) * sinphi /
+			 std::sqrt(3.0)));
 	}
 
-	if (this->GetThreshold(cont) == 0)
-	{
-		this->SetThreshold(c_max, cont);
-	} // 1st iteration sets threshold as c_max
-	c_threshold = this->GetThreshold(cont);
+	if (this->GetThreshold(cont) == 0) {
+		this->SetThreshold(c_max, cont); // 1st iteration sets threshold as c_max
+	} 
+	const double c_threshold = this->GetThreshold(cont);
 	this->SetNonConvergedEquivalentStress(f, cont);
 
 	F = f - c_threshold;
 
-	if (F <= 0.0)
-	{ // Elastic region --> Damage is constant
+	if (F <= 0.0) { // Elastic region --> Damage is constant
 		rdamage = this->GetConvergedDamages(cont);
-	}
-	else
-	{
+	} else {
 		rdamage = 1.0 - (c_max / f) * std::exp(A * (1.0 - f / c_max)); // Exponential softening law
 		if (rdamage > 0.99)
 			rdamage = 0.99;
