@@ -177,9 +177,8 @@ protected:
 
     double mInitialVolumetricStrain;
 
-    double mStateFunction;
-    Vector mStateFunctionFirstDerivative ;
-    Vector mStateFunctionSecondDerivative;
+    Vector mCenterOfHomologyStress;
+    Vector mImagePointStress;
     
     ///@name Protected static Member Variables
     ///@{
@@ -202,27 +201,34 @@ protected:
 
     void InitializeMaterialParameters();
 
+
     void CalculatePrincipalStressVector(Vector& rPrincipalStrain, Vector& rPrincipalStress);
 
     void CalculatePrincipalStrainFromStrainInvariants(Vector& rPrincipalStrain, const double& rVolumetricStrain, const double& rDeviatoricStrain, const Vector& rDirectionVector);
 
     void CalculateStrainInvariantsFromPrincipalStrain(const Vector& rPrincipalStrain, double& rVolumetricStrain, double& rDeviatoricStrain, Vector& rDeviatoricStrainVector);
-    
-    bool CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, Vector& rPrincipalStress, Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated);
- 
-    void ComputeElasticMatrix_3X3(const double& rMainStressP, Matrix& rElasticMatrix);
-
-    void ComputePlasticMatrix_3X3(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, Matrix& rPlasticMatrix);
 
     void ReturnStressFromPrincipalAxis(const Matrix& rEigenVectors, const Vector& rPrincipalStress, Matrix& rStressMatrix);
 
     void CalculateTransformationMatrix(const Matrix& rMainDirection, Matrix& rA);
 
+    
+    bool CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, Vector& rPrincipalStress, Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated);
+ 
+    void CalculateImagePointStress(const Vector& rCenterOfHomologyStress, const Vector& rCurrentStress, Vector& rImagePointStress, double& rConstantB, const bool& rBIsKnown = false);
+    
+    
+    void ComputeElasticMatrix(const double& rMainStressP, Matrix& rElasticMatrix);
+
+    void ComputePlasticMatrix(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, Matrix& rPlasticMatrix);
+
+    
     void CalculateYieldSurfaceDerivatives(const Vector& rPrincipalStressVector, Vector& rFirstDerivative);
 
     void CalculatePlasticPotentialDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative);
 
     void CalculatePlasticPotentialInvariantDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative);
+
 
     double CalculateCriticalStateLineSlope(const double& rLodeAngle);
 

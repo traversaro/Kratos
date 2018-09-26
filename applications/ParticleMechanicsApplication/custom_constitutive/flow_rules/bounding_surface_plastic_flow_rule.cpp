@@ -90,16 +90,16 @@ void BoundingSurfacePlasticFlowRule::InitializeMaterial(YieldCriterionPointer& p
     // Used to calculate Omega
     mInitialVolumetricStrain = 0.0;
 
-    // Saved state function and its derivative
-    mStateFunction = 0.0;
-    mStateFunctionFirstDerivative  = ZeroVector(3);
-    mStateFunctionSecondDerivative = ZeroVector(6);
+    // COH and IP stress - in principal coordinates
+    mCenterOfHomologyStress = ZeroVector(3);
+    mImagePointStress       = ZeroVector(3);
 
     this->InitializeMaterialParameters();
 }
 
 // Initiate Material Parameters which are allowed to change
 void BoundingSurfacePlasticFlowRule::InitializeMaterialParameters(){
+    // TODO: Implementation is not complete!
     mMaterialParameters.SpecificVolume = GetProperties()[SPECIFIC_VOLUME_REFERENCE];
 }
 
@@ -107,6 +107,7 @@ void BoundingSurfacePlasticFlowRule::InitializeMaterialParameters(){
 bool BoundingSurfacePlasticFlowRule::CalculateReturnMapping( RadialReturnVariables& rReturnMappingVariables, const Matrix& rIncrementalDeformationGradient, 
     Matrix& rStressMatrix, Matrix& rNewElasticLeftCauchyGreen)
 {
+    // TODO: Implementation is not complete!
     bool plasticity_active = false;
     rReturnMappingVariables.Options.Set(PLASTIC_REGION,false);
     
@@ -183,10 +184,11 @@ bool BoundingSurfacePlasticFlowRule::CalculateReturnMapping( RadialReturnVariabl
 bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, Vector& rPrincipalStress, 
     Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated)
 {
-
     // Calculate stress return in principal stress space
     // The flow rule is written for non-associated plasticity and explicit assumption using image point
     // Refer to paper by (Russel&Khalili, 2003) for the theoretical description
+ 
+    // TODO: Implementation is not complete!
     bool converged = false;
 
     return converged;
@@ -237,7 +239,10 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantDerivativ
 
     // Get material parameters
     const double parameter_A = GetProperties()[MODEL_PARAMETER_A];
-    const double shear_M     = this->CalculateCriticalStateLineSlope(lode_angle_IP);
+    const bool fix_csl_M = GetProperties()[IS_CSL_FIX];
+    double shear_M       = GetProperties()[CRITICAL_STATE_LINE];
+    if (!fix_csl_M)
+        shear_M = this->CalculateCriticalStateLineSlope(lode_angle_IP);
     const double direction_T = this->GetDirectionParameter(rPrincipalStressVector, rImagePointPrincipalStressVector); 
     const double alpha       = this->GetAlphaParameter();
 
@@ -250,8 +255,11 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantDerivativ
 }
 
 // Function that compute elastic matrix D_e
-void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix_3X3(const double& rMainStressP, Matrix& rElasticMatrix)
+void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix(const double& rMainStressP, Matrix& rElasticMatrix)
 {
+    // Size of matrix
+    const unsigned int size = rElasticMatrix.size1();
+    
     const double poisson_ratio  = GetProperties()[POISSON_RATIO];
     const double swelling_slope = GetProperties()[SWELLING_SLOPE];
 
@@ -260,7 +268,7 @@ void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix_3X3(const double& rMai
     const double lame_parameter = bulk_modulus - 2.0/3.0 * shear_modulus;
 
     // Assemble rElasticMatrix matrix
-    rElasticMatrix = ZeroMatrix(3);
+    rElasticMatrix = ZeroMatrix(size);
     for (unsigned int i=0; i<3; i++)
     {
         for (unsigned int j=0; j<3; j++)
@@ -269,12 +277,22 @@ void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix_3X3(const double& rMai
             else rElasticMatrix(i,j) = lame_parameter;
         }
     }
+    if (size == 6)
+    {
+        for (unsigned int i=3; i<6; i++)
+        {
+            rElasticMatrix(i,i) = 2.0 * shear_modulus;
+        }
+    }
     
 }
 
 // Function that compute elastic matrix D_p = D_e m n^T D_e / (n^T D_e m + h)
-void BoundingSurfacePlasticFlowRule::ComputePlasticMatrix_3X3(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, Matrix& rPlasticMatrix)
+void BoundingSurfacePlasticFlowRule::ComputePlasticMatrix(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, Matrix& rPlasticMatrix)
 {
+    // Size of matrix
+    const unsigned int size = rElasticMatrix.size1();
+    
     // Compute multiplications
     const Vector aux_De_m  = prod(rElasticMatrix, rDirectionM);
     const Vector aux_nT_De = prod(trans(rDirectionN), rElasticMatrix);
@@ -284,10 +302,10 @@ void BoundingSurfacePlasticFlowRule::ComputePlasticMatrix_3X3(const Vector& rDir
     if (std::abs(denominator) < 1.e-9) denominator = 1.e-9;
 
     // Arrange rPlasticMatrix matrix
-    rPlasticMatrix = ZeroMatrix(3);
-    for (unsigned int i=0; i<3; i++)
+    rPlasticMatrix = ZeroMatrix(size);
+    for (unsigned int i=0; i<size; i++)
     {
-        for (unsigned int j=0; j<3; j++)
+        for (unsigned int j=0; j<size; j++)
         {
             rPlasticMatrix(i,j) = aux_De_m[i] * aux_nT_De[j];
         }
@@ -325,8 +343,8 @@ void BoundingSurfacePlasticFlowRule::CalculatePrincipalStressVector(Vector& rPri
     mean_stress_p *= -1.0; // p is defined negative
 
     // Calculate elastic matrix
-    Matrix elastic_matrix_D_e;
-    this->ComputeElasticMatrix_3X3(mean_stress_p, elastic_matrix_D_e);
+    Matrix elastic_matrix_D_e = ZeroMatrix(3);
+    this->ComputeElasticMatrix(mean_stress_p, elastic_matrix_D_e);
 
     rPrincipalStress = prod(elastic_matrix_D_e, rPrincipalStrain);
 
@@ -375,7 +393,7 @@ void BoundingSurfacePlasticFlowRule::ReturnStressFromPrincipalAxis(const Matrix&
 // Function that compute the consistent tangent stiffness matrix (in normal space) considering both elastic and elasto-plastic case
 void BoundingSurfacePlasticFlowRule::ComputeElastoPlasticTangentMatrix(const RadialReturnVariables& rReturnMappingVariables, const Matrix& rNewElasticLeftCauchyGreen, const double& alfa, Matrix& rConsistMatrix)
 {
-    
+    // TODO: Implementation is not complete!
     // Compute Consistent Tangent Stiffness matrix in principal space
     Matrix D_elasto_plastic = ZeroMatrix(6,6);
 
@@ -479,9 +497,27 @@ bool BoundingSurfacePlasticFlowRule::UpdateInternalVariables( RadialReturnVariab
     mInternalVariables.DeltaPlasticDeviatoricStrain = deviatoric_strain;
     mInternalVariables.AccumulatedPlasticDeviatoricStrain += deviatoric_strain;
 
+    // TODO: Implementation is not complete!
+
     return true;
 }
 
+// Function that calculate stress at image point by using Newton Raphson iteration
+void BoundingSurfacePlasticFlowRule::CalculateImagePointStress(const Vector& rCenterOfHomologyStress, const Vector& rCurrentStress, Vector& rImagePointStress, double& rConstantB, const bool& rBIsKnown)
+{
+    if (!rBIsKnown)
+    {
+        //TODO: Tobe implemented using a bisection method
+
+    }
+    else
+    {
+        rImagePointStress = rCenterOfHomologyStress + (rCurrentStress - rCenterOfHomologyStress) * rConstantB;
+    }
+
+}
+
+// Function that return the slope of critical state line
 double BoundingSurfacePlasticFlowRule::CalculateCriticalStateLineSlope(const double& rLodeAngle)
 {
     double shear_M = GetProperties()[CRITICAL_STATE_LINE];
