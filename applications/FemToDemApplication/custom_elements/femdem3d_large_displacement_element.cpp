@@ -11,6 +11,9 @@
 //
 
 #include "custom_elements/femdem3d_large_displacement_element.hpp"
+#include "utilities/geometry_utilities.h"
+#include "fem_to_dem_application_variables.h"
+
 
 namespace Kratos
 {
@@ -102,6 +105,12 @@ void FemDem3DLargeDisplacementElement::CalculateLocalSystem(
     double detJ0, detF, detJ;
 
     const SizeType mat_size = number_of_nodes * dimension;
+    B.resize(strain_size, dimension * number_of_nodes);
+
+    Matrix constitutive_matrix = ZeroMatrix(strain_size, strain_size);
+    const double E = this->GetProperties()[YOUNG_MODULUS];
+    const double nu = this->GetProperties()[POISSON_RATIO];
+    this->CalculateConstitutiveMatrix(constitutive_matrix, E, nu);
 
     if (rLeftHandSideMatrix.size1() != mat_size)
         rLeftHandSideMatrix.resize(mat_size, mat_size, false);
@@ -117,17 +126,17 @@ void FemDem3DLargeDisplacementElement::CalculateLocalSystem(
     // Reading integration points
     const GeometryType::IntegrationPointsArrayType& integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
 
-	Matrix DeltaPosition(number_of_nodes, dimension);
-	noalias(DeltaPosition) = ZeroMatrix(number_of_nodes, dimension);
-	DeltaPosition = this->CalculateDeltaPosition(DeltaPosition);
+    Matrix DeltaPosition(number_of_nodes, dimension);
+    noalias(DeltaPosition) = ZeroMatrix(number_of_nodes, dimension);
+    DeltaPosition = this->CalculateDeltaPosition(DeltaPosition);
 
-   
     // Loop over Gauss Points
     for ( IndexType point_number = 0; point_number < integration_points.size(); ++point_number ) {
+
 		J = this->GetGeometry().Jacobian(J, point_number, mThisIntegrationMethod);
         detJ0 = this->CalculateDerivativesOnReferenceConfiguration(J0, InvJ0, DN_DX, point_number, mThisIntegrationMethod);
 
-        double IntegrationWeight = integration_points[point_number].Weight() * detJ0;
+        const double integration_weigth = integration_points[point_number].Weight() * detJ0;
         const Matrix &Ncontainer = GetGeometry().ShapeFunctionsValues(mThisIntegrationMethod);
 		Vector N = row(Ncontainer, point_number);
 
@@ -137,52 +146,154 @@ void FemDem3DLargeDisplacementElement::CalculateLocalSystem(
 		for (unsigned int i = 0; i < number_of_nodes; i++) {
 			int index = dimension * i;
 			for (unsigned int j = 0; j < dimension; j++) {
-				rRightHandSideVector[index + j] += IntegrationWeight * N[i] * VolumeForce[j];
+				rRightHandSideVector[index + j] += integration_weigth * N[i] * VolumeForce[j];
 			}
 		}
 
+        GeometryUtils::DeformationGradient(J, InvJ0, F);
+        this->CalculateB(B, F, DN_DX);
+
+        // if (this->Id() == 451) KRATOS_WATCH(B)
         
-        //GeometryUtils::DeformationGradient(J, rThisKinematicVariables.InvJ0,
-        //                                   rThisKinematicVariables.F);
-        //CalculateB(rThisKinematicVariables.B, rThisKinematicVariables.F,
-        //           rThisKinematicVariables.DN_DX);
 
+        // Compute stain/stress provisional small strain scheme
+        Vector stress_vector, strain_vector;
+        stress_vector.resize(strain_size);
+        strain_vector.resize(strain_size);
+        this->CalculateGreenLagrangeStrainVector(strain_vector, F);
 
+        this->SetValue(STRAIN_VECTOR, strain_vector);
+        
+        // S = C:E
+        this->CalculateStressVectorPredictor(stress_vector, constitutive_matrix, strain_vector);
+        this->SetValue(STRESS_VECTOR, stress_vector);
+        // Provisional
 
-
-
+        this->CalculateAndAddMaterialK(rLeftHandSideMatrix, B, constitutive_matrix, integration_weigth);
+        this->CalculateGeometricK(rLeftHandSideMatrix, DN_DX, stress_vector, integration_weigth);
+        this->CalculateAndAddInternalForcesVector(rRightHandSideVector, B, stress_vector, integration_weigth);
     }
-}
+} // CalculateLocalSystem
 
 double FemDem3DLargeDisplacementElement::CalculateDerivativesOnReferenceConfiguration(
-    Matrix& rJ0,
-    Matrix& rInvJ0,
-    Matrix& rDN_DX,
+    Matrix &rJ0,
+    Matrix &rInvJ0,
+    Matrix &rDN_DX,
     const IndexType PointNumber,
-    IntegrationMethod ThisIntegrationMethod
-    )
+    IntegrationMethod ThisIntegrationMethod)
 {
-    //GeometryType& r_geom = GetGeometry();
-    //GeometryUtils::JacobianOnInitialConfiguration(
-    //    r_geom,
-    //    r_geom.IntegrationPoints(ThisIntegrationMethod)[PointNumber], rJ0);
-    //double detJ0;
-    //MathUtils<double>::InvertMatrix(rJ0, rInvJ0, detJ0);
-    //const Matrix& rDN_De = GetGeometry().ShapeFunctionsLocalGradients(ThisIntegrationMethod)[PointNumber];
-    //GeometryUtils::ShapeFunctionsGradients(rDN_De, rInvJ0, rDN_DX);
-    //return detJ0;
+    GeometryType &r_geom = GetGeometry();
+    GeometryUtils::JacobianOnInitialConfiguration(r_geom, r_geom.IntegrationPoints(ThisIntegrationMethod)[PointNumber], rJ0);
 
-	return 0;
+    double detJ0;
+    MathUtils<double>::InvertMatrix(rJ0, rInvJ0, detJ0);
+
+    const Matrix &rDN_De = GetGeometry().ShapeFunctionsLocalGradients(ThisIntegrationMethod)[PointNumber];
+    GeometryUtils::ShapeFunctionsGradients(rDN_De, rInvJ0, rDN_DX);
+
+    return detJ0;
 }
-
 
 void FemDem3DLargeDisplacementElement::FinalizeNonLinearIteration(ProcessInfo &CurrentProcessInfo)
 {
 }
 
+void FemDem3DLargeDisplacementElement::CalculateB(Matrix& rB, const Matrix& rF, const Matrix& rDN_DX)
+{
+    KRATOS_TRY
 
+	const unsigned int number_of_nodes = GetGeometry().PointsNumber();
+	const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
 
+    for (int i = 0; i < number_of_nodes; ++i) {
+        const auto index = dimension * i;
+        rB(0, index + 0) = rF(0, 0) * rDN_DX(i, 0);
+        rB(0, index + 1) = rF(1, 0) * rDN_DX(i, 0);
+        rB(0, index + 2) = rF(2, 0) * rDN_DX(i, 0);
+        rB(1, index + 0) = rF(0, 1) * rDN_DX(i, 1);
+        rB(1, index + 1) = rF(1, 1) * rDN_DX(i, 1);
+        rB(1, index + 2) = rF(2, 1) * rDN_DX(i, 1);
+        rB(2, index + 0) = rF(0, 2) * rDN_DX(i, 2);
+        rB(2, index + 1) = rF(1, 2) * rDN_DX(i, 2);
+        rB(2, index + 2) = rF(2, 2) * rDN_DX(i, 2);
+        rB(3, index + 0) = rF(0, 0) * rDN_DX(i, 1) + rF(0, 1) * rDN_DX(i, 0);
+        rB(3, index + 1) = rF(1, 0) * rDN_DX(i, 1) + rF(1, 1) * rDN_DX(i, 0);
+        rB(3, index + 2) = rF(2, 0) * rDN_DX(i, 1) + rF(2, 1) * rDN_DX(i, 0);
+        rB(4, index + 0) = rF(0, 1) * rDN_DX(i, 2) + rF(0, 2) * rDN_DX(i, 1);
+        rB(4, index + 1) = rF(1, 1) * rDN_DX(i, 2) + rF(1, 2) * rDN_DX(i, 1);
+        rB(4, index + 2) = rF(2, 1) * rDN_DX(i, 2) + rF(2, 2) * rDN_DX(i, 1);
+        rB(5, index + 0) = rF(0, 2) * rDN_DX(i, 0) + rF(0, 0) * rDN_DX(i, 2);
+        rB(5, index + 1) = rF(1, 2) * rDN_DX(i, 0) + rF(1, 0) * rDN_DX(i, 2);
+        rB(5, index + 2) = rF(2, 2) * rDN_DX(i, 0) + rF(2, 0) * rDN_DX(i, 2);
+    }
 
+    KRATOS_CATCH("")
+}
+
+void FemDem3DLargeDisplacementElement::CalculateAndAddMaterialK(
+    MatrixType& rLeftHandSideMatrix,
+    const Matrix& B,
+    const Matrix& D,
+    const double IntegrationWeight
+    )
+{
+    KRATOS_TRY
+
+    noalias( rLeftHandSideMatrix ) += IntegrationWeight * prod( trans( B ), Matrix(prod(D, B)));
+
+    KRATOS_CATCH( "" )
+}
+
+void FemDem3DLargeDisplacementElement::CalculateGeometricK(
+    MatrixType& rLeftHandSideMatrix,
+    const Matrix& DN_DX,
+    const Vector& StressVector,
+    const double IntegrationWeight
+    )
+{
+    KRATOS_TRY
+
+    const SizeType dimension = GetGeometry().WorkingSpaceDimension();
+    Matrix stress_tensor = MathUtils<double>::StressVectorToTensor(StressVector);
+    Matrix reduced_Kg = prod(DN_DX, IntegrationWeight * Matrix(prod(stress_tensor, trans(DN_DX)))); 
+    MathUtils<double>::ExpandAndAddReducedMatrix(rLeftHandSideMatrix, reduced_Kg, dimension);
+
+    KRATOS_CATCH( "" )
+}
+
+void FemDem3DLargeDisplacementElement::CalculateGreenLagrangeStrainVector(
+    Vector &rStrainVector,
+    const Matrix &rF
+    )
+{
+    KRATOS_TRY
+
+    Matrix strain_tensor;
+    strain_tensor.resize(3, 3);
+    Matrix identity = identity_matrix<double>(3);
+    noalias(strain_tensor) = 0.5 * (prod(trans(rF), rF) - identity);
+    rStrainVector = MathUtils<double>::StrainTensorToVector(strain_tensor, rStrainVector.size());
+
+    KRATOS_CATCH("")
+}
+
+void FemDem3DLargeDisplacementElement::CalculateStressVectorPredictor(
+    Vector& rStressVector, 
+    const Matrix& rConstitutiveMAtrix, 
+    const Vector& rStrainVector)
+{
+    noalias(rStressVector) = prod(rConstitutiveMAtrix, rStrainVector);
+}
+
+void FemDem3DLargeDisplacementElement::CalculateAndAddInternalForcesVector(
+    Vector& rRightHandSideVector, 
+    const Matrix& rB, 
+    const Vector& rStressVector, 
+    const double IntegrationWeight
+    )
+{
+    noalias(rRightHandSideVector) -= IntegrationWeight * prod(trans(rB), rStressVector);
+}
 
 
 } // namespace Kratos

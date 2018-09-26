@@ -45,8 +45,11 @@ class FemDem3DLargeDisplacementElement : public FemDem3DElement
 
     void InitializeNonLinearIteration(ProcessInfo &rCurrentProcessInfo);
     void FinalizeNonLinearIteration(ProcessInfo &CurrentProcessInfo);
-	void CalculateLocalSystem(MatrixType &rLeftHandSideMatrix, VectorType &rRightHandSideVector,
+
+	void CalculateLocalSystem(MatrixType &rLeftHandSideMatrix,
+                              VectorType &rRightHandSideVector,
 							  ProcessInfo &rCurrentProcessInfo);
+
     int GetStrainSize(){return 6;}
     double CalculateDerivativesOnReferenceConfiguration(Matrix& rJ0,
                                                         Matrix& rInvJ0,
@@ -54,7 +57,28 @@ class FemDem3DLargeDisplacementElement : public FemDem3DElement
                                                         const IndexType PointNumber,
                                                         IntegrationMethod ThisIntegrationMethod);
 
+    void CalculateB(Matrix& rB, const Matrix& rF, const Matrix& rDN_DX);
 
+    void CalculateAndAddMaterialK(MatrixType& rLeftHandSideMatrix,
+                                    const Matrix& B,
+                                    const Matrix& D,
+                                    const double IntegrationWeight);
+
+    void CalculateGeometricK(MatrixType& rLeftHandSideMatrix,
+                            const Matrix& DN_DX,
+                            const Vector& StressVector,
+                            const double IntegrationWeight);
+
+    void CalculateGreenLagrangeStrainVector(Vector& rStrainVector, const Matrix& F);
+    
+    void CalculateStressVectorPredictor(Vector& rStressVector, 
+                                        const Matrix& rConstitutiveMAtrix, 
+                                        const Vector& rStrainVector);
+
+    void CalculateAndAddInternalForcesVector(Vector& rRightHandSideVector, 
+                                            const Matrix& rB, 
+                                            const Vector& rStressVector, 
+                                            const double IntegrationWeight);
 
 }; // Class
 } // namespace Kratos

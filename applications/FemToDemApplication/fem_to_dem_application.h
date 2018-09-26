@@ -33,6 +33,7 @@
 #include "custom_elements/femdem2d_element.hpp"
 #include "custom_elements/femdem3d_element.hpp"
 #include "custom_elements/romfemdem3d_element.hpp"
+#include "custom_elements/femdem3d_large_displacement_element.hpp"
 
 #include "fem_to_dem_application_variables.h"
 
@@ -105,6 +106,7 @@ private:
 	const FemDem2DElement mFemDem2DElement;
 	const FemDem3DElement   mFemDem3DElement;
 	const RomFemDem3DElement mRomFemDem3DElement;
+	const FemDem3DLargeDisplacementElement mFemDem3DLargeDisplacementElement;
 
 
 	//elastic laws

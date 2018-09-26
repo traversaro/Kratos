@@ -56,10 +56,10 @@
 namespace Kratos {
 
 KratosFemToDemApplication::KratosFemToDemApplication(): KratosApplication("FemToDemApplication"),
-//mZaratipitoElement(0, Element::GeometryType::Pointer(new Triangle2D3 <Node<3> >(Element::GeometryType::PointsArrayType(3)))),
 mFemDem2DElement(0, Element::GeometryType::Pointer(new Triangle2D3 <Node<3> >(Element::GeometryType::PointsArrayType(3)))),
 mFemDem3DElement(0, Element::GeometryType::Pointer(new Tetrahedra3D4 <Node<3> >(Element::GeometryType::PointsArrayType(4)))),
-mRomFemDem3DElement(0, Element::GeometryType::Pointer(new Tetrahedra3D4 <Node<3> >(Element::GeometryType::PointsArrayType(4))))
+mRomFemDem3DElement(0, Element::GeometryType::Pointer(new Tetrahedra3D4 <Node<3> >(Element::GeometryType::PointsArrayType(4)))),
+mFemDem3DLargeDisplacementElement(0, Element::GeometryType::Pointer(new Tetrahedra3D4 <Node<3> >(Element::GeometryType::PointsArrayType(4))))
 {}
 
 
@@ -146,6 +146,7 @@ void KratosFemToDemApplication::Register()
 	KRATOS_REGISTER_ELEMENT("FemDem2DElement", mFemDem2DElement)
 	KRATOS_REGISTER_ELEMENT("FemDem3DElement", mFemDem3DElement)
 	KRATOS_REGISTER_ELEMENT("RomFemDem3DElement", mRomFemDem3DElement)
+	KRATOS_REGISTER_ELEMENT("FemDem3DLargeDisplacementElement", mFemDem3DLargeDisplacementElement)
 			
 	//Register Constitutive Laws
 	Serializer::Register("ZarateLaw", mZarateLaw);
