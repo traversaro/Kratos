@@ -220,23 +220,6 @@ void FemDem3DLargeDisplacementElement::CalculateLocalSystem(
 			this->CalculateAverageStressOnEdge(AverageStressVector, EdgeNeighbours);
 			this->CalculateAverageStrainOnEdge(AverageStrainVector, EdgeNeighbours);
 
-// debug
-            // if (this->Id() == 376) {
-            //     KRATOS_WATCH(AverageStrainVector)
-            //     KRATOS_WATCH(AverageStressVector)
-
-            //     for (int i = 0; i < EdgeNeighbours.size(); i++) {
-            //         std::cout << "Vecino Id: " << EdgeNeighbours[i]->Id() << std::endl;
-            //     }
-
-			// 	std::cout << "" << std::endl;
-            // }
-
-
-// debug
-
-
-
 			double DamageEdge;
 			const double Lchar = this->Get_l_char(edge);
 			this->IntegrateStressDamageMechanics(IntegratedStressVectorOnEdge, DamageEdge,
@@ -244,18 +227,6 @@ void FemDem3DLargeDisplacementElement::CalculateLocalSystem(
 
 			this->SetNonConvergedDamages(DamageEdge, edge);
 			DamagesOnEdges[edge] = DamageEdge;
-            
-            // KRATOS_WATCH(this->Id())
-            // KRATOS_WATCH(DamageEdge)
-
-            // if (this->Id() == 376) {
-            //     KRATOS_WATCH(this->Id())
-            //     KRATOS_WATCH(DamageEdge)
-            //     // KRATOS_WATCH(AverageStressVector)
-            //     KRATOS_WATCH(IntegratedStressVectorOnEdge)
-            //     // KRATOS_WATCH(DamageEdge)
-            // }
-
 		} // End loop over edges
 
         double damage_element = this->CalculateElementalDamage(DamagesOnEdges);
@@ -271,6 +242,12 @@ void FemDem3DLargeDisplacementElement::CalculateLocalSystem(
         this->CalculateAndAddMaterialK(rLeftHandSideMatrix, B, constitutive_matrix, integration_weigth);
         this->CalculateGeometricK(rLeftHandSideMatrix, DN_DX, integrated_stress_vector, integration_weigth);
         this->CalculateAndAddInternalForcesVector(rRightHandSideVector, B, integrated_stress_vector, integration_weigth);
+
+        // Add nodal DEM forces
+		Vector NodalRHS = ZeroVector(mat_size);
+		this->AddDEMContactForces(NodalRHS);
+		// Add nodal contact forces from the DEM
+		noalias(rRightHandSideVector) += NodalRHS;
     }
 } // CalculateLocalSystem
 
@@ -337,7 +314,10 @@ void FemDem3DLargeDisplacementElement::CalculateAndAddMaterialK(
 {
     KRATOS_TRY
 
-    noalias(rLeftHandSideMatrix) += IntegrationWeight * prod(trans(B), Matrix(prod(D, B)));
+    double damage = this->GetNonConvergedDamage();
+
+    // Secant Constitutive Tensor
+    noalias(rLeftHandSideMatrix) += (1.0 - damage) * IntegrationWeight * prod(trans(B), Matrix(prod(D, B)));
 
     KRATOS_CATCH("")
 }
