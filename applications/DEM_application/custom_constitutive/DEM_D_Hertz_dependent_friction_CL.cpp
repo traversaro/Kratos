@@ -49,8 +49,8 @@ namespace Kratos {
             for (unsigned int i = 0; element1->mNeighbourElements.size(); i++) {
                 if (element1->mNeighbourElements[i]->Id() == element2->Id()) {
                     element1->mNeighbourContactRadius[i] = equiv_radius / equiv_level_of_fouling;
-                    if (indentation > offset) element1->mNeighbourContactRadius[i] = indentation - offset;
-                    else element1->mNeighbourContactRadius[i] = 0.0;
+                    if (indentation > offset) element1->mNeighbourIndentation[i] = indentation - offset;
+                    else element1->mNeighbourIndentation[i] = 0.0;
                     break;
                 }
             }
@@ -198,8 +198,8 @@ namespace Kratos {
             for (unsigned int i = 0; element->mNeighbourRigidFaces.size(); i++) {
                 if (element->mNeighbourRigidFaces[i]->Id() == wall->Id()) {
                     element->mNeighbourRigidContactRadius[i] = effective_radius / equiv_level_of_fouling;
-                    if (indentation > offset) element->mNeighbourRigidContactRadius[i] = indentation - offset;
-                    else element->mNeighbourRigidContactRadius[i] = 0.0;
+                    if (indentation > offset) element->mNeighbourRigidIndentation[i] = indentation - offset;
+                    else element->mNeighbourRigidIndentation[i] = 0.0;
                     break;
                 }
             }
