@@ -754,9 +754,9 @@ void MmgProcess<TDim>::ExecuteRemeshing()
     }
 
     // We create an auxiliar mesh for debugging purposes
-    if (mThisParameters["debug_result_mesh"].GetBool()) {
-        CreateDebugPrePostRemeshOutput(r_old_model_part);
-    }
+    // if (mThisParameters["debug_result_mesh"].GetBool()) {
+    //     CreateDebugPrePostRemeshOutput(r_old_model_part);
+    // }
 
     /* We interpolate all the values */
     Parameters InterpolateParameters = Parameters(R"({})" );

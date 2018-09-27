@@ -194,20 +194,6 @@ void FemDem3DLargeDisplacementElement::CalculateLocalSystem(
 
         GeometryUtils::DeformationGradient(J, InvJ0, F);
         this->CalculateB(B, F, DN_DX);
-        
-        //********************
-        // Compute stain/stress provisional small strain scheme
-        // Vector stress_vector, strain_vector, integrated_stress_vector;
-        // stress_vector.resize(strain_size);
-        // strain_vector.resize(strain_size);
-        // integrated_stress_vector.resize(strain_size);
-        // this->CalculateGreenLagrangeStrainVector(strain_vector, F);
-        // this->SetValue(STRAIN_VECTOR, strain_vector);
-        
-        // // S = C:E
-        // this->CalculateStressVectorPredictor(integrated_stress_vector, constitutive_matrix, strain_vector);
-        // this->SetValue(STRESS_VECTOR, integrated_stress_vector);
-        //*************************
 
         Vector IntegratedStressVector = ZeroVector(strain_size);
 		Vector DamagesOnEdges = ZeroVector(6);
