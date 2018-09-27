@@ -178,6 +178,7 @@ protected:
     double mInitialVolumetricStrain;
 
     Vector mCenterOfHomologyStress;
+    Vector mPreviousStress;
     Vector mImagePointStress;
     
     ///@name Protected static Member Variables
@@ -202,7 +203,7 @@ protected:
     void InitializeMaterialParameters();
 
 
-    void CalculatePrincipalStressVector(Vector& rPrincipalStrain, Vector& rPrincipalStress);
+    void CalculatePrincipalStressVector(const Vector& rPrincipalStrain, Vector& rPrincipalStress);
 
     void CalculatePrincipalStrainFromStrainInvariants(Vector& rPrincipalStrain, const double& rVolumetricStrain, const double& rDeviatoricStrain, const Vector& rDirectionVector);
 
@@ -215,14 +216,22 @@ protected:
     
     bool CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, Vector& rPrincipalStress, Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated);
  
+    void CalculatePlasticMultiplier(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, const Vector rPrincipalStrain, double& rPlasticStrainMultiplier);
+
     void CalculateImagePointStress(const Vector& rCenterOfHomologyStress, const Vector& rCurrentStress, Vector& rImagePointStress, double& rConstantB, const bool& rBIsKnown = false);
     
-    
-    void ComputeElasticMatrix(const double& rMainStressP, Matrix& rElasticMatrix);
+    void CalculateCenterOfHomologyStress(Vector& rCenterOfHomologyStress);
+
+
+    void ComputeElasticMatrix(const double& rMeanStressP, Matrix& rElasticMatrix);
 
     void ComputePlasticMatrix(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, Matrix& rPlasticMatrix);
 
     
+    void CalculateLoadingDirection(const Vector& rPrincipalStressVector, Vector& rLoadingDirection);
+
+    void CalculatePlasticFlowDirection(const Vector& rPrincipalStressVector, const Vector& rImagePointStressVector, Vector& rPlasticFlowDirection);
+
     void CalculateYieldSurfaceDerivatives(const Vector& rPrincipalStressVector, Vector& rFirstDerivative);
 
     void CalculatePlasticPotentialDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative);

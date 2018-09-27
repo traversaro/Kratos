@@ -92,6 +92,7 @@ void BoundingSurfacePlasticFlowRule::InitializeMaterial(YieldCriterionPointer& p
 
     // COH and IP stress - in principal coordinates
     mCenterOfHomologyStress = ZeroVector(3);
+    mPreviousStress         = ZeroVector(3);
     mImagePointStress       = ZeroVector(3);
 
     this->InitializeMaterialParameters();
@@ -194,6 +195,42 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnV
     return converged;
 }
 
+// Function that compute plastic multiplier considering explicit integration
+void CalculatePlasticMultiplier(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, const Vector rPrincipalStrain, double& rPlasticStrainMultiplier)
+{
+    const Vector aux_nT_De = prod(trans(rDirectionN), rElasticMatrix);
+
+    double denominator = MathUtils<double>::Dot(aux_nT_De, rDirectionM) + rHardening;
+    if (std::abs(denominator) < 1.e-9) denominator = 1.e-9;
+
+    rPlasticStrainMultiplier = MathUtils<double>::Dot(aux_nT_De, rPrincipalStrain) / denominator;
+
+}
+
+// Function that compute loading direction in principal space: n
+void BoundingSurfacePlasticFlowRule::CalculateLoadingDirection(const Vector& rPrincipalStressVector, Vector& rLoadingDirection)
+{
+    Vector dF_dsigma = ZeroVector(3);
+    this->CalculateYieldSurfaceDerivatives(rPrincipalStressVector, dF_dsigma);
+    
+    double norm_dF_dsigma = norm_2(dF_dsigma);
+    if (norm_dF_dsigma < 1.e-9) norm_dF_dsigma = 1.e-9;
+
+    rLoadingDirection = dF_dsigma / norm_dF_dsigma;
+}
+
+// Function that compute plastic flow direction in principal space: m
+void BoundingSurfacePlasticFlowRule::CalculatePlasticFlowDirection(const Vector& rPrincipalStressVector, const Vector& rImagePointStressVector, Vector& rPlasticFlowDirection)
+{
+    Vector dG_dsigma = ZeroVector(3);
+    this->CalculatePlasticPotentialDerivatives(rPrincipalStressVector, rImagePointStressVector, dG_dsigma);
+    
+    double norm_dG_dsigma = norm_2(dG_dsigma);
+    if (norm_dG_dsigma < 1.e-9) norm_dG_dsigma = 1.e-9;
+
+    rPlasticFlowDirection = dG_dsigma / norm_dG_dsigma;
+}
+
 // Function that compute derivative of yield surface (either F or f) with respect to principal stresses
 void BoundingSurfacePlasticFlowRule::CalculateYieldSurfaceDerivatives(const Vector& rPrincipalStressVector, Vector& rFirstDerivative)
 {
@@ -235,7 +272,7 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantDerivativ
     mean_stress_p *= -1.0;  // p is defined negative
 
     double lode_angle_IP;
-    MPMStressPrincipalInvariantsUtility::CalculateThirdStressInvariant(rPrincipalStressVector, lode_angle_IP);
+    MPMStressPrincipalInvariantsUtility::CalculateThirdStressInvariant(rImagePointPrincipalStressVector, lode_angle_IP);
 
     // Get material parameters
     const double parameter_A = GetProperties()[MODEL_PARAMETER_A];
@@ -255,16 +292,19 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantDerivativ
 }
 
 // Function that compute elastic matrix D_e
-void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix(const double& rMainStressP, Matrix& rElasticMatrix)
+void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix(const double& rMeanStressP, Matrix& rElasticMatrix)
 {
+    // Initial Check
+    KRATOS_ERROR_IF(rMeanStressP < 0.0) << "The given mean stress to compute elastic matrix is invalid. Please check the sign convention (expecting positive value)!" << std::endl;
+    
     // Size of matrix
     const unsigned int size = rElasticMatrix.size1();
     
     const double poisson_ratio  = GetProperties()[POISSON_RATIO];
     const double swelling_slope = GetProperties()[SWELLING_SLOPE];
 
-    const double bulk_modulus   = mMaterialParameters.SpecificVolume * rMainStressP / abs(swelling_slope);
-    const double shear_modulus  = (3.0 * (1.0 - (2.0 * poisson_ratio)) * mMaterialParameters.SpecificVolume * rMainStressP)/(2.0 * (1.0 + poisson_ratio)*abs(swelling_slope));
+    const double bulk_modulus   = mMaterialParameters.SpecificVolume * rMeanStressP / abs(swelling_slope);
+    const double shear_modulus  = (3.0 * (1.0 - (2.0 * poisson_ratio)) * mMaterialParameters.SpecificVolume * rMeanStressP)/(2.0 * (1.0 + poisson_ratio)*abs(swelling_slope));
     const double lame_parameter = bulk_modulus - 2.0/3.0 * shear_modulus;
 
     // Assemble rElasticMatrix matrix
@@ -336,15 +376,15 @@ void BoundingSurfacePlasticFlowRule::CalculatePrincipalStressTrial(const RadialR
 }
 
 // Function to compute Principal Stress Vector from Principal Strain Vector
-void BoundingSurfacePlasticFlowRule::CalculatePrincipalStressVector(Vector& rPrincipalStrain, Vector& rPrincipalStress)
+void BoundingSurfacePlasticFlowRule::CalculatePrincipalStressVector(const Vector& rPrincipalStrain, Vector& rPrincipalStress)
 {
-    double mean_stress_p, deviatoric_q;
-    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(rPrincipalStress, mean_stress_p, deviatoric_q);
-    mean_stress_p *= -1.0; // p is defined negative
+    double prev_mean_stress_p, prev_deviatoric_q;
+    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(mPreviousStress, prev_mean_stress_p, prev_deviatoric_q);
+    prev_mean_stress_p *= -1.0; // p is defined negative
 
     // Calculate elastic matrix
     Matrix elastic_matrix_D_e = ZeroMatrix(3);
-    this->ComputeElasticMatrix(mean_stress_p, elastic_matrix_D_e);
+    this->ComputeElasticMatrix(prev_mean_stress_p, elastic_matrix_D_e);
 
     rPrincipalStress = prod(elastic_matrix_D_e, rPrincipalStrain);
 
@@ -394,6 +434,7 @@ void BoundingSurfacePlasticFlowRule::ReturnStressFromPrincipalAxis(const Matrix&
 void BoundingSurfacePlasticFlowRule::ComputeElastoPlasticTangentMatrix(const RadialReturnVariables& rReturnMappingVariables, const Matrix& rNewElasticLeftCauchyGreen, const double& alfa, Matrix& rConsistMatrix)
 {
     // TODO: Implementation is not complete!
+
     // Compute Consistent Tangent Stiffness matrix in principal space
     Matrix D_elasto_plastic = ZeroMatrix(6,6);
 
@@ -498,8 +539,28 @@ bool BoundingSurfacePlasticFlowRule::UpdateInternalVariables( RadialReturnVariab
     mInternalVariables.AccumulatedPlasticDeviatoricStrain += deviatoric_strain;
 
     // TODO: Implementation is not complete!
+    this->CalculateCenterOfHomologyStress(mCenterOfHomologyStress);
+    mPreviousStress = mPrincipalStressUpdated;
+    
 
     return true;
+}
+
+// Function that calculate stress at center of homology -- this only apply when unloading happen
+void BoundingSurfacePlasticFlowRule::CalculateCenterOfHomologyStress(Vector& rCenterOfHomologyStress)
+{
+    Vector elastic_stress;
+    const Vector total_strain = mPlasticPrincipalStrain + mElasticPrincipalStrain;
+    this->CalculatePrincipalStressVector(total_strain, elastic_stress);
+    
+    // Check whether the stress state is reloaded or not
+    Vector direction_n = ZeroVector(3);
+    this->CalculateLoadingDirection(mPreviousStress, direction_n);
+
+    double dot_product = MathUtils<double>::Dot(elastic_stress, direction_n);
+    if (dot_product < 0.0)
+        rCenterOfHomologyStress = mPrincipalStressUpdated;
+
 }
 
 // Function that calculate stress at image point by using Newton Raphson iteration
@@ -544,7 +605,7 @@ double BoundingSurfacePlasticFlowRule::GetDirectionParameter(const Vector& rPrin
     else if (std::abs(gamma_angle - gamma_angle_IP) >= 0.5 * this->GetPI())
         direction_T = -1.0;
     else
-        KRATOS_ERROR << "There is a problem with angles gamma_angle = " << gamma_angle <<  ", gamma_angle_IP = " << gamma_angle_IP << std::endl;
+        KRATOS_ERROR << "There is a problem with angles: gamma_angle = " << gamma_angle <<  ", gamma_angle_IP = " << gamma_angle_IP << std::endl;
 
     return direction_T;
 }
