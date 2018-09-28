@@ -5,6 +5,7 @@ import KratosMultiphysics.EmpireApplicationApplication
 # Import Kratos "wrapper" for unittests
 import KratosMultiphysics.KratosUnittest as KratosUnittest
 
+from test_empire_wrapper import TestEmpireWrapper
 
 def AssembleTestSuites():
     ''' Populates the test suites to run.
@@ -24,6 +25,7 @@ def AssembleTestSuites():
     smallSuite = suites['small']
 
     nightSuite = suites['nightly']
+    nightSuite.addTests(KratosUnittest.TestLoader().loadTestsFromTestCases([TestEmpireWrapper]))
     nightSuite.addTests(smallSuite)
 
     validationSuite = suites['validation']
