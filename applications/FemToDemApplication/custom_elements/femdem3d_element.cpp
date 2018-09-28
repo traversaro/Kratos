@@ -659,17 +659,14 @@ void FemDem3DElement::CalculateAverageStressOnEdge(
 	rAverageVector = CurrentElementStress;
 	int counter = 0;
 
-	for (int elem = 0; elem < VectorOfElems.size(); elem++)
-	{
+	for (int elem = 0; elem < VectorOfElems.size(); elem++) {
 		// Only take into account the active elements
 		bool is_active = true;
-		if (VectorOfElems[elem]->IsDefined(ACTIVE))
-		{
+		if (VectorOfElems[elem]->IsDefined(ACTIVE)) {
 			is_active = VectorOfElems[elem]->Is(ACTIVE);
 		}
 
-		if (is_active == true)
-		{
+		if (is_active == true) {
 			rAverageVector += VectorOfElems[elem]->GetValue(STRESS_VECTOR);
 			counter++;
 		}
@@ -689,17 +686,14 @@ void FemDem3DElement::CalculateAverageStrainOnEdge(
 	rAverageVector = CurrentElementStress;
 	int counter = 0;
 
-	for (int elem = 0; elem < VectorOfElems.size(); elem++)
-	{
+	for (int elem = 0; elem < VectorOfElems.size(); elem++) {
 		// Only take into account the active elements
 		bool is_active = true;
-		if (VectorOfElems[elem]->IsDefined(ACTIVE))
-		{
+		if (VectorOfElems[elem]->IsDefined(ACTIVE)) {
 			is_active = VectorOfElems[elem]->Is(ACTIVE);
 		}
 
-		if (is_active == true)
-		{
+		if (is_active == true) {
 			rAverageVector += VectorOfElems[elem]->GetValue(STRAIN_VECTOR);
 			counter++;
 		}
@@ -715,8 +709,7 @@ void FemDem3DElement::GetValueOnIntegrationPoints(
 	std::vector<double> &rValues,
 	const ProcessInfo &rCurrentProcessInfo)
 {
-	if (rVariable == DAMAGE_ELEMENT || rVariable == IS_DAMAGED || rVariable == STRESS_THRESHOLD)
-	{
+	if (rVariable == DAMAGE_ELEMENT || rVariable == IS_DAMAGED || rVariable == STRESS_THRESHOLD) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
 	}
 }
@@ -727,18 +720,11 @@ void FemDem3DElement::GetValueOnIntegrationPoints(
 	std::vector<Vector> &rValues,
 	const ProcessInfo &rCurrentProcessInfo)
 {
-	if (rVariable == STRAIN_VECTOR)
-	{
+	if (rVariable == STRAIN_VECTOR) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	}
-
-	if (rVariable == STRESS_VECTOR)
-	{
+	} else if (rVariable == STRESS_VECTOR) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	}
-
-	if (rVariable == STRESS_VECTOR_INTEGRATED)
-	{
+	} else if (rVariable == STRESS_VECTOR_INTEGRATED) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
 	}
 }
@@ -749,18 +735,11 @@ void FemDem3DElement::GetValueOnIntegrationPoints(
 	std::vector<Matrix> &rValues,
 	const ProcessInfo &rCurrentProcessInfo)
 {
-	if (rVariable == STRAIN_TENSOR)
-	{
+	if (rVariable == STRAIN_TENSOR) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	}
-
-	if (rVariable == STRESS_TENSOR)
-	{
+	} else if (rVariable == STRESS_TENSOR) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	}
-
-	if (rVariable == STRESS_TENSOR_INTEGRATED)
-	{
+	} else if (rVariable == STRESS_TENSOR_INTEGRATED) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
 	}
 }
@@ -771,26 +750,19 @@ void FemDem3DElement::CalculateOnIntegrationPoints(
 	std::vector<double> &rOutput,
 	const ProcessInfo &rCurrentProcessInfo)
 {
-	if (rVariable == DAMAGE_ELEMENT)
-	{
+	if (rVariable == DAMAGE_ELEMENT) {
 		rOutput.resize(1);
 		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++)
 		{
 			rOutput[PointNumber] = double(this->GetValue(DAMAGE_ELEMENT));
 		}
-	}
-
-	if (rVariable == IS_DAMAGED)
-	{
+	}else if (rVariable == IS_DAMAGED) {
 		rOutput.resize(1);
 		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++)
 		{
 			rOutput[PointNumber] = double(this->GetValue(IS_DAMAGED));
 		}
-	}
-
-	if (rVariable == STRESS_THRESHOLD)
-	{
+	} else if (rVariable == STRESS_THRESHOLD) {
 		rOutput.resize(1);
 		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++)
 		{
@@ -807,20 +779,14 @@ void FemDem3DElement::CalculateOnIntegrationPoints(
 {
 	KRATOS_TRY
 
-	if (rVariable == STRESS_VECTOR)
-	{
+	if (rVariable == STRESS_VECTOR) {
 		rOutput[0] = this->GetValue(STRESS_VECTOR);
-	}
-
-	if (rVariable == STRAIN_VECTOR)
-	{
+	} else if (rVariable == STRAIN_VECTOR) {
 		rOutput[0] = this->GetValue(STRAIN_VECTOR);
-	}
-
-	if (rVariable == STRESS_VECTOR_INTEGRATED)
-	{
+	} else if (rVariable == STRESS_VECTOR_INTEGRATED) {
 		rOutput[0] = this->GetIntegratedStressVector();
 	}
+
 	KRATOS_CATCH("")
 }
 
@@ -836,18 +802,11 @@ void FemDem3DElement::CalculateOnIntegrationPoints(
 	if (rOutput[0].size2() != dimension)
 		rOutput[0].resize(dimension, dimension, false);
 
-	if (rVariable == STRESS_TENSOR)
-	{
+	if (rVariable == STRESS_TENSOR) {
 		rOutput[0] = MathUtils<double>::StressVectorToTensor(this->GetValue(STRESS_VECTOR));
-	}
-
-	if (rVariable == STRAIN_TENSOR)
-	{
+	} else if (rVariable == STRAIN_TENSOR) {
 		rOutput[0] = MathUtils<double>::StrainVectorToTensor(this->GetValue(STRAIN_VECTOR));
-	}
-
-	if (rVariable == STRESS_TENSOR_INTEGRATED)
-	{
+	} else if (rVariable == STRESS_TENSOR_INTEGRATED) {
 		rOutput[0] = MathUtils<double>::StressVectorToTensor(this->GetIntegratedStressVector());
 	}
 }
@@ -859,16 +818,15 @@ void FemDem3DElement::CalculateLchar()
 	Matrix Indexes;
 	this->SetNodeIndexes(Indexes);
 
-	for (int edge = 0; edge < 6; edge++)
-	{
-		double X1 = NodesElem[Indexes(edge, 0)].X();
-		double X2 = NodesElem[Indexes(edge, 1)].X();
-		double Y1 = NodesElem[Indexes(edge, 0)].Y();
-		double Y2 = NodesElem[Indexes(edge, 1)].Y();
-		double Z1 = NodesElem[Indexes(edge, 0)].Z();
-		double Z2 = NodesElem[Indexes(edge, 1)].Z();
+	for (int edge = 0; edge < 6; edge++) {
+		const double X1 = NodesElem[Indexes(edge, 0)].X();
+		const double X2 = NodesElem[Indexes(edge, 1)].X();
+		const double Y1 = NodesElem[Indexes(edge, 0)].Y();
+		const double Y2 = NodesElem[Indexes(edge, 1)].Y();
+		const double Z1 = NodesElem[Indexes(edge, 0)].Z();
+		const double Z2 = NodesElem[Indexes(edge, 1)].Z();
 
-		double lchar = std::sqrt((X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2) + (Z1 - Z2) * (Z1 - Z2));
+		const double lchar = std::sqrt((X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2) + (Z1 - Z2) * (Z1 - Z2));
 		this->Set_l_char(lchar, edge);
 	}
 }
@@ -883,12 +841,9 @@ void FemDem3DElement::Get2MaxValues(Vector &MaxValues, double a, double b, doubl
 	V[2] = c;
 	int n = 3, imin = 0;
 
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n - 1; j++)
-		{
-			if (V[j] > V[j + 1])
-			{
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n - 1; j++) {
+			if (V[j] > V[j + 1]) {
 				double aux = V[j];
 				V[j] = V[j + 1];
 				V[j + 1] = aux;
@@ -909,12 +864,9 @@ void FemDem3DElement::Get2MinValues(Vector &MaxValues, double a, double b, doubl
 	V[2] = c;
 	int n = 3, imin = 0;
 
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n - 1; j++)
-		{
-			if (V[j] > V[j + 1])
-			{
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n - 1; j++) {
+			if (V[j] > V[j + 1]) {
 				double aux = V[j];
 				V[j] = V[j + 1];
 				V[j + 1] = aux;
@@ -993,8 +945,7 @@ void FemDem3DElement::CalculateMassMatrix(MatrixType &rMassMatrix, ProcessInfo &
 		if (rCurrentProcessInfo[COMPUTE_LUMPED_MASS_MATRIX] == true)
 			ComputeLumpedMassMatrix = true;
 
-	if (ComputeLumpedMassMatrix == false)
-	{
+	if (ComputeLumpedMassMatrix == false) {
 
 		//create local system components
 		LocalSystemComponents LocalSystem;
@@ -1013,9 +964,7 @@ void FemDem3DElement::CalculateMassMatrix(MatrixType &rMassMatrix, ProcessInfo &
 
 		//Calculate elemental system
 		CalculateDynamicSystem(LocalSystem, rCurrentProcessInfo);
-	}
-	else
-	{
+	} else {
 		//lumped
 		unsigned int dimension = GetGeometry().WorkingSpaceDimension();
 		const unsigned int number_of_nodes = GetGeometry().PointsNumber();
@@ -1034,11 +983,9 @@ void FemDem3DElement::CalculateMassMatrix(MatrixType &rMassMatrix, ProcessInfo &
 
 		LumpFact = GetGeometry().LumpingFactors(LumpFact);
 
-		for (unsigned int i = 0; i < number_of_nodes; i++)
-		{
+		for (unsigned int i = 0; i < number_of_nodes; i++) {
 			double temp = LumpFact[i] * TotalMass;
-			for (unsigned int j = 0; j < dimension; j++)
-			{
+			for (unsigned int j = 0; j < dimension; j++) {
 				unsigned int index = i * dimension + j;
 				rMassMatrix(index, index) = temp;
 			}
@@ -1059,10 +1006,8 @@ Vector &FemDem3DElement::CalculateVolumeForce(Vector &rVolumeForce, const Vector
 
 	noalias(rVolumeForce) = ZeroVector(dimension);
 
-	for (unsigned int j = 0; j < number_of_nodes; j++)
-	{
-		if (GetGeometry()[j].SolutionStepsDataHas(VOLUME_ACCELERATION))
-		{ // it must be checked once at the begining only
+	for (unsigned int j = 0; j < number_of_nodes; j++) {
+		if (GetGeometry()[j].SolutionStepsDataHas(VOLUME_ACCELERATION)) { // it must be checked once at the begining only
 			array_1d<double, 3> &VolumeAcceleration = GetGeometry()[j].FastGetSolutionStepValue(VOLUME_ACCELERATION);
 			for (unsigned int i = 0; i < dimension; i++)
 				rVolumeForce[i] += rN[j] * VolumeAcceleration[i];
@@ -1070,7 +1015,6 @@ Vector &FemDem3DElement::CalculateVolumeForce(Vector &rVolumeForce, const Vector
 	}
 
 	rVolumeForce *= GetProperties()[DENSITY];
-
 	return rVolumeForce;
 
 	KRATOS_CATCH("")
@@ -1082,19 +1026,14 @@ double FemDem3DElement::GetMaxValue(Vector Strain)
 	int n = Strain.size();
 	V.resize(n);
 
-	for (int cont = 0; cont < n; cont++)
-	{
+	for (int cont = 0; cont < n; cont++) {
 		V[cont] = Strain[cont];
 	}
 
 	int imin = 0;
-
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n - 1; j++)
-		{
-			if (V[j] > V[j + 1])
-			{
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n - 1; j++) {
+			if (V[j] > V[j + 1]) {
 				double aux = V[j];
 				V[j] = V[j + 1];
 				V[j + 1] = aux;
@@ -1110,18 +1049,14 @@ double FemDem3DElement::GetMaxAbsValue(Vector Strain)
 	int n = Strain.size();
 	V.resize(n);
 
-	for (int cont = 0; cont < n; cont++)
-	{
+	for (int cont = 0; cont < n; cont++) {
 		V[cont] = std::abs(Strain[cont]);
 	}
 	int imin = 0;
 
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n - 1; j++)
-		{
-			if (V[j] > V[j + 1])
-			{
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n - 1; j++) {
+			if (V[j] > V[j + 1]) {
 				double aux = V[j];
 				V[j] = V[j + 1];
 				V[j + 1] = aux;
@@ -1140,12 +1075,9 @@ double FemDem3DElement::GetMinAbsValue(Vector Strain)
 	V[2] = std::abs(Strain[2]);
 	int n = 3, imin = 0;
 
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n - 1; j++)
-		{
-			if (V[j] > V[j + 1])
-			{
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n - 1; j++) {
+			if (V[j] > V[j + 1]) {
 				double aux = V[j];
 				V[j] = V[j + 1];
 				V[j + 1] = aux;
@@ -1177,7 +1109,7 @@ void FemDem3DElement::IntegrateStressDamageMechanics(
 	} else if (yield_surface == "RankineFragile") {
 		this->RankineFragileLaw(rIntegratedStress, rdamage, StressVector, cont, l_char);
 	} else {
-		KRATOS_ERROR << " Yield Surface not defined ";
+		KRATOS_ERROR << "Yield Surface not defined "<< std::endl;
 	}
 }
 
@@ -1240,7 +1172,7 @@ void FemDem3DElement::ModifiedMohrCoulombCriterion(
 		const double theta = CalculateLodeAngle(J2, J3);
 		f = (2.00 * std::tan(3.14159265359 * 0.25 + friction_angle * 0.5) / std::cos(friction_angle)) *
 			((I1 * K3 / 3.0) + std::sqrt(J2) * (K1 * std::cos(theta) - K2 * std::sin(theta) * sinphi /
-			 std::sqrt(3.0)));
+			std::sqrt(3.0)));
 	}
 
 	if (this->GetThreshold(cont) == 0) {
@@ -1273,38 +1205,32 @@ void FemDem3DElement::RankineCriterion(
 	Vector PrincipalStressVector = ZeroVector(3);
 	this->CalculatePrincipalStresses(PrincipalStressVector, StressVector);
 
-	double sigma_c = 0.0, sigma_t = 0.0, friction_angle = 0.0, E = 0.0, Gt = 0.0, c_max = 0.0, c_threshold = 0.0;
-	sigma_c = this->GetProperties()[YIELD_STRESS_C];
-	sigma_t = this->GetProperties()[YIELD_STRESS_T];
-	friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * 3.14159265359 / 180.0; // In radians!
-	E = this->GetProperties()[YOUNG_MODULUS];
-	Gt = this->GetProperties()[FRAC_ENERGY_T];
-	c_max = std::abs(sigma_t);
+	const double sigma_c = this->GetProperties()[YIELD_STRESS_C];
+	const double sigma_t = this->GetProperties()[YIELD_STRESS_T];
+	double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * 3.14159265359 / 180.0; // In radians!
+	const double E = this->GetProperties()[YOUNG_MODULUS];
+	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
+	const double c_max = std::abs(sigma_t);
 
-	double A = 1.00 / (Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
-	if (A < 0)
-	{
+	const double A = 1.00 / (Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
+	if (A < 0) {
 		KRATOS_THROW_ERROR(std::invalid_argument, " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T", A)
 	}
 
 	double f, F; /// F = f-c = 0 classical definition of yield surface
 	f = GetMaxValue(PrincipalStressVector);
 
-	if (this->GetThreshold(cont) == 0.0)
-	{
+	if (this->GetThreshold(cont) == 0.0) {
 		this->SetThreshold(c_max, cont);
 	} // 1st iteration sets threshold as c_max
-	c_threshold = this->GetThreshold(cont);
+	const double c_threshold = this->GetThreshold(cont);
 	this->SetNonConvergedEquivalentStress(f, cont);
 
 	F = f - c_threshold;
 
-	if (F <= 0)
-	{ // Elastic region --> Damage is constant
+	if (F <= 0) { // Elastic region --> Damage is constant
 		damage = this->GetConvergedDamages(cont);
-	}
-	else
-	{
+	} else {
 		damage = 1.0 - (c_max / f) * std::exp(A * (1.0 - f / c_max)); // Exponential softening law
 		if (damage > 0.99)
 			damage = 0.99;
@@ -1320,34 +1246,28 @@ void FemDem3DElement::DruckerPragerCriterion(
 	int cont,
 	double l_char)
 {
-	double sigma_c = 0.0, sigma_t = 0.0, friction_angle = 0.0, E = 0.0, Gt = 0.0;
-	sigma_c = this->GetProperties()[YIELD_STRESS_C];
-	sigma_t = this->GetProperties()[YIELD_STRESS_T];
-	friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * 3.14159265359 / 180; // In radians!
-	E = this->GetProperties()[YOUNG_MODULUS];
-	Gt = this->GetProperties()[FRAC_ENERGY_T];
+	const double sigma_c = this->GetProperties()[YIELD_STRESS_C];
+	const double sigma_t = this->GetProperties()[YIELD_STRESS_T];
+	double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * 3.14159265359 / 180; // In radians!
+	const double E = this->GetProperties()[YOUNG_MODULUS];
+	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
 
 	// Check input variables
-	if (friction_angle < 1e-24)
-	{
+	if (friction_angle < 1e-24) {
 		friction_angle = 32 * 3.14159 / 180;
 		std::cout << "Friction Angle not defined, assumed equal to 32� " << std::endl;
 	}
-	if (sigma_c < 1e-24)
-	{
+	if (sigma_c < 1e-24) {
 		KRATOS_ERROR << " ERROR: Yield stress in compression not defined, include YIELD_STRESS_C in .mdpa ";
 	}
-	if (sigma_t < 1e-24)
-	{
+	if (sigma_t < 1e-24) {
 		KRATOS_ERROR << " ERROR: Yield stress in tension not defined, include YIELD_STRESS_T in .mdpa ";
 	}
-	if (Gt < 1e-24)
-	{
+	if (Gt < 1e-24) {
 		KRATOS_ERROR << " ERROR: Fracture Energy not defined in the model part, include FRAC_ENERGY_T in .mdpa ";
 	}
 
-	double c_max, c_threshold;
-	c_max = std::abs(sigma_t * (3.0 + std::sin(friction_angle)) / (3.0 * std::sin(friction_angle) - 3.0));
+	const double c_max = std::abs(sigma_t * (3.0 + std::sin(friction_angle)) / (3.0 * std::sin(friction_angle) - 3.0));
 
 	double I1, J2;
 	I1 = CalculateI1Invariant(StressVector);
@@ -1355,9 +1275,8 @@ void FemDem3DElement::DruckerPragerCriterion(
 	this->CalculateDeviatorVector(Deviator, StressVector, I1);
 	J2 = CalculateJ2Invariant(Deviator);
 
-	double A = 1.00 / (Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
-	if (A < 0)
-	{
+	const double A = 1.00 / (Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
+	if (A < 0) {
 		KRATOS_THROW_ERROR(std::invalid_argument, " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T", A)
 	}
 
@@ -1366,34 +1285,27 @@ void FemDem3DElement::DruckerPragerCriterion(
 	double CFL = 0.0, TEN0 = 0.0;
 
 	// Check DruckerPrager criterion
-	if (I1 == 0.0)
-	{
+	if (I1 == 0.0) {
 		f = 0.0;
-	}
-	else
-	{
+	} else {
 		CFL = -std::sqrt(3.0) * (3.0 - std::sin(friction_angle)) / (3.0 * std::sin(friction_angle) - 3.0);
-		TEN0 = 2.0 * I1 * std::sin(friction_angle) / (std::sqrt(3.0) * (3 - std::sin(friction_angle))) + std::sqrt(J2);
+		TEN0 = 2.0 * I1 * std::sin(friction_angle) / (std::sqrt(3.0) * (3.0 - std::sin(friction_angle))) + std::sqrt(J2);
 		f = std::abs(CFL * TEN0);
 	}
 
-	if (this->GetThreshold(cont) == 0)
-	{
+	if (this->GetThreshold(cont) == 0) {
 		this->SetThreshold(c_max, cont);
 	} // 1st iteration sets threshold as c_max
-	c_threshold = this->GetThreshold(cont);
+
+	const double c_threshold = this->GetThreshold(cont);
 	this->SetNonConvergedEquivalentStress(f, cont);
 	F = f - c_threshold;
 
-	if (F <= 0) // Elastic region --> Damage is constant
-	{
+	if (F <= 0) { // Elastic region --> Damage is constant
 		damage = this->GetConvergedDamages(cont);
-	}
-	else
-	{
+	} else {
 		damage = 1.0 - (c_max / f) * std::exp(A * (1.0 - f / c_max)); // Exponential softening law
-		if (damage > 0.99)
-		{
+		if (damage > 0.99) {
 			damage = 0.99;
 		}
 	}
@@ -1412,19 +1324,15 @@ void FemDem3DElement::SimoJuCriterion(
 	Vector PrincipalStressVector = ZeroVector(3);
 	this->CalculatePrincipalStresses(PrincipalStressVector, StressVector);
 
-	double sigma_t = 0.0, E = 0.0, Gt = 0.0, sigma_c = 0.0, n = 0;
-	sigma_t = this->GetProperties()[YIELD_STRESS_T];
-	sigma_c = this->GetProperties()[YIELD_STRESS_C];
-	E = this->GetProperties()[YOUNG_MODULUS];
-	Gt = this->GetProperties()[FRAC_ENERGY_T];
-
-	double c_max, c_threshold;
-	n = std::abs(sigma_c / sigma_t);
-	c_max = std::abs(sigma_c) / std::sqrt(E);
+	const double sigma_t = this->GetProperties()[YIELD_STRESS_T];
+	const double sigma_c = this->GetProperties()[YIELD_STRESS_C];
+	const double E = this->GetProperties()[YOUNG_MODULUS];
+	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
+	const double n = std::abs(sigma_c / sigma_t);
+	const double c_max = std::abs(sigma_c) / std::sqrt(E);
 
 	double SumA = 0.0, SumB = 0.0, SumC = 0.0, ere0 = 0.0, ere1 = 0.0;
-	for (int cont = 0; cont < 2; cont++)
-	{
+	for (int cont = 0; cont < 2; cont++) {
 		SumA += std::abs(PrincipalStressVector[cont]);
 		SumB += 0.5 * (PrincipalStressVector[cont] + std::abs(PrincipalStressVector[cont]));
 		SumC += 0.5 * (-PrincipalStressVector[cont] + std::abs(PrincipalStressVector[cont]));
@@ -1432,47 +1340,38 @@ void FemDem3DElement::SimoJuCriterion(
 	ere0 = SumB / SumA;
 	ere1 = SumC / SumA;
 
-	double f = 0.0, F = 0.0; /// F = f-c = 0 classical definition of yield surface
+	double f, F; /// F = f-c = 0 classical definition of yield surface
 
 	// Check SimoJu criterion
-	if (StrainVector[0] == 0 && StrainVector[1] == 0)
-	{
+	if (StrainVector[0] == 0 && StrainVector[1] == 0) {
 		f = 0;
-	}
-	else
-	{
+	} else {
 		double auxf = 0.0;
-		for (int cont = 0; cont < 6; cont++)
-		{
+		for (int cont = 0; cont < 6; cont++) {
 			auxf += StrainVector[cont] * StressVector[cont]; // E*S
 		}
 		f = std::sqrt(auxf);
 		f *= (ere0 * n + ere1);
 	}
 
-	if (this->GetThreshold(cont) == 0)
-	{
+	if (this->GetThreshold(cont) == 0) {
 		this->SetThreshold(c_max, cont);
 	} // 1st iteration sets threshold as c_max
-	c_threshold = this->GetThreshold(cont);
+
+	const double c_threshold = this->GetThreshold(cont);
 	this->SetNonConvergedEquivalentStress(f, cont);
 	F = f - c_threshold;
 
-	double A = 1.00 / (Gt * n * n * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
-	if (A < 0)
-	{
+	const double A = 1.00 / (Gt * n * n * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
+	if (A < 0) {
 		KRATOS_THROW_ERROR(std::invalid_argument, " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T", A)
 	}
 
-	if (F <= 0) // Elastic region --> Damage is constant
-	{
+	if (F <= 0) { // Elastic region --> Damage is constant
 		damage = this->GetConvergedDamages(cont);
-	}
-	else
-	{
+	} else {
 		damage = 1 - (c_max / f) * std::exp(A * (1 - f / c_max)); // Exponential softening law
-		if (damage > 0.99)
-		{
+		if (damage > 0.99) {
 			damage = 0.99;
 		}
 	}
@@ -1490,38 +1389,31 @@ void FemDem3DElement::RankineFragileLaw(
 	Vector PrincipalStressVector = ZeroVector(3);
 	this->CalculatePrincipalStresses(PrincipalStressVector, StressVector);
 
-	double sigma_c = 0.0, sigma_t = 0.0, friction_angle = 0.0, E = 0.0, Gt = 0.0, c_max = 0.0, c_threshold = 0.0;
-	sigma_c = this->GetProperties()[YIELD_STRESS_C];
-	sigma_t = this->GetProperties()[YIELD_STRESS_T];
-	friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * 3.14159265359 / 180; // In radians!
-	E = this->GetProperties()[YOUNG_MODULUS];
-	Gt = this->GetProperties()[FRAC_ENERGY_T];
-	c_max = std::abs(sigma_t);
+	const double sigma_c = this->GetProperties()[YIELD_STRESS_C];
+	const double sigma_t = this->GetProperties()[YIELD_STRESS_T];
+	const double E = this->GetProperties()[YOUNG_MODULUS];
+	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
+	const double c_max = std::abs(sigma_t);
 
-	double A = 1.00 / (Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
-	if (A < 0)
-	{
+	const double  A = 1.00 / (Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
+	if (A < 0) {
 		KRATOS_THROW_ERROR(std::invalid_argument, " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T", A)
 	}
 
 	double f, F; /// F = f-c = 0 classical definition of yield surface
 	f = GetMaxValue(PrincipalStressVector);
 
-	if (this->GetThreshold(cont) == 0)
-	{
+	if (this->GetThreshold(cont) == 0) {
 		this->SetThreshold(c_max, cont);
 	} // 1st iteration sets threshold as c_max
-	c_threshold = this->GetThreshold(cont);
+	const double c_threshold = this->GetThreshold(cont);
 	this->SetNonConvergedEquivalentStress(f, cont);
 
 	F = f - c_threshold;
 
-	if (F <= 0) // Elastic region --> Damage is constant
-	{
+	if (F <= 0) { // Elastic region --> Damage is constant
 		damage = this->GetConvergedDamages(cont);
-	}
-	else
-	{
+	} else {
 		damage = 0.98; // Fragile  law
 	}
 	rIntegratedStress = StressVector;
@@ -1533,12 +1425,13 @@ double FemDem3DElement::CalculateElementalDamage(const Vector &EdgeDamages)
 {
 	// 7 modes of fracture of the tetrahedron
 	Vector DamageModeFracture = ZeroVector(7);
-	DamageModeFracture[0] = 0.3333333334 * (EdgeDamages[0] + EdgeDamages[1] + EdgeDamages[2]);
-	DamageModeFracture[1] = 0.3333333334 * (EdgeDamages[0] + EdgeDamages[3] + EdgeDamages[4]);
-	DamageModeFracture[2] = 0.3333333334 * (EdgeDamages[1] + EdgeDamages[3] + EdgeDamages[5]);
+	const double one_third = 1.0 / 3.0;
+	DamageModeFracture[0] = one_third * (EdgeDamages[0] + EdgeDamages[1] + EdgeDamages[2]);
+	DamageModeFracture[1] = one_third * (EdgeDamages[0] + EdgeDamages[3] + EdgeDamages[4]);
+	DamageModeFracture[2] = one_third * (EdgeDamages[1] + EdgeDamages[3] + EdgeDamages[5]);
 	DamageModeFracture[3] = 0.25 * (EdgeDamages[1] + EdgeDamages[2] + EdgeDamages[3] + EdgeDamages[4]);
 	DamageModeFracture[4] = 0.25 * (EdgeDamages[0] + EdgeDamages[1] + EdgeDamages[4] + EdgeDamages[5]);
-	DamageModeFracture[5] = 0.3333333334 * (EdgeDamages[2] + EdgeDamages[4] + EdgeDamages[5]);
+	DamageModeFracture[5] = one_third * (EdgeDamages[2] + EdgeDamages[4] + EdgeDamages[5]);
 	DamageModeFracture[6] = 0.25 * (EdgeDamages[0] + EdgeDamages[2] + EdgeDamages[3] + EdgeDamages[5]);
 
 	return this->GetMaxValue(DamageModeFracture);
