@@ -17,7 +17,9 @@ VALUE: 1
 QUESTION: Activate_MMG_Remeshing#CB#(true,false)
 VALUE: false
 HELP: Enables the adaptative meshing technique
-
+QUESTION: Use_Hexahedrons#CB#(true,false)
+VALUE: false
+HELP: Are you using hexahedron elements?
 
 TITLE:Solver_Settings
 QUESTION: Solution_Type#CB#(Static,Dynamic)

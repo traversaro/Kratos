@@ -16,6 +16,7 @@ proc WriteProjectParameters { basename dir problemtypedir TableDict} {
     puts $FileVar "    \},"
     ## problem_data
     puts $FileVar "   \"problem_data\": \{"
+    puts $FileVar "        \"is_hexahedron\":        [GiD_AccessValue get gendata Use_Hexahedrons],"      
     puts $FileVar "        \"problem_name\":         \"$basename\","
     puts $FileVar "        \"model_part_name\":      \"Structure\","
     puts $FileVar "        \"domain_size\":          [GiD_AccessValue get gendata Domain_Size],"

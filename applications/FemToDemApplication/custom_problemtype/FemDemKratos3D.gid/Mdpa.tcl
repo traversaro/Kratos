@@ -98,9 +98,11 @@ proc WriteMdpa { basename dir problemtypedir } {
 		set MatGroups [GiD_Info conditions Body_Part groups]
 		if {[lindex [lindex $MatGroups 0] 13] eq "true"} {
 			WriteElements FileVar [lindex $Groups $i] tetrahedra RomFemDem3DElement $BodyElemsProp Tetrahedron3D4Connectivities
+		} elseif {[GiD_AccessValue get gendata Use_Hexahedrons] eq "true"} {
+            WriteElements FileVar [lindex $Groups $i] Hexahedra FemDem3DHexahedronElement $BodyElemsProp Hexahedron3D8Connectivities
 		} else {
 			WriteElements FileVar [lindex $Groups $i] tetrahedra FemDem3DElement $BodyElemsProp Tetrahedron3D4Connectivities
-		}
+        }
 	}
     puts $FileVar ""
 

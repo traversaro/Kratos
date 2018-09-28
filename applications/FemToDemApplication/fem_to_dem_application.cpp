@@ -13,41 +13,8 @@
 
 // Project includes
 #include "geometries/triangle_2d_3.h"
-#include "geometries/triangle_2d_6.h"
-
-#include "geometries/quadrilateral_2d_4.h"
-#include "geometries/quadrilateral_2d_8.h"
-#include "geometries/quadrilateral_2d_9.h"
-
-#include "geometries/triangle_3d_3.h"
-
-#include "geometries/quadrilateral_3d_4.h"
-#include "geometries/quadrilateral_3d_8.h"
-#include "geometries/quadrilateral_3d_9.h"
-
 #include "geometries/tetrahedra_3d_4.h"
-#include "geometries/tetrahedra_3d_10.h"
-
 #include "geometries/hexahedra_3d_8.h"
-#include "geometries/hexahedra_3d_20.h"
-#include "geometries/hexahedra_3d_27.h"
-
-#include "geometries/prism_3d_6.h"
-#include "geometries/prism_3d_15.h"
-
-#include "geometries/line_2d.h"
-#include "geometries/line_2d_2.h"
-
-#include "geometries/line_3d_2.h"
-#include "geometries/line_3d_3.h"
-
-#include "geometries/point_2d.h"
-#include "geometries/point_3d.h"
-
-#include "includes/element.h"
-#include "includes/condition.h"
-#include "includes/variables.h"
-#include "includes/serializer.h"
 
 #include "fem_to_dem_application.h"
 #include "fem_to_dem_application_variables.h"
@@ -59,16 +26,12 @@ KratosFemToDemApplication::KratosFemToDemApplication(): KratosApplication("FemTo
 mFemDem2DElement(0, Element::GeometryType::Pointer(new Triangle2D3 <Node<3> >(Element::GeometryType::PointsArrayType(3)))),
 mFemDem3DElement(0, Element::GeometryType::Pointer(new Tetrahedra3D4 <Node<3> >(Element::GeometryType::PointsArrayType(4)))),
 mRomFemDem3DElement(0, Element::GeometryType::Pointer(new Tetrahedra3D4 <Node<3> >(Element::GeometryType::PointsArrayType(4)))),
-mFemDem3DLargeDisplacementElement(0, Element::GeometryType::Pointer(new Tetrahedra3D4 <Node<3> >(Element::GeometryType::PointsArrayType(4))))
+mFemDem3DLargeDisplacementElement(0, Element::GeometryType::Pointer(new Tetrahedra3D4 <Node<3> >(Element::GeometryType::PointsArrayType(4)))),
+mFemDem3DHexahedronElement(0, Element::GeometryType::Pointer(new Hexahedra3D8 <Node<3> >(Element::GeometryType::PointsArrayType(8))))
 {}
 
-
-
-
 void KratosFemToDemApplication::Register() 
-	{
-
-
+{
  	// calling base class register to register Kratos components
  	KratosApplication::Register();
 	
@@ -147,12 +110,13 @@ void KratosFemToDemApplication::Register()
 	KRATOS_REGISTER_ELEMENT("FemDem3DElement", mFemDem3DElement)
 	KRATOS_REGISTER_ELEMENT("RomFemDem3DElement", mRomFemDem3DElement)
 	KRATOS_REGISTER_ELEMENT("FemDem3DLargeDisplacementElement", mFemDem3DLargeDisplacementElement)
-			
+	KRATOS_REGISTER_ELEMENT("FemDem3DHexahedronElement", mFemDem3DHexahedronElement)
+	
 	//Register Constitutive Laws
 	Serializer::Register("ZarateLaw", mZarateLaw);
 
 	
 
-	}
+}
 
 }  // namespace Kratos.
