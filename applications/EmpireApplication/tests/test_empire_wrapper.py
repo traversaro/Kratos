@@ -3,6 +3,7 @@ import KratosMultiphysics
 import KratosMultiphysics.EmpireApplication as KratosEmpire
 import KratosMultiphysics.KratosUnittest as KratosUnittest
 import KratosMultiphysics.kratos_utilities as kratos_utils
+import os
 
 if "EMPIRE_API_LIBSO_ON_MACHINE" in os.environ:
     have_empire = True
@@ -12,7 +13,7 @@ else:
 def GetFilePath(fileName):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), fileName)
 
-@UnitTest.skipUnless(have_empire,"EMPIRE is not available")
+@KratosUnittest.skipUnless(have_empire,"EMPIRE is not available")
 class TestEmpireWrapper(KratosUnittest.TestCase):
     def tearDown(self):
         kratos_utils.DeleteFileIfExisting("Structure_EigenResults_0.post.msh")
