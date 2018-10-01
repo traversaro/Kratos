@@ -594,14 +594,20 @@ void MmgProcess<TDim>::ExecuteRemeshing()
                     counter_cond_0 += 1;
                 }
             }
-            ConditionType::Pointer p_condition = CreateCondition0(cond_id, ref, is_required, skip_creation);
+			//if (mpRefCondition[ref]->pGetProperties() == nullptr) {
+			//	std::cout << "Oh deer god" << std::endl;
+			//}
+			if (mpRefCondition[ref] != nullptr) {
+				ConditionType::Pointer p_condition = CreateCondition0(cond_id, ref, is_required, skip_creation);
 
-            if (p_condition != nullptr) {
-                created_conditions_vector.push_back(p_condition);
-//                 mrThisModelPart.AddCondition(p_condition);
-                if (ref != 0) color_cond_0[static_cast<IndexType>(ref)].push_back(cond_id);// NOTE: ref == 0 is the MainModelPart
-                cond_id += 1;
-            }
+				if (p_condition != nullptr) {
+					created_conditions_vector.push_back(p_condition);
+					//                 mrThisModelPart.AddCondition(p_condition);
+					if (ref != 0) color_cond_0[static_cast<IndexType>(ref)].push_back(cond_id);// NOTE: ref == 0 is the MainModelPart
+					cond_id += 1;
+				}
+			}
+
         }
 
         IndexType counter_cond_1 = 0;
@@ -615,14 +621,17 @@ void MmgProcess<TDim>::ExecuteRemeshing()
                     counter_cond_1 += 1;
                 }
             }
-            ConditionType::Pointer p_condition = CreateCondition1(cond_id, ref, is_required, skip_creation);
 
-            if (p_condition != nullptr) {
-                created_conditions_vector.push_back(p_condition);
-//                 mrThisModelPart.AddCondition(p_condition);
-                if (ref != 0) color_cond_1[static_cast<IndexType>(ref)].push_back(cond_id);// NOTE: ref == 0 is the MainModelPart
-                cond_id += 1;
-            }
+			if (mpRefCondition[ref] != nullptr) {
+				ConditionType::Pointer p_condition = CreateCondition1(cond_id, ref, is_required, skip_creation);
+
+				if (p_condition != nullptr) {
+					created_conditions_vector.push_back(p_condition);
+					//                 mrThisModelPart.AddCondition(p_condition);
+					if (ref != 0) color_cond_1[static_cast<IndexType>(ref)].push_back(cond_id);// NOTE: ref == 0 is the MainModelPart
+					cond_id += 1;
+				}
+			}
         }
     }
 
@@ -1202,6 +1211,8 @@ ConditionType::Pointer MmgProcess<3>::CreateCondition0(
     bool SkipCreation
     )
 {
+	KRATOS_TRY
+
     ConditionType::Pointer p_condition = nullptr;
 
     int vertex_0, vertex_1, vertex_2;
@@ -1220,11 +1231,20 @@ ConditionType::Pointer MmgProcess<3>::CreateCondition0(
         condition_nodes[1] = mrThisModelPart.pGetNode(vertex_1);
         condition_nodes[2] = mrThisModelPart.pGetNode(vertex_2);
 
+
+		//KRATOS_WATCH(mpRefCondition[PropId]->Info())
+		//	KRATOS_WATCH(condition_nodes[0])
+		//	KRATOS_WATCH(condition_nodes[1])
+		//	KRATOS_WATCH(condition_nodes[2])
+		if (mpRefCondition[PropId] == nullptr) return nullptr;
+
         p_condition = mpRefCondition[PropId]->Create(CondId, PointerVector<NodeType>{condition_nodes}, mpRefCondition[PropId]->pGetProperties());
     } else if (mEchoLevel > 2)
         KRATOS_WARNING("MmgProcess") << "Condition creation avoided" << std::endl;
 
     return p_condition;
+
+	KRATOS_CATCH("")
 }
 
 /***********************************************************************************/
