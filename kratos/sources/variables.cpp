@@ -59,6 +59,7 @@
 #include "includes/radiation_settings.h"
 
 #include "includes/kratos_flags.h"
+#include "utilities/indirect_scalar.h"
 
 namespace Kratos {
 typedef Node<3> NodeType;
@@ -209,6 +210,12 @@ KRATOS_CREATE_3D_VARIABLE_WITH_COMPONENTS(SHAPE_SENSITIVITY)
 KRATOS_CREATE_VARIABLE(double, NORMAL_SENSITIVITY)
 KRATOS_CREATE_VARIABLE(double, NUMBER_OF_NEIGHBOUR_ELEMENTS)
 KRATOS_CREATE_VARIABLE(bool, UPDATE_SENSITIVITIES)
+KRATOS_CREATE_VARIABLE(Function<void(std::size_t, std::vector<IndirectScalar<double>>&, std::size_t)>, GetFirstDerivativesIndirectVector)
+KRATOS_CREATE_VARIABLE(Function<void(std::size_t, std::vector<IndirectScalar<double>>&, std::size_t)>, GetSecondDerivativesIndirectVector)
+KRATOS_CREATE_VARIABLE(Function<void(std::size_t, std::vector<IndirectScalar<double>>&, std::size_t)>, GetAuxAdjointIndirectVector)
+KRATOS_CREATE_VARIABLE(Function<void(std::vector<VariableData const*>&)>, GetFirstDerivativesVariables)
+KRATOS_CREATE_VARIABLE(Function<void(std::vector<VariableData const*>&)>, GetSecondDerivativesVariables)
+KRATOS_CREATE_VARIABLE(Function<void(std::vector<VariableData const*>&)>, GetAuxAdjointVariables)
 
 //for Electric application
 
@@ -824,6 +831,9 @@ void KratosApplication::RegisterVariables() {
     KRATOS_REGISTER_VARIABLE(NORMAL_SENSITIVITY)
     KRATOS_REGISTER_VARIABLE(NUMBER_OF_NEIGHBOUR_ELEMENTS)
     KRATOS_REGISTER_VARIABLE(UPDATE_SENSITIVITIES)
+    KRATOS_REGISTER_VARIABLE(GetFirstDerivativesIndirectVector)
+    KRATOS_REGISTER_VARIABLE(GetSecondDerivativesIndirectVector)
+    KRATOS_REGISTER_VARIABLE(GetAuxAdjointIndirectVector)
 
     //--------------- Meshing ApplicationApplication -------------------//
 
