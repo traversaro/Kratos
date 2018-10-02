@@ -19,6 +19,7 @@
 // Project includes
 #include "includes/define.h"
 #include "includes/element.h"
+#include "utilities/indirect_scalar.h"
 
 namespace Kratos
 {
@@ -34,6 +35,90 @@ template <class TPrimalElement>
 class KRATOS_API(STRUCTURAL_MECHANICS_APPLICATION) AdjointSolidElement
     : public Element
 {
+    struct GetFirstDerivativesVectorImpl
+    {
+        Element* mpElement;
+
+        void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
+        {
+            auto& r_node = mpElement->GetGeometry()[NodeId];
+            rVector.resize(mpElement->GetGeometry().WorkingSpaceDimension());
+            std::size_t index = 0;
+            rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_2_X, Step);
+            rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_2_Y, Step);
+            if (mpElement->GetGeometry().WorkingSpaceDimension() == 3)
+            {
+                rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_2_Z, Step);
+            }
+        }
+    };
+
+    struct GetSecondDerivativesVectorImpl
+    {
+        Element* mpElement;
+
+        void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
+        {
+            auto& r_node = mpElement->GetGeometry()[NodeId];
+            rVector.resize(mpElement->GetGeometry().WorkingSpaceDimension());
+            std::size_t index = 0;
+            rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_3_X, Step);
+            rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_3_Y, Step);
+            if (mpElement->GetGeometry().WorkingSpaceDimension() == 3)
+            {
+                rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_3_Z, Step);
+            }
+        }
+    };
+
+    struct GetAuxAdjointVectorImpl
+    {
+        Element* mpElement;
+
+        void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
+        {
+            auto& r_node = mpElement->GetGeometry()[NodeId];
+            rVector.resize(mpElement->GetGeometry().WorkingSpaceDimension());
+            std::size_t index = 0;
+            rVector[index++] = MakeIndirectScalar(r_node, AUX_ADJOINT_FLUID_VECTOR_1_X, Step);
+            rVector[index++] = MakeIndirectScalar(r_node, AUX_ADJOINT_FLUID_VECTOR_1_Y, Step);
+            if (mpElement->GetGeometry().WorkingSpaceDimension() == 3)
+            {
+                rVector[index++] = MakeIndirectScalar(r_node, AUX_ADJOINT_FLUID_VECTOR_1_Z, Step);
+            }
+        }
+    };
+
+    struct GetFirstDerivativesVariablesImpl
+    {
+        Element* mpElement;
+        void operator()(std::vector<VariableData const*>& rVariables)
+        {
+            rVariables.resize(1);
+            rVariables[0] = &ADJOINT_FLUID_VECTOR_2;
+        }
+    };
+    
+    struct GetSecondDerivativesVariablesImpl
+    {
+        Element* mpElement;
+        void operator()(std::vector<VariableData const*>& rVariables)
+        {
+            rVariables.resize(1);
+            rVariables[0] = &ADJOINT_FLUID_VECTOR_3;
+        }
+    };
+    
+    struct GetAuxAdjointVariablesImpl
+    {
+        Element* mpElement;
+        void operator()(std::vector<VariableData const*>& rVariables)
+        {
+            rVariables.resize(1);
+            rVariables[0] = &AUX_ADJOINT_FLUID_VECTOR_1;
+        }
+    };
+
 public:
     ///@name Type Definitions
     ///@{
@@ -72,6 +157,12 @@ public:
     {
         KRATOS_TRY;
         mPrimalElement.Initialize();
+        SetValue(GetFirstDerivativesIndirectVector, GetFirstDerivativesVectorImpl{this});
+        SetValue(GetSecondDerivativesIndirectVector, GetSecondDerivativesVectorImpl{this});
+        SetValue(GetAuxAdjointIndirectVector, GetAuxAdjointVectorImpl{this});
+        SetValue(GetFirstDerivativesVariables, GetFirstDerivativesVariablesImpl{this});
+        SetValue(GetSecondDerivativesVariables, GetSecondDerivativesVariablesImpl{this});
+        SetValue(GetAuxAdjointVariables, GetAuxAdjointVariablesImpl{this});
         KRATOS_CATCH("");
     }
 

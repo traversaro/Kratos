@@ -17,6 +17,7 @@
 // System includes
 #include <vector>
 #include <string>
+#include <unordered_set>
 
 // External includes
 
@@ -25,11 +26,122 @@
 #include "includes/checks.h"
 #include "includes/kratos_parameters.h"
 #include "solving_strategies/schemes/residual_based_adjoint_static_scheme.h"
+#include "utilities/indirect_scalar.h"
+#include "utilities/variable_utils.h"
 
 namespace Kratos
 {
 ///@name Kratos Classes
 ///@{
+
+namespace Internals
+{
+    class AdjointBossakSchemeUtils
+    {
+        struct Hash
+        {
+            std::size_t operator()(const VariableData* const& p) const
+            {
+                return p->Key();
+            }
+        };
+
+        struct Pred
+        {
+            bool operator()(const VariableData* const l, const VariableData* const r) const
+            {
+                return *l == *r;
+            }
+        };
+
+        public:
+            using TGetAdjointVector = Variable<Function<void(std::vector<VariableData const*>&)>>;
+
+            template <typename TContainerType>
+            std::vector<const VariableData*> Execute(const TGetAdjointVector& rFunc, const TContainerType& rElements)
+            {
+                KRATOS_TRY;
+                const int number_of_elements = rElements.size();
+                const int num_threads = OpenMPUtils::GetNumThreads();
+                std::vector<const VariableData*> var_vec;
+                std::vector<std::unordered_set<const VariableData*, Hash, Pred>> var_sets(num_threads);
+#pragma omp parallel for private(var_vec)
+                for (int i = 0; i < number_of_elements; ++i)
+                {
+                    auto& r_element = *(rElements.begin() + i);
+                    r_element.GetValue(rFunc)(var_vec);
+                    const int k = OpenMPUtils::ThisThread();
+                    var_sets[k].insert(var_vec.begin(), var_vec.end());
+                }
+                std::unordered_set<const VariableData*, Hash, Pred> total_var_set;
+                for (int i = 0; i < num_threads; ++i)
+                {
+                    total_var_set.insert(var_sets[i].begin(), var_sets[i].end());
+                }
+                return std::vector<const VariableData*>{total_var_set.begin(), total_var_set.end()};
+                KRATOS_CATCH("");
+            }
+
+            void SetToZero_AdjointVars(const std::vector<const VariableData*>& rVariables, ModelPart::NodesContainerType& rNodes)
+            {
+                KRATOS_TRY;
+                for (auto p_variable_data : rVariables)
+                {
+                    if (KratosComponents<Variable<array_1d<double, 3>>>::Has(
+                            p_variable_data->Name()))
+                    {
+                        const auto& r_variable =
+                            KratosComponents<Variable<array_1d<double, 3>>>::Get(
+                                p_variable_data->Name());
+                        VariableUtils().SetToZero_VectorVar(r_variable, rNodes);
+                    }
+                    else if (KratosComponents<Variable<double>>::Has(
+                                 p_variable_data->Name()))
+                    {
+                        const auto& r_variable = KratosComponents<Variable<double>>::Get(
+                            p_variable_data->Name());
+                        VariableUtils().SetToZero_ScalarVar(r_variable, rNodes);
+                    }
+                    else
+                    {
+                        KRATOS_ERROR << "Variable \"" << p_variable_data->Name()
+                                     << "\" not found!\n";
+                    }
+                }
+                KRATOS_CATCH("");
+            }
+
+            void Assemble_AdjointVars(const std::vector<const VariableData*>& rVariables,
+                                      Communicator& rComm)
+            {
+                KRATOS_TRY;
+                for (auto p_variable_data : rVariables)
+                {
+                    if (KratosComponents<Variable<array_1d<double, 3>>>::Has(
+                            p_variable_data->Name()))
+                    {
+                        const auto& r_variable =
+                            KratosComponents<Variable<array_1d<double, 3>>>::Get(
+                                p_variable_data->Name());
+                        rComm.AssembleCurrentData(r_variable);
+                    }
+                    else if (KratosComponents<Variable<double>>::Has(
+                                 p_variable_data->Name()))
+                    {
+                        const auto& r_variable = KratosComponents<Variable<double>>::Get(
+                            p_variable_data->Name());
+                        rComm.AssembleCurrentData(r_variable);
+                    }
+                    else
+                    {
+                        KRATOS_ERROR << "Variable \"" << p_variable_data->Name()
+                                     << "\" not found!\n";
+                    }
+                }
+                KRATOS_CATCH("");
+            }
+    };
+}
 
 /// A scheme for dynamic adjoint equations, using Bossak time integration.
 /**
@@ -58,18 +170,12 @@ public:
 
     /// Constructor.
     ResidualBasedAdjointBossakScheme(Parameters& rParameters, AdjointResponseFunction::Pointer pResponseFunction):
-        ResidualBasedAdjointStaticScheme<TSparseSpace, TDenseSpace>(pResponseFunction),
-        mVelocityUpdateAdjointVariable(VELOCITY),
-        mAccelerationUpdateAdjointVariable(VELOCITY),
-        mAuxiliaryVariable(VELOCITY)
+        ResidualBasedAdjointStaticScheme<TSparseSpace, TDenseSpace>(pResponseFunction)
     {
 
         Parameters default_parameters(R"({
             "scheme_type": "bossak",
-            "alpha_bossak": -0.3,
-            "velocity_update_adjoint_variable": "ADJOINT_FLUID_VECTOR_2",
-            "acceleration_update_adjoint_variable": "ADJOINT_FLUID_VECTOR_3",
-            "auxiliary_variable": "AUX_ADJOINT_FLUID_VECTOR_1"
+            "alpha_bossak": -0.3
         })");
 
         rParameters.ValidateAndAssignDefaults(default_parameters);
@@ -77,10 +183,6 @@ public:
         mAlphaBossak = rParameters["alpha_bossak"].GetDouble();
         mBetaNewmark = 0.25 * (1.0 - mAlphaBossak) * (1.0 - mAlphaBossak);
         mGammaNewmark = 0.5 - mAlphaBossak;
-
-        mVelocityUpdateAdjointVariable = GetVariableFromParameters(rParameters, "velocity_update_adjoint_variable");
-        mAccelerationUpdateAdjointVariable = GetVariableFromParameters(rParameters, "acceleration_update_adjoint_variable");
-        mAuxiliaryVariable = GetVariableFromParameters(rParameters, "auxiliary_variable");
     }
 
     /// Destructor.
@@ -111,9 +213,9 @@ public:
         mSecondDerivsLHS.resize(num_threads);
         mSecondDerivsResponseGradient.resize(num_threads);
         mAdjointValuesVector.resize(num_threads);
-        mAdjointFirstDerivsVector.resize(num_threads);
-        mAdjointSecondDerivsVector.resize(num_threads);
-        mAdjointAuxiliaryVector.resize(num_threads);
+        mAdjointIndirectVector2.resize(num_threads);
+        mAdjointIndirectVector3.resize(num_threads);
+        mAuxAdjointIndirectVector1.resize(num_threads);
 
         InitializeNodeNeighbourCount(rModelPart.Nodes());
 
@@ -196,12 +298,6 @@ public:
         KRATOS_ERROR_IF(domain_size != working_space_dimension) <<
             "DOMAIN_SIZE " << domain_size << " not equal to the element's Working Space Dimension " <<
             working_space_dimension << "." << std::endl;
-
-        // Check that the required variables are defined
-        const Node<3>& r_node = *(rModelPart.NodesBegin());
-        KRATOS_CHECK_VARIABLE_IN_NODAL_DATA(mVelocityUpdateAdjointVariable,r_node);
-        KRATOS_CHECK_VARIABLE_IN_NODAL_DATA(mAccelerationUpdateAdjointVariable,r_node);
-        KRATOS_CHECK_VARIABLE_IN_NODAL_DATA(mAuxiliaryVariable,r_node);
 
         return BaseType::Check(rModelPart); // Check elements and conditions.
 
@@ -390,24 +486,26 @@ protected:
         const double second_deriv_coeff = mInverseDt * mInverseDt / mBetaNewmark;
 
         const Geometry< Node<3> >& r_geometry = pCurrentElement->GetGeometry();
-        const unsigned int domain_size = r_geometry.WorkingSpaceDimension();
         const unsigned int num_nodes = r_geometry.PointsNumber();
+        const int k = OpenMPUtils::ThisThread();
 
         unsigned int local_index = 0;
         for (unsigned int i_node = 0; i_node < num_nodes; ++i_node) {
             auto& r_node = r_geometry[i_node];
-            const array_1d<double, 3>& r_aux_adjoint_vector = r_node.FastGetSolutionStepValue(mAuxiliaryVariable,1);
-            const array_1d<double, 3>& r_velocity_adjoint = r_node.FastGetSolutionStepValue(mVelocityUpdateAdjointVariable,1);
-            const array_1d<double, 3>& r_acceleration_adjoint = r_node.FastGetSolutionStepValue(mAccelerationUpdateAdjointVariable,1);
+            pCurrentElement->GetValue(GetFirstDerivativesIndirectVector)(
+                i_node, mAdjointIndirectVector2[k], 1);
+            pCurrentElement->GetValue(GetSecondDerivativesIndirectVector)(
+                i_node, mAdjointIndirectVector3[k], 1);
+            pCurrentElement->GetValue(GetAuxAdjointIndirectVector)(
+                i_node, mAuxAdjointIndirectVector1[k], 1);
             const double weight = 1.0 / r_node.GetValue(NUMBER_OF_NEIGHBOUR_ELEMENTS);
 
-            for (unsigned int d = 0; d < domain_size; d++) {
-                rRHS_Contribution[local_index] += weight * second_deriv_coeff * r_aux_adjoint_vector[d];
-                rRHS_Contribution[local_index] += weight * old_adjoint_velocity_coeff * r_velocity_adjoint[d];
-                rRHS_Contribution[local_index] += weight * old_adjoint_acceleration_coeff * r_acceleration_adjoint[d];
+            for (unsigned int d = 0; d < mAdjointIndirectVector2[k].size(); d++) {
+                rRHS_Contribution[local_index] += weight * second_deriv_coeff * mAuxAdjointIndirectVector1[k][d];
+                rRHS_Contribution[local_index] += weight * old_adjoint_velocity_coeff * mAdjointIndirectVector2[k][d];
+                rRHS_Contribution[local_index] += weight * old_adjoint_acceleration_coeff * mAdjointIndirectVector3[k][d];
                 ++local_index;
             }
-            ++local_index; // skip continuity equation adjoint rows.
         }
     }
 
@@ -457,7 +555,13 @@ protected:
 
     virtual void UpdateTimeSchemeAdjoints(ModelPart& rModelPart)
     {
-        Communicator& r_communicator = rModelPart.GetCommunicator();
+        KRATOS_TRY;
+        auto lambda2_vars = Internals::AdjointBossakSchemeUtils().Execute(
+            GetFirstDerivativesVariables, rModelPart.Elements());
+        auto lambda3_vars = Internals::AdjointBossakSchemeUtils().Execute(
+            GetSecondDerivativesVariables, rModelPart.Elements());
+        Internals::AdjointBossakSchemeUtils().SetToZero_AdjointVars(lambda2_vars, rModelPart.Nodes());
+        Internals::AdjointBossakSchemeUtils().SetToZero_AdjointVars(lambda3_vars, rModelPart.Nodes());
         auto& r_response_function = *(this->mpResponseFunction);
 
         const double a22 = 1.0 - mGammaNewmark/mBetaNewmark;
@@ -465,121 +569,95 @@ protected:
         const double a32 = (1.0 - 0.5*mGammaNewmark/mBetaNewmark)*mTimeStep;
         const double a33 = (1.0 - 0.5/mBetaNewmark);
 
-        // Process the part that does not require assembly first
-        const int number_of_local_nodes = r_communicator.LocalMesh().NumberOfNodes();
-        #pragma omp parallel for
-        for (int i = 0; i < number_of_local_nodes; i++) {
-            Node<3>& r_node = *(r_communicator.LocalMesh().NodesBegin() + i);
-            array_1d<double,3>& r_lambda2 = r_node.FastGetSolutionStepValue(mVelocityUpdateAdjointVariable);
-            array_1d<double,3>& r_lambda3 = r_node.FastGetSolutionStepValue(mAccelerationUpdateAdjointVariable);
-            const array_1d<double,3>& r_lambda2_old = r_node.FastGetSolutionStepValue(mVelocityUpdateAdjointVariable,1);
-            const array_1d<double,3>& r_lambda3_old = r_node.FastGetSolutionStepValue(mAccelerationUpdateAdjointVariable,1);
-            const array_1d<double, 3>& r_old_aux_adjoint_vector = r_node.FastGetSolutionStepValue(mAuxiliaryVariable,1);
-
-            noalias(r_lambda2) = a22 * r_lambda2_old + a23 * r_lambda3_old;
-            noalias(r_lambda3) = a32 * r_lambda2_old + a33 * r_lambda3_old + r_old_aux_adjoint_vector;
-        }
-
-        const int number_of_ghost_nodes = r_communicator.GhostMesh().NumberOfNodes();
-        #pragma omp parallel for
-        for (int i = 0; i < number_of_ghost_nodes; i++) {
-            Node<3>& r_node = *(r_communicator.GhostMesh().NodesBegin() + i);
-            noalias(r_node.FastGetSolutionStepValue(mVelocityUpdateAdjointVariable)) = mVelocityUpdateAdjointVariable.Zero();
-            noalias(r_node.FastGetSolutionStepValue(mAccelerationUpdateAdjointVariable)) = mAccelerationUpdateAdjointVariable.Zero();
-        }
-
-        // Loop over elements to assemble the remaining terms
         const int number_of_elements = rModelPart.NumberOfElements();
         ProcessInfo& r_process_info = rModelPart.GetProcessInfo();
-        #pragma omp parallel for
+        Vector aux_adjoint2, aux_adjoint3;
+        std::vector<IndirectScalar<double>> adjoint2, adjoint3, aux_adjoint,
+            adjoint2_old, adjoint3_old;
+        #pragma omp parallel for private(aux_adjoint2, aux_adjoint3, adjoint2, adjoint3, aux_adjoint, adjoint2_old, adjoint3_old)
         for (int i = 0; i < number_of_elements; i++) {
             Element& r_element = *(rModelPart.ElementsBegin()+i);
             const int k = OpenMPUtils::ThisThread();
-            auto& r_lhs = mLeftHandSide[k];
-            auto& r_response_gradient = mResponseGradient[k];
-            auto& r_first_lhs = mFirstDerivsLHS[k];
-            auto& r_first_response_gradient = mFirstDerivsResponseGradient[k];
-            auto& r_second_lhs = mSecondDerivsLHS[k];
-            auto& r_second_response_gradient = mSecondDerivsResponseGradient[k];
-            auto& r_residual_adjoint = mAdjointValuesVector[k];
-            auto& r_velocity_adjoint = mAdjointFirstDerivsVector[k];
-            auto& r_acceleration_adjoint = mAdjointSecondDerivsVector[k];
 
-            r_element.GetValuesVector(r_residual_adjoint);
-            this->CheckAndResizeThreadStorage(r_residual_adjoint.size());
+            r_element.GetValuesVector(mAdjointValuesVector[k]);
+            this->CheckAndResizeThreadStorage(mAdjointValuesVector[k].size());
 
-            r_element.CalculateLeftHandSide(r_lhs,r_process_info);
-            r_response_function.CalculateGradient(r_element,r_lhs,r_response_gradient,r_process_info);
+            r_element.CalculateFirstDerivativesLHS(mFirstDerivsLHS[k],r_process_info);
+            r_response_function.CalculateFirstDerivativesGradient(r_element,mFirstDerivsLHS[k],mFirstDerivsResponseGradient[k],r_process_info);
 
-            r_element.CalculateFirstDerivativesLHS(r_first_lhs,r_process_info);
-            r_response_function.CalculateFirstDerivativesGradient(r_element,r_first_lhs,r_first_response_gradient,r_process_info);
+            r_element.CalculateSecondDerivativesLHS(mSecondDerivsLHS[k],r_process_info);
+            mSecondDerivsLHS[k] *= (1.0 - mAlphaBossak);
+            r_response_function.CalculateSecondDerivativesGradient(r_element,mSecondDerivsLHS[k],mSecondDerivsResponseGradient[k],r_process_info);
 
-            r_element.CalculateSecondDerivativesLHS(r_second_lhs,r_process_info);
-            r_second_lhs *= (1.0 - mAlphaBossak);
-            r_response_function.CalculateSecondDerivativesGradient(r_element,r_second_lhs,r_second_response_gradient,r_process_info);
-
-            noalias(r_velocity_adjoint) = - r_first_response_gradient - prod(r_first_lhs,r_residual_adjoint);
-            noalias(r_acceleration_adjoint) = - r_second_response_gradient - prod(r_second_lhs,r_residual_adjoint);
+            if (aux_adjoint2.size() != mFirstDerivsResponseGradient[k].size())
+                aux_adjoint2.resize(mFirstDerivsResponseGradient[k].size(), false);
+            noalias(aux_adjoint2) = -mFirstDerivsResponseGradient[k] - prod(mFirstDerivsLHS[k], mAdjointValuesVector[k]);
+            if (aux_adjoint3.size() != mSecondDerivsResponseGradient[k].size())
+                aux_adjoint3.resize(mSecondDerivsResponseGradient[k].size(), false);
+            noalias(aux_adjoint3) = - mSecondDerivsResponseGradient[k] - prod(mSecondDerivsLHS[k],mAdjointValuesVector[k]);
 
             // Assemble the contributions to the corresponding nodal unknowns.
             unsigned int local_index = 0;
             Geometry< Node<3> >& r_geometry = r_element.GetGeometry();
             for (unsigned int i_node = 0; i_node < r_geometry.PointsNumber(); ++i_node) {
-
+                r_element.GetValue(GetFirstDerivativesIndirectVector)(i_node, adjoint2, 0);
+                r_element.GetValue(GetSecondDerivativesIndirectVector)(i_node, adjoint3, 0);
+                r_element.GetValue(GetFirstDerivativesIndirectVector)(i_node, adjoint2_old, 1);
+                r_element.GetValue(GetSecondDerivativesIndirectVector)(i_node, adjoint3_old, 1);
+                r_element.GetValue(GetAuxAdjointIndirectVector)(i_node, aux_adjoint, 1);
                 Node<3>& r_node = r_geometry[i_node];
-                array_1d<double, 3>& r_adjoint_fluid_vector_2 = r_node.FastGetSolutionStepValue(mVelocityUpdateAdjointVariable);
-                array_1d<double, 3>& r_adjoint_fluid_vector_3 = r_node.FastGetSolutionStepValue(mAccelerationUpdateAdjointVariable);
-
+                const double weight = 1.0 / r_node.GetValue(NUMBER_OF_NEIGHBOUR_ELEMENTS);
                 r_node.SetLock();
-                for (unsigned int d = 0; d < r_geometry.WorkingSpaceDimension(); ++d) {
+                for (unsigned int d = 0; d < adjoint2.size(); ++d) {
 
-                    r_adjoint_fluid_vector_2[d] += r_velocity_adjoint[local_index];
-                    r_adjoint_fluid_vector_3[d] += r_acceleration_adjoint[local_index];
+                    adjoint2[d] += aux_adjoint2[local_index];
+                    adjoint2[d] += a22 * weight * adjoint2_old[d];
+                    adjoint2[d] += a23 * weight * adjoint3_old[d];
+                    adjoint3[d] += aux_adjoint3[local_index];
+                    adjoint3[d] += a32 * weight * adjoint2_old[d];
+                    adjoint3[d] += a33 * weight * adjoint3_old[d];
+                    adjoint3[d] += weight * aux_adjoint[d];
                     ++local_index;
                 }
                 r_node.UnSetLock();
-                ++local_index; // pressure dof
             }
         }
 
-        // Finalize calculation
-        r_communicator.AssembleCurrentData(mVelocityUpdateAdjointVariable);
-        r_communicator.AssembleCurrentData(mAccelerationUpdateAdjointVariable);
+        // Finalize global assembly
+        Internals::AdjointBossakSchemeUtils().Assemble_AdjointVars(lambda2_vars, rModelPart.GetCommunicator());
+        Internals::AdjointBossakSchemeUtils().Assemble_AdjointVars(lambda3_vars, rModelPart.GetCommunicator());
+        KRATOS_CATCH("");
     }
-
 
     virtual void UpdateAuxiliaryVariable(ModelPart& rModelPart)
     {
+        KRATOS_TRY;
+        auto aux_vars = Internals::AdjointBossakSchemeUtils().Execute(
+            GetAuxAdjointVariables, rModelPart.Elements());
+        Internals::AdjointBossakSchemeUtils().SetToZero_AdjointVars(
+            aux_vars, rModelPart.Nodes());
         auto& r_response_function = *(this->mpResponseFunction);
-
-        // Process the part that does not require assembly first
-        const int number_of_nodes = rModelPart.NumberOfNodes();
-        #pragma omp parallel for
-        for (int i = 0; i < number_of_nodes; i++) {
-            Node<3>& r_node = *(rModelPart.NodesBegin() + i);
-            noalias(r_node.FastGetSolutionStepValue(mAuxiliaryVariable)) = mAuxiliaryVariable.Zero();
-        }
 
         // Loop over elements to assemble the remaining terms
         const int number_of_elements = rModelPart.NumberOfElements();
         ProcessInfo& r_process_info = rModelPart.GetProcessInfo();
-        #pragma omp parallel for
+        std::vector<IndirectScalar<double>> aux_adjoint_on_node;
+        Vector aux_adjoint_vector;
+#pragma omp parallel for private(aux_adjoint_on_node, aux_adjoint_vector)
         for (int i = 0; i < number_of_elements; i++) {
             Element& r_element = *(rModelPart.ElementsBegin()+i);
             const int k = OpenMPUtils::ThisThread();
-            auto& r_second_lhs = mSecondDerivsLHS[k];
-            auto& r_second_response_gradient = mSecondDerivsResponseGradient[k];
-            auto& r_residual_adjoint = mAdjointValuesVector[k];
-            auto& r_adjoint_auxiliary = mAdjointAuxiliaryVector[k];
 
-            r_element.GetValuesVector(r_residual_adjoint);
-            this->CheckAndResizeThreadStorage(r_residual_adjoint.size());
+            r_element.GetValuesVector(mAdjointValuesVector[k]);
+            this->CheckAndResizeThreadStorage(mAdjointValuesVector[k].size());
 
-            r_element.CalculateSecondDerivativesLHS(r_second_lhs,r_process_info);
-            r_second_lhs *= mAlphaBossak;
-            r_response_function.CalculateSecondDerivativesGradient(r_element,r_second_lhs,r_second_response_gradient,r_process_info);
+            r_element.CalculateSecondDerivativesLHS(mSecondDerivsLHS[k],r_process_info);
+            mSecondDerivsLHS[k] *= mAlphaBossak;
+            r_response_function.CalculateSecondDerivativesGradient(r_element,mSecondDerivsLHS[k],mSecondDerivsResponseGradient[k],r_process_info);
 
-            noalias(r_adjoint_auxiliary) = - prod(r_second_lhs,r_residual_adjoint) - r_second_response_gradient;
+            if (aux_adjoint_vector.size() != mSecondDerivsLHS[k].size1())
+                aux_adjoint_vector.resize(mSecondDerivsLHS[k].size1(), false);
+            noalias(aux_adjoint_vector) = -prod(mSecondDerivsLHS[k], mAdjointValuesVector[k]) - mSecondDerivsResponseGradient[k];
 
             // Assemble the contributions to the corresponding nodal unknowns.
             unsigned int local_index = 0;
@@ -587,21 +665,21 @@ protected:
             for (unsigned int i_node = 0; i_node < r_geometry.PointsNumber(); ++i_node) {
 
                 Node<3>& r_node = r_geometry[i_node];
-                array_1d<double, 3>& r_aux_adjoint_fluid_vector_1 = r_node.FastGetSolutionStepValue(mAuxiliaryVariable);
+                r_element.GetValue(GetAuxAdjointIndirectVector)(i_node, aux_adjoint_on_node, 0);
 
                 r_node.SetLock();
-                for (unsigned int d = 0; d < r_geometry.WorkingSpaceDimension(); ++d) {
+                for (unsigned int d = 0; d < aux_adjoint_on_node.size(); ++d) {
 
-                    r_aux_adjoint_fluid_vector_1[d] += r_adjoint_auxiliary[local_index];
+                    aux_adjoint_on_node[d] += aux_adjoint_vector[local_index];
                     ++local_index;
                 }
                 r_node.UnSetLock();
-                ++local_index; // pressure dof
             }
         }
 
-        // Finalize calculation
-        rModelPart.GetCommunicator().AssembleCurrentData(mAuxiliaryVariable);
+        // Finalize global assembly
+        Internals::AdjointBossakSchemeUtils().Assemble_AdjointVars(aux_vars, rModelPart.GetCommunicator());
+        KRATOS_CATCH("");
     }
 
     /// Free memory allocated by this class.
@@ -645,13 +723,9 @@ private:
     std::vector< LocalSystemMatrixType > mSecondDerivsLHS;
     std::vector< LocalSystemVectorType > mSecondDerivsResponseGradient;
     std::vector< LocalSystemVectorType > mAdjointValuesVector;
-    std::vector< LocalSystemVectorType > mAdjointFirstDerivsVector;
-    std::vector< LocalSystemVectorType > mAdjointSecondDerivsVector;
-    std::vector< LocalSystemVectorType > mAdjointAuxiliaryVector;
-
-    Variable< array_1d<double,3> > mVelocityUpdateAdjointVariable;
-    Variable< array_1d<double,3> > mAccelerationUpdateAdjointVariable;
-    Variable< array_1d<double,3> > mAuxiliaryVariable;
+    std::vector<std::vector<IndirectScalar<double>>> mAdjointIndirectVector2;
+    std::vector<std::vector<IndirectScalar<double>>> mAdjointIndirectVector3;
+    std::vector<std::vector<IndirectScalar<double>>> mAuxAdjointIndirectVector1;
 
     typename TSparseSpace::DofUpdaterPointerType mpDofUpdater = TSparseSpace::CreateDofUpdater();
 
@@ -688,18 +762,6 @@ private:
 
         if (mSecondDerivsResponseGradient[k].size() != SystemSize) {
             mSecondDerivsResponseGradient[k].resize(SystemSize,false);
-        }
-
-        if (mAdjointFirstDerivsVector[k].size() != SystemSize) {
-            mAdjointFirstDerivsVector[k].resize(SystemSize,false);
-        }
-
-        if (mAdjointSecondDerivsVector[k].size() != SystemSize) {
-            mAdjointSecondDerivsVector[k].resize(SystemSize,false);
-        }
-
-        if (mAdjointAuxiliaryVector[k].size() != SystemSize) {
-            mAdjointAuxiliaryVector[k].resize(SystemSize,false);
         }
     }
 

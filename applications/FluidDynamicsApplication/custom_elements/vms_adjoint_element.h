@@ -24,6 +24,7 @@
 #include "geometries/tetrahedra_3d_4.h"
 #include "includes/serializer.h"
 #include "utilities/geometry_utilities.h"
+#include "utilities/indirect_scalar.h"
 
 // Application includes
 #include "fluid_dynamics_application_variables.h"
@@ -43,6 +44,92 @@ namespace Kratos {
  */
 template< unsigned int TDim >
 class VMSAdjointElement: public Element {
+    struct GetFirstDerivativesVectorImpl
+    {
+        Element* mpElement;
+
+        void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
+        {
+            auto& r_node = mpElement->GetGeometry()[NodeId];
+            rVector.resize(mpElement->GetGeometry().WorkingSpaceDimension() + 1);
+            std::size_t index = 0;
+            rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_2_X, Step);
+            rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_2_Y, Step);
+            if (mpElement->GetGeometry().WorkingSpaceDimension() == 3)
+            {
+                rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_2_Z, Step);
+            }
+            rVector[index] = IndirectScalar<double>{};
+        }
+    };
+
+    struct GetSecondDerivativesVectorImpl
+    {
+        Element* mpElement;
+
+        void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
+        {
+            auto& r_node = mpElement->GetGeometry()[NodeId];
+            rVector.resize(mpElement->GetGeometry().WorkingSpaceDimension() + 1);
+            std::size_t index = 0;
+            rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_3_X, Step);
+            rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_3_Y, Step);
+            if (mpElement->GetGeometry().WorkingSpaceDimension() == 3)
+            {
+                rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_3_Z, Step);
+            }
+            rVector[index] = IndirectScalar<double>{};
+        }
+    };
+
+    struct GetAuxAdjointVectorImpl
+    {
+        Element* mpElement;
+
+        void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
+        {
+            auto& r_node = mpElement->GetGeometry()[NodeId];
+            rVector.resize(mpElement->GetGeometry().WorkingSpaceDimension() + 1);
+            std::size_t index = 0;
+            rVector[index++] = MakeIndirectScalar(r_node, AUX_ADJOINT_FLUID_VECTOR_1_X, Step);
+            rVector[index++] = MakeIndirectScalar(r_node, AUX_ADJOINT_FLUID_VECTOR_1_Y, Step);
+            if (mpElement->GetGeometry().WorkingSpaceDimension() == 3)
+            {
+                rVector[index++] = MakeIndirectScalar(r_node, AUX_ADJOINT_FLUID_VECTOR_1_Z, Step);
+            }
+            rVector[index] = IndirectScalar<double>{};
+        }
+    };
+
+    struct GetFirstDerivativesVariablesImpl
+    {
+        Element* mpElement;
+        void operator()(std::vector<VariableData const*>& rVariables)
+        {
+            rVariables.resize(1);
+            rVariables[0] = &ADJOINT_FLUID_VECTOR_2;
+        }
+    };
+    
+    struct GetSecondDerivativesVariablesImpl
+    {
+        Element* mpElement;
+        void operator()(std::vector<VariableData const*>& rVariables)
+        {
+            rVariables.resize(1);
+            rVariables[0] = &ADJOINT_FLUID_VECTOR_3;
+        }
+    };
+    
+    struct GetAuxAdjointVariablesImpl
+    {
+        Element* mpElement;
+        void operator()(std::vector<VariableData const*>& rVariables)
+        {
+            rVariables.resize(1);
+            rVariables[0] = &AUX_ADJOINT_FLUID_VECTOR_1;
+        }
+    };
 public:
 
     ///@name Type Definitions
@@ -103,6 +190,16 @@ public:
     ///@}
     ///@name Operations
     ///@{
+
+    void Initialize() override
+    {
+        this->SetValue(GetFirstDerivativesIndirectVector, GetFirstDerivativesVectorImpl{this});
+        this->SetValue(GetSecondDerivativesIndirectVector, GetSecondDerivativesVectorImpl{this});
+        this->SetValue(GetAuxAdjointIndirectVector, GetAuxAdjointVectorImpl{this});
+        this->SetValue(GetFirstDerivativesVariables, GetFirstDerivativesVariablesImpl{this});
+        this->SetValue(GetSecondDerivativesVariables, GetSecondDerivativesVariablesImpl{this});
+        this->SetValue(GetAuxAdjointVariables, GetAuxAdjointVariablesImpl{this});
+    }
 
     /**
      * @brief Creates a new element of this type.
@@ -433,7 +530,7 @@ public:
     ///@}
 
 protected:
-
+    
     ///@name Protected Operations
     ///@{
 
