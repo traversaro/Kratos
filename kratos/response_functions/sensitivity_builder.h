@@ -25,6 +25,7 @@
 #include "utilities/variable_utils.h"
 #include "response_functions/adjoint_response_function.h"
 #include "solving_strategies/response_functions/nodal_sensitivity_builder.h"
+#include "solving_strategies/response_functions/element_sensitivity_builder.h"
 
 namespace Kratos
 {
@@ -52,7 +53,8 @@ public:
         Parameters default_settings(R"(
         {
             "sensitivity_model_part_name": "PLEASE_SPECIFY_SENSITIVITY_MODEL_PART",
-            "nodal_sensitivity_variables": ["SHAPE_SENSITIVITY"],
+            "nodal_sensitivity_variables": [],
+            "element_sensitivity_variables" : [],
             "integrate_in_time": true
         })");
 
@@ -70,6 +72,11 @@ public:
         mNodalSensitivityVariables.resize(nodal_sensitivity_variables.size());
         for (unsigned int i = 0; i < nodal_sensitivity_variables.size(); ++i)
             mNodalSensitivityVariables[i] = nodal_sensitivity_variables[i].GetString();
+        
+        Parameters element_sensitivity_variables = custom_settings["element_sensitivity_variables"];
+        mElementSensitivityVariables.resize(element_sensitivity_variables.size());
+        for (unsigned int i = 0; i < element_sensitivity_variables.size(); ++i)
+            mElementSensitivityVariables[i] = element_sensitivity_variables[i].GetString();
 
         mIntegrateInTime = custom_settings["integrate_in_time"].GetBool();
 
@@ -90,6 +97,9 @@ public:
 
         for (const std::string& r_label : mNodalSensitivityVariables)
             SetNodalSensitivityVariableToZero(r_label);
+
+        for (const std::string& r_label : mElementSensitivityVariables)
+            SetElementSensitivityVariableToZero(r_label);
 
         VariableUtils().SetNonHistoricalVariable(UPDATE_SENSITIVITIES, false,
                                                  mrModelPart.Nodes());
@@ -113,6 +123,10 @@ public:
         NodalSensitivityBuilder nodal_sensitivity_builder(mrModelPart, mpResponseFunction);
         for (const std::string& r_label : mNodalSensitivityVariables)
             nodal_sensitivity_builder.BuildNodalSolutionStepSensitivities(r_label, delta_time);
+        
+        ElementSensitivityBuilder element_sensitivity_builder(mrModelPart, mpResponseFunction);
+        for (const std::string& r_label : mElementSensitivityVariables)
+            element_sensitivity_builder.BuildElementSensitivities(r_label, delta_time);
 
         KRATOS_CATCH("");
     }
@@ -141,6 +155,7 @@ private:
     ModelPart* mpSensitivityModelPart = nullptr;
     AdjointResponseFunction::Pointer mpResponseFunction;
     std::vector<std::string> mNodalSensitivityVariables;
+    std::vector<std::string> mElementSensitivityVariables;
     bool mIntegrateInTime;
 
     ///@}
@@ -168,6 +183,39 @@ private:
                 KratosComponents<Variable<array_1d<double, 3>>>::Get(rVariableName);
 
             VariableUtils().SetVectorVar(r_variable, r_variable.Zero(), mrModelPart.Nodes());
+        }
+        else
+            KRATOS_ERROR << "Unsupported variable: " << rVariableName << "." << std::endl;
+
+        KRATOS_CATCH("");
+    }
+
+    void SetElementSensitivityVariableToZero(std::string const& rVariableName)
+    {
+        KRATOS_TRY;
+
+        auto& r_elements = mrModelPart.Elements();
+        if (KratosComponents<Variable<double>>::Has(rVariableName) == true)
+        {
+            const Variable<double>& r_variable =
+                KratosComponents<Variable<double>>::Get(rVariableName);
+            #pragma omp parallel for
+            for (int k = 0; k< static_cast<int> (r_elements.size()); ++k)
+            {
+                auto it = r_elements.begin() + k;
+                it->SetValue(r_variable, r_variable.Zero());
+            }
+        }
+        else if (KratosComponents<Variable<array_1d<double, 3>>>::Has(rVariableName) == true)
+        {
+            const Variable<array_1d<double, 3>>& r_variable =
+                KratosComponents<Variable<array_1d<double, 3>>>::Get(rVariableName);
+            #pragma omp parallel for
+            for (int k = 0; k< static_cast<int> (r_elements.size()); ++k)
+            {
+                auto it = r_elements.begin() + k;
+                it->SetValue(r_variable, r_variable.Zero());
+            }
         }
         else
             KRATOS_ERROR << "Unsupported variable: " << rVariableName << "." << std::endl;
