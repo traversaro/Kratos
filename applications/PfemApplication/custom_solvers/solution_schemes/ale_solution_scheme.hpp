@@ -112,7 +112,15 @@ namespace Kratos {
             : BaseType(IntegrationMethodsVectorType& rTimeVectorIntegrationMethods, Flags& rOptions),
             mRotationTool(DomainSize,DomainSize+1,IS_STRUCTURE,0.0), // Second argument is number of matrix rows per node: monolithic elements have velocity and pressure dofs.
         {
-
+            for(typename IntegrationMethodsVectorType::iterator it=mTimeVectorIntegrationMethods.begin(); it!=mTimeVectorIntegrationMethods.end(); ++it)
+            {
+                if( (*it)->GetPrimaryVariableName() == "VELOCITY" )
+                {
+                    mTimeVectorIntegrationMethods.push_back( (*it)->Clone() );
+                    mTimeVectorIntegrationMethods.back().SetVariables(MESH_DISPLACEMENT,MESH_VELOCITY,MESH_ACCELERATION,MESH_VELOCITY);
+                    break;
+                }
+            }
         }
 
         /** Destructor.
@@ -147,74 +155,77 @@ namespace Kratos {
             mRotationTool.RotateVelocities(rModelPart);
 
             this->UpdateDofs(rModelPart,rDofSet,rDx);
-            //mpDofUpdater->UpdateDofs(rDofSet,rDx); //TODO: delete
+
+            this->UpdateMeshVelocity(rModelPart,rDx);
 
             mRotationTool.RecoverVelocities(rModelPart);
 
             this->UpdateVariables(rModelPart);
 
-            //TODO: update mesh_acceleration, mesh_velocity, mesh_displacement
-
-            this->MoveMesh(rModelPart);
+            this->MoveMesh(rModelPart,"MESH_DISPLACEMENT");
 
             KRATOS_CATCH( "" );
         }
 
+
+        /**
+        * @brief Performing the update of the mesh velocity except for slip conditions
+        * for slip conditions, mesh velocity must be imposed through a process
+        * @details this function must be called only once per iteration
+        */
+        void UpdateMeshVelocity(ModelPart& rModelPart,
+                                SystemVectorType& rDx)
+        {
+            KRATOS_TRY
+
+            // Updating time derivatives (nodally for efficiency)
+            const unsigned int NumThreads = OpenMPUtils::GetNumThreads();
+            OpenMPUtils::PartitionVector NodePartition;
+            OpenMPUtils::DivideInPartitions(rModelPart.Nodes().size(), NumThreads, NodePartition);
+
+            const int nnodes = static_cast<int>(rModelPart.Nodes().size());
+            NodesContainerType::iterator NodeBegin = rModelPart.Nodes().begin();
+
+            #pragma omp parallel for firstprivate(NodeBegin)
+            for(int i = 0;  i < nnodes; i++)
+            {
+                NodesContainerType::iterator itNode = NodeBegin + i;
+
+                if(itNode->IsNot(SLIP))
+                {
+                    if (itNode->GetDof(VELOCITY_X).IsFree() )
+                    {
+                        itNode->FastGetSolutionStepValue(MESH_VELOCITY_X) += TSparseSpace::GetValue(rDx,itNode->GetDof(VELOCITY_X).EquationId());
+                    }
+                    else
+                    {
+                        itNode->FastGetSolutionStepValue(MESH_VELOCITY_X) = itNode->FastGetSolutionStepValue(VELOCITY_X);
+                    }
+                    if (itNode->GetDof(VELOCITY_Y).IsFree() )
+                    {
+                        itNode->FastGetSolutionStepValue(MESH_VELOCITY_Y) += TSparseSpace::GetValue(rDx,itNode->GetDof(VELOCITY_Y).EquationId());
+                    }
+                    else
+                    {
+                        itNode->FastGetSolutionStepValue(MESH_VELOCITY_Y) = itNode->FastGetSolutionStepValue(VELOCITY_Y);
+                    }
+                    if (itNode->GetDof(VELOCITY_Z).IsFree() )
+                    {
+                        itNode->FastGetSolutionStepValue(MESH_VELOCITY_Z) += TSparseSpace::GetValue(rDx,itNode->GetDof(VELOCITY_Z).EquationId());
+                    }
+                    else
+                    {
+                        itNode->FastGetSolutionStepValue(MESH_VELOCITY_Z) = itNode->FastGetSolutionStepValue(VELOCITY_Z);
+                    }
+                }
+            }
+
+            KRATOS_CATCH("")
+        }
+
         //***************************************************************************
 
-        // void AdditionalUpdateOperations(ModelPart& rModelPart,
-        //                                 DofsArrayType& rDofSet,
-        //                                 TSystemMatrixType& A,
-        //                                 TSystemVectorType& Dv,
-        //                                 TSystemVectorType& b)
-        // {
-        //     KRATOS_TRY
 
-        //     int NumThreads = OpenMPUtils::GetNumThreads();
-        //     OpenMPUtils::PartitionVector NodePartition;
-        //     OpenMPUtils::DivideInPartitions(rModelPart.Nodes().size(), NumThreads, NodePartition);
-
-        //     //updating time derivatives (nodally for efficiency)
-        //     #pragma omp parallel
-        //     {
-        //         array_1d<double, 3 > DeltaVel;
-
-        //         int k = OpenMPUtils::ThisThread();
-
-        //         ModelPart::NodeIterator NodesBegin = rModelPart.NodesBegin() + NodePartition[k];
-        //         ModelPart::NodeIterator NodesEnd = rModelPart.NodesBegin() + NodePartition[k + 1];
-
-        //         for (ModelPart::NodeIterator itNode = NodesBegin; itNode != NodesEnd; itNode++) {
-        //             noalias(DeltaVel) = (itNode)->FastGetSolutionStepValue(VELOCITY) - (itNode)->FastGetSolutionStepValue(VELOCITY, 1);
-
-        //             array_1d<double, 3 > & CurrentAcceleration = (itNode)->FastGetSolutionStepValue(ACCELERATION, 0);
-        //             array_1d<double, 3 > & OldAcceleration = (itNode)->FastGetSolutionStepValue(ACCELERATION, 1);
-
-        //             UpdateAcceleration(CurrentAcceleration, DeltaVel, OldAcceleration);
-
-        //             if (mMeshVelocity == 2)//Lagrangian
-        //             {
-        //                 if((itNode)->FastGetSolutionStepValue(IS_LAGRANGIAN_INLET) < 1e-15)
-        //                 {
-        //                     array_1d<double, 3 > & CurrentDisplacement = (itNode)->FastGetSolutionStepValue(DISPLACEMENT, 0);
-        //                     array_1d<double, 3 > & OldDisplacement = (itNode)->FastGetSolutionStepValue(DISPLACEMENT, 1);
-        //                     array_1d<double, 3 > & OldVelocity = (itNode)->FastGetSolutionStepValue(VELOCITY, 1);
-
-        //                     noalias(itNode->FastGetSolutionStepValue(MESH_VELOCITY)) = itNode->FastGetSolutionStepValue(VELOCITY);
-        //                     UpdateDisplacement(CurrentDisplacement, OldDisplacement, OldVelocity, OldAcceleration, CurrentAcceleration);
-        //                 }
-        //                 else
-        //                 {
-        //                     noalias(itNode->FastGetSolutionStepValue(MESH_VELOCITY)) = ZeroVector(3);
-        //                     noalias(itNode->FastGetSolutionStepValue(DISPLACEMENT)) = ZeroVector(3);
-        //                 }
-        //             }
-        //         }
-        //     }
-
-        //     KRATOS_CATCH("")
-
-        // }
 
         /**
         * Performing the prediction of the solution
@@ -229,144 +240,13 @@ namespace Kratos {
         {
             KRATOS_TRY;
 
-            this->PredictVariables(rModelPart);
+            this->UpdateMeshVelocity(rModelPart,rDx);
 
-            //TODO: predict mesh_acceleration, mesh_velocity, mesh_displacement
+            this->PredictVariables(rModelPart);
 
             this->MoveMesh(rModelPart);
 
             KRATOS_CATCH( "" );
-        }
-
-        //***************************************************************************
-        //predicts the solution at the current step as
-        // v = vold
-//         void Predict(ModelPart& rModelPart,
-//                              DofsArrayType& rDofSet,
-//                              TSystemMatrixType& A,
-//                              TSystemVectorType& Dv,
-//                              TSystemVectorType& b) override
-//         {
-//             // if (rModelPart.GetCommunicator().MyPID() == 0)
-//             //     std::cout << "prediction" << std::endl;
-
-//             int NumThreads = OpenMPUtils::GetNumThreads();
-//             OpenMPUtils::PartitionVector NodePartition;
-//             OpenMPUtils::DivideInPartitions(rModelPart.Nodes().size(), NumThreads, NodePartition);
-
-//             #pragma omp parallel
-//             {
-//                 //array_1d<double, 3 > DeltaDisp;
-
-//                 int k = OpenMPUtils::ThisThread();
-
-//                 ModelPart::NodeIterator NodesBegin = rModelPart.NodesBegin() + NodePartition[k];
-//                 ModelPart::NodeIterator NodesEnd = rModelPart.NodesBegin() + NodePartition[k + 1];
-
-//                 for (ModelPart::NodeIterator itNode = NodesBegin; itNode != NodesEnd; itNode++) {
-//                     array_1d<double, 3 > & OldVelocity = (itNode)->FastGetSolutionStepValue(VELOCITY, 1);
-//                     double& OldPressure = (itNode)->FastGetSolutionStepValue(PRESSURE, 1);
-
-//                     //predicting velocity
-//                     //ATTENTION::: the prediction is performed only on free nodes
-//                     array_1d<double, 3 > & CurrentVelocity = (itNode)->FastGetSolutionStepValue(VELOCITY);
-//                     double& CurrentPressure = (itNode)->FastGetSolutionStepValue(PRESSURE);
-
-//                     if ((itNode->pGetDof(VELOCITY_X))->IsFree())
-//                         (CurrentVelocity[0]) = OldVelocity[0];
-//                     if (itNode->pGetDof(VELOCITY_Y)->IsFree())
-//                         (CurrentVelocity[1]) = OldVelocity[1];
-//                     if (itNode->HasDofFor(VELOCITY_Z))
-//                         if (itNode->pGetDof(VELOCITY_Z)->IsFree())
-//                             (CurrentVelocity[2]) = OldVelocity[2];
-
-//                     if (itNode->pGetDof(PRESSURE)->IsFree())
-//                         CurrentPressure = OldPressure;
-
-//                     // updating time derivatives ::: please note that displacements and
-//                     // their time derivatives can not be consistently fixed separately
-//                     array_1d<double, 3 > DeltaVel;
-//                     noalias(DeltaVel) = CurrentVelocity - OldVelocity;
-//                     array_1d<double, 3 > & OldAcceleration = (itNode)->FastGetSolutionStepValue(ACCELERATION, 1);
-//                     array_1d<double, 3 > & CurrentAcceleration = (itNode)->FastGetSolutionStepValue(ACCELERATION);
-
-//                     UpdateAcceleration(CurrentAcceleration, DeltaVel, OldAcceleration);
-
-//                     if (mMeshVelocity == 2) //Lagrangian
-//                     {
-//                         array_1d<double, 3 > & OldDisplacement = (itNode)->FastGetSolutionStepValue(DISPLACEMENT, 1);
-//                         array_1d<double, 3 > & CurrentDisplacement = (itNode)->FastGetSolutionStepValue(DISPLACEMENT, 0);
-
-//                   if((itNode)->FastGetSolutionStepValue(IS_LAGRANGIAN_INLET) < 1e-15)
-// 			{
-// 			    noalias(itNode->FastGetSolutionStepValue(MESH_VELOCITY)) = itNode->FastGetSolutionStepValue(VELOCITY);
-// 			    UpdateDisplacement(CurrentDisplacement, OldDisplacement, OldVelocity, OldAcceleration, CurrentAcceleration);
-// 			}
-// 			else
-// 			{
-// 			  itNode->FastGetSolutionStepValue(MESH_VELOCITY_X) = 0.0;
-// 			  itNode->FastGetSolutionStepValue(MESH_VELOCITY_Y) = 0.0;
-// 			  itNode->FastGetSolutionStepValue(DISPLACEMENT_X) = 0.0;
-// 			  itNode->FastGetSolutionStepValue(DISPLACEMENT_Y) = 0.0;
-// 			}
-//                     }
-//                 }
-//             }
-
-// //              if (rModelPart.GetCommunicator().MyPID() == 0)
-// //                  std::cout << "end of prediction" << std::endl;
-
-//         }
-
-        /**
-        * @brief This function is designed to move the mesh
-        * @note Be careful it just consider displacements, derive this method to adapt to your own strategies (ALE, FSI, etc...)
-        */
-        void MoveMesh(ModelPart& rModelPart) override
-        {
-            KRATOS_TRY
-
-            if( this->mOptions.Is(LocalFlagType::MOVE_MESH) ){
-
-                if (rModelPart.NodesBegin()->SolutionStepsDataHas(DISPLACEMENT_X) == false)
-                {
-                    KRATOS_ERROR << "It is impossible to move the mesh since the DISPLACEMENT variable is not in the Model Part. Add DISPLACEMENT to the list of variables" << std::endl;
-                }
-
-                bool DisplacementIntegration = false;
-                for(typename IntegrationMethodsVectorType::iterator it=mTimeVectorIntegrationMethods.begin();
-                    it!=mTimeVectorIntegrationMethods.end(); ++it)
-                {
-                    if( "DISPLACEMENT" == (*it)->GetVariableName() ){
-                        DisplacementIntegration = true;
-                        break;
-                    }
-                }
-
-                if(DisplacementIntegration == true){
-
-                    // Update mesh positions : node coordinates
-                    const int nnodes = rModelPart.NumberOfNodes();
-                    ModelPart::NodesContainerType::iterator it_begin = rModelPart.NodesBegin();
-
-                #pragma omp parallel for
-                    for(int i = 0; i<nnodes; i++)
-                    {
-                        ModelPart::NodesContainerType::iterator it_node = it_begin + i;
-
-                        // TODO: review
-                        noalias(it_node->Coordinates()) = it_node->GetInitialPosition().Coordinates();
-                        if( it_node->IsNot(SLIP) ){
-                            noalias(it_node->Coordinates()) += it_node->FastGetSolutionStepValue(DISPLACEMENT);
-                        } else {
-                            noalias(it_node->Coordinates()) += it_node->FastGetSolutionStepValue(MESH_DISPLACEMENT);
-                        }
-
-                    }
-                }
-            }
-
-            KRATOS_CATCH("")
         }
 
         //***************************************************************************
@@ -393,13 +273,11 @@ namespace Kratos {
             int thread = OpenMPUtils::ThisThread();
 
             //Initializing the non linear iteration for the current element
-            // (pCurrentElement) -> InitializeNonLinearIteration(rCurrentProcessInfo); //TODO: delete
 
             (pCurrentElement) -> CalculateLocalSystem(rLHS_Contribution,rRHS_Contribution, rCurrentProcessInfo);
 
             (pCurrentElement) -> EquationIdVector(EquationId, rCurrentProcessInfo);
 
-            // TODO: this will be generally false
             if ( rCurrentProcessInfo[COMPUTE_DYNAMIC_TANGENT] == true ){
                 (pCurrentElement) -> CalculateSecondDerivativesContributions(this->mMatrix.M[thread],this->mVector.a[thread],rCurrentProcessInfo);
                 (pCurrentElement) -> CalculateFirstDerivativesContributions(this->mMatrix.D[thread],this->mVector.v[thread],rCurrentProcessInfo);
@@ -432,7 +310,6 @@ namespace Kratos {
             int thread = OpenMPUtils::ThisThread();
 
             //Initializing the non linear iteration for the current element
-            // (pCurrentElement) -> InitializeNonLinearIteration(rCurrentProcessInfo); //TODO: delete
 
             // Basic operations for the element considered
             (pCurrentElement) -> CalculateRightHandSide(rRHS_Contribution, rCurrentProcessInfo);
@@ -475,8 +352,6 @@ namespace Kratos {
 
             int thread = OpenMPUtils::ThisThread();
 
-            // (pCurrentCondition) -> InitializeNonLinearIteration(rCurrentProcessInfo); //TODO: delete
-
             // Basic operations for the condition considered
             (pCurrentCondition) -> CalculateLocalSystem(rLHS_Contribution,rRHS_Contribution, rCurrentProcessInfo);
 
@@ -513,8 +388,6 @@ namespace Kratos {
 
             int thread = OpenMPUtils::ThisThread();
 
-            // (pCurrentCondition) -> InitializeNonLinearIteration(rCurrentProcessInfo); //TODO: delete
-
             // Basic operations for the condition considered
             (pCurrentCondition) -> CalculateRightHandSide(rRHS_Contribution, rCurrentProcessInfo);
 
@@ -540,92 +413,165 @@ namespace Kratos {
             KRATOS_CATCH("")
         }
 
+        // TODO
 
-        //TODO: is this necessary in PFEM?
-        void FinalizeSolutionStep(ModelPart &rModelPart, TSystemMatrixType &A, TSystemVectorType &Dx, TSystemVectorType &b) override
-        {
-            Element::EquationIdVectorType EquationId;
-            LocalSystemVectorType RHS_Contribution;
-            LocalSystemMatrixType LHS_Contribution;
-            ProcessInfo& CurrentProcessInfo = rModelPart.GetProcessInfo();
+        // void InitializeNonLinIteration(ModelPart& r_model_part,
+        //                                        TSystemMatrixType& A,
+        //                                        TSystemVectorType& Dx,
+        //                                        TSystemVectorType& b) override
+        // {
+        //     KRATOS_TRY
 
-            //for (ModelPart::NodeIterator itNode = rModelPart.NodesBegin(); itNode != rModelPart.NodesEnd(); ++itNode)
+        //     if (mpTurbulenceModel != 0) // If not null
+        //         mpTurbulenceModel->Execute();
 
-            #pragma omp parallel for
-            for(int k = 0; k<static_cast<int>(rModelPart.Nodes().size()); k++)
-            {
-                auto itNode = rModelPart.NodesBegin() + k;
-                (itNode->FastGetSolutionStepValue(REACTION)).clear();
+        //     KRATOS_CATCH("")
+        // }
 
-                // calculating relaxed acceleration
-                const array_1d<double, 3 > & CurrentAcceleration = (itNode)->FastGetSolutionStepValue(ACCELERATION, 0);
-                const array_1d<double, 3 > & OldAcceleration = (itNode)->FastGetSolutionStepValue(ACCELERATION, 1);
-                const array_1d<double, 3> relaxed_acceleration = (1 - mAlphaBossak) * CurrentAcceleration
-                                                                    + mAlphaBossak * OldAcceleration;
-                (itNode)->SetValue(RELAXED_ACCELERATION, relaxed_acceleration);
-            }
+        // void FinalizeNonLinIteration(ModelPart &rModelPart, TSystemMatrixType &A, TSystemVectorType &Dx, TSystemVectorType &b) override
+        // {
+        //     ProcessInfo& CurrentProcessInfo = rModelPart.GetProcessInfo();
 
-            //for (ModelPart::ElementsContainerType::ptr_iterator itElem = rModelPart.Elements().ptr_begin(); itElem != rModelPart.Elements().ptr_end(); ++itElem)
+        //     //if orthogonal subscales are computed
+        //     if (CurrentProcessInfo[OSS_SWITCH] == 1.0) {
+        //         if (rModelPart.GetCommunicator().MyPID() == 0)
+        //             std::cout << "Computing OSS projections" << std::endl;
 
-            #pragma omp parallel for firstprivate(EquationId,RHS_Contribution,LHS_Contribution)
-            for(int k = 0; k<static_cast<int>(rModelPart.Elements().size()); k++)
-            {
-                auto itElem = rModelPart.Elements().ptr_begin()+k;
-                int thread_id = OpenMPUtils::ThisThread();
 
-                (*itElem)->InitializeNonLinearIteration(CurrentProcessInfo);
-                //KRATOS_WATCH(LHS_Contribution);
-                //basic operations for the element considered
-                (*itElem)->CalculateLocalSystem(LHS_Contribution, RHS_Contribution, CurrentProcessInfo);
+        //         const int nnodes = static_cast<int>(rModelPart.Nodes().size());
+        //         auto nbegin = rModelPart.NodesBegin();
+        //         #pragma omp parallel for firstprivate(nbegin,nnodes)
+        //         for(int i=0; i<nnodes; ++i)
+        //         {
+        //             auto ind = nbegin + i;
+        //             noalias(ind->FastGetSolutionStepValue(ADVPROJ)) = ZeroVector(3);
 
-                //std::cout << rCurrentElement->Id() << " RHS = " << RHS_Contribution << std::endl;
-                (*itElem)->CalculateMassMatrix(mMass[thread_id], CurrentProcessInfo);
-                (*itElem)->CalculateLocalVelocityContribution(mDamp[thread_id], RHS_Contribution, CurrentProcessInfo);
+        //             ind->FastGetSolutionStepValue(DIVPROJ) = 0.0;
 
-                (*itElem)->EquationIdVector(EquationId, CurrentProcessInfo);
+        //             ind->FastGetSolutionStepValue(NODAL_AREA) = 0.0;
 
-                //adding the dynamic contributions (statics is already included)
-                AddDynamicsToLHS(LHS_Contribution, mDamp[thread_id], mMass[thread_id], CurrentProcessInfo);
-                AddDynamicsToRHS((*itElem), RHS_Contribution, mDamp[thread_id], mMass[thread_id], CurrentProcessInfo);
 
-                GeometryType& rGeom = (*itElem)->GetGeometry();
-                unsigned int NumNodes = rGeom.PointsNumber();
-                unsigned int Dimension = rGeom.WorkingSpaceDimension();
+        //         }//end of loop over nodes
 
-                unsigned int index = 0;
-                for (unsigned int i = 0; i < NumNodes; i++)
-                {
-                    auto& reaction = rGeom[i].FastGetSolutionStepValue(REACTION);
+        //         //loop on nodes to compute ADVPROJ   CONVPROJ NODALAREA
+        //         array_1d<double, 3 > output = ZeroVector(3);
 
-                    double& target_value0 = reaction[0];
-                    const double& origin_value0 = RHS_Contribution[index++];
-                    #pragma omp atomic
-                    target_value0 -= origin_value0;
+        //         const int nel = static_cast<int>(rModelPart.Elements().size());
+        //         auto elbegin = rModelPart.ElementsBegin();
+        //         #pragma omp parallel for firstprivate(elbegin,nel,output)
+        //         for(int i=0; i<nel; ++i)
+        //         {
+        //             auto elem = elbegin + i;
+        //             elem->Calculate(ADVPROJ, output, CurrentProcessInfo);
+        //         }
 
-                    double& target_value1 = reaction[1];
-                    const double& origin_value1 = RHS_Contribution[index++];
-                    #pragma omp atomic
-                    target_value1 -= origin_value1;
+        //         rModelPart.GetCommunicator().AssembleCurrentData(NODAL_AREA);
+        //         rModelPart.GetCommunicator().AssembleCurrentData(DIVPROJ);
+        //         rModelPart.GetCommunicator().AssembleCurrentData(ADVPROJ);
 
-                    if (Dimension == 3)
-                    {
-                      double& target_value2 = reaction[2];
-                      const double& origin_value2 = RHS_Contribution[index++];
-                      #pragma omp atomic
-                      target_value2 -= origin_value2;
-                    }
-            //        rGeom[i].FastGetSolutionStepValue(REACTION_X,0) -= RHS_Contribution[index++];
-             //          rGeom[i].FastGetSolutionStepValue(REACTION_Y,0) -= RHS_Contribution[index++];
-            //        if (Dimension == 3) rGeom[i].FastGetSolutionStepValue(REACTION_Z,0) -= RHS_Contribution[index++];
-                    index++; // skip pressure dof
-                }
-            }
+        //         // Correction for periodic conditions
+        //         this->PeriodicConditionProjectionCorrection(rModelPart);
 
-            rModelPart.GetCommunicator().AssembleCurrentData(REACTION);
+        //         #pragma omp parallel for firstprivate(nbegin,nnodes)
+        //         for(int i=0; i<nnodes; ++i)
+        //         {
+        //             auto ind = nbegin + i;
+        //             if (ind->FastGetSolutionStepValue(NODAL_AREA) == 0.0)
+        //             {
+        //                 ind->FastGetSolutionStepValue(NODAL_AREA) = 1.0;
+        //                 //KRATOS_WATCH("*********ATTENTION: NODAL AREA IS ZERRROOOO************");
+        //             }
+        //             const double Area = ind->FastGetSolutionStepValue(NODAL_AREA);
+        //             ind->FastGetSolutionStepValue(ADVPROJ) /= Area;
+        //             ind->FastGetSolutionStepValue(DIVPROJ) /= Area;
+        //         }
+        //     }
+        // }
 
-            // Base scheme calls FinalizeSolutionStep method of elements and conditions
-            Scheme<TSparseSpace, TDenseSpace>::FinalizeSolutionStep(rModelPart, A, Dx, b);
-        }
+        // void FinalizeSolutionStep(ModelPart &rModelPart, TSystemMatrixType &A, TSystemVectorType &Dx, TSystemVectorType &b) override
+        // {
+        //     Element::EquationIdVectorType EquationId;
+        //     LocalSystemVectorType RHS_Contribution;
+        //     LocalSystemMatrixType LHS_Contribution;
+        //     ProcessInfo& CurrentProcessInfo = rModelPart.GetProcessInfo();
+
+        //     //for (ModelPart::NodeIterator itNode = rModelPart.NodesBegin(); itNode != rModelPart.NodesEnd(); ++itNode)
+
+        //     #pragma omp parallel for
+        //     for(int k = 0; k<static_cast<int>(rModelPart.Nodes().size()); k++)
+        //     {
+        //         auto itNode = rModelPart.NodesBegin() + k;
+        //         (itNode->FastGetSolutionStepValue(REACTION)).clear();
+
+        //         // calculating relaxed acceleration
+        //         const array_1d<double, 3 > & CurrentAcceleration = (itNode)->FastGetSolutionStepValue(ACCELERATION, 0);
+        //         const array_1d<double, 3 > & OldAcceleration = (itNode)->FastGetSolutionStepValue(ACCELERATION, 1);
+        //         const array_1d<double, 3> relaxed_acceleration = (1 - mAlphaBossak) * CurrentAcceleration
+        //                                                             + mAlphaBossak * OldAcceleration;
+        //         (itNode)->SetValue(RELAXED_ACCELERATION, relaxed_acceleration);
+        //     }
+
+        //     //for (ModelPart::ElementsContainerType::ptr_iterator itElem = rModelPart.Elements().ptr_begin(); itElem != rModelPart.Elements().ptr_end(); ++itElem)
+
+        //     #pragma omp parallel for firstprivate(EquationId,RHS_Contribution,LHS_Contribution)
+        //     for(int k = 0; k<static_cast<int>(rModelPart.Elements().size()); k++)
+        //     {
+        //         auto itElem = rModelPart.Elements().ptr_begin()+k;
+        //         int thread_id = OpenMPUtils::ThisThread();
+
+        //         (*itElem)->InitializeNonLinearIteration(CurrentProcessInfo);
+        //         //KRATOS_WATCH(LHS_Contribution);
+        //         //basic operations for the element considered
+        //         (*itElem)->CalculateLocalSystem(LHS_Contribution, RHS_Contribution, CurrentProcessInfo);
+
+        //         //std::cout << rCurrentElement->Id() << " RHS = " << RHS_Contribution << std::endl;
+        //         (*itElem)->CalculateMassMatrix(mMass[thread_id], CurrentProcessInfo);
+        //         (*itElem)->CalculateLocalVelocityContribution(mDamp[thread_id], RHS_Contribution, CurrentProcessInfo);
+
+        //         (*itElem)->EquationIdVector(EquationId, CurrentProcessInfo);
+
+        //         //adding the dynamic contributions (statics is already included)
+        //         AddDynamicsToLHS(LHS_Contribution, mDamp[thread_id], mMass[thread_id], CurrentProcessInfo);
+        //         AddDynamicsToRHS((*itElem), RHS_Contribution, mDamp[thread_id], mMass[thread_id], CurrentProcessInfo);
+
+        //         GeometryType& rGeom = (*itElem)->GetGeometry();
+        //         unsigned int NumNodes = rGeom.PointsNumber();
+        //         unsigned int Dimension = rGeom.WorkingSpaceDimension();
+
+        //         unsigned int index = 0;
+        //         for (unsigned int i = 0; i < NumNodes; i++)
+        //         {
+        //             auto& reaction = rGeom[i].FastGetSolutionStepValue(REACTION);
+
+        //             double& target_value0 = reaction[0];
+        //             const double& origin_value0 = RHS_Contribution[index++];
+        //             #pragma omp atomic
+        //             target_value0 -= origin_value0;
+
+        //             double& target_value1 = reaction[1];
+        //             const double& origin_value1 = RHS_Contribution[index++];
+        //             #pragma omp atomic
+        //             target_value1 -= origin_value1;
+
+        //             if (Dimension == 3)
+        //             {
+        //               double& target_value2 = reaction[2];
+        //               const double& origin_value2 = RHS_Contribution[index++];
+        //               #pragma omp atomic
+        //               target_value2 -= origin_value2;
+        //             }
+        //     //        rGeom[i].FastGetSolutionStepValue(REACTION_X,0) -= RHS_Contribution[index++];
+        //      //          rGeom[i].FastGetSolutionStepValue(REACTION_Y,0) -= RHS_Contribution[index++];
+        //     //        if (Dimension == 3) rGeom[i].FastGetSolutionStepValue(REACTION_Z,0) -= RHS_Contribution[index++];
+        //             index++; // skip pressure dof
+        //         }
+        //     }
+
+        //     rModelPart.GetCommunicator().AssembleCurrentData(REACTION);
+
+        //     // Base scheme calls FinalizeSolutionStep method of elements and conditions
+        //     Scheme<TSparseSpace, TDenseSpace>::FinalizeSolutionStep(rModelPart, A, Dx, b);
+        // }
 
         //************************************************************************************************
         //************************************************************************************************
@@ -670,6 +616,88 @@ namespace Kratos {
         /*@{ */
 
 
+        /** On periodic boundaries, the nodal area and the values to project need to take into account contributions from elements on
+         * both sides of the boundary. This is done using the conditions and the non-historical nodal data containers as follows:\n
+         * 1- The partition that owns the PeriodicCondition adds the values on both nodes to their non-historical containers.\n
+         * 2- The non-historical containers are added across processes, communicating the right value from the condition owner to all partitions.\n
+         * 3- The value on all periodic nodes is replaced by the one received in step 2.
+         */
+        // void PeriodicConditionProjectionCorrection(ModelPart& rModelPart)
+        // {
+        //     const int num_nodes = rModelPart.NumberOfNodes();
+        //     const int num_conditions = rModelPart.NumberOfConditions();
+
+        //     #pragma omp parallel for
+        //     for (int i = 0; i < num_nodes; i++) {
+        //         auto it_node = rModelPart.NodesBegin() + i;
+
+        //         it_node->SetValue(NODAL_AREA,0.0);
+        //         it_node->SetValue(ADVPROJ,ZeroVector(3));
+        //         it_node->SetValue(DIVPROJ,0.0);
+        //     }
+
+        //     #pragma omp parallel for
+        //     for (int i = 0; i < num_conditions; i++) {
+        //         auto it_cond = rModelPart.ConditionsBegin() + i;
+
+        //         if(it_cond->Is(PERIODIC)) {
+        //             this->AssemblePeriodicContributionToProjections(it_cond->GetGeometry());
+        //         }
+        //     }
+
+        //     rModelPart.GetCommunicator().AssembleNonHistoricalData(NODAL_AREA);
+        //     rModelPart.GetCommunicator().AssembleNonHistoricalData(ADVPROJ);
+        //     rModelPart.GetCommunicator().AssembleNonHistoricalData(DIVPROJ);
+
+        //     #pragma omp parallel for
+        //     for (int i = 0; i < num_nodes; i++) {
+        //         auto it_node = rModelPart.NodesBegin() + i;
+        //         this->CorrectContributionsOnPeriodicNode(*it_node);
+        //     }
+        // }
+
+        // void AssemblePeriodicContributionToProjections(Geometry< Node<3> >& rGeometry)
+        // {
+        //     unsigned int nodes_in_cond = rGeometry.PointsNumber();
+
+        //     double nodal_area = 0.0;
+        //     array_1d<double,3> momentum_projection = ZeroVector(3);
+        //     double mass_projection = 0.0;
+        //     for ( unsigned int i = 0; i < nodes_in_cond; i++ )
+        //     {
+        //         auto& r_node = rGeometry[i];
+        //         nodal_area += r_node.FastGetSolutionStepValue(NODAL_AREA);
+        //         noalias(momentum_projection) += r_node.FastGetSolutionStepValue(ADVPROJ);
+        //         mass_projection += r_node.FastGetSolutionStepValue(DIVPROJ);
+        //     }
+
+        //     for ( unsigned int i = 0; i < nodes_in_cond; i++ )
+        //     {
+        //         auto& r_node = rGeometry[i];
+        //         /* Note that this loop is expected to be threadsafe in normal conditions,
+        //         * since each node should belong to a single periodic link. However, I am
+        //         * setting the locks for openmp in case that we try more complicated things
+        //         * in the future (like having different periodic conditions for different
+        //         * coordinate directions).
+        //         */
+        //         r_node.SetLock();
+        //         r_node.GetValue(NODAL_AREA) = nodal_area;
+        //         noalias(r_node.GetValue(ADVPROJ)) = momentum_projection;
+        //         r_node.GetValue(DIVPROJ) = mass_projection;
+        //         r_node.UnSetLock();
+        //     }
+        // }
+
+        // void CorrectContributionsOnPeriodicNode(Node<3>& rNode)
+        // {
+        //     if (rNode.GetValue(NODAL_AREA) != 0.0) // Only periodic nodes will have a non-historical NODAL_AREA set.
+        //     {
+        //         rNode.FastGetSolutionStepValue(NODAL_AREA) = rNode.GetValue(NODAL_AREA);
+        //         noalias(rNode.FastGetSolutionStepValue(ADVPROJ)) = rNode.GetValue(ADVPROJ);
+        //         rNode.FastGetSolutionStepValue(DIVPROJ) = rNode.GetValue(DIVPROJ);
+        //     }
+        // }
+
         /*@} */
         /**@name Protected  Access */
         /*@{ */
@@ -699,7 +727,9 @@ namespace Kratos {
 
         CoordinateTransformationUtils<LocalSystemMatrixType,LocalSystemVectorType,double> mRotationTool;
 
-        // typename TSparseSpace::DofUpdaterPointerType mpDofUpdater = TSparseSpace::CreateDofUpdater(); //TODO: delete
+        // const Variable<int>& mrPeriodicIdVar;
+
+        // Process::Pointer mpTurbulenceModel;
 
         /*@} */
         /**@name Private Operators*/

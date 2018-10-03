@@ -496,7 +496,7 @@ class SolutionScheme : public Flags
    * @brief This function is designed to move the mesh
    * @note Be careful it just consider displacements, derive this method to adapt to your own strategies (ALE, FSI, etc...)
    */
-  virtual void MoveMesh(ModelPart& rModelPart)
+  virtual void MoveMesh(ModelPart& rModelPart, const std::string MoveMeshVariableName = "DISPLACEMENT")
   {
     KRATOS_TRY
 
@@ -511,7 +511,7 @@ class SolutionScheme : public Flags
       for(typename IntegrationMethodsVectorType::iterator it=mTimeVectorIntegrationMethods.begin();
           it!=mTimeVectorIntegrationMethods.end(); ++it)
       {
-        if( "DISPLACEMENT" == (*it)->GetVariableName() ){
+        if( MoveMeshVariableName == (*it)->GetVariableName() ){
           DisplacementIntegration = true;
           break;
         }
@@ -523,13 +523,15 @@ class SolutionScheme : public Flags
         const int nnodes = rModelPart.NumberOfNodes();
         ModelPart::NodesContainerType::iterator it_begin = rModelPart.NodesBegin();
 
+        Variable<array_1d<double,3>> MoveMeshVariable = KratosComponents< Variable<array_1d<double,3> > >::Get(MoveMeshVariableName);
+
 #pragma omp parallel for
         for(int i = 0; i<nnodes; i++)
         {
           ModelPart::NodesContainerType::iterator it_node = it_begin + i;
 
           noalias(it_node->Coordinates()) = it_node->GetInitialPosition().Coordinates();
-          noalias(it_node->Coordinates()) += it_node->FastGetSolutionStepValue(DISPLACEMENT);
+          noalias(it_node->Coordinates()) += it_node->FastGetSolutionStepValue(MoveMeshVariable);
         }
 
       }
