@@ -13,13 +13,8 @@
 // System includes
 
 // External includes
-#include "boost/smart_ptr.hpp"
 
 // Project includes
-#include "includes/serializer.h"
-#include "includes/ublas_interface.h"
-#include "includes/variables.h"
-#include "includes/constitutive_law.h"
 #include "includes/element.h"
 #include "utilities/beam_math_utilities.hpp"
 
@@ -55,14 +50,6 @@ public:
 
     ///@name Type Definitions
     ///@{
-    ///Reference type definition for constitutive laws
-    typedef ConstitutiveLaw                          ConstitutiveLawType;
-    ///Pointer type for constitutive laws
-    typedef ConstitutiveLawType::Pointer      ConstitutiveLawPointerType;
-    ///StressMeasure from constitutive laws
-    typedef ConstitutiveLawType::StressMeasure         StressMeasureType;
-    ///Type definition for integration methods
-    typedef GeometryData::IntegrationMethod            IntegrationMethod;
     ///Type definition for beam utilities
     typedef BeamMathUtils<double>                      BeamMathUtilsType;
     ///Type definition for quaternion
@@ -386,7 +373,7 @@ public:
     ///@name Input and output
     ///@{
     /// Turn back information as a string.
-    virtual std::string Info() const override
+    std::string Info() const override
     {
         std::stringstream buffer;
         buffer << "Rigid Body Element #" << Id();
@@ -394,13 +381,13 @@ public:
     }
 
     /// Print information about this object.
-    virtual void PrintInfo(std::ostream& rOStream) const override
+    void PrintInfo(std::ostream& rOStream) const override
     {
         rOStream << "Rigid Body Element #" << Id();
     }
 
     /// Print object's data.
-    virtual void PrintData(std::ostream& rOStream) const override
+    void PrintData(std::ostream& rOStream) const override
     {
       GetGeometry().PrintData(rOStream);
     }
@@ -433,12 +420,6 @@ protected:
     ///@name Protected Operations
     ///@{
 
-
-    /**
-     * Calculates the elemental contributions
-     */
-    virtual void CalculateElementalSystem(LocalSystemComponents& rLocalSystem,
-                                          ProcessInfo& rCurrentProcessInfo);
     
     /**
      * Calculates the elemental dynamic contributions
@@ -507,6 +488,12 @@ protected:
 					   ElementVariables& rVariables);
 
 
+    /**
+      * Calculation of the time integration parameters
+      */
+    virtual void GetTimeIntegrationParameters(double& rP0,double& rP1,double& rP2,
+                                              const ProcessInfo& rCurrentProcessInfo);
+    
     /**
      * Calculation of the Volume Force of the Element
      */
