@@ -81,7 +81,7 @@ class KRATOS_API(DELAUNAY_MESHING_APPLICATION) QhullTriangularMesh2DMesher
 {
 protected:
 
-    enum QhullErrors {INPUT_MEMORY_ERROR=1, INTERNAL_ERROR=2, INVALID_GEOMETRY_ERROR=3};
+    enum class QhullError {INPUT_MEMORY_ERROR=1, INTERNAL_ERROR=2, INVALID_GEOMETRY_ERROR=3};
 
 public:
 
@@ -111,12 +111,12 @@ public:
       int exitcode, numpoints, dim;
       coordT *points;
       boolT ismalloc;
-      
+
       qh_init_A(stdin, stdout, stderr, argc, argv);
 
       exitcode= setjmp(qh errexit); /* simple statement for CRAY J916 */
 
-     
+
       if (!exitcode) {
         qh NOerrexit = False;
         qh_option("delaunay  Qbbound-last", NULL, NULL);
@@ -299,5 +299,3 @@ private:
 }  // namespace Kratos.
 
 #endif // KRATOS_QHULL_TRIANGULAR_MESH_2D_MESHER_H_INCLUDED  defined
-
-
