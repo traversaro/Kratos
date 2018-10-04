@@ -65,7 +65,7 @@ namespace Kratos
     typedef typename BaseType::SolutionSchemePointerType                  BasePointerType;
     typedef typename BaseType::LocalFlagType                                LocalFlagType;
 
-    typedef StaticScheme<TSparseSpace,TDenseSpace>                           DerivedType;
+    typedef StaticScheme<TSparseSpace,TDenseSpace>                            DerivedType;
 
     typedef typename BaseType::NodeType                                          NodeType;
     typedef typename BaseType::DofsArrayType                                DofsArrayType;
@@ -157,8 +157,8 @@ namespace Kratos
     ///@{
 
     /**
-    this is the place to initialize the Scheme.
-    This is intended to be called just once when the strategy is initialized
+     * @brief Performs all the required operations that should be done (for each step) before solving the solution step.
+     * @details This is intended to be called just once when the strategy is initialized
      */
     void Initialize(ModelPart& rModelPart) override
     {
