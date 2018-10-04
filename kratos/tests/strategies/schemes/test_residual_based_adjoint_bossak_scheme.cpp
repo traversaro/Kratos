@@ -574,7 +574,7 @@ std::ostream& operator<<(std::ostream& os, const Vector& v)
     return os;
 }
 
-KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, KratosCoreSchemesFastSuite2)
+KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, KratosCoreSchemesFastSuite)
 {
     using namespace NonLinearMassSpringDamper;
     using namespace Solvers;
