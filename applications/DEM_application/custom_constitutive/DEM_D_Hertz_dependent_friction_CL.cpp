@@ -87,7 +87,7 @@ namespace Kratos {
                 if (element1->mNeighbourContactRadius[i] > equiv_radius) {
                     equiv_radius = element1->mNeighbourContactRadius[i];
                     indentation = element1->mNeighbourIndentation[i] + (indentation - previous_indentation);
-                    if (indentation < 0.0) indentation = 0.0;
+                    if (indentation < 0.0) element1->mNeighbourIndentation[i] = indentation = 0.0;
                 }
                 break;
             }
@@ -232,7 +232,7 @@ namespace Kratos {
                 if (element->mNeighbourRigidContactRadius[i] > effective_radius) {
                     effective_radius = element->mNeighbourRigidContactRadius[i];
                     indentation = element->mNeighbourRigidIndentation[i] + (indentation - previous_indentation);
-                    if (indentation < 0.0) indentation = 0.0;
+                    if (indentation < 0.0) element->mNeighbourRigidIndentation[i] = indentation = 0.0;
                 }
                 break;
             }
