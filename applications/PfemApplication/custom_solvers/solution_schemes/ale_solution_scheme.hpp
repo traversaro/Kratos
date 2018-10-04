@@ -119,6 +119,8 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
 
     DerivedType::Initialize(rModelPart);
 
+    const SizeType dimension = rModelPart.GetProcessInfo()[SPACE_DIMENSION];
+    
     // Set dofs size
     unsigned int DofsSize = 0;
     for(typename IntegrationMethodsVectorType::iterator it=mTimeVectorIntegrationMethods.begin();

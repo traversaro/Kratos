@@ -284,7 +284,7 @@ class SlipCoordinateTransformation
   /// Transform nodal velocities to the rotated coordinates (aligned with each node's normal)
   virtual void RotateVelocities(ModelPart& rModelPart) const
   {
-    const SizeType dimension = rModelPart.ProcessInfo()[SPACE_DIMENSION];
+    const SizeType dimension = rModelPart.GetProcessInfo()[SPACE_DIMENSION];
 
     TLocalVectorType Vel(dimension);
     TLocalVectorType Tmp(dimension);
