@@ -25,7 +25,7 @@
 #include "solving_strategies/convergencecriterias/residual_criteria.h"
 #include "linear_solvers/skyline_lu_custom_scalar_solver.h"
 #include "spaces/ublas_space.h"
-#include "solving_strategies/schemes/residual_based_adjoint_static_scheme.h"
+#include "solving_strategies/schemes/residual_based_adjoint_bossak_scheme.h"
 #include "response_functions/sensitivity_builder.h"
 
 // Application includes
@@ -84,8 +84,8 @@ private:
         (*p_prop)[DENSITY] = 1000.0;
         (*p_prop)[YOUNG_MODULUS] = 1400000.0;
         (*p_prop)[POISSON_RATIO] = 0.2;
-        (*p_prop)[RAYLEIGH_ALPHA] = 0.02;
-        (*p_prop)[RAYLEIGH_BETA] = 0.03;
+        (*p_prop)[RAYLEIGH_ALPHA] = 0.; // 0.02;
+        (*p_prop)[RAYLEIGH_BETA] = 0.;  // 0.03;
     }
 
     void CreateElements()
@@ -156,6 +156,9 @@ class AdjointModelPartFactory
             mrAdjointModelPart.GetNodalSolutionStepVariablesList() =
                 mrPrimalModelPart.GetNodalSolutionStepVariablesList();
             mrAdjointModelPart.AddNodalSolutionStepVariable(ADJOINT_DISPLACEMENT);
+            mrAdjointModelPart.AddNodalSolutionStepVariable(ADJOINT_FLUID_VECTOR_2);
+            mrAdjointModelPart.AddNodalSolutionStepVariable(ADJOINT_FLUID_VECTOR_3);
+            mrAdjointModelPart.AddNodalSolutionStepVariable(AUX_ADJOINT_FLUID_VECTOR_1);
             mrAdjointModelPart.AddNodalSolutionStepVariable(SHAPE_SENSITIVITY);
         }
 
@@ -273,10 +276,10 @@ struct PrimalSolverFactory
         LinearSolverType::Pointer p_linear_solver =
             Kratos::make_shared<SkylineLUCustomScalarSolver<SparseSpaceType, LocalSpaceType>>();
         SchemeType::Pointer p_scheme =
-            Kratos::make_shared<ResidualBasedBossakDisplacementScheme<SparseSpaceType, LocalSpaceType>>(-0.3);
+            Kratos::make_shared<ResidualBasedBossakDisplacementScheme<SparseSpaceType, LocalSpaceType>>(0.0);
         ConvergenceCriteriaType::Pointer p_conv_criteria =
             Kratos::make_shared<ResidualCriteria<SparseSpaceType, LocalSpaceType>>(
-                1e-12, 1e-14);
+                1e-24, 1e-25);
         return Kratos::make_shared<ResidualBasedNewtonRaphsonStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>>(
             rModelPart, p_scheme, p_linear_solver, p_conv_criteria, 30, true, false, true);
     }
@@ -288,32 +291,30 @@ AdjointResponseFunction::Pointer ResponseFunctionFactory(ModelPart& rModelPart)
             "direction": [0.0, 1.0, 0.0]})"), rModelPart);
 }
 
-// struct AdjointSolverFactory
-// {
-//     typedef UblasSpace<double, CompressedMatrix, Vector> SparseSpaceType;
-//     typedef UblasSpace<double, Matrix, Vector> LocalSpaceType;
-//     typedef LinearSolver<SparseSpaceType, LocalSpaceType> LinearSolverType;
-//     typedef Scheme<SparseSpaceType, LocalSpaceType> SchemeType;
-//     typedef ConvergenceCriteria<SparseSpaceType, LocalSpaceType> ConvergenceCriteriaType;
-//     typedef SolvingStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType> SolvingStrategyType;
+struct AdjointSolverFactory
+{
+    typedef UblasSpace<double, CompressedMatrix, Vector> SparseSpaceType;
+    typedef UblasSpace<double, Matrix, Vector> LocalSpaceType;
+    typedef LinearSolver<SparseSpaceType, LocalSpaceType> LinearSolverType;
+    typedef Scheme<SparseSpaceType, LocalSpaceType> SchemeType;
+    typedef ConvergenceCriteria<SparseSpaceType, LocalSpaceType>
+    ConvergenceCriteriaType;
+    typedef SolvingStrategy<SparseSpaceType, LocalSpaceType,
+    LinearSolverType> SolvingStrategyType;
 
-//     SolvingStrategyType::Pointer Execute(ModelPart& rModelPart, AdjointResponseFunction::Pointer pResponseFunction)
-//     {
-//         LinearSolverType::Pointer p_linear_solver =
-//             Kratos::make_shared<SkylineLUCustomScalarSolver<SparseSpaceType, LocalSpaceType>>();
-//         Parameters default_parameters(R"({
-//             "alpha_bossak": -0.3,
-//             "velocity_update_adjoint_variable": "ADJOINT_FLUID_VECTOR_2",
-//             "acceleration_update_adjoint_variable": "ADJOINT_FLUID_VECTOR_3",
-//             "auxiliary_variable": "AUX_ADJOINT_FLUID_VECTOR_1"
-//         })");
-//         SchemeType::Pointer p_adjoint_scheme =
-//             Kratos::make_shared<ResidualBasedAdjointBossakScheme<SparseSpaceType, LocalSpaceType>>(
-//                 pResponseFunction);
-//         return Kratos::make_shared<ResidualBasedLinearStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>>(
-//             rModelPart, p_adjoint_scheme, p_linear_solver);
-//     }
-// };
+    static SolvingStrategyType::Pointer Execute(ModelPart& rModelPart,
+                                                AdjointResponseFunction::Pointer pResponseFunction)
+    {
+        LinearSolverType::Pointer p_linear_solver =
+            Kratos::make_shared<SkylineLUCustomScalarSolver<SparseSpaceType, LocalSpaceType>>();
+        Parameters settings(R"({ "alpha_bossak": 0.0 })");
+        SchemeType::Pointer p_adjoint_scheme =
+            Kratos::make_shared<ResidualBasedAdjointBossakScheme<SparseSpaceType, LocalSpaceType>>(
+                settings, pResponseFunction);
+        return Kratos::make_shared<ResidualBasedLinearStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>>(
+            rModelPart, p_adjoint_scheme, p_linear_solver);
+    }
+};
 }
 
 double CalculateResponseValue(unsigned NodeToPerturb, char Direction, double Perturbation)
@@ -329,13 +330,17 @@ double CalculateResponseValue(unsigned NodeToPerturb, char Direction, double Per
     p_response_function->Initialize();
     p_solver->Initialize();
     double response_value = 0.;
-    primal_model_part.CloneTimeStep(0.);
-    primal_model_part.CloneTimeStep(0.008);
-    for (double time = 0.016; time < 0.025; time+=0.008) // approx. 1/4 of a period.
+    const double start_time = 0.0;
+    const double delta_time = 0.016;
+    const double end_time = 0.015;
+    primal_model_part.CloneTimeStep(start_time - delta_time);
+    primal_model_part.CloneTimeStep(start_time);
+    for (double current_time = start_time; current_time < end_time;) // approx. 1/4 of a period.
     {
-        primal_model_part.CloneTimeStep(time);
+        current_time += delta_time;
+        primal_model_part.CloneTimeStep(current_time);
         p_solver->Solve();
-        response_value += 0.008 * p_response_function->CalculateValue();
+        response_value += delta_time * p_response_function->CalculateValue();
     }
     return response_value;
 }
@@ -346,37 +351,55 @@ double CalculateSensitivity(unsigned NodeToPerturb, char Direction)
     PrimalModelPartFactory(primal_model_part).Execute();
     auto p_solver = PrimalSolverFactory().Execute(primal_model_part);
     p_solver->Initialize();
-    primal_model_part.CloneTimeStep(0.);
-    primal_model_part.CloneTimeStep(0.008);
-    for (double time = 0.016; time < 0.025; time+=0.008) // approx. 1/4 of a period.
+    const double start_time = 0.0;
+    const double delta_time = 0.016;
+    const double end_time = 0.015;
+    primal_model_part.CloneTimeStep(start_time - delta_time);
+    primal_model_part.CloneTimeStep(start_time);
+    for (double current_time = start_time;
+         current_time < end_time;) // approx. 1/4 of a period.
     {
-        primal_model_part.CloneTimeStep(time);
+        current_time += delta_time;
+        primal_model_part.CloneTimeStep(current_time);
         p_solver->Solve();
     }
 
     ModelPart adjoint_model_part("adjoint");
     AdjointModelPartFactory(primal_model_part, adjoint_model_part).Execute();
     auto p_response_function = ResponseFunctionFactory(adjoint_model_part);
-    // TODO: Create adjoint solver, solve 2 steps of transient adjoint and return sensitivity.
-    return 0.0;
+    auto p_adjoint_solver =
+        AdjointSolverFactory::Execute(adjoint_model_part, p_response_function);
+    p_adjoint_solver->Initialize();
+    SensitivityBuilder sensitivity_builder(
+        Parameters(R"({"nodal_sensitivity_variables": ["SHAPE_SENSITIVITY"], "integrate_in_time": true})"),
+        adjoint_model_part, p_response_function);
+    sensitivity_builder.Initialize();
+    adjoint_model_part.CloneTimeStep(end_time + delta_time);
+    adjoint_model_part.CloneTimeStep(end_time);
+    for (auto& r_adjoint_node : adjoint_model_part.Nodes())
+    {
+        const auto& r_primal_node = primal_model_part.GetNode(r_adjoint_node.Id());
+        r_adjoint_node.FastGetSolutionStepValue(DISPLACEMENT) = r_primal_node.FastGetSolutionStepValue(DISPLACEMENT);
+        r_adjoint_node.FastGetSolutionStepValue(VELOCITY) = r_primal_node.FastGetSolutionStepValue(VELOCITY);
+        r_adjoint_node.FastGetSolutionStepValue(ACCELERATION) = r_primal_node.FastGetSolutionStepValue(ACCELERATION);
+    }
+    p_adjoint_solver->Solve();
+    sensitivity_builder.UpdateSensitivities();
+    auto& r_node = adjoint_model_part.GetNode(NodeToPerturb);
+    double sensitivity{};
+    if (Direction == 'x')
+        sensitivity = r_node.FastGetSolutionStepValue(SHAPE_SENSITIVITY_X);
+    else if (Direction == 'y')
+        sensitivity = r_node.FastGetSolutionStepValue(SHAPE_SENSITIVITY_Y);
+    else
+        KRATOS_ERROR << "Invalid Direction: " << Direction << std::endl;
+    return sensitivity;
 }
 
 KRATOS_TEST_CASE_IN_SUITE(TotalLagrangian2D3_SensitivityTransientOneElement, KratosStructuralMechanicsFastSuite)
 {
-    // Compute adjoint solution.
-    // ModelPart adjoint_model_part("adjoint");
-    // AdjointModelPartFactory(primal_model_part, adjoint_model_part).Execute();
-    // auto p_adjoint_response_function = ResponseFunctionFactory(adjoint_model_part);
-    // auto p_adjoint_solver =
-    //     AdjointSolverFactory().Execute(adjoint_model_part, p_adjoint_response_function);
-    // p_adjoint_solver->Initialize();
-    // p_adjoint_solver->Solve();
-    // SensitivityBuilder sensitivity_builder(
-    //     Parameters(R"({"integrate_in_time": false})"), adjoint_model_part, p_adjoint_response_function);
-    // sensitivity_builder.Initialize();
-    // sensitivity_builder.UpdateSensitivities();
-    // Compare with finite difference sensitivity.
-    const double delta = 1e-7;
+    std::vector<double> fd_sensitivities, adjoint_sensitivities;
+    const double delta = 1e-5;
     const double response_value0 = CalculateResponseValue(1, 'x', 0.);
     KRATOS_WATCH(response_value0);
     for (unsigned i_node : {1, 2, 3})
@@ -386,13 +409,25 @@ KRATOS_TEST_CASE_IN_SUITE(TotalLagrangian2D3_SensitivityTransientOneElement, Kra
             const double response_value1 = CalculateResponseValue(i_node, d, delta);
             const double finite_diff_sensitivity =
                 (response_value1 - response_value0) / delta;
-            KRATOS_WATCH(finite_diff_sensitivity);
-            // const double adjoint_sensitivity =
-            //     adjoint_model_part.GetNode(r_node.Id()).FastGetSolutionStepValue(SHAPE_SENSITIVITY)[d];
-            // KRATOS_CHECK_NEAR(finite_diff_sensitivity, adjoint_sensitivity,
-            // 1e-8);
+            const double adjoint_sensitivity = CalculateSensitivity(i_node, d);
+            fd_sensitivities.push_back(finite_diff_sensitivity);
+            adjoint_sensitivities.push_back(adjoint_sensitivity);
         }
     }
+    for (std::size_t i = 0; i < fd_sensitivities.size(); ++i)
+    {
+        KRATOS_CHECK_NEAR(adjoint_sensitivities.at(i), fd_sensitivities.at(i), 1e-8);
+    }
+    std::cout << "FD Sensitivity Values:\n";
+    std::cout << std::setprecision(12);
+    std::cout << std::fixed << std::scientific;
+    for (auto s : fd_sensitivities)
+        std::cout << s << std::endl;
+    std::cout << "Adjoint Sensitivity Values:\n";
+    std::cout << std::setprecision(12);
+    std::cout << std::fixed << std::scientific;
+    for (auto s : adjoint_sensitivities)
+        std::cout << s << std::endl;
 }
 }
 }
