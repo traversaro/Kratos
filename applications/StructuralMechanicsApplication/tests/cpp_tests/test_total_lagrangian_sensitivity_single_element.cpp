@@ -328,7 +328,8 @@ KRATOS_TEST_CASE_IN_SUITE(TotalLagrangian2D3_SensitivityOneElement, KratosStruct
     p_adjoint_solver->Initialize();
     p_adjoint_solver->Solve();
     SensitivityBuilder sensitivity_builder(
-        Parameters(R"({"integrate_in_time": false})"), adjoint_model_part, p_adjoint_response_function);
+        Parameters(R"({"nodal_sensitivity_variables": ["SHAPE_SENSITIVITY"], "integrate_in_time": false})"),
+        adjoint_model_part, p_adjoint_response_function);
     sensitivity_builder.Initialize();
     sensitivity_builder.UpdateSensitivities();
     // Compare with finite difference sensitivity.
