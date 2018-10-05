@@ -331,11 +331,12 @@ double CalculateResponseValue(unsigned NodeToPerturb, char Direction, double Per
     p_solver->Initialize();
     double response_value = 0.;
     const double start_time = 0.0;
-    const double delta_time = 0.016;
+    const double delta_time = 0.008;
     const double end_time = 0.015;
     primal_model_part.CloneTimeStep(start_time - delta_time);
     primal_model_part.CloneTimeStep(start_time);
-    for (double current_time = start_time; current_time < end_time;) // approx. 1/4 of a period.
+    for (double current_time = start_time;
+         current_time < end_time;) // approx. 1/4 of a period.
     {
         current_time += delta_time;
         primal_model_part.CloneTimeStep(current_time);
@@ -352,7 +353,7 @@ double CalculateSensitivity(unsigned NodeToPerturb, char Direction)
     auto p_solver = PrimalSolverFactory().Execute(primal_model_part);
     p_solver->Initialize();
     const double start_time = 0.0;
-    const double delta_time = 0.016;
+    const double delta_time = 0.008;
     const double end_time = 0.015;
     primal_model_part.CloneTimeStep(start_time - delta_time);
     primal_model_part.CloneTimeStep(start_time);
@@ -380,8 +381,22 @@ double CalculateSensitivity(unsigned NodeToPerturb, char Direction)
     {
         const auto& r_primal_node = primal_model_part.GetNode(r_adjoint_node.Id());
         r_adjoint_node.FastGetSolutionStepValue(DISPLACEMENT) = r_primal_node.FastGetSolutionStepValue(DISPLACEMENT);
+        r_adjoint_node.X() = r_adjoint_node.X0() + r_adjoint_node.FastGetSolutionStepValue(DISPLACEMENT_X);
+        r_adjoint_node.Y() = r_adjoint_node.Y0() + r_adjoint_node.FastGetSolutionStepValue(DISPLACEMENT_Y);
         r_adjoint_node.FastGetSolutionStepValue(VELOCITY) = r_primal_node.FastGetSolutionStepValue(VELOCITY);
         r_adjoint_node.FastGetSolutionStepValue(ACCELERATION) = r_primal_node.FastGetSolutionStepValue(ACCELERATION);
+    }
+    p_adjoint_solver->Solve();
+    sensitivity_builder.UpdateSensitivities();
+    adjoint_model_part.CloneTimeStep(end_time - delta_time);
+    for (auto& r_adjoint_node : adjoint_model_part.Nodes())
+    {
+        const auto& r_primal_node = primal_model_part.GetNode(r_adjoint_node.Id());
+        r_adjoint_node.FastGetSolutionStepValue(DISPLACEMENT) = r_primal_node.FastGetSolutionStepValue(DISPLACEMENT,1);
+        r_adjoint_node.X() = r_adjoint_node.X0() + r_adjoint_node.FastGetSolutionStepValue(DISPLACEMENT_X);
+        r_adjoint_node.Y() = r_adjoint_node.Y0() + r_adjoint_node.FastGetSolutionStepValue(DISPLACEMENT_Y);
+        r_adjoint_node.FastGetSolutionStepValue(VELOCITY) = r_primal_node.FastGetSolutionStepValue(VELOCITY,1);
+        r_adjoint_node.FastGetSolutionStepValue(ACCELERATION) = r_primal_node.FastGetSolutionStepValue(ACCELERATION,1);
     }
     p_adjoint_solver->Solve();
     sensitivity_builder.UpdateSensitivities();
@@ -416,18 +431,8 @@ KRATOS_TEST_CASE_IN_SUITE(TotalLagrangian2D3_SensitivityTransientOneElement, Kra
     }
     for (std::size_t i = 0; i < fd_sensitivities.size(); ++i)
     {
-        KRATOS_CHECK_NEAR(adjoint_sensitivities.at(i), fd_sensitivities.at(i), 1e-8);
+        KRATOS_CHECK_NEAR(adjoint_sensitivities.at(i), fd_sensitivities.at(i), 1e-9);
     }
-    std::cout << "FD Sensitivity Values:\n";
-    std::cout << std::setprecision(12);
-    std::cout << std::fixed << std::scientific;
-    for (auto s : fd_sensitivities)
-        std::cout << s << std::endl;
-    std::cout << "Adjoint Sensitivity Values:\n";
-    std::cout << std::setprecision(12);
-    std::cout << std::fixed << std::scientific;
-    for (auto s : adjoint_sensitivities)
-        std::cout << s << std::endl;
 }
 }
 }
