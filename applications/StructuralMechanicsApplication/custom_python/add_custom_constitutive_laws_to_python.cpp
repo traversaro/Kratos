@@ -45,6 +45,8 @@
 #include "custom_constitutive/generic_small_strain_viscoplasticity_3d.h"
 #include "custom_constitutive/generic_small_strain_isotropic_plasticity.h"
 #include "custom_constitutive/generic_small_strain_isotropic_damage.h"
+#include "custom_constitutive/test_consta_law.h"
+
 
 // Integrators
 #include "custom_constitutive/constitutive_laws_integrators/generic_constitutive_law_integrator_damage.h"
@@ -164,6 +166,10 @@ void  AddCustomConstitutiveLawsToPython(pybind11::module& m)
 
     class_< ViscousGeneralizedMaxwell<ElasticIsotropic3D>, typename ViscousGeneralizedMaxwell<ElasticIsotropic3D>::Pointer,  ConstitutiveLaw  >
     (m,"ViscousGeneralizedMaxwell3D").def( init<>())
+    ;
+
+    class_< TestConstaLaw, typename TestConstaLaw::Pointer,  ConstitutiveLaw  >
+    (m,"TestConstaLaw").def( init<>())
     ;
 
     // Custom Constitutive Laws Registration
