@@ -267,19 +267,16 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialDerivatives(const 
 // Function that compute derivative of plastic potential g with respect to stress invariants: p, q, and ø
 void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative)
 {
-    double mean_stress_p, deviatoric_q;
-    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(rPrincipalStressVector, mean_stress_p, deviatoric_q);
+    double mean_stress_p, deviatoric_q, lode_angle;
+    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(rPrincipalStressVector, mean_stress_p, deviatoric_q, lode_angle);
     mean_stress_p *= -1.0;  // p is defined negative
-
-    double lode_angle_IP;
-    MPMStressPrincipalInvariantsUtility::CalculateThirdStressInvariant(rImagePointPrincipalStressVector, lode_angle_IP);
 
     // Get material parameters
     const double parameter_A = GetProperties()[MODEL_PARAMETER_A];
     const bool fix_csl_M = GetProperties()[IS_CSL_FIX];
     double shear_M       = GetProperties()[CRITICAL_STATE_LINE];
     if (!fix_csl_M)
-        shear_M = this->CalculateCriticalStateLineSlope(lode_angle_IP);
+        shear_M = this->CalculateCriticalStateLineSlope(lode_angle);
     const double direction_T = this->GetDirectionParameter(rPrincipalStressVector, rImagePointPrincipalStressVector); 
     const double alpha       = this->GetAlphaParameter();
 
@@ -287,9 +284,71 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantDerivativ
     rFirstDerivative[0]  = parameter_A * (shear_M - direction_T * (deviatoric_q/mean_stress_p));
     rFirstDerivative[1]  = direction_T;
     rFirstDerivative[2]  = - direction_T * 3.0/4.0 * deviatoric_q;
-    rFirstDerivative[2] *= (1.0 - std::pow(alpha, 4)) * std::cos(3.0 * lode_angle_IP) / (1.0 + std::pow(alpha, 4) - (1 - std::pow(alpha, 4)) * std::sin(3.0 * lode_angle_IP) );
+    rFirstDerivative[2] *= (1.0 - std::pow(alpha, 4)) * std::cos(3.0 * lode_angle) / (1.0 + std::pow(alpha, 4) - (1 - std::pow(alpha, 4)) * std::sin(3.0 * lode_angle) );
 
 }
+
+// Function that compute second derivative of plastic potential g with respect to principal stresses - results is returned as matrix
+void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialSecondDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Matrix& rSecondDerivative)
+{
+    rSecondDerivative = ZeroMatrix(3);
+
+    // Compute plastic potential derivatives with respect to stress invariants: p, q, and ø
+    Vector invariant_derivatives;
+    this->CalculatePlasticPotentialInvariantDerivatives(rPrincipalStressVector, rImagePointPrincipalStressVector, invariant_derivatives);
+
+    // Compute plastic potential second derivatives with respect to stress invariants: p, q, and ø
+    Vector invariant_second_derivatives;
+    this->CalculatePlasticPotentialInvariantSecondDerivatives(rPrincipalStressVector, rImagePointPrincipalStressVector, invariant_second_derivatives);
+
+    // Compute stress invariant derivatives with respect to current principal stress state
+    Vector dp_dsigma, dq_dsigma, dtheta_dsigma;
+    MPMStressPrincipalInvariantsUtility::CalculateDerivativeVectors(rPrincipalStressVector, dp_dsigma, dq_dsigma, dtheta_dsigma);
+    dp_dsigma *= -1.0; // dp_sigma is defined negative
+
+    // Compute stress invariant second derivatives with respect to current principal stress state
+    Matrix d2p_d2sigma, d2q_d2sigma, d2theta_d2sigma;
+    MPMStressPrincipalInvariantsUtility::CalculateSecondDerivativeMatrices(rPrincipalStressVector, d2p_d2sigma, d2q_d2sigma, d2theta_d2sigma);
+
+    // Compute auxiliary matrices
+    Matrix aux_pp           = ZeroMatrix(3);
+    Matrix aux_qq           = ZeroMatrix(3);
+    Matrix aux_thetatheta   = ZeroMatrix(3);
+    for (unsigned int i=0; i<3; i++)
+    {
+        for (unsigned int j=0; j<3; j++)
+        {
+            aux_pp(i,j)         = dp_dsigma[i] * dp_dsigma[j];
+            aux_qq(i,j)         = dq_dsigma[i] * dq_dsigma[j];
+            aux_thetatheta(i,j) = dtheta_dsigma[i] * dtheta_dsigma[j];
+        }
+}
+
+    // Assemble second derivative matrix (3x3)
+    rSecondDerivative  = invariant_second_derivatives[0] * aux_pp + invariant_derivatives[0] * d2p_d2sigma;
+    rSecondDerivative += invariant_second_derivatives[1] * aux_qq + invariant_derivatives[1] * d2q_d2sigma;
+    rSecondDerivative += invariant_second_derivatives[2] * aux_thetatheta + invariant_derivatives[2] * d2theta_d2sigma;
+}
+
+// Function that compute second derivative of plastic potential g with respect to stress invariants: p, q, and ø
+void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantSecondDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rSecondDerivative)
+{
+    double mean_stress_p, deviatoric_q, lode_angle;
+    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(rPrincipalStressVector, mean_stress_p, deviatoric_q, lode_angle);
+    mean_stress_p *= -1.0;  // p is defined negative
+
+    // Get material parameters
+    const double parameter_A = GetProperties()[MODEL_PARAMETER_A];
+    const double direction_T = this->GetDirectionParameter(rPrincipalStressVector, rImagePointPrincipalStressVector); 
+    const double alpha       = this->GetAlphaParameter();
+
+    rSecondDerivative = ZeroVector(3);
+    rSecondDerivative[0]  = parameter_A * direction_T * deviatoric_q / std::pow(mean_stress_p,2);
+    rSecondDerivative[1]  = 0.0;
+    rSecondDerivative[2]  = direction_T * 9.0/4.0 * deviatoric_q * (1.0 - std::pow(alpha, 4));
+    rSecondDerivative[2] *= ((1.0 + std::pow(alpha, 4)) * std::sin(3.0 * lode_angle) - (1.0 - std::pow(alpha, 4))) / std::pow(((1.0 + std::pow(alpha, 4)) - (1.0 - std::pow(alpha, 4)) * std::sin(3.0 * lode_angle)), 2);
+}
+
 
 // Function that compute elastic matrix D_e
 void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix(const double& rMeanStressP, Matrix& rElasticMatrix)

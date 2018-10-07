@@ -238,6 +238,10 @@ protected:
 
     void CalculatePlasticPotentialInvariantDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rFirstDerivative);
 
+    void CalculatePlasticPotentialSecondDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Matrix& rSecondDerivative);
+
+    void CalculatePlasticPotentialInvariantSecondDerivatives(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector, Vector& rSecondDerivative);
+
 
     double CalculateCriticalStateLineSlope(const double& rLodeAngle);
 
