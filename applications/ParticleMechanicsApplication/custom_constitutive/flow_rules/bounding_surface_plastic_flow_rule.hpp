@@ -169,6 +169,7 @@ protected:
     Vector mPlasticPrincipalStrain;
 
     Vector mPrincipalStressUpdated;
+    Vector mPrincipalStressTrial;
 
     unsigned int mRegion;
     bool mLargeStrainBool;
@@ -181,6 +182,8 @@ protected:
     Vector mPreviousStress;
     Vector mImagePointStress;
     
+    double mPlasticMultiplier;
+
     ///@name Protected static Member Variables
     ///@{
 
@@ -226,6 +229,8 @@ protected:
     void ComputeElasticMatrix(const double& rMeanStressP, Matrix& rElasticMatrix);
 
     void ComputePlasticMatrix(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, Matrix& rPlasticMatrix);
+
+    void CalculateModificationMatrix(Matrix& rModMatrixT);
 
     
     void CalculateLoadingDirection(const Vector& rPrincipalStressVector, Vector& rLoadingDirection);

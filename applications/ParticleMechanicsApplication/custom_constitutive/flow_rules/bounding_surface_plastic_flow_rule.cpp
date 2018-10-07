@@ -494,8 +494,16 @@ void BoundingSurfacePlasticFlowRule::ComputeElastoPlasticTangentMatrix(const Rad
 {
     // TODO: Implementation is not complete!
 
+    // Calculate  the modification matrix t
+    Matrix modification_matrix = IdentityMatrix(6);
+    this->CalculateModificationMatrix( modification_matrix );
+    
+    // Calculate the ElastoPlastic Matrix
+    Matrix D_ep = ZeroMatrix(6,6);
+
     // Compute Consistent Tangent Stiffness matrix in principal space
     Matrix D_elasto_plastic = ZeroMatrix(6,6);
+    D_elasto_plastic = prod(modification_matrix, D_ep);
 
     // Return constitutive matrix from principal space to normal space
     Matrix A = ZeroMatrix(6,6);
@@ -507,6 +515,57 @@ void BoundingSurfacePlasticFlowRule::ComputeElastoPlasticTangentMatrix(const Rad
     aux_mat = prod(A_trans, D_elasto_plastic);
     rConsistMatrix = prod(aux_mat, A);
 
+}
+
+void BoundingSurfacePlasticFlowRule::CalculateModificationMatrix(Matrix& rModMatrixT)
+{
+    // Compute main 3x3 terms
+    Matrix main_mod_3x3 = IdentityMatrix(3);
+    Matrix inv_main_mod_3x3 = ZeroMatrix(3);
+
+    // Calculate plastic potential second derivatives
+    Matrix second_order_terms = ZeroMatrix(3);
+    this->CalculatePlasticPotentialSecondDerivatives(mPrincipalStressUpdated, mImagePointStress, second_order_terms);
+    
+    // Calculate elastic matrix
+    double prev_mean_stress_p, prev_deviatoric_q;
+    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(mPreviousStress, prev_mean_stress_p, prev_deviatoric_q);
+    prev_mean_stress_p *= -1.0; // p is defined negative
+    Matrix elastic_matrix_D_e = ZeroMatrix(3);
+    this->ComputeElasticMatrix(prev_mean_stress_p, elastic_matrix_D_e);
+
+    main_mod_3x3 += mPlasticMultiplier * prod(elastic_matrix_D_e,second_order_terms);
+    double det_main_mod_3x3 = MathUtils<double>::Det(main_mod_3x3);
+    MathUtils<double>::InvertMatrix( main_mod_3x3, inv_main_mod_3x3, det_main_mod_3x3);
+
+    // Assemble main 3x3 terms
+    for(unsigned int i = 0; i<3; i++)
+    {
+        for(unsigned int j = 0; j<3; j++)
+            rModMatrixT(i,j) = inv_main_mod_3x3(i,j);
+    }
+
+    // Compute auxiliary terms
+    Vector inv_aux_T = ZeroVector(3);
+    if(mPrincipalStressUpdated[0] - mPrincipalStressUpdated[1] > 0)
+    {
+        inv_aux_T[0] = (mPrincipalStressUpdated[0] - mPrincipalStressUpdated[1])/(mPrincipalStressTrial[0] - mPrincipalStressTrial[1]);
+    }
+    if(mPrincipalStressUpdated[0] - mPrincipalStressUpdated[2] > 0)
+    {
+        inv_aux_T[1] = (mPrincipalStressUpdated[0] - mPrincipalStressUpdated[2])/(mPrincipalStressTrial[0] - mPrincipalStressTrial[2]);
+    }
+    if(mPrincipalStressUpdated[1] - mPrincipalStressUpdated[2] > 0)
+    {
+        inv_aux_T[2] = (mPrincipalStressUpdated[1] - mPrincipalStressUpdated[2])/(mPrincipalStressTrial[1] - mPrincipalStressTrial[2]);
+    }
+
+    // Assemble auxiliary terms
+    for(unsigned int i = 3; i<6; i++)
+    {
+        int index_i = i-3;
+        rModMatrixT(i,i) = inv_aux_T[index_i];
+    }
 }
 
 void BoundingSurfacePlasticFlowRule::CalculateTransformationMatrix(const Matrix& rMainDirection, Matrix& rA)
