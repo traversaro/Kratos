@@ -164,6 +164,29 @@ namespace Kratos
                   rDJ3 = MathUtils<double>::StrainTensorToVector( t_tensor, rVector.size());
             }
 
+            // Calculate second derivatives of invariants d2I1/d2tensor, d2J2/d2tensor, and d2J3/d2tensor
+            static inline void CalculateTensorInvariantsSecondDerivatives( const Vector& rVector, Matrix& rD2I1, Matrix& rD2J2, Matrix& rD2J3 )
+            {
+                  double i_1, j_2;
+                  CalculateTensorInvariants(rVector, i_1, j_2);
+
+                  // change given vector to tensor
+                  const Matrix aux_tensor = MathUtils<double>::StressVectorToTensor( rVector );
+                  
+                  // d2I1/d2tensor
+                  rD2I1 = ZeroMatrix(3);
+
+                  // d2J2/d2tensor
+                  rD2J2 = IdentityMatrix(3);
+
+                  // d2J3/d2tensor
+                  rD2J3  = aux_tensor;
+                  for (unsigned int i = 0; i < 3; ++i)
+                        rD2J3(i,i) -= i_1/3.0;
+                  rD2J3 *= 2.0;
+
+            }
+
             // Calculate stress invariants p (volumetric equivalent) and q (deviatoric equivalent)
             static inline void CalculateStressInvariants( const Vector& rStress, double& rMeanStressP, double& rDeviatoricQ)
             {
@@ -229,7 +252,7 @@ namespace Kratos
 
             }
 
-            // Calculate stress invariant derivatives dp/dsigma (volumetric), dq/dsigma (deviatoric), and dlodeangle,dsigma
+            // Calculate stress invariant derivatives dp/dsigma (volumetric), dq/dsigma (deviatoric), and dlodeangle/dsigma
             static inline void CalculateDerivativeVectors( const Vector rStress, Vector& rC1, Vector& rC2, Vector& rC3)
             {
                   double i_1, j_2, j_3;
@@ -248,6 +271,43 @@ namespace Kratos
                   // Compute dLodeAngle/dstress
                   rC3  = dj_3 - (3.0/2.0 * j_3/j_2) * dj_2;
                   rC3 *= - std::sqrt(3.0) / (2.0 * std::cos(3*lode_angle) * std::pow(j_2, 1.5));
+            }
+
+            // Calculate second stress invariant derivatives d2p/d2sigma (volumetric) and d2q/d2sigma (deviatoric)
+            static inline void CalculateSecondDerivativeMatrices( const Vector rStress, Matrix& r2C1, Matrix& r2C2)
+            {
+                  // Calculate stress invariants
+                  double i_1, j_2;
+                  CalculateTensorInvariants( rStress, i_1, j_2);
+                  
+                  // d2P/d2stress
+                  r2C1 = ZeroMatrix(3);
+
+                  // d2Q/d2stress
+                  r2C2 = IdentityMatrix(3);
+                  if ( std::abs(j_2) > 1E-9) r2C2 *= 3.0 / (2.0 * std::sqrt(3 * j_2));
+
+            }
+
+            // Calculate second stress invariant derivatives d2p/d2sigma (volumetric), d2q/d2sigma (deviatoric), and d2lodeangle/d2sigma
+            static inline void CalculateSecondDerivativeMatrices( const Vector rStress, Matrix& r2C1, Matrix& r2C2, Matrix& r2C3)
+            {
+                  double i_1, j_2, j_3;
+                  CalculateTensorInvariants(rStress, i_1, j_2, j_3);
+                  
+                  Matrix d2i_1, d2j_2, d2j_3;      
+                  CalculateTensorInvariantsSecondDerivatives(rStress, d2i_1, d2j_2, d2j_3);
+                  
+                  // Compute d2P/d2stress and d2Q/d2stress
+                  CalculateSecondDerivativeMatrices(rStress, r2C1, r2C2);
+
+                  // Compute dLodeAngle/dstress
+                  double lode_angle;
+                  CalculateThirdStressInvariant(rStress, lode_angle);
+
+                  // Compute dLodeAngle/dstress
+                  r2C3  = d2j_3 - (3.0/2.0 * j_3/j_2) * d2j_2;
+                  r2C3 *= - std::sqrt(3.0) / (2.0 * std::cos(3*lode_angle) * std::pow(j_2, 1.5));
             }
 
             static double GetPI()
