@@ -136,7 +136,7 @@ bool BoundingSurfacePlasticFlowRule::CalculateReturnMapping( RadialReturnVariabl
     // Performing stress computation: Will update mElasticPrincipalStrain, Region, and principal_stress_updated
     bool converged = this->CalculateConsistencyCondition(rReturnMappingVariables, mPrincipalStressTrial, mElasticPrincipalStrain, region, principal_stress_updated);
     KRATOS_ERROR_IF(!converged) << "Warning:: Constitutive Law does not converge! "<<std::endl;
-    
+
     // Update local variable
     mRegion = region;
     mPrincipalStressUpdated = principal_stress_updated;
@@ -144,19 +144,19 @@ bool BoundingSurfacePlasticFlowRule::CalculateReturnMapping( RadialReturnVariabl
     // In bounding surface plasticity, plasticity is always true, even though the stress state are inside the yield function
     plasticity_active = true;
     rReturnMappingVariables.Options.Set(PLASTIC_REGION,true);
-        
+
     // rStressMatrix is the matrix of the updated stress in cartesian configuration -- this function perform back transformation
     this->ReturnStressFromPrincipalAxis(rReturnMappingVariables.MainDirections, mPrincipalStressUpdated, rStressMatrix);
-
+ 
     Vector DeltaPrincipalStress = mPrincipalStressTrial - mPrincipalStressUpdated;
 
     // Updated the PrincipalStrain vector
     Matrix inv_elastic_matrix = ZeroMatrix(3,3);
     this->ComputeInverseElasticMatrix(mPreviousMeanStressP, inv_elastic_matrix);
-
+  
     // Delta plastic strain
     Vector plastic_strain = prod(inv_elastic_matrix, DeltaPrincipalStress);
- 
+
     // Now the component of mElasticPrincipalStrain are sorted in the same way as plastic_strain!
     mElasticPrincipalStrain -= plastic_strain;
     mPlasticPrincipalStrain = plastic_strain;
@@ -182,9 +182,35 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(const RadialR
     // Calculate stress return in principal stress space
     // The flow rule is written for non-associated plasticity and explicit assumption using image point
     // Refer to paper by (Russel&Khalili, 2003) for the theoretical description
- 
-    // TODO: Implementation is not complete!
     bool converged = false;
+
+    // Calculate preconsolidation stresses ratio b
+    double constant_B = 1.0;
+    bool is_b_known   = false;
+    if (!mIsOnceUnloaded)
+    {
+        constant_B = mMaterialParameters.PreconsolidationPressureIP / mMaterialParameters.PreconsolidationPressure;
+        is_b_known = true;
+    }
+
+    // Calculate Image Point from previous stress and center of homology
+    if (!mImagePointComputedBool)
+    {
+        this->CalculateImagePointStress(mCenterOfHomologyStress, mPreviousStress, mImagePointStress, constant_B, is_b_known);
+    }
+
+    // Calculate hardening parameters
+    double hardening_parameter = 0.0;
+
+    // Compute elastic matrix: D_e
+
+    // Compute plastic multiplier
+
+    // Compute principal stress updated
+
+    // Check crossing region -- by checking eigen value multiplications
+
+    // Update order of principal stress
 
     return converged;
 }
@@ -317,7 +343,7 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialSecondDerivatives(
             aux_qq(i,j)         = dq_dsigma[i] * dq_dsigma[j];
             aux_thetatheta(i,j) = dtheta_dsigma[i] * dtheta_dsigma[j];
         }
-}
+    }
 
     // Assemble second derivative matrix (3x3)
     rSecondDerivative  = invariant_second_derivatives[0] * aux_pp + invariant_derivatives[0] * d2p_d2sigma;
@@ -690,10 +716,10 @@ bool BoundingSurfacePlasticFlowRule::UpdateInternalVariables( RadialReturnVariab
     // TODO: Implementation is not complete!
     this->CalculateCenterOfHomologyStress(mCenterOfHomologyStress);
     mPreviousStress = mPrincipalStressUpdated;
-    
+
     MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(mPreviousStress, mPreviousMeanStressP, mPreviousDeviatoricStressQ);
     mPreviousMeanStressP *= -1.0; // p is defined negative
-
+    
     return true;
 }
 
