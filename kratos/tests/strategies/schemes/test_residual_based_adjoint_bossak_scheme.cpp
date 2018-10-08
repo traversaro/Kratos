@@ -1,5 +1,4 @@
 #include<iostream>
-#include<iomanip> // for debug only
 #include<algorithm>
 #include<exception>
 #include <sstream>
@@ -30,13 +29,14 @@ namespace Kratos
 {
 namespace Testing
 {
-struct ResultsData
+namespace TestResidualBasedAdjointBossakScheme
 {
-    virtual void StoreCurrentResult(const ModelPart& rModelPart) = 0;
-    virtual void LoadCurrentResult(ModelPart& rModelPart) = 0;
+struct PrimalResults
+{
+    virtual void StoreCurrentSolutionStep(const ModelPart& rModelPart) = 0;
+    virtual void LoadCurrentSolutionStep(ModelPart& rModelPart) = 0;
 };
 
-const double eps = 0./*1.e-4*/;
 namespace NonLinearMassSpringDamper
 {
 /**
@@ -159,11 +159,11 @@ public:
 private:
     const double m1 = 1.;
     const double m2 = 1.;
-    const double kd = 1. + eps;
+    const double kd = 1.;
     const double kc = 0.1;
 };
 
-class TwoMassSpringDamperSystemAdjoint : public Element
+class TwoMassSpringDamperAdjointSystem : public Element
 {
     struct GetFirstDerivativesVectorImpl
     {
@@ -229,17 +229,17 @@ class TwoMassSpringDamperSystemAdjoint : public Element
     };
 
 public:
-    KRATOS_CLASS_POINTER_DEFINITION(TwoMassSpringDamperSystemAdjoint);
+    KRATOS_CLASS_POINTER_DEFINITION(TwoMassSpringDamperAdjointSystem);
 
     static Pointer Create(Node<3>::Pointer pNode1, Node<3>::Pointer pNode2)
     {
         auto nodes = PointerVector<Node<3>>{};
         nodes.push_back(pNode1);
         nodes.push_back(pNode2);
-        return Kratos::make_shared<TwoMassSpringDamperSystemAdjoint>(nodes);
+        return Kratos::make_shared<TwoMassSpringDamperAdjointSystem>(nodes);
     }
 
-    TwoMassSpringDamperSystemAdjoint(const NodesArrayType& ThisNodes)
+    TwoMassSpringDamperAdjointSystem(const NodesArrayType& ThisNodes)
         : Element(0, ThisNodes), mPrimalElement(ThisNodes)
     {
         SetValue(GetFirstDerivativesIndirectVector, GetFirstDerivativesVectorImpl{this});
@@ -412,7 +412,7 @@ class TwoMassSpringDamperSystemResponseFunction : public AdjointResponseFunction
         ModelPart& mrModelPart;
 };
 
-struct TwoMassSpringDamperSystemResultsData : ResultsData
+struct TwoMassSpringDamperSystemPrimalResults : PrimalResults
 {
     std::vector<double> time;
     std::vector<double> x1;
@@ -422,7 +422,7 @@ struct TwoMassSpringDamperSystemResultsData : ResultsData
     std::vector<double> a1;
     std::vector<double> a2;
 
-    void StoreCurrentResult(const ModelPart& rModelPart) override
+    void StoreCurrentSolutionStep(const ModelPart& rModelPart) override
     {
         this->time.push_back(rModelPart.GetProcessInfo()[TIME]);
         auto& node1 = rModelPart.GetNode(1);
@@ -435,7 +435,7 @@ struct TwoMassSpringDamperSystemResultsData : ResultsData
         this->a2.push_back(node2.FastGetSolutionStepValue(ACCELERATION_X));
     }
 
-    void LoadCurrentResult(ModelPart& rModelPart) override
+    void LoadCurrentSolutionStep(ModelPart& rModelPart) override
     {
         const double current_time = rModelPart.GetProcessInfo()[TIME];
         if (current_time < 1e-8 || current_time > this->time.back() + 1e-8)
@@ -480,20 +480,6 @@ struct TwoMassSpringDamperSystemResultsData : ResultsData
     }
 };
 
-// double ResponseValue(TwoMassSpringDamperSystemResultsData& rd)
-// {
-//     double response_value = 0.;
-//     for (std::size_t i = 0; i < rd.time.size(); ++i)
-//     {
-//         const double x1 = rd.x1[i];
-//         const double x2 = rd.x2[i];
-//         const double v1 = rd.v1[i];
-//         const double v2 = rd.v2[i];
-//         const double delta_time = rd.time[i] - rd.time[i - 1];
-//         response_value += delta_time * (x1 * x1 + x2 * x2 + v1 * v1 + v2 * v2);
-//     }
-//     return response_value;
-// }
 }
 
 namespace Solvers
@@ -522,9 +508,9 @@ namespace Solvers
     {
     public:
         AdjointBossakSolver(ModelPart& rModelPart,
-                            Kratos::shared_ptr<ResultsData> pResultsData,
+                            Kratos::shared_ptr<PrimalResults> pPrimalResults,
                             AdjointResponseFunction::Pointer pResponseFunction)
-            : mrModelPart(rModelPart), mpResultsData(pResultsData)
+            : mrModelPart(rModelPart), mpPrimalResults(pPrimalResults)
         {
             LinearSolverType::Pointer p_linear_solver =
                 Kratos::make_shared<SkylineLUCustomScalarSolver<SparseSpaceType, LocalSpaceType>>();
@@ -539,13 +525,13 @@ namespace Solvers
 
         double Solve()
         {
-            mpResultsData->LoadCurrentResult(mrModelPart);
+            mpPrimalResults->LoadCurrentSolutionStep(mrModelPart);
             return mpSolver->Solve();
         }
 
     private:
         ModelPart& mrModelPart;
-        Kratos::shared_ptr<ResultsData> mpResultsData;
+        Kratos::shared_ptr<PrimalResults> mpPrimalResults;
         SolvingStrategyType::Pointer mpSolver;
     };
     }
@@ -573,9 +559,11 @@ std::ostream& operator<<(std::ostream& os, const Vector& v)
     }
     return os;
 }
+} // namespace TestResidualBasedAdjointBossakScheme
 
 KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, KratosCoreSchemesFastSuite)
 {
+    using namespace TestResidualBasedAdjointBossakScheme;
     using namespace NonLinearMassSpringDamper;
     using namespace Solvers;
     ModelPart model_part("test");
@@ -599,8 +587,8 @@ KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, 
     node2.FastGetSolutionStepValue(DISPLACEMENT_X) = 1.0;
     node1.FastGetSolutionStepValue(ACCELERATION_X) = 2.0;
     node2.FastGetSolutionStepValue(ACCELERATION_X) =-2.0;
-    Kratos::shared_ptr<TwoMassSpringDamperSystemResultsData> p_results_data =
-        Kratos::make_shared<TwoMassSpringDamperSystemResultsData>();
+    Kratos::shared_ptr<TwoMassSpringDamperSystemPrimalResults> p_results_data =
+        Kratos::make_shared<TwoMassSpringDamperSystemPrimalResults>();
     const double end_time = 0.1;
     const double start_time = 0.;
     const std::size_t N = 5;
@@ -612,7 +600,7 @@ KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, 
         current_time += delta_time;
         model_part.CloneTimeStep(current_time);
         p_solver->Solve();
-        p_results_data->StoreCurrentResult(model_part);
+        p_results_data->StoreCurrentSolutionStep(model_part);
     }
     ModelPart adjoint_model_part("test");
     adjoint_model_part.AddNodalSolutionStepVariable(DISPLACEMENT);
@@ -631,7 +619,7 @@ KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, 
     {
         r_node.AddDof(ADJOINT_FLUID_VECTOR_1_X, REACTION_X);
     }
-    auto p_adjoint_element = TwoMassSpringDamperSystemAdjoint::Create(
+    auto p_adjoint_element = TwoMassSpringDamperAdjointSystem::Create(
         adjoint_model_part.pGetNode(1), adjoint_model_part.pGetNode(2));
     adjoint_model_part.AddElement(p_adjoint_element);
     auto p_response_function =
