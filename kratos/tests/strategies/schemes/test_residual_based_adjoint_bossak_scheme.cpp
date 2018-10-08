@@ -1,16 +1,14 @@
-#include<iostream>
-#include<algorithm>
-#include<exception>
+#include <algorithm>
+#include <exception>
 #include <sstream>
+#include <iomanip>
 
 #include "testing/testing.h"
 #include "includes/define.h"
 #include "includes/shared_pointers.h"
-#include "includes/element.h"
 #include "includes/model_part.h"
 #include "containers/pointer_vector.h"
 #include "spaces/ublas_space.h"
-#include "linear_solvers/linear_solver.h"
 #include "linear_solvers/skyline_lu_custom_scalar_solver.h"
 #include "solving_strategies/schemes/scheme.h"
 #include "solving_strategies/schemes/residual_based_bossak_displacement_scheme.hpp"
@@ -18,7 +16,6 @@
 #include "solving_strategies/strategies/solving_strategy.h"
 #include "solving_strategies/strategies/residualbased_newton_raphson_strategy.h"
 #include "solving_strategies/strategies/residualbased_linear_strategy.h"
-#include "solving_strategies/convergencecriterias/convergence_criteria.h"
 #include "solving_strategies/convergencecriterias/residual_criteria.h"
 #include "utilities/indirect_scalar.h"
 #include "response_functions/adjoint_response_function.h"
@@ -29,45 +26,123 @@ namespace Kratos
 {
 namespace Testing
 {
-namespace TestResidualBasedAdjointBossakScheme
+namespace
 {
+const double AlphaBossak = 0.;
+namespace Base
+{
+typedef UblasSpace<double, CompressedMatrix, Vector> SparseSpaceType;
+typedef UblasSpace<double, Matrix, Vector> LocalSpaceType;
+typedef LinearSolver<SparseSpaceType, LocalSpaceType> LinearSolverType;
+typedef Scheme<SparseSpaceType, LocalSpaceType> SchemeType;
+typedef ConvergenceCriteria<SparseSpaceType, LocalSpaceType> ConvergenceCriteriaType;
+typedef SolvingStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType> SolvingStrategyType;
+
 struct PrimalResults
 {
+    KRATOS_CLASS_POINTER_DEFINITION(PrimalResults);
     virtual void StoreCurrentSolutionStep(const ModelPart& rModelPart) = 0;
-    virtual void LoadCurrentSolutionStep(ModelPart& rModelPart) = 0;
+    virtual void LoadCurrentSolutionStep(ModelPart& rModelPart) const = 0;
 };
 
-namespace NonLinearMassSpringDamper
+class PrimalStrategy : public SolvingStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>
+{
+public:
+    KRATOS_CLASS_POINTER_DEFINITION(PrimalStrategy);
+
+    PrimalStrategy(ModelPart& rModelPart, PrimalResults::Pointer pPrimalResults)
+        : SolvingStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>(rModelPart),
+          mpPrimalResults(pPrimalResults)
+    {
+        auto p_scheme =
+            Kratos::make_shared<ResidualBasedBossakDisplacementScheme<SparseSpaceType, LocalSpaceType>>(
+                AlphaBossak);
+        auto p_linear_solver =
+            Kratos::make_shared<SkylineLUCustomScalarSolver<SparseSpaceType, LocalSpaceType>>();
+        auto p_conv_criteria =
+            Kratos::make_shared<ResidualCriteria<SparseSpaceType, LocalSpaceType>>(
+                1e-26, 1e-27);
+        mpSolver = Kratos::make_shared<ResidualBasedNewtonRaphsonStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>>(
+            rModelPart, p_scheme, p_linear_solver, p_conv_criteria, 40, true, false, true);
+    }
+
+    double Solve() override
+    {
+        auto result = mpSolver->Solve();
+        mpPrimalResults->StoreCurrentSolutionStep(this->GetModelPart());
+        return result;
+    }
+
+private:
+    PrimalResults::Pointer mpPrimalResults;
+    SolvingStrategyType::Pointer mpSolver;
+};
+
+class AdjointStrategy : public SolvingStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>
+{
+public:
+    KRATOS_CLASS_POINTER_DEFINITION(AdjointStrategy);
+
+    AdjointStrategy(ModelPart& rModelPart,
+                    Kratos::shared_ptr<PrimalResults> pPrimalResults,
+                    AdjointResponseFunction::Pointer pResponseFunction)
+        : SolvingStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>(rModelPart),
+          mpPrimalResults(pPrimalResults)
+    {
+        auto p_linear_solver =
+            Kratos::make_shared<SkylineLUCustomScalarSolver<SparseSpaceType, LocalSpaceType>>();
+        auto scheme_settings = Parameters{R"({ "alpha_bossak": )" + std::to_string(AlphaBossak) + " }"};
+        auto p_adjoint_scheme =
+            Kratos::make_shared<ResidualBasedAdjointBossakScheme<SparseSpaceType, LocalSpaceType>>(
+                scheme_settings, pResponseFunction);
+        mpSolver =
+            Kratos::make_shared<ResidualBasedLinearStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>>(
+                rModelPart, p_adjoint_scheme, p_linear_solver);
+    }
+
+    double Solve() override
+    {
+        mpPrimalResults->LoadCurrentSolutionStep(this->GetModelPart());
+        return mpSolver->Solve();
+    }
+
+private:
+    PrimalResults::Pointer mpPrimalResults;
+    SolvingStrategyType::Pointer mpSolver;
+};
+}
+
+namespace NonLinearSpringMassDamper
 {
 /**
- * @class TwoMassSpringDamperSystem
+ * @class PrimalElement
  * @brief A system of two mass-spring-dampers for testing a second-order ode.
  * @details Taken from L.F. Fernandez, D.A. Tortorelli, Semi-analytical
  * sensitivity analysis for nonlinear transient problems.
  * 
  *  |                _____                 _____
- *  |---[ Damper ]--|  m1 |---[ Damper ]--|  m2 |
+ *  |---[ Damper ]--|mass1|---[ Damper ]--|mass2|
  *  |-----/\/\/\----|_____|-----/\/\/\----|_____|
  *  |
  * 
- * Spring force: fe = x + kd * x^3
- * Damper force: fc = kc * x'
+ * Spring force: fe = x + stiffness * x^3
+ * Damper force: fc = damping * x'
  * 
  */
-class TwoMassSpringDamperSystem : public Element
+class PrimalElement : public Element
 {
 public:
-    KRATOS_CLASS_POINTER_DEFINITION(TwoMassSpringDamperSystem);
+    KRATOS_CLASS_POINTER_DEFINITION(PrimalElement);
 
     static Pointer Create(Node<3>::Pointer pNode1, Node<3>::Pointer pNode2)
     {
         auto nodes = PointerVector<Node<3>>{};
         nodes.push_back(pNode1);
         nodes.push_back(pNode2);
-        return Kratos::make_shared<TwoMassSpringDamperSystem>(nodes);
+        return Kratos::make_shared<PrimalElement>(nodes);
     }
 
-    TwoMassSpringDamperSystem(const NodesArrayType& ThisNodes)
+    PrimalElement(const NodesArrayType& ThisNodes)
         : Element(0, ThisNodes)
     {
     }
@@ -121,10 +196,10 @@ public:
         rLeftHandSideMatrix.resize(2, 2, false);
         const double& x1 = this->GetGeometry()[0].FastGetSolutionStepValue(DISPLACEMENT_X);
         const double& x2 = this->GetGeometry()[1].FastGetSolutionStepValue(DISPLACEMENT_X);
-        rLeftHandSideMatrix(0, 0) = 2. + 3. * kd * x1 * x1 + 3. * kd * (x2 - x1) * (x2 - x1);
-        rLeftHandSideMatrix(0, 1) = -1. - 3. * kd * (x2 - x1) * (x2 - x1);
-        rLeftHandSideMatrix(1, 0) = -1. - 3. * kd * (x2 - x1) * (x2 - x1);
-        rLeftHandSideMatrix(1, 1) = 1. + 3. * kd * (x2 - x1) * (x2 - x1);
+        rLeftHandSideMatrix(0, 0) = 2. + 3. * stiffness * x1 * x1 + 3. * stiffness * (x2 - x1) * (x2 - x1);
+        rLeftHandSideMatrix(0, 1) = -1. - 3. * stiffness * (x2 - x1) * (x2 - x1);
+        rLeftHandSideMatrix(1, 0) = -1. - 3. * stiffness * (x2 - x1) * (x2 - x1);
+        rLeftHandSideMatrix(1, 1) = 1. + 3. * stiffness * (x2 - x1) * (x2 - x1);
     }
 
     void CalculateRightHandSide(VectorType& rRightHandSideVector,
@@ -134,155 +209,155 @@ public:
         const double& x1 = this->GetGeometry()[0].FastGetSolutionStepValue(DISPLACEMENT_X);
         const double& x2 = this->GetGeometry()[1].FastGetSolutionStepValue(DISPLACEMENT_X);
         const double x21 = x2 - x1;
-        rRightHandSideVector(0) = -(2. * x1 - x2 + kd * x1 * x1 * x1 - kd * x21 * x21 * x21);
-        rRightHandSideVector(1) = -(-x1 + x2 + kd * x21 * x21 * x21);
+        rRightHandSideVector(0) = -(2. * x1 - x2 + stiffness * x1 * x1 * x1 - stiffness * x21 * x21 * x21);
+        rRightHandSideVector(1) = -(-x1 + x2 + stiffness * x21 * x21 * x21);
     }
 
     void CalculateMassMatrix(MatrixType& rMassMatrix, ProcessInfo& rCurrentProcessInfo) override
     {
         rMassMatrix.resize(2, 2, false);
-        rMassMatrix(0, 0) = m1;
+        rMassMatrix(0, 0) = mass1;
         rMassMatrix(0, 1) = 0.;
-        rMassMatrix(1, 1) = m2;
+        rMassMatrix(1, 1) = mass2;
         rMassMatrix(1, 0) = 0.;
     }
 
     void CalculateDampingMatrix(MatrixType& rDampingMatrix, ProcessInfo& rCurrentProcessInfo) override
     {
         rDampingMatrix.resize(2, 2, false);
-        rDampingMatrix(0, 0) = 2. * kc;
-        rDampingMatrix(0, 1) = -kc;
-        rDampingMatrix(1, 1) = kc;
-        rDampingMatrix(1, 0) = -kc;
+        rDampingMatrix(0, 0) = 2. * damping;
+        rDampingMatrix(0, 1) = -damping;
+        rDampingMatrix(1, 1) = damping;
+        rDampingMatrix(1, 0) = -damping;
     }
 
 private:
-    const double m1 = 1.;
-    const double m2 = 1.;
-    const double kd = 1.;
-    const double kc = 0.1;
+    const double mass1 = 1.;
+    const double mass2 = 1.;
+    const double stiffness = 1.;
+    const double damping = 0.1;
 };
 
-class TwoMassSpringDamperAdjointSystem : public Element
+class AdjointElement : public Element
 {
-    struct GetFirstDerivativesVectorImpl
+    struct GetFirstDerivativesVectorExtension
     {
         Element* mpElement;
         void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
         {
             auto& r_node = mpElement->GetGeometry()[NodeId];
             rVector.resize(1);
-            rVector[0] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_2_X, Step);
+            rVector[0] = MakeIndirectScalar(r_node, ADJOINT_VECTOR_2_X, Step);
         }
     };
 
-    struct GetSecondDerivativesVectorImpl
+    struct GetSecondDerivativesVectorExtension
     {
         Element* mpElement;
         void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
         {
             auto& r_node = mpElement->GetGeometry()[NodeId];
             rVector.resize(1);
-            rVector[0] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_3_X, Step);
+            rVector[0] = MakeIndirectScalar(r_node, ADJOINT_VECTOR_3_X, Step);
         }
     };
 
-    struct GetAuxAdjointVectorImpl
+    struct GetAuxAdjointVectorExtension
     {
         Element* mpElement;
         void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
         {
             auto& r_node = mpElement->GetGeometry()[NodeId];
             rVector.resize(1);
-            rVector[0] = MakeIndirectScalar(r_node, AUX_ADJOINT_FLUID_VECTOR_1_X, Step);
+            rVector[0] = MakeIndirectScalar(r_node, AUX_ADJOINT_VECTOR_1_X, Step);
         }
     };
 
-    struct GetFirstDerivativesVariablesImpl
+    struct GetFirstDerivativesVariablesExtension
     {
         Element* mpElement;
         void operator()(std::vector<VariableData const*>& rVariables)
         {
             rVariables.resize(1);
-            rVariables[0] = &ADJOINT_FLUID_VECTOR_2;
+            rVariables[0] = &ADJOINT_VECTOR_2;
         }
     };
     
-    struct GetSecondDerivativesVariablesImpl
+    struct GetSecondDerivativesVariablesExtension
     {
         Element* mpElement;
         void operator()(std::vector<VariableData const*>& rVariables)
         {
             rVariables.resize(1);
-            rVariables[0] = &ADJOINT_FLUID_VECTOR_3;
+            rVariables[0] = &ADJOINT_VECTOR_3;
         }
     };
     
-    struct GetAuxAdjointVariablesImpl
+    struct GetAuxAdjointVariablesExtension
     {
         Element* mpElement;
         void operator()(std::vector<VariableData const*>& rVariables)
         {
             rVariables.resize(1);
-            rVariables[0] = &AUX_ADJOINT_FLUID_VECTOR_1;
+            rVariables[0] = &AUX_ADJOINT_VECTOR_1;
         }
     };
 
 public:
-    KRATOS_CLASS_POINTER_DEFINITION(TwoMassSpringDamperAdjointSystem);
+    KRATOS_CLASS_POINTER_DEFINITION(AdjointElement);
 
     static Pointer Create(Node<3>::Pointer pNode1, Node<3>::Pointer pNode2)
     {
         auto nodes = PointerVector<Node<3>>{};
         nodes.push_back(pNode1);
         nodes.push_back(pNode2);
-        return Kratos::make_shared<TwoMassSpringDamperAdjointSystem>(nodes);
+        return Kratos::make_shared<AdjointElement>(nodes);
     }
 
-    TwoMassSpringDamperAdjointSystem(const NodesArrayType& ThisNodes)
+    AdjointElement(const NodesArrayType& ThisNodes)
         : Element(0, ThisNodes), mPrimalElement(ThisNodes)
     {
-        SetValue(GetFirstDerivativesIndirectVector, GetFirstDerivativesVectorImpl{this});
-        SetValue(GetSecondDerivativesIndirectVector, GetSecondDerivativesVectorImpl{this});
-        SetValue(GetAuxAdjointIndirectVector, GetAuxAdjointVectorImpl{this});
-        SetValue(GetFirstDerivativesVariables, GetFirstDerivativesVariablesImpl{this});
-        SetValue(GetSecondDerivativesVariables, GetSecondDerivativesVariablesImpl{this});
-        SetValue(GetAuxAdjointVariables, GetAuxAdjointVariablesImpl{this});
+        SetValue(GetFirstDerivativesIndirectVector, GetFirstDerivativesVectorExtension{this});
+        SetValue(GetSecondDerivativesIndirectVector, GetSecondDerivativesVectorExtension{this});
+        SetValue(GetAuxAdjointIndirectVector, GetAuxAdjointVectorExtension{this});
+        SetValue(GetFirstDerivativesVariables, GetFirstDerivativesVariablesExtension{this});
+        SetValue(GetSecondDerivativesVariables, GetSecondDerivativesVariablesExtension{this});
+        SetValue(GetAuxAdjointVariables, GetAuxAdjointVariablesExtension{this});
     }
 
     void EquationIdVector(EquationIdVectorType& rResult, ProcessInfo& rCurrentProcessInfo) override
     {
         rResult.resize(2);
-        rResult[0] = this->GetGeometry()[0].GetDof(ADJOINT_FLUID_VECTOR_1_X).EquationId();
-        rResult[1] = this->GetGeometry()[1].GetDof(ADJOINT_FLUID_VECTOR_1_X).EquationId();
+        rResult[0] = this->GetGeometry()[0].GetDof(ADJOINT_VECTOR_1_X).EquationId();
+        rResult[1] = this->GetGeometry()[1].GetDof(ADJOINT_VECTOR_1_X).EquationId();
     }
 
     void GetDofList(DofsVectorType& rElementalDofList, ProcessInfo& rCurrentProcessInfo) override
     {
         rElementalDofList.resize(2);
-        rElementalDofList[0] = this->GetGeometry()[0].pGetDof(ADJOINT_FLUID_VECTOR_1_X);
-        rElementalDofList[1] = this->GetGeometry()[1].pGetDof(ADJOINT_FLUID_VECTOR_1_X);
+        rElementalDofList[0] = this->GetGeometry()[0].pGetDof(ADJOINT_VECTOR_1_X);
+        rElementalDofList[1] = this->GetGeometry()[1].pGetDof(ADJOINT_VECTOR_1_X);
     }
 
     void GetValuesVector(Vector& values, int Step = 0) override
     {
         values.resize(2);
-        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ADJOINT_FLUID_VECTOR_1_X);
-        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ADJOINT_FLUID_VECTOR_1_X);
+        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ADJOINT_VECTOR_1_X);
+        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ADJOINT_VECTOR_1_X);
     }
 
     void GetFirstDerivativesVector(Vector& values, int Step = 0) override
     {
         values.resize(2);
-        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ADJOINT_FLUID_VECTOR_2_X);
-        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ADJOINT_FLUID_VECTOR_2_X);
+        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ADJOINT_VECTOR_2_X);
+        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ADJOINT_VECTOR_2_X);
     }
 
     void GetSecondDerivativesVector(Vector& values, int Step = 0) override
     {
         values.resize(2);
-        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ADJOINT_FLUID_VECTOR_3_X);
-        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ADJOINT_FLUID_VECTOR_3_X);
+        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ADJOINT_VECTOR_3_X);
+        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ADJOINT_VECTOR_3_X);
     }
 
     void CalculateLeftHandSide(MatrixType& rLeftHandSideMatrix,
@@ -315,7 +390,7 @@ public:
                                     const ProcessInfo& rCurrentProcessInfo) override
     {
         KRATOS_TRY;
-        if (rDesignVariable == NORMAL_SENSITIVITY)
+        if (rDesignVariable == SCALAR_SENSITIVITY)
         {
             rOutput.resize(1, 2, false);
             const double& x1 = this->GetGeometry()[0].FastGetSolutionStepValue(DISPLACEMENT_X);
@@ -334,16 +409,15 @@ public:
     ///@}
 
 private:
-    TwoMassSpringDamperSystem mPrimalElement;
+    PrimalElement mPrimalElement;
 };
 
-class TwoMassSpringDamperSystemResponseFunction : public AdjointResponseFunction
+class ResponseFunction : public AdjointResponseFunction
 {
     public:
-        KRATOS_CLASS_POINTER_DEFINITION(TwoMassSpringDamperSystemResponseFunction);
-        
-        TwoMassSpringDamperSystemResponseFunction(ModelPart& rModelPart)
-            : mrModelPart(rModelPart)
+        KRATOS_CLASS_POINTER_DEFINITION(ResponseFunction);
+
+        ResponseFunction(ModelPart& rModelPart) : mrModelPart(rModelPart)
         {
         }
 
@@ -412,7 +486,7 @@ class TwoMassSpringDamperSystemResponseFunction : public AdjointResponseFunction
         ModelPart& mrModelPart;
 };
 
-struct TwoMassSpringDamperSystemPrimalResults : PrimalResults
+struct PrimalResults : Base::PrimalResults
 {
     std::vector<double> time;
     std::vector<double> x1;
@@ -429,13 +503,19 @@ struct TwoMassSpringDamperSystemPrimalResults : PrimalResults
         auto& node2 = rModelPart.GetNode(2);
         this->x1.push_back(node1.FastGetSolutionStepValue(DISPLACEMENT_X));
         this->v1.push_back(node1.FastGetSolutionStepValue(VELOCITY_X));
-        this->a1.push_back(node1.FastGetSolutionStepValue(ACCELERATION_X));
+        const double acc1 =
+            (1. - AlphaBossak) * node1.FastGetSolutionStepValue(ACCELERATION_X) +
+            AlphaBossak * node1.FastGetSolutionStepValue(ACCELERATION_X, 1);
+        this->a1.push_back(acc1);
         this->x2.push_back(node2.FastGetSolutionStepValue(DISPLACEMENT_X));
         this->v2.push_back(node2.FastGetSolutionStepValue(VELOCITY_X));
-        this->a2.push_back(node2.FastGetSolutionStepValue(ACCELERATION_X));
+        const double acc2 =
+            (1. - AlphaBossak) * node2.FastGetSolutionStepValue(ACCELERATION_X) +
+            AlphaBossak * node2.FastGetSolutionStepValue(ACCELERATION_X, 1);
+        this->a2.push_back(acc2);
     }
 
-    void LoadCurrentSolutionStep(ModelPart& rModelPart) override
+    void LoadCurrentSolutionStep(ModelPart& rModelPart) const override
     {
         const double current_time = rModelPart.GetProcessInfo()[TIME];
         if (current_time < 1e-8 || current_time > this->time.back() + 1e-8)
@@ -480,115 +560,64 @@ struct TwoMassSpringDamperSystemPrimalResults : PrimalResults
     }
 };
 
-}
-
-namespace Solvers
+void InitializePrimalModelPart(ModelPart& rModelPart)
 {
-    typedef UblasSpace<double, CompressedMatrix, Vector> SparseSpaceType;
-    typedef UblasSpace<double, Matrix, Vector> LocalSpaceType;
-    typedef LinearSolver<SparseSpaceType, LocalSpaceType> LinearSolverType;
-    typedef Scheme<SparseSpaceType, LocalSpaceType> SchemeType;
-    typedef ConvergenceCriteria<SparseSpaceType, LocalSpaceType> ConvergenceCriteriaType;
-    typedef SolvingStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType> SolvingStrategyType;
-
-    SolvingStrategyType::Pointer CreateResidualBasedNewtonRaphsonStrategy(ModelPart& rModelPart)
-    {
-        LinearSolverType::Pointer p_linear_solver =
-            Kratos::make_shared<SkylineLUCustomScalarSolver<SparseSpaceType, LocalSpaceType>>();
-        SchemeType::Pointer p_scheme =
-            Kratos::make_shared<ResidualBasedBossakDisplacementScheme<SparseSpaceType, LocalSpaceType>>(/*-0.3*/ 0.);
-        ConvergenceCriteriaType::Pointer p_conv_criteria =
-            Kratos::make_shared<ResidualCriteria<SparseSpaceType, LocalSpaceType>>(
-                1e-26, 1e-27);
-        return Kratos::make_shared<ResidualBasedNewtonRaphsonStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>>(
-            rModelPart, p_scheme, p_linear_solver, p_conv_criteria, 40, true, false, true);
-    }
-
-    class AdjointBossakSolver
-    {
-    public:
-        AdjointBossakSolver(ModelPart& rModelPart,
-                            Kratos::shared_ptr<PrimalResults> pPrimalResults,
-                            AdjointResponseFunction::Pointer pResponseFunction)
-            : mrModelPart(rModelPart), mpPrimalResults(pPrimalResults)
-        {
-            LinearSolverType::Pointer p_linear_solver =
-                Kratos::make_shared<SkylineLUCustomScalarSolver<SparseSpaceType, LocalSpaceType>>();
-            auto scheme_settings = Parameters{R"({ "alpha_bossak": 0.0 })"};
-            SchemeType::Pointer p_adjoint_scheme =
-                Kratos::make_shared<ResidualBasedAdjointBossakScheme<SparseSpaceType, LocalSpaceType>>(
-                    scheme_settings, pResponseFunction);
-            mpSolver =
-                Kratos::make_shared<ResidualBasedLinearStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>>(
-                    rModelPart, p_adjoint_scheme, p_linear_solver);
-        }
-
-        double Solve()
-        {
-            mpPrimalResults->LoadCurrentSolutionStep(mrModelPart);
-            return mpSolver->Solve();
-        }
-
-    private:
-        ModelPart& mrModelPart;
-        Kratos::shared_ptr<PrimalResults> mpPrimalResults;
-        SolvingStrategyType::Pointer mpSolver;
-    };
-    }
-
-    std::ostream& operator<<(std::ostream& os, const Matrix& m)
-    {
-        os << "\nPrinting Matrix:\n";
-        os << std::scientific << std::fixed;
-        for (std::size_t i = 0; i < m.size1(); ++i)
-        {
-            for (std::size_t j = 0; j < m.size2(); ++j)
-                os << m(i, j) << ' ';
-            os << std::endl;
-        }
-        return os;
-}
-
-std::ostream& operator<<(std::ostream& os, const Vector& v)
-{
-    os << "\nPrinting Vector:\n";
-    os << std::scientific << std::fixed;
-    for (std::size_t i = 0; i < v.size(); ++i)
-    {
-        os << v(i) << std::endl;
-    }
-    return os;
-}
-} // namespace TestResidualBasedAdjointBossakScheme
-
-KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, KratosCoreSchemesFastSuite)
-{
-    using namespace TestResidualBasedAdjointBossakScheme;
-    using namespace NonLinearMassSpringDamper;
-    using namespace Solvers;
-    ModelPart model_part("test");
-    model_part.AddNodalSolutionStepVariable(DISPLACEMENT);
-    model_part.AddNodalSolutionStepVariable(REACTION);
-    model_part.AddNodalSolutionStepVariable(VELOCITY);
-    model_part.AddNodalSolutionStepVariable(ACCELERATION);
-    model_part.CreateNewNode(1, 0.0, 0.0, 0.0);
-    model_part.CreateNewNode(2, 0.0, 0.0, 0.0);
-    model_part.SetBufferSize(2);
-    for (auto& r_node : model_part.Nodes())
+    rModelPart.AddNodalSolutionStepVariable(DISPLACEMENT);
+    rModelPart.AddNodalSolutionStepVariable(REACTION);
+    rModelPart.AddNodalSolutionStepVariable(VELOCITY);
+    rModelPart.AddNodalSolutionStepVariable(ACCELERATION);
+    rModelPart.CreateNewNode(1, 0.0, 0.0, 0.0);
+    rModelPart.CreateNewNode(2, 0.0, 0.0, 0.0);
+    rModelPart.SetBufferSize(2);
+    for (auto& r_node : rModelPart.Nodes())
     {
         r_node.AddDof(DISPLACEMENT_X, REACTION_X);
     }
-    auto& node1 = model_part.GetNode(1);
-    auto& node2 = model_part.GetNode(2);
-    auto p_element = TwoMassSpringDamperSystem::Create(model_part.pGetNode(1),
-                                                       model_part.pGetNode(2));
-    model_part.AddElement(p_element);
-    auto p_solver = CreateResidualBasedNewtonRaphsonStrategy(model_part);
+    auto p_element =
+        PrimalElement::Create(rModelPart.pGetNode(1), rModelPart.pGetNode(2));
+    rModelPart.AddElement(p_element);
+    auto& node1 = rModelPart.GetNode(1);
+    auto& node2 = rModelPart.GetNode(2);
     node2.FastGetSolutionStepValue(DISPLACEMENT_X) = 1.0;
     node1.FastGetSolutionStepValue(ACCELERATION_X) = 2.0;
     node2.FastGetSolutionStepValue(ACCELERATION_X) =-2.0;
-    Kratos::shared_ptr<TwoMassSpringDamperSystemPrimalResults> p_results_data =
-        Kratos::make_shared<TwoMassSpringDamperSystemPrimalResults>();
+}
+
+void InitializeAdjointModelPart(ModelPart& rModelPart)
+{
+    rModelPart.AddNodalSolutionStepVariable(DISPLACEMENT);
+    rModelPart.AddNodalSolutionStepVariable(REACTION);
+    rModelPart.AddNodalSolutionStepVariable(VELOCITY);
+    rModelPart.AddNodalSolutionStepVariable(ACCELERATION);
+    rModelPart.AddNodalSolutionStepVariable(ADJOINT_VECTOR_1);
+    rModelPart.AddNodalSolutionStepVariable(ADJOINT_VECTOR_2);
+    rModelPart.AddNodalSolutionStepVariable(ADJOINT_VECTOR_3);
+    rModelPart.AddNodalSolutionStepVariable(AUX_ADJOINT_VECTOR_1);
+    rModelPart.AddNodalSolutionStepVariable(SCALAR_SENSITIVITY);
+    rModelPart.CreateNewNode(1, 0.0, 0.0, 0.0);
+    rModelPart.CreateNewNode(2, 0.0, 0.0, 0.0);
+    rModelPart.SetBufferSize(2);
+    for (auto& r_node : rModelPart.Nodes())
+    {
+        r_node.AddDof(ADJOINT_VECTOR_1_X);
+    }
+    auto p_adjoint_element =
+        AdjointElement::Create(rModelPart.pGetNode(1), rModelPart.pGetNode(2));
+    rModelPart.AddElement(p_adjoint_element);
+}
+
+}
+
+} // unnamed namespace
+
+KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, KratosCoreSchemesFastSuite)
+{
+    namespace Nlsmd = NonLinearSpringMassDamper;
+    // Solve the primal problem.
+    ModelPart model_part("test");
+    Nlsmd::InitializePrimalModelPart(model_part);
+    auto p_results_data = Kratos::make_shared<Nlsmd::PrimalResults>();
+    auto p_solver = Kratos::make_shared<Base::PrimalStrategy>(model_part, p_results_data);
     const double end_time = 0.1;
     const double start_time = 0.;
     const std::size_t N = 5;
@@ -600,33 +629,16 @@ KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, 
         current_time += delta_time;
         model_part.CloneTimeStep(current_time);
         p_solver->Solve();
-        p_results_data->StoreCurrentSolutionStep(model_part);
     }
+
+    // Solve the adjoint problem.
     ModelPart adjoint_model_part("test");
-    adjoint_model_part.AddNodalSolutionStepVariable(DISPLACEMENT);
-    adjoint_model_part.AddNodalSolutionStepVariable(REACTION);
-    adjoint_model_part.AddNodalSolutionStepVariable(VELOCITY);
-    adjoint_model_part.AddNodalSolutionStepVariable(ACCELERATION);
-    adjoint_model_part.AddNodalSolutionStepVariable(ADJOINT_FLUID_VECTOR_1);
-    adjoint_model_part.AddNodalSolutionStepVariable(ADJOINT_FLUID_VECTOR_2);
-    adjoint_model_part.AddNodalSolutionStepVariable(ADJOINT_FLUID_VECTOR_3);
-    adjoint_model_part.AddNodalSolutionStepVariable(AUX_ADJOINT_FLUID_VECTOR_1);
-    adjoint_model_part.AddNodalSolutionStepVariable(NORMAL_SENSITIVITY);
-    adjoint_model_part.CreateNewNode(1, 0.0, 0.0, 0.0);
-    adjoint_model_part.CreateNewNode(2, 0.0, 0.0, 0.0);
-    adjoint_model_part.SetBufferSize(2);
-    for (auto& r_node : adjoint_model_part.Nodes())
-    {
-        r_node.AddDof(ADJOINT_FLUID_VECTOR_1_X, REACTION_X);
-    }
-    auto p_adjoint_element = TwoMassSpringDamperAdjointSystem::Create(
-        adjoint_model_part.pGetNode(1), adjoint_model_part.pGetNode(2));
-    adjoint_model_part.AddElement(p_adjoint_element);
+    Nlsmd::InitializeAdjointModelPart(adjoint_model_part);
     auto p_response_function =
-        Kratos::make_shared<TwoMassSpringDamperSystemResponseFunction>(adjoint_model_part);
-    AdjointBossakSolver adjoint_solver(adjoint_model_part, p_results_data, p_response_function);
+        Kratos::make_shared<Nlsmd::ResponseFunction>(adjoint_model_part);
+    Base::AdjointStrategy adjoint_solver(adjoint_model_part, p_results_data, p_response_function);
     SensitivityBuilder sensitivity_builder(
-        Parameters{R"({ "element_sensitivity_variables": ["NORMAL_SENSITIVITY"] })"},
+        Parameters{R"({ "element_sensitivity_variables": ["SCALAR_SENSITIVITY"] })"},
         adjoint_model_part, p_response_function);
     sensitivity_builder.Initialize();
     adjoint_model_part.CloneTimeStep(end_time + 2. * delta_time);
@@ -638,10 +650,12 @@ KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, 
         adjoint_solver.Solve();
         sensitivity_builder.UpdateSensitivities();
     }
-    const double adjoint_sensitivity = p_adjoint_element->GetValue(NORMAL_SENSITIVITY);
+
+    // Check.
+    const double adjoint_sensitivity = adjoint_model_part.Elements().front().GetValue(SCALAR_SENSITIVITY);
     const double fd_sensitivity = (0.1025147391 - 0.1025144844) / 1.e-4 /* = 0.00254700000007490*/;
-    KRATOS_CHECK_NEAR(adjoint_model_part.GetNode(1).FastGetSolutionStepValue(ADJOINT_FLUID_VECTOR_1_X), 0.0220776047, 1e-8);
-    KRATOS_CHECK_NEAR(adjoint_model_part.GetNode(2).FastGetSolutionStepValue(ADJOINT_FLUID_VECTOR_1_X),-0.0141543232, 1e-8);
+    KRATOS_CHECK_NEAR(adjoint_model_part.GetNode(1).FastGetSolutionStepValue(ADJOINT_VECTOR_1_X), 0.0220776047, 1e-8);
+    KRATOS_CHECK_NEAR(adjoint_model_part.GetNode(2).FastGetSolutionStepValue(ADJOINT_VECTOR_1_X),-0.0141543232, 1e-8);
     KRATOS_CHECK_NEAR(adjoint_sensitivity, fd_sensitivity, 1e-7);
 }
 }
