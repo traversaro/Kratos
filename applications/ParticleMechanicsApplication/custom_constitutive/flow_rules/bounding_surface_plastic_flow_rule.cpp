@@ -108,64 +108,50 @@ void BoundingSurfacePlasticFlowRule::InitializeMaterialParameters(){
 bool BoundingSurfacePlasticFlowRule::CalculateReturnMapping( RadialReturnVariables& rReturnMappingVariables, const Matrix& rIncrementalDeformationGradient, 
     Matrix& rStressMatrix, Matrix& rNewElasticLeftCauchyGreen)
 {
-    // TODO: Implementation is not complete!
     bool plasticity_active = false;
     rReturnMappingVariables.Options.Set(PLASTIC_REGION,false);
     
-    Vector principal_stress = ZeroVector(3);
-    Vector main_strain      = ZeroVector(3);
-    
+    // Predicted new total delta strain
     for (unsigned int i = 0; i<3; ++i)
-        main_strain[i] = rNewElasticLeftCauchyGreen(i,i);
+        mElasticPrincipalStrain[i] = rNewElasticLeftCauchyGreen(i,i);
 
+    // Elastic trial principal stress -- this is not sorted by its magnitude
     for(unsigned int i=0; i<3; i++)
     {
-        // the rStressMatrix is the precomputed principal stress or trial principal stress
-        principal_stress[i] = rStressMatrix(i,i);
+        // the rStressMatrix is the precomputed principal stress
+        mPrincipalStressTrial[i] = rStressMatrix(i,i);
     }
 
-    // Sorting Principal Stress and Strain - "0" is the largest one and "2" is the lowest one
-    // MPMStressPrincipalInvariantsUtility::SortPrincipalStress(principal_stress, main_strain, rReturnMappingVariables.MainDirections);
+    unsigned int region = 0;
+    Vector principal_stress_updated = ZeroVector(3);
 
-    // Assigning to local variables
-    mElasticPrincipalStrain = main_strain;
-
-    // Check for the yield Condition -- calling the yield criterion
-    // rReturnMappingVariables.TrialStateFunction = 0.0;
-    // rReturnMappingVariables.TrialStateFunction = mpYieldCriterion->CalculateYieldCondition(rReturnMappingVariables.TrialStateFunction, principal_stress, 0.0, mMaterialParameters.PreconsolidationPressure);
+    // Performing stress computation: Will update mElasticPrincipalStrain, Region, and principal_stress_updated
+    bool converged = this->CalculateConsistencyCondition(rReturnMappingVariables, mPrincipalStressTrial, mElasticPrincipalStrain, region, principal_stress_updated);
+    KRATOS_ERROR_IF(!converged) << "Warning:: Constitutive Law does not converge! "<<std::endl;
     
-    // If yield is reached, do return mapping
-    // if (rReturnMappingVariables.TrialStateFunction <= 0.0)
-    // {
-    //     mRegion = 0;
-    //     mPrincipalStressUpdated = principal_stress;
-    //     plasticity_active = false;
-    //     rReturnMappingVariables.Options.Set(PLASTIC_REGION,false);
+    // Update local variable
+    mRegion = region;
+    mPrincipalStressUpdated = principal_stress_updated;
 
-    //     this->UpdateStateVariables(mPrincipalStressUpdated);
+    // In bounding surface plasticity, plasticity is always true, even though the stress state are inside the yield function
+    plasticity_active = true;
+    rReturnMappingVariables.Options.Set(PLASTIC_REGION,true);
         
-    // }
-    // else
-    // {
-    //     unsigned int region = 0;
-    //     Vector principal_stress_updated = ZeroVector(3);
-
-    //     // Perform return mapping to the yield surface: Will update mElasticPrincipalStrain, Region, and principal_stress_updated
-    //     bool converged = this->CalculateConsistencyCondition(rReturnMappingVariables, principal_stress, mElasticPrincipalStrain, region, principal_stress_updated);
-    //     KRATOS_ERROR_IF(!converged) << "Warning:: Constitutive Law does not converge! "<<std::endl;
-
-    //     mRegion = region;
-    //     mPrincipalStressUpdated = principal_stress_updated;
-
-    //     plasticity_active = true;
-    //     rReturnMappingVariables.Options.Set(PLASTIC_REGION,true);
-    // }
-
     // rStressMatrix is the matrix of the updated stress in cartesian configuration -- this function perform back transformation
     this->ReturnStressFromPrincipalAxis(rReturnMappingVariables.MainDirections, mPrincipalStressUpdated, rStressMatrix);
- 
+
+    Vector DeltaPrincipalStress = mPrincipalStressTrial - mPrincipalStressUpdated;
+
+    // Updated the PrincipalStrain vector
+    Matrix inv_elastic_matrix = ZeroMatrix(3,3);
+    this->ComputeInverseElasticMatrix(mPreviousMeanStressP, inv_elastic_matrix);
+
     // Delta plastic strain
-    mPlasticPrincipalStrain = main_strain - mElasticPrincipalStrain ;
+    Vector plastic_strain = prod(inv_elastic_matrix, DeltaPrincipalStress);
+ 
+    // Now the component of mElasticPrincipalStrain are sorted in the same way as plastic_strain!
+    mElasticPrincipalStrain -= plastic_strain;
+    mPlasticPrincipalStrain = plastic_strain;
 
     // We're saving the updated info in terms of principal strain and stress in these matrix
     // these information will be used for the evaluation of the second contribution in the
@@ -380,7 +366,46 @@ void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix(const double& rMeanStr
     {
         for (unsigned int i=3; i<6; i++)
         {
-            rElasticMatrix(i,i) = 2.0 * shear_modulus;
+            rElasticMatrix(i,i) = shear_modulus;
+        }
+    }
+    
+}
+
+// Function that compute the inverse of elastic matrix D_e
+void BoundingSurfacePlasticFlowRule::ComputeInverseElasticMatrix(const double& rMeanStressP, Matrix& rInverseElasticMatrix)
+{
+    // Initial Check
+    KRATOS_ERROR_IF(rMeanStressP < 0.0) << "The given mean stress to compute elastic matrix is invalid. Please check the sign convention (expecting positive value)!" << std::endl;
+    
+    // Size of matrix
+    const unsigned int size = rInverseElasticMatrix.size1();
+    
+    const double poisson_ratio  = GetProperties()[POISSON_RATIO];
+    const double swelling_slope = GetProperties()[SWELLING_SLOPE];
+
+    const double bulk_modulus   = mMaterialParameters.SpecificVolume * rMeanStressP / abs(swelling_slope);
+    const double shear_modulus  = (3.0 * (1.0 - (2.0 * poisson_ratio)) * mMaterialParameters.SpecificVolume * rMeanStressP)/(2.0 * (1.0 + poisson_ratio)*abs(swelling_slope));
+    const double lame_parameter = bulk_modulus - 2.0/3.0 * shear_modulus;
+
+    const double diagonal    = (lame_parameter + shear_modulus)/(shear_modulus*(3.0*lame_parameter+2.0*shear_modulus));
+    const double nondiagonal = (-lame_parameter)/( 2.0*shear_modulus*(3.0*lame_parameter + 2.0*shear_modulus));
+
+    // Assemble rElasticMatrix matrix
+    rInverseElasticMatrix = ZeroMatrix(size);
+    for (unsigned int i = 0; i<3; ++i)
+    {
+        for (unsigned int j = 0; j<3; ++j)
+        {
+            if (i == j) {rInverseElasticMatrix(i,i) = diagonal;}
+            else {rInverseElasticMatrix(i,j) = nondiagonal;}
+        }
+    }
+    if (size == 6)
+    {
+        for (unsigned int i=3; i<6; i++)
+        {
+            rInverseElasticMatrix(i,i) = 1.0 / (shear_modulus);
         }
     }
     

@@ -228,6 +228,8 @@ protected:
 
     void ComputeElasticMatrix(const double& rMeanStressP, Matrix& rElasticMatrix);
 
+    void ComputeInverseElasticMatrix(const double& rMeanStressP, Matrix& rInverseElasticMatrix);
+
     void ComputePlasticMatrix(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, Matrix& rPlasticMatrix);
 
     void CalculateModificationMatrix(Matrix& rModMatrixT);
