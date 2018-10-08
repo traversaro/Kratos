@@ -182,7 +182,13 @@ protected:
     Vector mPreviousStress;
     Vector mImagePointStress;
     
+    double mPreviousMeanStressP;
+    double mPreviousDeviatoricStressQ;
+
     double mPlasticMultiplier;
+
+    bool mImagePointComputedBool;
+    bool mIsOnceUnloaded;
 
     ///@name Protected static Member Variables
     ///@{

@@ -83,6 +83,7 @@ void BoundingSurfacePlasticFlowRule::InitializeMaterial(YieldCriterionPointer& p
     mElasticPrincipalStrain = ZeroVector(3);
     mPlasticPrincipalStrain = ZeroVector(3);
 
+    mPrincipalStressTrial   = ZeroVector(3);
     mPrincipalStressUpdated = ZeroVector(3);
     mLargeStrainBool = true;
     mRegion = 0;
@@ -94,6 +95,13 @@ void BoundingSurfacePlasticFlowRule::InitializeMaterial(YieldCriterionPointer& p
     mCenterOfHomologyStress = ZeroVector(3);
     mPreviousStress         = ZeroVector(3);
     mImagePointStress       = ZeroVector(3);
+
+    mPreviousMeanStressP       = 0.0;
+    mPreviousDeviatoricStressQ = 0.0;
+    mPlasticMultiplier         = 0.0;
+
+    mImagePointComputedBool = false;
+    mIsOnceUnloaded         = false;
 
     this->InitializeMaterialParameters();
 }
@@ -182,7 +190,7 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnV
 }
 
 // Function that compute plastic multiplier considering explicit integration
-void CalculatePlasticMultiplier(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, const Vector rPrincipalStrain, double& rPlasticStrainMultiplier)
+void BoundingSurfacePlasticFlowRule::CalculatePlasticMultiplier(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, const Vector rPrincipalStrain, double& rPlasticStrainMultiplier)
 {
     const Vector aux_nT_De = prod(trans(rDirectionN), rElasticMatrix);
 
@@ -190,6 +198,7 @@ void CalculatePlasticMultiplier(const Vector& rDirectionN, const Vector& rDirect
     if (std::abs(denominator) < 1.e-9) denominator = 1.e-9;
 
     rPlasticStrainMultiplier = MathUtils<double>::Dot(aux_nT_De, rPrincipalStrain) / denominator;
+    mPlasticMultiplier       = rPlasticStrainMultiplier;
 
 }
 
@@ -259,8 +268,8 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantDerivativ
 
     // Get material parameters
     const double parameter_A = GetProperties()[MODEL_PARAMETER_A];
-    const bool fix_csl_M = GetProperties()[IS_CSL_FIX];
-    double shear_M       = GetProperties()[CRITICAL_STATE_LINE];
+    const bool fix_csl_M     = GetProperties()[IS_CSL_FIX];
+    double shear_M           = GetProperties()[CRITICAL_STATE_LINE];
     if (!fix_csl_M)
         shear_M = this->CalculateCriticalStateLineSlope(lode_angle);
     const double direction_T = this->GetDirectionParameter(rPrincipalStressVector, rImagePointPrincipalStressVector); 
@@ -397,8 +406,8 @@ void BoundingSurfacePlasticFlowRule::ComputeInverseElasticMatrix(const double& r
     {
         for (unsigned int j = 0; j<3; ++j)
         {
-            if (i == j) {rInverseElasticMatrix(i,i) = diagonal;}
-            else {rInverseElasticMatrix(i,j) = nondiagonal;}
+            if (i == j) rInverseElasticMatrix(i,i) = diagonal;
+            else rInverseElasticMatrix(i,j) = nondiagonal;
         }
     }
     if (size == 6)
@@ -462,18 +471,15 @@ void BoundingSurfacePlasticFlowRule::CalculatePrincipalStressTrial(const RadialR
 // Function to compute Principal Stress Vector from Principal Strain Vector
 void BoundingSurfacePlasticFlowRule::CalculatePrincipalStressVector(const Vector& rPrincipalStrain, Vector& rPrincipalStress)
 {
-    double prev_mean_stress_p, prev_deviatoric_q;
-    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(mPreviousStress, prev_mean_stress_p, prev_deviatoric_q);
-    prev_mean_stress_p *= -1.0; // p is defined negative
-
     // Calculate elastic matrix
     Matrix elastic_matrix_D_e = ZeroMatrix(3);
-    this->ComputeElasticMatrix(prev_mean_stress_p, elastic_matrix_D_e);
+    this->ComputeElasticMatrix(mPreviousMeanStressP, elastic_matrix_D_e);
 
     rPrincipalStress = prod(elastic_matrix_D_e, rPrincipalStrain);
 
 }
 
+// TODO: Confirm whether this is used or not. Otherwise, delete this function
 // Function which returns principal strains from volumetric and deviatoric strain components
 void BoundingSurfacePlasticFlowRule::CalculatePrincipalStrainFromStrainInvariants(Vector& rPrincipalStrain, const double& rVolumetricStrain, const double& rDeviatoricStrain, const Vector& rDirectionVector)
 {
@@ -544,7 +550,7 @@ void BoundingSurfacePlasticFlowRule::ComputeElastoPlasticTangentMatrix(const Rad
 
 void BoundingSurfacePlasticFlowRule::CalculateModificationMatrix(Matrix& rModMatrixT)
 {
-    // Compute main 3x3 terms
+    // Compute main 3x3 terms -- this term need to be considered for nonlinear plastic potential
     Matrix main_mod_3x3 = IdentityMatrix(3);
     Matrix inv_main_mod_3x3 = ZeroMatrix(3);
 
@@ -570,7 +576,7 @@ void BoundingSurfacePlasticFlowRule::CalculateModificationMatrix(Matrix& rModMat
             rModMatrixT(i,j) = inv_main_mod_3x3(i,j);
     }
 
-    // Compute auxiliary terms
+    // Compute auxiliary terms -- this need to be considered for any type of potential
     Vector inv_aux_T = ZeroVector(3);
     if(mPrincipalStressUpdated[0] - mPrincipalStressUpdated[1] > 0)
     {
@@ -685,6 +691,8 @@ bool BoundingSurfacePlasticFlowRule::UpdateInternalVariables( RadialReturnVariab
     this->CalculateCenterOfHomologyStress(mCenterOfHomologyStress);
     mPreviousStress = mPrincipalStressUpdated;
     
+    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(mPreviousStress, mPreviousMeanStressP, mPreviousDeviatoricStressQ);
+    mPreviousMeanStressP *= -1.0; // p is defined negative
 
     return true;
 }
@@ -692,17 +700,16 @@ bool BoundingSurfacePlasticFlowRule::UpdateInternalVariables( RadialReturnVariab
 // Function that calculate stress at center of homology -- this only apply when unloading happen
 void BoundingSurfacePlasticFlowRule::CalculateCenterOfHomologyStress(Vector& rCenterOfHomologyStress)
 {
-    Vector elastic_stress;
-    const Vector total_strain = mPlasticPrincipalStrain + mElasticPrincipalStrain;
-    this->CalculatePrincipalStressVector(total_strain, elastic_stress);
-    
     // Check whether the stress state is reloaded or not
     Vector direction_n = ZeroVector(3);
     this->CalculateLoadingDirection(mPreviousStress, direction_n);
 
-    double dot_product = MathUtils<double>::Dot(elastic_stress, direction_n);
+    double dot_product = MathUtils<double>::Dot(mPrincipalStressTrial, direction_n);
     if (dot_product < 0.0)
+    {
         rCenterOfHomologyStress = mPrincipalStressUpdated;
+        mIsOnceUnloaded         = true;
+    }
 
 }
 
@@ -718,6 +725,8 @@ void BoundingSurfacePlasticFlowRule::CalculateImagePointStress(const Vector& rCe
     {
         rImagePointStress = rCenterOfHomologyStress + (rCurrentStress - rCenterOfHomologyStress) * rConstantB;
     }
+
+    mImagePointComputedBool = true;
 
 }
 
