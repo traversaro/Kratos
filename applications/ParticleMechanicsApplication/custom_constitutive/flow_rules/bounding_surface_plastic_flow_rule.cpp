@@ -176,8 +176,8 @@ bool BoundingSurfacePlasticFlowRule::CalculateReturnMapping( RadialReturnVariabl
 
 }
 
-bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, Vector& rPrincipalStress, 
-    Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated)
+bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(const RadialReturnVariables& rReturnMappingVariables, const Vector& rPrincipalStress,
+    const Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated)
 {
     // Calculate stress return in principal stress space
     // The flow rule is written for non-associated plasticity and explicit assumption using image point

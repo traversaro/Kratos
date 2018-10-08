@@ -223,7 +223,7 @@ protected:
     void CalculateTransformationMatrix(const Matrix& rMainDirection, Matrix& rA);
 
     
-    bool CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, Vector& rPrincipalStress, Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated);
+    bool CalculateConsistencyCondition(const RadialReturnVariables& rReturnMappingVariables, const Vector& rPrincipalStress, const Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated);
  
     void CalculatePlasticMultiplier(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, const Vector rPrincipalStrain, double& rPlasticStrainMultiplier);
 
