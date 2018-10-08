@@ -80,11 +80,15 @@ public:
     struct MaterialParameters
     {
         double SpecificVolume;
+        double PreconsolidationPressure;
+        double PreconsolidationPressureIP;
 
     public:
         void PrintInfo()
         {
             KRATOS_INFO("MPMFlowRule.MaterialParameters") << "SpecificVolume = " <<  SpecificVolume  << std::endl;
+            KRATOS_INFO("MPMFlowRule.MaterialParameters") << "PreconsolidationPressure = " <<  PreconsolidationPressure  << std::endl;
+            KRATOS_INFO("MPMFlowRule.MaterialParameters") << "PreconsolidationPressureIP = " <<  PreconsolidationPressureIP  << std::endl;
         }
 
     };
@@ -181,7 +185,7 @@ protected:
     Vector mCenterOfHomologyStress;
     Vector mPreviousStress;
     Vector mImagePointStress;
-    
+
     double mPreviousMeanStressP;
     double mPreviousDeviatoricStressQ;
 
