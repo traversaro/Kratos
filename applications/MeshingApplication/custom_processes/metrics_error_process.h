@@ -49,7 +49,7 @@ namespace Kratos
  * @author Vicente Mataix Ferrandiz
  */
 template<SizeType TDim>
-class  MetricErrorProcess
+class MetricErrorProcess
     : public Process
 {
 public:

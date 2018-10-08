@@ -50,7 +50,7 @@ namespace Kratos
  * @todo Replace with VariableUtils() when updated for nonhistorical
  */
 template<SizeType TDim>
-class  MetricFastInit
+class MetricFastInit
     : public Process
 {
 public:
