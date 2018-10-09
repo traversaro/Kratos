@@ -97,10 +97,74 @@ void FemDem3DHexahedronElement::CalculateLocalSystem(
 	VectorType &rRightHandSideVector,
 	ProcessInfo &rCurrentProcessInfo)
 {
+	// provisional elastic
+	KRATOS_TRY
 
+	const unsigned int number_of_nodes = GetGeometry().size();
+	const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
+	unsigned int voigt_size = dimension * (dimension + 1) / 2;
+
+	const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(mThisIntegrationMethod);
+	unsigned int system_size = number_of_nodes * dimension;
+	if (rLeftHandSideMatrix.size1() != system_size)
+		rLeftHandSideMatrix.resize(system_size, system_size, false);
+	noalias(rLeftHandSideMatrix) = ZeroMatrix(system_size, system_size);
+
+	if (rRightHandSideVector.size() != system_size)
+		rRightHandSideVector.resize(system_size, false);
+	noalias(rRightHandSideVector) = ZeroVector(system_size);
+
+	Matrix DeltaPosition(number_of_nodes, dimension);
+	noalias(DeltaPosition) = ZeroMatrix(number_of_nodes, dimension);
+	DeltaPosition = this->CalculateDeltaPosition(DeltaPosition);
+
+	GeometryType::JacobiansType J;
+	J.resize(1, false);
+	J[0].resize(dimension, dimension, false);
+	noalias(J[0]) = ZeroMatrix(dimension, dimension);
+	J = GetGeometry().Jacobian(J, mThisIntegrationMethod, DeltaPosition);
+
+	for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+		const Matrix &Ncontainer = GetGeometry().ShapeFunctionsValues(mThisIntegrationMethod);
+		Vector N = row(Ncontainer, PointNumber);
+
+		double detJ = 0;
+		Matrix InvJ(dimension, dimension);
+		noalias(InvJ) = ZeroMatrix(dimension, dimension);
+		MathUtils<double>::InvertMatrix(J[PointNumber], InvJ, detJ);
+
+		double IntegrationWeight = integration_points[PointNumber].Weight() * detJ;
+		const Matrix &B = this->GetBMatrix();
+		const Vector &StressVector = this->GetValue(STRESS_VECTOR);
+
+		Matrix ConstitutiveMatrix = ZeroMatrix(voigt_size, voigt_size);
+		const double E = this->GetProperties()[YOUNG_MODULUS];
+		const double nu = this->GetProperties()[POISSON_RATIO];
+		this->CalculateConstitutiveMatrix(ConstitutiveMatrix, E, nu);
+
+		noalias(rLeftHandSideMatrix) += prod(trans(B), IntegrationWeight * Matrix(prod(ConstitutiveMatrix, B))); // LHS
+
+		Vector VolumeForce = ZeroVector(dimension);
+		VolumeForce = this->CalculateVolumeForce(VolumeForce, N);
+
+		// RHS
+		for (unsigned int i = 0; i < number_of_nodes; i++) {
+			int index = dimension * i;
+			for (unsigned int j = 0; j < dimension; j++) {
+				rRightHandSideVector[index + j] += IntegrationWeight * N[i] * VolumeForce[j];
+			}
+		}
+
+		//compute and add internal forces (RHS = rRightHandSideVector = Fext - Fint)
+		noalias(rRightHandSideVector) -= IntegrationWeight * prod(trans(B), StressVector);
+
+	}
+	KRATOS_CATCH("")
 }
 
-
+void FemDem3DHexahedronElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
+{
+}
 
 
 

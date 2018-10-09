@@ -48,6 +48,8 @@ class FemDem3DHexahedronElement : public FemDem3DElement
 		VectorType &rRightHandSideVector,
 		ProcessInfo &rCurrentProcessInfo);
 
+	void FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo);
+
   private:
 
 }; // Class FemDem3DHexahedronElement

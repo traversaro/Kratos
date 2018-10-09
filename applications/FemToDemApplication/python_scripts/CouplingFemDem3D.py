@@ -52,19 +52,12 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 		self.FEM_Solution.step = self.FEM_Solution.step + 1
 		self.FEM_Solution.main_model_part.ProcessInfo[KratosMultiphysics.STEP] = self.FEM_Solution.step
 
-		# self.nodal_neighbour_finder = KratosMultiphysics.FindNodalNeighboursProcess(self.FEM_Solution.main_model_part, 4, 5)
-		# self.nodal_neighbour_finder.Execute()
-		# KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
-
 		if self.DoRemeshing:
 			is_remeshing = self.CheckIfHasRemeshed()
 			
 			if is_remeshing:
 				# Extrapolate the VonMises normalized stress to nodes (remeshing)
 				KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
-				print("ei")
-				Wait()
-
 
 			# Perform remeshing
 			self.RemeshingProcessMMG.ExecuteInitializeSolutionStep()
