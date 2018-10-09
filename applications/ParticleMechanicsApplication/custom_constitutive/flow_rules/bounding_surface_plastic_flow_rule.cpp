@@ -108,7 +108,7 @@ void BoundingSurfacePlasticFlowRule::InitializeMaterial(YieldCriterionPointer& p
 
 // Initiate Material Parameters which are allowed to change
 void BoundingSurfacePlasticFlowRule::InitializeMaterialParameters(){
-    // TODO: Implementation is not complete!
+
     mMaterialParameters.SpecificVolume = GetProperties()[SPECIFIC_VOLUME_REFERENCE];
     mMaterialParameters.PreconsolidationPressureIP = GetProperties()[PRE_CONSOLIDATION_STRESS];
     
@@ -186,7 +186,7 @@ bool BoundingSurfacePlasticFlowRule::CalculateReturnMapping( RadialReturnVariabl
 
 }
 
-bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, const Vector& rPrincipalStress,
+bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, const Vector& rPrincipalStress, 
     const Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated)
 {
     // Calculate stress return in principal stress space
@@ -780,11 +780,81 @@ void BoundingSurfacePlasticFlowRule::CalculateImagePointStress(const Vector& rCe
         Vector image_point_stress = rCurrentStress;
 
         // Compute the initial guess of state_function F
-        double state_function = 0.0;
-        mpYieldCriterion->CalculateYieldCondition(state_function, image_point_stress, mMaterialParameters.PreconsolidationPressureIP);
+        double state_function;
+        state_function = mpYieldCriterion->CalculateYieldCondition(state_function, image_point_stress, mMaterialParameters.PreconsolidationPressureIP);
+        
+        if (state_function < 0.0)
+        {
+            double ratio_b = rConstantB;
+            const unsigned int max_num_iteration = 20;
 
-        // Bisection method loop -- try to find ratio b, which gives state_function F close to zero
-        // TODO: Update!
+            /*  Try to find ratio b, which gives state_function F > 0.0.
+                The ratio b obtained will be fed as initial guess of the following Newton Raphson iteration.
+                The prediction process is done in order to provide a better initial guess for the NR loop.
+                Without this prediction process, the NR loop might gives b < 1.0. 
+                Which means that the obtained image point is at the opposite parametric side (and this is wrong).*/ 
+            double mean_stress_p, deviatoric_q;
+            MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(image_point_stress, mean_stress_p, deviatoric_q);
+            mean_stress_p *= -1.0;
+
+            // Calculate the minimum increment of stress shooting
+            double min_increment = std::abs((mMaterialParameters.PreconsolidationPressureIP - mean_stress_p) / mMaterialParameters.PreconsolidationPressureIP);
+            
+            Vector aux_diff_vector = rCurrentStress - rCenterOfHomologyStress;
+
+            // Loop to predict ratio b > 1.0 outside the bounding surface
+            bool iteration_converged = false;
+            unsigned int iteration_counter = 0;
+            while(!iteration_converged)
+            {
+                iteration_counter += 1;
+                
+                // Predict new ratio_b, image point stress and state function
+                ratio_b += min_increment;
+                image_point_stress = rCenterOfHomologyStress + aux_diff_vector * ratio_b;
+                state_function = mpYieldCriterion->CalculateYieldCondition(state_function, image_point_stress, mMaterialParameters.PreconsolidationPressureIP);
+
+                if (iteration_counter == max_num_iteration || state_function >= 0.0) iteration_converged = true;
+            }
+
+            // Newton Raphson loop -- find the ratio b which makes F zero
+            bool nr_iteration_converged = false;
+            iteration_counter = 0;
+            
+            while(!nr_iteration_converged)
+            {
+                iteration_counter += 1;
+                double rhs, lhs, delta_b;
+                
+                // NR -- right hand side
+                rhs = -state_function;
+
+                // NR -- left hand side
+                Vector first_derivative_vector = ZeroVector(3); 
+                this->CalculateYieldSurfaceDerivatives(image_point_stress, first_derivative_vector);
+                lhs = MathUtils<double>::Dot(first_derivative_vector, aux_diff_vector);
+
+                // NR -- increment of b
+                delta_b = rhs / lhs;
+                ratio_b += delta_b;
+
+                image_point_stress = rCenterOfHomologyStress + aux_diff_vector * ratio_b;
+                state_function = mpYieldCriterion->CalculateYieldCondition(state_function, image_point_stress, mMaterialParameters.PreconsolidationPressureIP);
+                
+                if (iteration_counter == max_num_iteration || std::abs(state_function) < 1.e-5) iteration_converged = true;
+            }
+
+            // Update the output, ratio_b and image point stress
+            rImagePointStress = image_point_stress;
+            rConstantB        = ratio_b;
+        }
+        else
+        {
+            // Update the output, ratio_b and image point stress
+            rImagePointStress = image_point_stress;
+            rConstantB        = 1.0;
+        }
+
     }
     else
     {
