@@ -17,9 +17,7 @@
 #include <cmath>
 
 #include "includes/model_part.h"
-//#include "boost/smart_ptr.hpp"
 #include "processes/process.h"
-
 #include "fem_to_dem_application_variables.h"
 #include "includes/kratos_flags.h"
 #include "includes/define.h"
@@ -72,11 +70,8 @@ class StressToNodesProcess : public Process
     {
         int max_id;
         this->ObtainMaximumNodeId(max_id);
-
         NodeStresses *NodeStressesVector = new NodeStresses[max_id];
-
         this->StressExtrapolationAndSmoothing(NodeStressesVector);
-
         delete[] NodeStressesVector;
     }
 
@@ -89,14 +84,11 @@ class StressToNodesProcess : public Process
 
         // Loop over elements to extrapolate the stress to the nodes
         for (ElementsArrayType::ptr_iterator it = mr_model_part.Elements().ptr_begin(); it != mr_model_part.Elements().ptr_end(); ++it) {
-
             bool condition_is_active = true;
             if ((*it)->IsDefined(ACTIVE)) {
                 condition_is_active = (*it)->Is(ACTIVE);
             }
-
             if (condition_is_active) {
-
                 if ((*it)->GetGeometry().PointsNumber() == 3) {
                     GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR);
                     for (int i = 0; i < 3; i++) {
@@ -124,7 +116,6 @@ class StressToNodesProcess : public Process
         // Ponderate over the elements coincident on that node
         for (unsigned int i = 0; i < mNNodes; i++) {
             pNodeStressesVector[i].EffectiveStressVector = pNodeStressesVector[i].EffectiveStressVector / pNodeStressesVector[i].NElems;
-            //pNodeStressesVector[i].Damage = pNodeStressesVector[i].Damage / pNodeStressesVector[i].NElems;
         }
 
         // Loop to compute the max eq. stress in order to normalize
@@ -140,7 +131,6 @@ class StressToNodesProcess : public Process
         // Loop to compute the max eq. stress and normalize
         double MaxEqStress = 0.0;
         for (ModelPart::NodeIterator it = mr_model_part.NodesBegin(); it != mr_model_part.NodesEnd(); ++it) {
-
             double &norm = it->GetSolutionStepValue(EQUIVALENT_NODAL_STRESS);
             if (norm > MaxEqStress)
                 MaxEqStress = norm;
