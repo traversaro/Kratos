@@ -626,8 +626,8 @@ KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, 
     ModelPart model_part("test");
     Nlsmd::InitializePrimalModelPart(model_part);
     auto p_results_data = Kratos::make_shared<Nlsmd::PrimalResults>();
-    auto p_solver = Kratos::make_shared<Base::PrimalStrategy>(model_part, p_results_data);
-    p_solver->Initialize();
+    Base::PrimalStrategy solver(model_part, p_results_data);
+    solver.Initialize();
     const double end_time = 0.1;
     const double start_time = 0.;
     const std::size_t N = 5;
@@ -638,7 +638,7 @@ KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, 
     {
         current_time += delta_time;
         model_part.CloneTimeStep(current_time);
-        p_solver->Solve();
+        solver.Solve();
     }
 
     // Solve the adjoint problem.
