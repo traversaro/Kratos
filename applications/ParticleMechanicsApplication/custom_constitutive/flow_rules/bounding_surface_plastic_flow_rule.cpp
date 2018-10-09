@@ -773,8 +773,18 @@ void BoundingSurfacePlasticFlowRule::CalculateImagePointStress(const Vector& rCe
 {
     if (!rBIsKnown)
     {
-        //TODO: Tobe implemented using a bisection method
+        // First, update the preconsolidation stress at image point from the relation with void ratio
+        mMaterialParameters.PreconsolidationPressureIP = 0.0; //TODO: Update!
 
+        // Guess IP stress equal to rCurrentStress
+        Vector image_point_stress = rCurrentStress;
+
+        // Compute the initial guess of state_function F
+        double state_function = 0.0;
+        mpYieldCriterion->CalculateYieldCondition(state_function, image_point_stress, mMaterialParameters.PreconsolidationPressureIP);
+
+        // Bisection method loop -- try to find ratio b, which gives state_function F close to zero
+        // TODO: Update!
     }
     else
     {
