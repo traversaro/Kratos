@@ -190,6 +190,7 @@ protected:
     double mPreviousDeviatoricStressQ;
 
     double mPlasticMultiplier;
+    double mHardeningConstant;
 
     bool mImagePointComputedBool;
     bool mIsOnceUnloaded;
@@ -227,13 +228,15 @@ protected:
     void CalculateTransformationMatrix(const Matrix& rMainDirection, Matrix& rA);
 
     
-    bool CalculateConsistencyCondition(const RadialReturnVariables& rReturnMappingVariables, const Vector& rPrincipalStress, const Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated);
+    bool CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, const Vector& rPrincipalStress, const Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated);
  
     void CalculatePlasticMultiplier(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, const Vector rPrincipalStrain, double& rPlasticStrainMultiplier);
 
     void CalculateImagePointStress(const Vector& rCenterOfHomologyStress, const Vector& rCurrentStress, Vector& rImagePointStress, double& rConstantB, const bool& rBIsKnown = false);
     
     void CalculateCenterOfHomologyStress(Vector& rCenterOfHomologyStress);
+
+    void CheckOrderOfStress(const Vector& rPreviousStress, Vector& rUpdatedStress, Matrix& rMainDirection, unsigned int& rStressRegion);
 
 
     void ComputeElasticMatrix(const double& rMeanStressP, Matrix& rElasticMatrix);

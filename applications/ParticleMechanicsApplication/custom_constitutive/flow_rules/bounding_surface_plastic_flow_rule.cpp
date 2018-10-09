@@ -186,7 +186,7 @@ bool BoundingSurfacePlasticFlowRule::CalculateReturnMapping( RadialReturnVariabl
 
 }
 
-bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(const RadialReturnVariables& rReturnMappingVariables, const Vector& rPrincipalStress,
+bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, const Vector& rPrincipalStress,
     const Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated)
 {
     // Calculate stress return in principal stress space
@@ -210,19 +210,35 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(const RadialR
     }
 
     // Calculate hardening parameters
-    double hardening_parameter = 0.0;
+    mHardeningConstant = this->ComputePlasticHardeningParameter();
 
     // Compute elastic matrix: D_e
+    Matrix elastic_matrix_D_e = ZeroMatrix(3);
+    this->ComputeElasticMatrix(mPreviousMeanStressP, elastic_matrix_D_e);
+
+    // Compute unit direction vectors: n and m
+    Vector unit_n = ZeroVector(3);
+    Vector unit_m = ZeroVector(3);
+    this->CalculateLoadingDirection(mImagePointStress, unit_n);
+    this->CalculatePlasticFlowDirection(mPreviousStress, mImagePointStress, unit_m);
 
     // Compute plastic multiplier
+    this->CalculatePlasticMultiplier(unit_n, unit_m, mHardeningConstant, elastic_matrix_D_e, rPrincipalStrain, mPlasticMultiplier);
 
     // Compute principal stress updated
+    Vector aux_De_m = prod(elastic_matrix_D_e, unit_m);
+    rPrincipalStressUpdated = rPrincipalStress - mPlasticMultiplier * aux_De_m;
 
-    // Check crossing region -- by checking eigen value multiplications
-
-    // Update order of principal stress
+    // Check crossing region and update order (if needed) -- by checking eigen value multiplications
+    this->CheckOrderOfStress(mPreviousStress, rPrincipalStressUpdated, rReturnMappingVariables.MainDirections, region);
 
     return converged;
+}
+
+// Function to check whether the order of stress are changed and return region
+void BoundingSurfacePlasticFlowRule::CheckOrderOfStress(const Vector& rPreviousStress, Vector& rUpdatedStress, Matrix& rMainDirection, unsigned int& rStressRegion)
+{ 
+
 }
 
 // Function that compute plastic multiplier considering explicit integration
@@ -234,7 +250,6 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticMultiplier(const Vector& rD
     if (std::abs(denominator) < 1.e-9) denominator = 1.e-9;
 
     rPlasticStrainMultiplier = MathUtils<double>::Dot(aux_nT_De, rPrincipalStrain) / denominator;
-    mPlasticMultiplier       = rPlasticStrainMultiplier;
 
 }
 
