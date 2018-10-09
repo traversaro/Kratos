@@ -111,6 +111,15 @@ void BoundingSurfacePlasticFlowRule::InitializeMaterialParameters(){
     // TODO: Implementation is not complete!
     mMaterialParameters.SpecificVolume = GetProperties()[SPECIFIC_VOLUME_REFERENCE];
     mMaterialParameters.PreconsolidationPressureIP = GetProperties()[PRE_CONSOLIDATION_STRESS];
+    
+    // Get necessary parameters
+    const double p_0         = GetProperties()[INITIAL_MEAN_STRESS];
+    const double q_0         = GetProperties()[INITIAL_DEVIATORIC_STRESS];
+    const double curvature_N = GetProperties()[BOUNDING_SURFACE_CURVATURE];
+    const double ratio_R     = GetProperties()[MODEL_PARAMETER_R];
+    const double shear_M     = GetProperties()[CRITICAL_STATE_LINE];
+    
+    mMaterialParameters.PreconsolidationPressure = std::exp(std::log(ratio_R) * std::pow(q_0/shear_M/p_0, curvature_N) + std::log(p_0));
 }
 
 
@@ -184,13 +193,6 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(const RadialR
     // The flow rule is written for non-associated plasticity and explicit assumption using projected image point
     // Refer to paper by (Russel&Khalili, 2003; Kan et al, 2013) for the theoretical description
     bool converged = false;
-
-    // Calculate preconsolidation stresses
-    if (!mIsOnceUnloaded)
-    {
-        
-        mMaterialParameters.PreconsolidationPressure = 0.0;
-    }
 
     // Calculate preconsolidation stresses ratio b
     double constant_B = 1.0;
