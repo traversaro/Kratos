@@ -110,6 +110,7 @@ void BoundingSurfacePlasticFlowRule::InitializeMaterial(YieldCriterionPointer& p
 void BoundingSurfacePlasticFlowRule::InitializeMaterialParameters(){
     // TODO: Implementation is not complete!
     mMaterialParameters.SpecificVolume = GetProperties()[SPECIFIC_VOLUME_REFERENCE];
+    mMaterialParameters.PreconsolidationPressureIP = GetProperties()[PRE_CONSOLIDATION_STRESS];
 }
 
 
@@ -180,9 +181,16 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(const RadialR
     const Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated)
 {
     // Calculate stress return in principal stress space
-    // The flow rule is written for non-associated plasticity and explicit assumption using image point
-    // Refer to paper by (Russel&Khalili, 2003) for the theoretical description
+    // The flow rule is written for non-associated plasticity and explicit assumption using projected image point
+    // Refer to paper by (Russel&Khalili, 2003; Kan et al, 2013) for the theoretical description
     bool converged = false;
+
+    // Calculate preconsolidation stresses
+    if (!mIsOnceUnloaded)
+    {
+        
+        mMaterialParameters.PreconsolidationPressure = 0.0;
+    }
 
     // Calculate preconsolidation stresses ratio b
     double constant_B = 1.0;
@@ -719,6 +727,8 @@ bool BoundingSurfacePlasticFlowRule::UpdateInternalVariables( RadialReturnVariab
 
     MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(mPreviousStress, mPreviousMeanStressP, mPreviousDeviatoricStressQ);
     mPreviousMeanStressP *= -1.0; // p is defined negative
+
+    mImagePointComputedBool = false;
     
     return true;
 }
@@ -733,6 +743,8 @@ void BoundingSurfacePlasticFlowRule::CalculateCenterOfHomologyStress(Vector& rCe
     double dot_product = MathUtils<double>::Dot(mPrincipalStressTrial, direction_n);
     if (dot_product < 0.0)
     {
+        //TODO: Need to implement overshooting treatment
+
         rCenterOfHomologyStress = mPrincipalStressUpdated;
         mIsOnceUnloaded         = true;
     }
@@ -755,6 +767,24 @@ void BoundingSurfacePlasticFlowRule::CalculateImagePointStress(const Vector& rCe
     mImagePointComputedBool = true;
 
 }
+
+// Function that return the total hardening parameter h = h_b + h_f for computation of multiplier and stiffness matrix
+double BoundingSurfacePlasticFlowRule::ComputePlasticHardeningParameter()
+{
+    double hardening_parameter = 0.0;
+
+    // TODO: Tobe implemented
+    // Calculate plastic hardening modulus h_b at the imagepoint stress on the bounding surface
+    double hardening_b = 0.0;
+
+    // Calculate arbitrary hardening modulus h_f (require the distance from the current stress to the image point)
+    double hardening_f = 0.0;
+
+    hardening_parameter = hardening_b + hardening_f;
+    
+    return hardening_parameter;
+}
+
 
 // Function that return the slope of critical state line
 double BoundingSurfacePlasticFlowRule::CalculateCriticalStateLineSlope(const double& rLodeAngle)
