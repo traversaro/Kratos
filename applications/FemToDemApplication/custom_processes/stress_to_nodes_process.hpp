@@ -117,6 +117,7 @@ class StressToNodesProcess : public Process
                 else
                 {
                     GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR);
+					//KRATOS_WATCH(GaussPointsStresses)
                     //damage = (*it)->GetValue(DAMAGE_ELEMENT);
 
                     for (int i = 0; i < 4; i++)
@@ -169,7 +170,8 @@ class StressToNodesProcess : public Process
         for (ModelPart::NodeIterator it = mr_model_part.NodesBegin(); it != mr_model_part.NodesEnd(); ++it)
         {
             double &norm = it->GetSolutionStepValue(EQUIVALENT_NODAL_STRESS);
-            norm /= (MaxEqStress * 1.0e4);
+            // norm /= (MaxEqStress * 1.0e4);
+            norm /= (MaxEqStress);
         }
     }
 

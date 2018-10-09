@@ -54,6 +54,7 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 
 		# self.nodal_neighbour_finder = KratosMultiphysics.FindNodalNeighboursProcess(self.FEM_Solution.main_model_part, 4, 5)
 		# self.nodal_neighbour_finder.Execute()
+		# KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
 
 		if self.DoRemeshing:
 			is_remeshing = self.CheckIfHasRemeshed()
@@ -61,8 +62,9 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 			if is_remeshing:
 				# Extrapolate the VonMises normalized stress to nodes (remeshing)
 				KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
-				# Extrapolate the Damage normalized stress to nodes (remeshing)
-				# KratosFemDem.DamageToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
+				print("ei")
+				Wait()
+
 
 			# Perform remeshing
 			self.RemeshingProcessMMG.ExecuteInitializeSolutionStep()
@@ -115,6 +117,8 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 		self.CheckForPossibleIndentations()
 		self.CheckInactiveNodes()
 		self.UpdateDEMVariables()     # We update coordinates, displ and velocities of the DEM according to FEM
+
+		KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
 
 		self.DEM_Solution.InitializeTimeStep()
 
