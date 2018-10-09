@@ -60,9 +60,9 @@ public:
             Kratos::make_shared<SkylineLUCustomScalarSolver<SparseSpaceType, LocalSpaceType>>();
         auto p_conv_criteria =
             Kratos::make_shared<ResidualCriteria<SparseSpaceType, LocalSpaceType>>(
-                1e-26, 1e-27);
+                1e-10, 1e-13);
         mpSolver = Kratos::make_shared<ResidualBasedNewtonRaphsonStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>>(
-            rModelPart, p_scheme, p_linear_solver, p_conv_criteria, 40, true, false, true);
+            rModelPart, p_scheme, p_linear_solver, p_conv_criteria, 10, true, false, true);
     }
 
     void Initialize() override
