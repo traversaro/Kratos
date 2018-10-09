@@ -137,6 +137,9 @@ namespace NonLinearSpringMassDamper
  * Spring force: fe = x + stiffness * x^3
  * Damper force: fc = damping * x'
  * 
+ * Momentum equations:
+ * mass1 * acc1 + 2 * damping * vel1 - damping * vel2 + 2 * disp1 - disp2 + stiffness * disp1^3 - stiffness * (disp2 - disp1)^3 = 0,
+ * mass2 * acc2 - damping * vel1 + damping * vel2 - disp1 + disp2 + stiffness * (disp2 - disp1)^3 = 0.
  */
 class PrimalElement : public Element
 {
