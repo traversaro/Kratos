@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <exception>
 #include <sstream>
-#include <iomanip>
 
 #include "testing/testing.h"
 #include "includes/define.h"
@@ -28,7 +27,7 @@ namespace Testing
 {
 namespace
 {
-const double AlphaBossak = 0.;
+const double AlphaBossak = -0.3;
 namespace Base
 {
 typedef UblasSpace<double, CompressedMatrix, Vector> SparseSpaceType;
@@ -66,6 +65,11 @@ public:
             rModelPart, p_scheme, p_linear_solver, p_conv_criteria, 40, true, false, true);
     }
 
+    void Initialize() override
+    {
+        mpSolver->Initialize();
+    }
+
     double Solve() override
     {
         auto result = mpSolver->Solve();
@@ -98,6 +102,11 @@ public:
         mpSolver =
             Kratos::make_shared<ResidualBasedLinearStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>>(
                 rModelPart, p_adjoint_scheme, p_linear_solver);
+    }
+
+    void Initialize() override
+    {
+        mpSolver->Initialize();
     }
 
     double Solve() override
@@ -164,22 +173,22 @@ public:
     void GetValuesVector(Vector& values, int Step = 0) override
     {
         values.resize(2);
-        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(DISPLACEMENT_X);
-        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(DISPLACEMENT_X);
+        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(DISPLACEMENT_X, Step);
+        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(DISPLACEMENT_X, Step);
     }
 
     void GetFirstDerivativesVector(Vector& values, int Step = 0) override
     {
         values.resize(2);
-        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(VELOCITY_X);
-        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(VELOCITY_X);
+        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(VELOCITY_X, Step);
+        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(VELOCITY_X, Step);
     }
 
     void GetSecondDerivativesVector(Vector& values, int Step = 0) override
     {
         values.resize(2);
-        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ACCELERATION_X);
-        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ACCELERATION_X);
+        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ACCELERATION_X, Step);
+        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ACCELERATION_X, Step);
     }
 
     void CalculateLocalSystem(MatrixType& rLeftHandSideMatrix,
@@ -342,22 +351,22 @@ public:
     void GetValuesVector(Vector& values, int Step = 0) override
     {
         values.resize(2);
-        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ADJOINT_VECTOR_1_X);
-        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ADJOINT_VECTOR_1_X);
+        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ADJOINT_VECTOR_1_X, Step);
+        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ADJOINT_VECTOR_1_X, Step);
     }
 
     void GetFirstDerivativesVector(Vector& values, int Step = 0) override
     {
         values.resize(2);
-        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ADJOINT_VECTOR_2_X);
-        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ADJOINT_VECTOR_2_X);
+        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ADJOINT_VECTOR_2_X, Step);
+        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ADJOINT_VECTOR_2_X, Step);
     }
 
     void GetSecondDerivativesVector(Vector& values, int Step = 0) override
     {
         values.resize(2);
-        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ADJOINT_VECTOR_3_X);
-        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ADJOINT_VECTOR_3_X);
+        values[0] = this->GetGeometry()[0].FastGetSolutionStepValue(ADJOINT_VECTOR_3_X, Step);
+        values[1] = this->GetGeometry()[1].FastGetSolutionStepValue(ADJOINT_VECTOR_3_X, Step);
     }
 
     void CalculateLeftHandSide(MatrixType& rLeftHandSideMatrix,
@@ -618,6 +627,7 @@ KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, 
     Nlsmd::InitializePrimalModelPart(model_part);
     auto p_results_data = Kratos::make_shared<Nlsmd::PrimalResults>();
     auto p_solver = Kratos::make_shared<Base::PrimalStrategy>(model_part, p_results_data);
+    p_solver->Initialize();
     const double end_time = 0.1;
     const double start_time = 0.;
     const std::size_t N = 5;
@@ -637,6 +647,7 @@ KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, 
     auto p_response_function =
         Kratos::make_shared<Nlsmd::ResponseFunction>(adjoint_model_part);
     Base::AdjointStrategy adjoint_solver(adjoint_model_part, p_results_data, p_response_function);
+    adjoint_solver.Initialize();
     SensitivityBuilder sensitivity_builder(
         Parameters{R"({ "element_sensitivity_variables": ["SCALAR_SENSITIVITY"] })"},
         adjoint_model_part, p_response_function);
@@ -653,9 +664,13 @@ KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, 
 
     // Check.
     const double adjoint_sensitivity = adjoint_model_part.Elements().front().GetValue(SCALAR_SENSITIVITY);
-    const double fd_sensitivity = (0.1025147391 - 0.1025144844) / 1.e-4 /* = 0.00254700000007490*/;
-    KRATOS_CHECK_NEAR(adjoint_model_part.GetNode(1).FastGetSolutionStepValue(ADJOINT_VECTOR_1_X), 0.0220776047, 1e-8);
-    KRATOS_CHECK_NEAR(adjoint_model_part.GetNode(2).FastGetSolutionStepValue(ADJOINT_VECTOR_1_X),-0.0141543232, 1e-8);
+    const double fd_sensitivity = (1.0251139877e-01 - 1.0251114465e-01) / 1.e-4;
+    KRATOS_CHECK_NEAR(adjoint_model_part.GetNode(1).FastGetSolutionStepValue(ADJOINT_VECTOR_1_X), 2.1808885528e-02, 1e-6);
+    KRATOS_CHECK_NEAR(adjoint_model_part.GetNode(2).FastGetSolutionStepValue(ADJOINT_VECTOR_1_X), -1.3753669361e-02, 1e-6);
+    KRATOS_CHECK_NEAR(adjoint_model_part.GetNode(1).FastGetSolutionStepValue(ADJOINT_VECTOR_2_X), -1.1404210281, 1e-6);
+    KRATOS_CHECK_NEAR(adjoint_model_part.GetNode(2).FastGetSolutionStepValue(ADJOINT_VECTOR_2_X), 7.5552893007e-01, 1e-6);
+    KRATOS_CHECK_NEAR(adjoint_model_part.GetNode(1).FastGetSolutionStepValue(ADJOINT_VECTOR_3_X), 1.8155023724e-02, 1e-6);
+    KRATOS_CHECK_NEAR(adjoint_model_part.GetNode(2).FastGetSolutionStepValue(ADJOINT_VECTOR_3_X), -1.0319132594e-02, 1e-6);
     KRATOS_CHECK_NEAR(adjoint_sensitivity, fd_sensitivity, 1e-7);
 }
 }
