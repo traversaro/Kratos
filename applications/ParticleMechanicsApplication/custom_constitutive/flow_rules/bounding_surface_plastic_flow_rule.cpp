@@ -532,19 +532,6 @@ void BoundingSurfacePlasticFlowRule::CalculatePrincipalStressVector(const Vector
 
 }
 
-// TODO: Confirm whether this is used or not. Otherwise, delete this function
-// Function which returns principal strains from volumetric and deviatoric strain components
-void BoundingSurfacePlasticFlowRule::CalculatePrincipalStrainFromStrainInvariants(Vector& rPrincipalStrain, const double& rVolumetricStrain, const double& rDeviatoricStrain, const Vector& rDirectionVector)
-{
-    rPrincipalStrain = ZeroVector(3);
-    
-    for (unsigned int i = 0; i<3; ++i)
-    {
-        rPrincipalStrain[i] += 1.0/3.0 * rVolumetricStrain;
-    }
-    rPrincipalStrain += std::sqrt(3.0/2.0) * rDeviatoricStrain * rDirectionVector;
-}
-
 
 // Function which returns volumetric and deviatoric strain components from principal strain
 void BoundingSurfacePlasticFlowRule::CalculateStrainInvariantsFromPrincipalStrain(const Vector& rPrincipalStrain, double& rVolumetricStrain, double& rDeviatoricStrain, Vector& rDeviatoricStrainVector)
