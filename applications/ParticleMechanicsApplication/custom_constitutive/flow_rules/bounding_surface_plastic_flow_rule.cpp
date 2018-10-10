@@ -207,10 +207,10 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnV
     if (!mImagePointComputedBool)
     {
         this->CalculateImagePointStress(mCenterOfHomologyStress, mPreviousStress, mImagePointStress, constant_B, is_b_known);
+    
+        // Calculate hardening parameters
+        mHardeningConstant = this->ComputePlasticHardeningParameter(constant_B);
     }
-
-    // Calculate hardening parameters
-    mHardeningConstant = this->ComputePlasticHardeningParameter();
 
     // Compute elastic matrix: D_e
     Matrix elastic_matrix_D_e = ZeroMatrix(3);
@@ -231,6 +231,8 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnV
 
     // Check crossing region and update order (if needed) -- by checking eigen value multiplications
     this->CheckOrderOfStress(mPreviousStress, rPrincipalStressUpdated, rReturnMappingVariables.MainDirections, region);
+
+    converged = true;
 
     return converged;
 }
@@ -745,6 +747,7 @@ bool BoundingSurfacePlasticFlowRule::UpdateInternalVariables( RadialReturnVariab
     MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(mPreviousStress, mPreviousMeanStressP, mPreviousDeviatoricStressQ);
     mPreviousMeanStressP *= -1.0; // p is defined negative
 
+    // Reset bool
     mImagePointComputedBool = false;
     
     return true;
@@ -783,6 +786,7 @@ void BoundingSurfacePlasticFlowRule::CalculateImagePointStress(const Vector& rCe
         double state_function;
         state_function = mpYieldCriterion->CalculateYieldCondition(state_function, image_point_stress, mMaterialParameters.PreconsolidationPressureIP);
         
+        // Current stress state is inside bounding surface
         if (state_function < 0.0)
         {
             double ratio_b = rConstantB;
@@ -826,28 +830,30 @@ void BoundingSurfacePlasticFlowRule::CalculateImagePointStress(const Vector& rCe
                 iteration_counter += 1;
                 double rhs, lhs, delta_b;
                 
-                // NR -- right hand side
+                // Assign right hand side value
                 rhs = -state_function;
 
-                // NR -- left hand side
+                // Compute left hand side value
                 Vector first_derivative_vector = ZeroVector(3); 
                 this->CalculateYieldSurfaceDerivatives(image_point_stress, first_derivative_vector);
                 lhs = MathUtils<double>::Dot(first_derivative_vector, aux_diff_vector);
 
-                // NR -- increment of b
+                // Calculate and add increment of b
                 delta_b = rhs / lhs;
                 ratio_b += delta_b;
 
+                // Check the new state function (residual)
                 image_point_stress = rCenterOfHomologyStress + aux_diff_vector * ratio_b;
                 state_function = mpYieldCriterion->CalculateYieldCondition(state_function, image_point_stress, mMaterialParameters.PreconsolidationPressureIP);
                 
-                if (iteration_counter == max_num_iteration || std::abs(state_function) < 1.e-5) iteration_converged = true;
+                if (iteration_counter == max_num_iteration || std::abs(state_function) < 1.e-5) nr_iteration_converged = true;
             }
 
             // Update the output, ratio_b and image point stress
             rImagePointStress = image_point_stress;
             rConstantB        = ratio_b;
         }
+        // Current stress state is overlapping the bounding surface
         else
         {
             // Update the output, ratio_b and image point stress
@@ -866,22 +872,55 @@ void BoundingSurfacePlasticFlowRule::CalculateImagePointStress(const Vector& rCe
 }
 
 // Function that return the total hardening parameter h = h_b + h_f for computation of multiplier and stiffness matrix
-double BoundingSurfacePlasticFlowRule::ComputePlasticHardeningParameter()
+double BoundingSurfacePlasticFlowRule::ComputePlasticHardeningParameter(const double& rConstantB)
 {
     double hardening_parameter = 0.0;
 
-    // TODO: Tobe implemented
     // Calculate plastic hardening modulus h_b at the imagepoint stress on the bounding surface
     double hardening_b = 0.0;
+    
+    Vector dF_dsigma = ZeroVector(3); 
+    this->CalculateYieldSurfaceDerivatives(mImagePointStress, dF_dsigma);
+    const double norm_dF_dsigma = norm_2(dF_dsigma);
+
+    Vector unit_m = ZeroVector(3);
+    this->CalculatePlasticFlowDirection(mPreviousStress, mImagePointStress, unit_m);
+    const double m_p = unit_m[0];
+
+    const double other_slope    = 0.0; //TODO: Update this!
+    const double swelling_slope = GetProperties()[SWELLING_SLOPE];
+    const double ratio_R        = GetProperties()[MODEL_PARAMETER_R];
+
+    hardening_b = mMaterialParameters.SpecificVolume / (other_slope - swelling_slope) / std::log(ratio_R) * m_p / norm_dF_dsigma;
 
     // Calculate arbitrary hardening modulus h_f (require the distance from the current stress to the image point)
     double hardening_f = 0.0;
 
+    const double direction_T = this->GetDirectionParameter(mPreviousStress, mImagePointStress);
+    const double param_K = GetProperties()[MODEL_PARAMETER_K];
+    const double state_parameter = this->GetStateParameter();
+
+    const bool fix_csl_M = GetProperties()[IS_CSL_FIX];
+    double shear_M       = GetProperties()[CRITICAL_STATE_LINE];
+    if (!fix_csl_M)
+    {
+        double lode_angle;
+        MPMStressPrincipalInvariantsUtility::CalculateThirdStressInvariant(mPreviousStress, lode_angle);
+        shear_M = this->CalculateCriticalStateLineSlope(lode_angle);
+    }
+
+    const double peak_stress_ratio = direction_T * (1.0 - param_K * state_parameter) * shear_M;
+    const double stress_ratio = mPreviousDeviatoricStressQ / mPreviousMeanStressP;
+    const double scaling_parameter = this->GetScalingHardeningParameter();
+
+    hardening_f  = mMaterialParameters.SpecificVolume * mPreviousMeanStressP / (other_slope - swelling_slope);
+    hardening_f *= (rConstantB - 1.0) * scaling_parameter * (peak_stress_ratio - direction_T * stress_ratio);
+
+    // Total hardening modulus
     hardening_parameter = hardening_b + hardening_f;
     
     return hardening_parameter;
 }
-
 
 // Function that return the slope of critical state line
 double BoundingSurfacePlasticFlowRule::CalculateCriticalStateLineSlope(const double& rLodeAngle)
@@ -895,6 +934,20 @@ double BoundingSurfacePlasticFlowRule::CalculateCriticalStateLineSlope(const dou
     KRATOS_ERROR_IF(shear_M < 0.0) << "The slope of critical state line is negative! M_cs = " << shear_M << std::endl;
 
     return shear_M;
+}
+
+double BoundingSurfacePlasticFlowRule::GetScalingHardeningParameter()
+{
+    if (!mIsOnceUnloaded) {return GetProperties()[INITIAL_SCALING_HARDENING_PARAMETER];} 
+    else {return GetProperties()[RELOAD_SCALING_HARDENING_PARAMETER];}
+}
+
+double BoundingSurfacePlasticFlowRule::GetStateParameter()
+{
+    //TODO: Update this!
+    double specific_volume_CSL = 0.0;
+
+    return mMaterialParameters.SpecificVolume - specific_volume_CSL;
 }
 
 double BoundingSurfacePlasticFlowRule::GetDirectionParameter(const Vector& rPrincipalStressVector, const Vector& rImagePointPrincipalStressVector)
