@@ -25,9 +25,6 @@
 
 // External includes
 #include <pybind11/pybind11.h>
-//#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-//#include <boost/timer.hpp>
-
 
 // Project includes
 #include "includes/define.h"
@@ -37,6 +34,7 @@
 
 //strategies
 #include "solving_strategies/strategies/solving_strategy.h"
+#include "custom_strategies/hexahedra_newton_raphson_strategy.h"
 
 //linear solvers
 #include "linear_solvers/linear_solver.h"
@@ -46,30 +44,36 @@
 namespace Kratos
 {
 
-	namespace Python
+namespace Python
+{
+	using namespace pybind11;
+
+	void  AddCustomStrategiesToPython(pybind11::module& m)
 	{
-		using namespace pybind11;
+		typedef UblasSpace<double, CompressedMatrix, Vector> SparseSpaceType;
+		typedef UblasSpace<double, Matrix, Vector> LocalSpaceType;
+		typedef Scheme< SparseSpaceType, LocalSpaceType > BaseSchemeType;
 
-		void  AddCustomStrategiesToPython(pybind11::module& m)
-		{
-			typedef UblasSpace<double, CompressedMatrix, Vector> SparseSpaceType;
-			typedef UblasSpace<double, Matrix, Vector> LocalSpaceType;
+		// Base types
+		typedef LinearSolver<SparseSpaceType, LocalSpaceType > LinearSolverType;
+		typedef LinearSolverType::Pointer LinearSolverPointer;
+		typedef SolvingStrategy< SparseSpaceType, LocalSpaceType, LinearSolverType > BaseSolvingStrategyType;
+		typedef ConvergenceCriteria< SparseSpaceType, LocalSpaceType > ConvergenceCriteriaType;
+		typedef ConvergenceCriteriaType::Pointer ConvergenceCriteriaPointer;
+		typedef BuilderAndSolver< SparseSpaceType, LocalSpaceType, LinearSolverType > BuilderAndSolverType;
+		typedef BuilderAndSolverType::Pointer BuilderAndSolverPointer;
+		typedef ResidualBasedNewtonRaphsonStrategy< SparseSpaceType, LocalSpaceType, LinearSolverType > ResidualBasedNewtonRaphsonStrategyType;
+		typedef HexahedraNewtonRaphsonStrategy< SparseSpaceType, LocalSpaceType, LinearSolverType > HexahedraNewtonRaphsonStrategyType;
 
-			typedef LinearSolver<SparseSpaceType, LocalSpaceType > LinearSolverType;
-			typedef SolvingStrategy< SparseSpaceType, LocalSpaceType, LinearSolverType > BaseSolvingStrategyType;
-			typedef Scheme< SparseSpaceType, LocalSpaceType > BaseSchemeType;
+		// class_<HexahedraNewtonRaphsonStrategyType, typename HexahedraNewtonRaphsonStrategyType::Pointer, ResidualBasedNewtonRaphsonStrategyType>(m, "HexahedraNewtonRaphsonStrategy")
+		// 	.def(init<ModelPart& , BaseSchemeType::Pointer, LinearSolverPointer, ConvergenceCriteriaPointer, BuilderAndSolverType, int, bool, bool, bool, bool>());
+		class_< HexahedraNewtonRaphsonStrategyType,
+				typename HexahedraNewtonRaphsonStrategyType::Pointer,
+				BaseSolvingStrategyType  >  (m, "HexahedraNewtonRaphsonStrategy")
+				.def(init < ModelPart&, BaseSchemeType::Pointer, LinearSolverType::Pointer, ConvergenceCriteriaType::Pointer, int, bool, bool, bool >())
+				;
+	}
 
-			//********************************************************************
-			//********************************************************************
-// 			class_< TestStrategy< SparseSpaceType, LocalSpaceType, LinearSolverType >,
-// 					bases< BaseSolvingStrategyType >,  boost::noncopyable >
-// 				("TestStrategy",
-// 				init<ModelPart&, LinearSolverType::Pointer, int, int, bool >() )
-// 				.def("MoveNodes",&TestStrategy< SparseSpaceType, LocalSpaceType, LinearSolverType >::MoveNodes)
-// 				;
-
-		}
-
-	}  // namespace Python.
+}  // namespace Python.
 
 } // Namespace Kratos

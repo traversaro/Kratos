@@ -34,15 +34,15 @@ class FEMDEM3DHexahedrons_Solution(CouplingFemDem3D.FEMDEM3D_Solution):
 
 
 		# *******************************************************
-		# default_settings = KratosMultiphysics.Parameters("""
-		# {
-        # "echo_level"                 : 0,
-        # "area_average"               : true,
-        # "average_variable"           : "STRESS_VECTOR",
-        # "list_of_variables"          : [],
-        # "extrapolate_non_historical" : true
-    	# }""")
-		# MeshingApplication.IntegrationValuesExtrapolationToNodesProcess(self.FEM_Solution.main_model_part, default_settings).Execute()
+		default_settings = KratosMultiphysics.Parameters("""
+		{
+			"echo_level"                 : 0,
+			"area_average"               : true,
+			"average_variable"           : "NODAL_AREA",
+			"list_of_variables"          : ["STRESS_VECTOR"],
+			"extrapolate_non_historical" : true
+    	}""")
+		MeshingApplication.IntegrationValuesExtrapolationToNodesProcess(self.FEM_Solution.main_model_part, default_settings).Execute()
 		# *************************************************************
 
 		
