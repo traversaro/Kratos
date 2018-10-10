@@ -96,6 +96,8 @@ void BoundingSurfacePlasticFlowRule::InitializeMaterial(YieldCriterionPointer& p
     mPreviousStress         = ZeroVector(3);
     mImagePointStress       = ZeroVector(3);
 
+    mPreviousMainDirections = ZeroMatrix(3);
+
     mPreviousMeanStressP       = 0.0;
     mPreviousDeviatoricStressQ = 0.0;
     mPlasticMultiplier         = 0.0;
@@ -139,6 +141,9 @@ bool BoundingSurfacePlasticFlowRule::CalculateReturnMapping( RadialReturnVariabl
         // the rStressMatrix is the precomputed principal stress
         mPrincipalStressTrial[i] = rStressMatrix(i,i);
     }
+
+    // Sorting Principal Stress and Strain - "0" is the largest one and "2" is the lowest one
+    MPMStressPrincipalInvariantsUtility::SortPrincipalStress(mPrincipalStressTrial, mElasticPrincipalStrain, rReturnMappingVariables.MainDirections);
 
     unsigned int region = 0;
     Vector principal_stress_updated = ZeroVector(3);
@@ -229,18 +234,9 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnV
     Vector aux_De_m = prod(elastic_matrix_D_e, unit_m);
     rPrincipalStressUpdated = rPrincipalStress - mPlasticMultiplier * aux_De_m;
 
-    // Check crossing region and update order (if needed) -- by checking eigen value multiplications
-    this->CheckOrderOfStress(mPreviousStress, rPrincipalStressUpdated, rReturnMappingVariables.MainDirections, region);
-
     converged = true;
 
     return converged;
-}
-
-// Function to check whether the order of stress are changed and return region
-void BoundingSurfacePlasticFlowRule::CheckOrderOfStress(const Vector& rPreviousStress, Vector& rUpdatedStress, Matrix& rMainDirection, unsigned int& rStressRegion)
-{ 
-
 }
 
 // Function that compute plastic multiplier considering explicit integration
@@ -532,7 +528,6 @@ void BoundingSurfacePlasticFlowRule::CalculatePrincipalStressVector(const Vector
 
 }
 
-
 // Function which returns volumetric and deviatoric strain components from principal strain
 void BoundingSurfacePlasticFlowRule::CalculateStrainInvariantsFromPrincipalStrain(const Vector& rPrincipalStrain, double& rVolumetricStrain, double& rDeviatoricStrain, Vector& rDeviatoricStrainVector)
 {
@@ -727,10 +722,15 @@ bool BoundingSurfacePlasticFlowRule::UpdateInternalVariables( RadialReturnVariab
     mInternalVariables.DeltaPlasticDeviatoricStrain = deviatoric_strain;
     mInternalVariables.AccumulatedPlasticDeviatoricStrain += deviatoric_strain;
 
-    // TODO: Implementation is not complete!
-    this->CalculateCenterOfHomologyStress(mCenterOfHomologyStress);
-    mPreviousStress = mPrincipalStressUpdated;
+    // Check crossing region and update order (if needed) -- by checking eigen value multiplications
+    Vector rearranged_updated_principal_stress = mPrincipalStressUpdated;
+    Matrix rearranged_main_directions          = rReturnMappingVariables.MainDirections;
+    this->CheckOrderOfStress(rearranged_updated_principal_stress, rearranged_main_directions);
 
+    this->CalculateCenterOfHomologyStress(rearranged_updated_principal_stress, mCenterOfHomologyStress);
+
+    mPreviousStress = rearranged_updated_principal_stress;
+    mPreviousMainDirections = rearranged_main_directions;
     MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(mPreviousStress, mPreviousMeanStressP, mPreviousDeviatoricStressQ);
     mPreviousMeanStressP *= -1.0; // p is defined negative
 
@@ -740,8 +740,19 @@ bool BoundingSurfacePlasticFlowRule::UpdateInternalVariables( RadialReturnVariab
     return true;
 }
 
+// Function to check whether the order of stress are changed and return region
+void BoundingSurfacePlasticFlowRule::CheckOrderOfStress(Vector& rUpdatedStress, Matrix& rMainDirection)
+{ 
+    // Normalize eigen vectors
+    
+    // Multiply to check
+
+    // Swap if needed
+
+}
+
 // Function that calculate stress at center of homology -- this only apply when unloading happen
-void BoundingSurfacePlasticFlowRule::CalculateCenterOfHomologyStress(Vector& rCenterOfHomologyStress)
+void BoundingSurfacePlasticFlowRule::CalculateCenterOfHomologyStress(const Vector& rRearrangedStress, Vector& rCenterOfHomologyStress)
 {
     // Check whether the stress state is reloaded or not
     Vector direction_n = ZeroVector(3);
@@ -750,10 +761,11 @@ void BoundingSurfacePlasticFlowRule::CalculateCenterOfHomologyStress(Vector& rCe
     double dot_product = MathUtils<double>::Dot(mPrincipalStressTrial, direction_n);
     if (dot_product < 0.0)
     {
-        //TODO: Need to implement overshooting treatment
-
-        rCenterOfHomologyStress = mPrincipalStressUpdated;
-        mIsOnceUnloaded         = true;
+        if (mInternalVariables.DeltaPlasticDeviatoricStrain > 1.e-5)
+        {
+            rCenterOfHomologyStress = rRearrangedStress;
+            mIsOnceUnloaded         = true;   
+        }
     }
 
 }

@@ -185,6 +185,7 @@ protected:
     Vector mCenterOfHomologyStress;
     Vector mPreviousStress;
     Vector mImagePointStress;
+    Matrix mPreviousMainDirections;
 
     double mPreviousMeanStressP;
     double mPreviousDeviatoricStressQ;
@@ -232,9 +233,9 @@ protected:
 
     void CalculateImagePointStress(const Vector& rCenterOfHomologyStress, const Vector& rCurrentStress, Vector& rImagePointStress, double& rConstantB, const bool& rBIsKnown = false);
     
-    void CalculateCenterOfHomologyStress(Vector& rCenterOfHomologyStress);
+    void CalculateCenterOfHomologyStress(const Vector& rRearrangedStress, Vector& rCenterOfHomologyStress);
 
-    void CheckOrderOfStress(const Vector& rPreviousStress, Vector& rUpdatedStress, Matrix& rMainDirection, unsigned int& rStressRegion);
+    void CheckOrderOfStress(Vector& rUpdatedStress, Matrix& rMainDirection);
 
 
     void ComputeElasticMatrix(const double& rMeanStressP, Matrix& rElasticMatrix);
