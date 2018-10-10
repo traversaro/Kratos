@@ -129,15 +129,15 @@ void FemDem3DElement::ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo)
 
 	// Loop over EDGES to assign the elements that share that edge -> Fill mEdgeNeighboursContainer
 	for (int edge = 0; edge < 6; edge++) {
-		int NodeIndex1 = nodes_indexes(edge, 0);
-		int NodeIndex2 = nodes_indexes(edge, 1);
+		const int NodeIndex1 = nodes_indexes(edge, 0);
+		const int NodeIndex2 = nodes_indexes(edge, 1);
 
 		// Neigh elements of local node 1 and 2  //
 		WeakPointerVector<Element> &neigh_of_node_1 = NodalNeighbours[NodeIndex1];
 		WeakPointerVector<Element> &neigh_of_node_2 = NodalNeighbours[NodeIndex2];
 
-		int NodeId1 = NodesCurrentElement[NodeIndex1].Id();
-		int NodeId2 = NodesCurrentElement[NodeIndex2].Id();
+		const int NodeId1 = NodesCurrentElement[NodeIndex1].Id();
+		const int NodeId2 = NodesCurrentElement[NodeIndex2].Id();
 
 		std::vector<Element *> edge_shared_elements_node_1;
 		// Loop over neigh elements of the node 1
@@ -376,23 +376,23 @@ void FemDem3DElement::CalculateLocalSystem(
 		double IntegrationWeight = integration_points[PointNumber].Weight() * detJ;
 		const Matrix &B = this->GetBMatrix();
 		Vector IntegratedStressVector = ZeroVector(voigt_size);
-		Vector DamagesOnEdges = ZeroVector(6);
+		Vector DamagesOnEdges = ZeroVector(this->GetNumberOfEdges());
 
 		// Loop over edges of the element
-		for (int edge = 0; edge < 6; edge++) {
-			std::vector<Element *> EdgeNeighbours = this->GetEdgeNeighbourElements(edge);
+		for (int edge = 0; edge < this->GetNumberOfEdges(); edge++) {
+			std::vector<Element*> EdgeNeighbours = this->GetEdgeNeighbourElements(edge);
 			Vector AverageStressVector, AverageStrainVector, IntegratedStressVectorOnEdge;
 
 			this->CalculateAverageStressOnEdge(AverageStressVector, EdgeNeighbours);
 			this->CalculateAverageStrainOnEdge(AverageStrainVector, EdgeNeighbours);
 
-			double DamageEdge = 0.0;
-			const double Lchar = this->Get_l_char(edge);
-			this->IntegrateStressDamageMechanics(IntegratedStressVectorOnEdge, DamageEdge,
-												 AverageStrainVector, AverageStressVector, edge, Lchar);
+			double damage_edge = 0.0;
+			const double characteristic_length = this->Get_l_char(edge);
+			this->IntegrateStressDamageMechanics(IntegratedStressVectorOnEdge, damage_edge,
+												 AverageStrainVector, AverageStressVector, edge, characteristic_length);
 
-			this->SetNonConvergedDamages(DamageEdge, edge);
-			DamagesOnEdges[edge] = DamageEdge;
+			this->SetNonConvergedDamages(damage_edge, edge);
+			DamagesOnEdges[edge] = damage_edge;
 
 		} // End loop over edges
 
@@ -643,8 +643,7 @@ void FemDem3DElement::AverageVector(Vector &rAverageVector, const Vector &v, con
 		KRATOS_ERROR << "The dimension of the vectors are different or null";
 	rAverageVector.resize(n);
 
-	for (int cont = 0; cont < n; cont++)
-	{
+	for (int cont = 0; cont < n; cont++) {
 		rAverageVector[cont] = (v[cont] + w[cont]) * 0.5;
 	}
 }
@@ -678,7 +677,7 @@ void FemDem3DElement::CalculateAverageStressOnEdge(
 
 void FemDem3DElement::CalculateAverageStrainOnEdge(
 	Vector &rAverageVector,
-	const std::vector<Element *> VectorOfElems)
+	const std::vector<Element*> VectorOfElems)
 {
 	KRATOS_TRY
 
@@ -752,20 +751,17 @@ void FemDem3DElement::CalculateOnIntegrationPoints(
 {
 	if (rVariable == DAMAGE_ELEMENT) {
 		rOutput.resize(1);
-		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++)
-		{
+		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++) {
 			rOutput[PointNumber] = double(this->GetValue(DAMAGE_ELEMENT));
 		}
-	}else if (rVariable == IS_DAMAGED) {
+	} else if (rVariable == IS_DAMAGED) {
 		rOutput.resize(1);
-		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++)
-		{
+		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++) {
 			rOutput[PointNumber] = double(this->GetValue(IS_DAMAGED));
 		}
 	} else if (rVariable == STRESS_THRESHOLD) {
 		rOutput.resize(1);
-		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++)
-		{
+		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++) {
 			rOutput[PointNumber] = double(this->GetValue(STRESS_THRESHOLD));
 		}
 	}
@@ -826,8 +822,8 @@ void FemDem3DElement::CalculateLchar()
 		const double Z1 = NodesElem[Indexes(edge, 0)].Z();
 		const double Z2 = NodesElem[Indexes(edge, 1)].Z();
 
-		const double lchar = std::sqrt((X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2) + (Z1 - Z2) * (Z1 - Z2));
-		this->Set_l_char(lchar, edge);
+		const double characteristic_length = std::sqrt((X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2) + (Z1 - Z2) * (Z1 - Z2));
+		this->Set_l_char(characteristic_length, edge);
 	}
 }
 

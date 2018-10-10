@@ -50,7 +50,41 @@ class FemDem3DHexahedronElement : public FemDem3DElement
 
 	void FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo);
 
+	void GetValueOnIntegrationPoints(
+		const Variable<double> &rVariable,
+		std::vector<double> &rValues,
+		const ProcessInfo &rCurrentProcessInfo);
+
+	void GetValueOnIntegrationPoints(
+		const Variable<Vector> &rVariable,
+		std::vector<Vector> &rValues,
+		const ProcessInfo &rCurrentProcessInfo);
+
+	void GetValueOnIntegrationPoints(
+		const Variable<Matrix> &rVariable,
+		std::vector<Matrix> &rValues,
+		const ProcessInfo &rCurrentProcessInfo);
+
+	void CalculateOnIntegrationPoints(
+		const Variable<double> &rVariable,
+		std::vector<double> &rOutput,
+		const ProcessInfo &rCurrentProcessInfo);
+
+	void CalculateOnIntegrationPoints(
+		const Variable<Vector> &rVariable,
+		std::vector<Vector> &rOutput,
+		const ProcessInfo &rCurrentProcessInfo);
+
+	void CalculateOnIntegrationPoints(
+		const Variable<Matrix> &rVariable,
+		std::vector<Matrix> &rOutput,
+		const ProcessInfo &rCurrentProcessInfo);
+
+
   private:
+
+	int mNumberOfEdges = 12;
+
 
 }; // Class FemDem3DHexahedronElement
 

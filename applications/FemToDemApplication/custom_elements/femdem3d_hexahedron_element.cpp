@@ -167,6 +167,127 @@ void FemDem3DHexahedronElement::FinalizeSolutionStep(ProcessInfo &rCurrentProces
 }
 
 
+// Double values
+void FemDem3DHexahedronElement::GetValueOnIntegrationPoints(
+	const Variable<double> &rVariable,
+	std::vector<double> &rValues,
+	const ProcessInfo &rCurrentProcessInfo)
+{
+	if (rVariable == DAMAGE_ELEMENT || rVariable == IS_DAMAGED || rVariable == STRESS_THRESHOLD) {
+		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+	}
+}
 
+// Vector Values
+void FemDem3DHexahedronElement::GetValueOnIntegrationPoints(
+	const Variable<Vector> &rVariable,
+	std::vector<Vector> &rValues,
+	const ProcessInfo &rCurrentProcessInfo)
+{
+	if (rVariable == STRAIN_VECTOR) {
+		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+	} else if (rVariable == STRESS_VECTOR) {
+		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+	} else if (rVariable == STRESS_VECTOR_INTEGRATED) {
+		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+	}
+}
+
+// Tensor variables
+void FemDem3DHexahedronElement::GetValueOnIntegrationPoints(
+	const Variable<Matrix> &rVariable,
+	std::vector<Matrix> &rValues,
+	const ProcessInfo &rCurrentProcessInfo)
+{
+	if (rVariable == STRAIN_TENSOR) {
+		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+	} else if (rVariable == STRESS_TENSOR) {
+		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+	} else if (rVariable == STRESS_TENSOR_INTEGRATED) {
+		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+	}
+}
+
+// double variables
+void FemDem3DHexahedronElement::CalculateOnIntegrationPoints(
+	const Variable<double> &rVariable,
+	std::vector<double> &rOutput,
+	const ProcessInfo &rCurrentProcessInfo)
+{
+    const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
+	if (rOutput.size() != integration_points.size())
+		rOutput.resize(integration_points.size());
+
+	if (rVariable == DAMAGE_ELEMENT) {
+		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+			rOutput[PointNumber] = double(this->GetValue(DAMAGE_ELEMENT));
+		}
+	} else if (rVariable == IS_DAMAGED) {
+		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+			rOutput[PointNumber] = double(this->GetValue(IS_DAMAGED));
+		}
+	} else if (rVariable == STRESS_THRESHOLD) {
+		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+			rOutput[PointNumber] = double(this->GetValue(STRESS_THRESHOLD));
+		}
+	}
+}
+
+// 	VECTOR VARIABLES
+void FemDem3DHexahedronElement::CalculateOnIntegrationPoints(
+	const Variable<Vector> &rVariable,
+	std::vector<Vector> &rOutput,
+	const ProcessInfo &rCurrentProcessInfo)
+{
+    const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
+	if (rOutput.size() != integration_points.size())
+		rOutput.resize(integration_points.size());
+
+	if (rVariable == STRESS_VECTOR) {
+		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+			rOutput[PointNumber] = this->GetValue(STRESS_VECTOR);
+		}
+	} else if (rVariable == STRAIN_VECTOR) {
+		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+			rOutput[PointNumber] = this->GetValue(STRAIN_VECTOR);
+		}
+	} else if (rVariable == STRESS_VECTOR_INTEGRATED) {
+		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+			rOutput[PointNumber] = this->GetValue(STRESS_VECTOR_INTEGRATED);
+		}
+	}
+}
+
+// 	TENSOR VARIABLES
+void FemDem3DHexahedronElement::CalculateOnIntegrationPoints(
+	const Variable<Matrix> &rVariable,
+	std::vector<Matrix> &rOutput,
+	const ProcessInfo &rCurrentProcessInfo)
+{
+    const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
+	if (rOutput.size() != integration_points.size())
+		rOutput.resize(integration_points.size());
+	const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
+
+	if (rVariable == STRESS_TENSOR) {
+		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+			if (rOutput[PointNumber].size2() != dimension)
+				rOutput[PointNumber].resize(dimension, dimension, false);
+			rOutput[PointNumber] = MathUtils<double>::StressVectorToTensor(this->GetValue(STRESS_VECTOR));
+		}
+	} else if (rVariable == STRAIN_TENSOR) {
+		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+			if (rOutput[PointNumber].size2() != dimension)
+				rOutput[PointNumber].resize(dimension, dimension, false);
+			rOutput[PointNumber] = MathUtils<double>::StrainVectorToTensor(this->GetValue(STRAIN_VECTOR));
+		}
+	} else if (rVariable == STRESS_TENSOR_INTEGRATED) {
+		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+			if (rOutput[PointNumber].size2() != dimension)
+				rOutput[PointNumber].resize(dimension, dimension, false);
+			rOutput[PointNumber] = MathUtils<double>::StressVectorToTensor(this->GetIntegratedStressVector());
+		}
+	}
+}
 
 } // namespace Kratos

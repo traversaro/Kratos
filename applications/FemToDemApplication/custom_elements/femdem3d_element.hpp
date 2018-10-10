@@ -164,9 +164,6 @@ class FemDem3DElement : public SmallDisplacementElement // Derived Element from 
 	double Get_l_char(int cont) { return mL_char[cont]; }
 	void CalculateLchar();
 
-	//void   SetJ(double af) { mJac = af; }
-	//double GetJ() { return mJac; }
-
 	// Auxiliar functions...
 	void IterationPlus() { iteration++; }
 	int GetIteration() { return iteration; }
@@ -180,9 +177,6 @@ class FemDem3DElement : public SmallDisplacementElement // Derived Element from 
 	double GetMaxValue(Vector Strain);
 	double GetMaxAbsValue(Vector Strain);
 	double GetMinAbsValue(Vector Strain);
-	//void PerturbateStrainComponent(const Vector& rStrainVector, Vector& PertubatedStrain, const double& perturbation, int component);
-	//double CalculatePerturbation(const Vector& StrainVector, int component);
-	//void CalculateTangentTensor(Matrix& rTangentTensor, const Vector& StrainVector, const Vector& IntegratedStressVector ,int cont, double L_char);
 
 	void SetStressVector(Vector toStressVector)
 	{
@@ -209,9 +203,6 @@ class FemDem3DElement : public SmallDisplacementElement // Derived Element from 
 	Matrix GetBMatrix() { return mB; }
 
 	void CalculateDeformationMatrix(Matrix &rB, const Matrix &rDN_DX);
-
-	//void SetIntegrationCoefficient(double tomIntegrationCoefficient){ mIntegrationCoefficient = tomIntegrationCoefficient;}
-	//double GetIntegrationCoefficient(){ return mIntegrationCoefficient; }
 
 	// Fills mEdgeNeighboursContainer
 	void ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo);
@@ -243,42 +234,41 @@ class FemDem3DElement : public SmallDisplacementElement // Derived Element from 
 	}
 
 	double CalculateElementalDamage(const Vector &EdgeDamages);
+	double GetNumberOfEdges() {return mNumberOfEdges;}
 
   private:
 	int iteration = 0;
+	int mNumberOfEdges = 6;
 
 	const unsigned int number_of_nodes = GetGeometry().size();
 	const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
 	unsigned int voigt_size = dimension * (dimension + 1) * 0.5;
 
 	// Each component == Each edge
-	Vector mF_sigmas = ZeroVector(6);   // Equivalent stress
-	Vector mThresholds = ZeroVector(6); // Stress mThreshold on edge
+	Vector mF_sigmas = ZeroVector(mNumberOfEdges);   // Equivalent stress
+	Vector mThresholds = ZeroVector(mNumberOfEdges); // Stress mThreshold on edge
 
 	double mThreshold = 0.0;
 	double mF_sigma = 0.0;
 
-	Vector mDamages = ZeroVector(6); // Converged mDamage on each edge
+	Vector mDamages = ZeroVector(mNumberOfEdges); // Converged mDamage on each edge
 	double mDamage = 0.0;			 // Converged mDamage
 
-	Vector mNonConvergedDamages = ZeroVector(6); // mDamages on edges of "i" iteration
-	Vector mNonConvergedFsigmas = ZeroVector(6); // Equivalent stress of "i" iteration
+	Vector mNonConvergedDamages = ZeroVector(mNumberOfEdges); // mDamages on edges of "i" iteration
+	Vector mNonConvergedFsigmas = ZeroVector(mNumberOfEdges); // Equivalent stress of "i" iteration
 
 	double mNonConvergedFsigma = 0.0;
 	double mNonConvergedDamage = 0.0; // mDamage of the element of "i" iteration
 
-	Vector mL_char = ZeroVector(6); // Characteristic length on each edge
+	Vector mL_char = ZeroVector(mNumberOfEdges); // Characteristic length on each edge
 
 	Vector mStressVector = ZeroVector(voigt_size);
 	Vector mStrainVector = ZeroVector(voigt_size);
 	Vector mIntegratedStressVector = ZeroVector(voigt_size);
-	Matrix mB = ZeroMatrix(voigt_size, dimension *number_of_nodes);
-
-	//double mJac = 0.0;
-	//double mIntegrationCoefficient = 0.0;
+	Matrix mB = ZeroMatrix(voigt_size, dimension * number_of_nodes);
 
 	// Vector to storage the neigh elements sharing a certain edge
-	std::vector<std::vector<Element *>> mEdgeNeighboursContainer;
+	std::vector<std::vector<Element*>> mEdgeNeighboursContainer;
 
 }; // Class FemDem3DElement
 
