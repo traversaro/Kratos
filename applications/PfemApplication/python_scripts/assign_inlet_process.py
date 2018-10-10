@@ -14,6 +14,11 @@ class AssignInletProcess(assign_vector_components_to_nodes_process.AssignVectorC
 
         assign_vector_components_to_nodes_process.AssignVectorComponentsToNodesProcess.__init__(self, Model, custom_settings)
 
+    def ExecuteInitialize(self):
+
+        # set model part
+        self.model_part = self.model[self.settings["model_part_name"].GetString()]
+
         entity_type = "Nodes"
         assign_flags = [KratosMultiphysics.INLET]
         self.model_inlet =  KratosSolid.AssignFlagsToEntitiesProcess(self.model_part,entity_type,assign_flags)
