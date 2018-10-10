@@ -91,12 +91,13 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
   ///@name Life Cycle
   ///@{
 
-  /// Constructor.
-  AleSolutionScheme(IntegrationMethodsVectorType& rTimeVectorIntegrationMethods, Flags& rOptions)
-      : DerivedType(IntegrationMethodsVectorType& rTimeVectorIntegrationMethods, Flags& rOptions)
-      , mRotationTool()
-  {
-  }
+    /// Constructor.
+    AleSolutionScheme(IntegrationMethodsVectorType& rTimeVectorIntegrationMethods,
+                  IntegrationMethodsScalarType& rTimeScalarIntegrationMethods)
+        :DerivedType(rTimeVectorIntegrationMethods, rTimeScalarIntegrationMethods)
+        , mRotationTool()
+    {
+    }
 
   // Class SolutionScheme
   ~AleSolutionScheme() override {}
@@ -120,7 +121,7 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
     DerivedType::Initialize(rModelPart);
 
     const SizeType dimension = rModelPart.GetProcessInfo()[SPACE_DIMENSION];
-    
+
     // Set dofs size
     unsigned int DofsSize = 0;
     for(typename IntegrationMethodsVectorType::iterator it=mTimeVectorIntegrationMethods.begin();

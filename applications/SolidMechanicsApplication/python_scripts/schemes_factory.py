@@ -20,7 +20,8 @@ class SolutionScheme:
            "time_integration": "Implicit",
            "integration_method": "Newmark",
            "time_integration_order": 1,
-           "buffer_size": 2
+           "buffer_size": 2,
+           "integration_variables": []
         }
         """)
 
@@ -35,6 +36,10 @@ class SolutionScheme:
         # add default DISPLACEMENT dof
         if( len(self.dofs) == 0 or (len(self.dofs) == 1 and self.dofs[0] =="ROTATION") ):
             self.dofs.append('DISPLACEMENT')
+
+        self.integration_variables = []
+        for i in range(0, self.settings["integration_variables"].size() ):
+            self.integration_variables.append(self.settings["integration_variables"][i].GetString())
 
     def GetVariables(self):
 
@@ -126,15 +131,21 @@ class SolutionScheme:
         solution_scheme = None
         if(self.settings["solution_type"].GetString() == "Dynamic"):
             if(self.settings["time_integration"].GetString() == "Implicit"):
-                if(len(vector_integration_methods)):
-                    if(len(scalar_integration_methods)):
+                if(self.settings["analysis_type"].GetString() == "ALE"):
+                    if(len(vector_integration_methods) and len(scalar_integration_methods)):
+                        solution_scheme = KratosSolid.AleDynamicScheme(vector_integration_methods,scalar_integration_methods)
+                    else:
+                        raise Exception("ALE scheme needs vector and scalar integration methods.")
+                else:
+                    if(len(vector_integration_methods)):
+                        if(len(scalar_integration_methods)):
+                            solution_scheme = KratosSolid.DynamicScheme(vector_integration_methods,scalar_integration_methods)
+                        else:
+                            solution_scheme = KratosSolid.DynamicScheme(vector_integration_methods)
+                    elif(len(scalar_integration_methods)):
                         solution_scheme = KratosSolid.DynamicScheme(vector_integration_methods,scalar_integration_methods)
                     else:
-                        solution_scheme = KratosSolid.DynamicScheme(vector_integration_methods)
-                elif(len(scalar_integration_methods)):
-                    solution_scheme = KratosSolid.DynamicScheme(vector_integration_methods,scalar_integration_methods)
-                else:
-                    print("WARNING: no integration methods")
+                        print("WARNING: no integration methods")
 
         elif(self.settings["solution_type"].GetString() == "Static" or self.settings["solution_type"].GetString() == "Quasi-static"):
             if(len(vector_integration_methods)):
@@ -155,13 +166,15 @@ class SolutionScheme:
         # set solution scheme and integration method dictionary
         integration_methods = {}
 
-        for dof in self.dofs:
+        all_integration_variables = self.dofs + self.integration_variables
 
-            integration_method_name = self._get_integration_method_name(dof)
-            variable_names = self._get_integration_method_variables(dof)
+        for var in all_integration_variables:
+
+            integration_method_name = self._get_integration_method_name(var)
+            variable_names = self._get_integration_method_variables(var)
 
             ##check if variable type is a vector
-            kratos_variable = KratosMultiphysics.KratosGlobals.GetVariable(dof)
+            kratos_variable = KratosMultiphysics.KratosGlobals.GetVariable(var)
             if( isinstance(kratos_variable,KratosMultiphysics.Array1DVariable3) ):
 
                 component_integration_method = None
@@ -186,7 +199,7 @@ class SolutionScheme:
                         raise Exception('len(variables) = ' + str(len(variables)))
 
                     if(integration_method_name.find("Step") != -1):
-                        step_variable_name = 'STEP_'+dof+component
+                        step_variable_name = 'STEP_'+var+component
                         integration_method.SetStepVariable(KratosMultiphysics.KratosGlobals.GetVariable(step_variable_name))
 
                     integration_methods.update({variables[0].Name(): integration_method})
@@ -206,13 +219,15 @@ class SolutionScheme:
         # set solution scheme and integration method dictionary
         integration_methods = {}
 
-        for dof in self.dofs:
+        all_integration_variables = self.dofs + self.integration_variables
 
-            integration_method_name = self._get_integration_method_name(dof)
-            variable_names = self._get_integration_method_variables(dof)
+        for var in all_integration_variables:
+
+            integration_method_name = self._get_integration_method_name(var)
+            variable_names = self._get_integration_method_variables(var)
 
             ##check if variable type is a scalar
-            kratos_variable = KratosMultiphysics.KratosGlobals.GetVariable(dof)
+            kratos_variable = KratosMultiphysics.KratosGlobals.GetVariable(var)
             if( isinstance(kratos_variable,KratosMultiphysics.DoubleVariable) ):
 
                 scalar_integration_method = None
@@ -235,7 +250,7 @@ class SolutionScheme:
                     raise Exception('len(variables) = ' + str(len(variables)))
 
                 if(integration_method_name.find("Step") != -1):
-                    step_variable_name = 'STEP_'+dof
+                    step_variable_name = 'STEP_'+var
                     integration_method.SetStepVariable(KratosMultiphysics.KratosGlobals.GetVariable(step_variable_name))
 
                 integration_methods.update({variables[0].Name(): integration_method})
@@ -266,26 +281,28 @@ class SolutionScheme:
         return integration_method_name
 
     #
-    def _get_integration_method_variables(self, dof):
+    def _get_integration_method_variables(self, var):
 
         variables = []
         if(self.settings["solution_type"].GetString() == "Dynamic" ):
-            if(dof == 'DISPLACEMENT' or dof == 'VELOCITY' or dof == 'ACCELERATION'):
-                variables = variables + ['DISPLACEMENT','VELOCITY','ACCELERATION',dof]
-            elif(dof == 'ROTATION' or dof == 'ANGULAR_VELOCITY' or dof == 'ANGULAR_ACCELERATION'):
-                variables = variables + ['ROTATION','ANGULAR_VELOCITY','ANGULAR_ACCELERATION',dof]
-            elif(dof == 'WATER_DISPLACEMENT'):
-                variables = variables + ['WATER_DISPLACEMENT','WATER_VELOCITY','WATER_ACCELERATION',dof]
-            elif(dof == 'WATER_PRESSURE'):
-                variables = variables + ['WATER_PRESSURE','WATER_PRESSURE_VELOCITY','WATER_PRESSURE_ACCELERATION',dof]
-            elif(dof == 'PRESSURE'):
-                variables = variables + ['PRESSURE','PRESSURE_VELOCITY','PRESSURE_ACCELERATION',dof]
-            elif(dof == 'FLUID_PRESSURE'):
-                variables = variables + ['FLUID_PRESSURE','FLUID_PRESSURE_VELOCITY','FLUID_PRESSURE_ACCELERATION',dof]
+            if(var == 'DISPLACEMENT' or var == 'VELOCITY' or var == 'ACCELERATION'):
+                variables = variables + ['DISPLACEMENT','VELOCITY','ACCELERATION',var]
+            elif(var == 'ROTATION' or var == 'ANGULAR_VELOCITY' or var == 'ANGULAR_ACCELERATION'):
+                variables = variables + ['ROTATION','ANGULAR_VELOCITY','ANGULAR_ACCELERATION',var]
+            elif(var == 'WATER_DISPLACEMENT'):
+                variables = variables + ['WATER_DISPLACEMENT','WATER_VELOCITY','WATER_ACCELERATION',var]
+            elif(var == 'WATER_PRESSURE'):
+                variables = variables + ['WATER_PRESSURE','WATER_PRESSURE_VELOCITY','WATER_PRESSURE_ACCELERATION',var]
+            elif(var == 'PRESSURE'):
+                variables = variables + ['PRESSURE','PRESSURE_VELOCITY','PRESSURE_ACCELERATION',var]
+            elif(var == 'FLUID_PRESSURE'):
+                variables = variables + ['FLUID_PRESSURE','FLUID_PRESSURE_VELOCITY','FLUID_PRESSURE_ACCELERATION',var]
+            elif(var == 'MESH_DISPLACEMENT' or var == 'MESH_VELOCITY' or var == 'MESH_ACCELERATION'):
+                variables = variables + ['MESH_DISPLACEMENT','MESH_VELOCITY','MESH_ACCELERATION',var]
             else:
-                variables = variables + [dof]
+                variables = variables + [var]
         else:
-            variables = variables + [dof]
+            variables = variables + [var]
 
         return variables
 

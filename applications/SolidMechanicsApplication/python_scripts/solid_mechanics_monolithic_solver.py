@@ -49,7 +49,8 @@ class MonolithicSolver(object):
                 "time_integration": "Implicit",
                 "integration_method": "Newmark",
                 "time_integration_order": 1,
-                "buffer_size": 2
+                "buffer_size": 2,
+                "integration_variables":[]
             },
             "convergence_criterion_settings":{
                 "convergence_criterion": "Residual_criterion",
