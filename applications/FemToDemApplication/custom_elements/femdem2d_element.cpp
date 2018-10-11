@@ -96,22 +96,18 @@ void FemDem2DElement::InitializeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 {
 
 	// After the mapping, the thresholds of the edges ( are equal to 0.0) are imposed equal to the IP threshold
-	Vector thresholds = this->GetThresholds();
-	double ElementThreshold = this->GetValue(STRESS_THRESHOLD);
-
-	if (thresholds[0] == 0.0 && thresholds[1] == 0.0 && thresholds[2] == 0.0)
-	{
+	const Vector thresholds = this->GetThresholds();
+	const double ElementThreshold = this->GetValue(STRESS_THRESHOLD);
+	if (thresholds[0] == 0.0 && thresholds[1] == 0.0 && thresholds[2] == 0.0) {
 		this->SetThreshold(ElementThreshold, 0);
 		this->SetThreshold(ElementThreshold, 1);
 		this->SetThreshold(ElementThreshold, 2);
 	}
 
 	// IDEM with the edge damages
-	Vector DamageEdges = this->GetDamages();
-	double DamageElement = this->GetValue(DAMAGE_ELEMENT);
-
-	if (DamageEdges[0] == 0.0 && DamageEdges[1] == 0.0 && DamageEdges[2] == 0.0)
-	{
+	const Vector DamageEdges = this->GetDamages();
+	const double DamageElement = this->GetValue(DAMAGE_ELEMENT);
+	if (DamageEdges[0] == 0.0 && DamageEdges[1] == 0.0 && DamageEdges[2] == 0.0) {
 		this->SetConvergedDamages(DamageElement, 0);
 		this->SetConvergedDamages(DamageElement, 1);
 		this->SetConvergedDamages(DamageElement, 2);

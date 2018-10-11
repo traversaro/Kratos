@@ -42,6 +42,16 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 			self.InitializeMMGvariables()
 			self.RemeshingProcessMMG.ExecuteInitialize()
 
+		print(" /$$$$$$$$ /$$$$$$$$ /$$      /$$         /$$$$$$$  /$$$$$$$$ /$$      /$$")
+		print("| $$_____/| $$_____/| $$$    /$$$        | $$__  $$| $$_____/| $$$    /$$$")
+		print("| $$      | $$      | $$$$  /$$$$        | $$  \ $$| $$      | $$$$  /$$$$")
+		print("| $$$$$   | $$$$$   | $$ $$/$$ $$ /$$$$$$| $$  | $$| $$$$$   | $$ $$/$$ $$")
+		print("| $$__/   | $$__/   | $$  $$$| $$|______/| $$  | $$| $$__/   | $$  $$$| $$")
+		print("| $$      | $$      | $$\  $ | $$        | $$  | $$| $$      | $$\  $ | $$")
+		print("| $$      | $$$$$$$$| $$ \/  | $$        | $$$$$$$/| $$$$$$$$| $$ \/  | $$")
+		print("|__/      |________/|__/     |__/        |_______/ |________/|__/     |__/ Application")
+                                                                          
+
 #============================================================================================================================
 	def InitializeSolutionStep(self):
 
@@ -51,6 +61,7 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 		self.FEM_Solution.main_model_part.CloneTimeStep(self.FEM_Solution.time)
 		self.FEM_Solution.step = self.FEM_Solution.step + 1
 		self.FEM_Solution.main_model_part.ProcessInfo[KratosMultiphysics.STEP] = self.FEM_Solution.step
+
 
 		if self.DoRemeshing:
 			is_remeshing = self.CheckIfHasRemeshed()
@@ -62,11 +73,14 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 			# Perform remeshing
 			self.RemeshingProcessMMG.ExecuteInitializeSolutionStep()
 
+			# if self.FEM_Solution.step == 21:
+			# 	self.FEM_Solution.GraphicalOutputExecuteInitializeSolutionStep()
+			# 	Wait()
+
 			self.nodal_neighbour_finder = KratosMultiphysics.FindNodalNeighboursProcess(self.FEM_Solution.main_model_part, 4, 5)
 			self.nodal_neighbour_finder.Execute()
 
 			if is_remeshing:
-
 				# Initialize the "flag" IS_DEM in all the nodes
 				KratosMultiphysics.VariableUtils().SetNonHistoricalVariable(KratosFemDem.IS_DEM, False, self.FEM_Solution.main_model_part.Nodes)
 				# Initialize the "flag" NODAL_FORCE_APPLIED in all the nodes
@@ -83,6 +97,17 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 				self.FEM_Solution.model_processes.ExecuteInitialize()
 				self.FEM_Solution.model_processes.ExecuteBeforeSolutionLoop()
 				self.FEM_Solution.model_processes.ExecuteInitializeSolutionStep()
+
+		# Search the skin nodes for the remeshing
+		skin_detection_process_param = KratosMultiphysics.Parameters("""
+        {
+			"name_auxiliar_model_part" : "SkinDEMModelPart",
+			"name_auxiliar_condition"  : "Condition",
+			"echo_level"               : 0
+        }""")
+		skin_detection_process = KratosMultiphysics.SkinDetectionProcess3D(self.FEM_Solution.main_model_part,
+		                                                                   skin_detection_process_param)
+		skin_detection_process.Execute()
 
 		self.FEM_Solution.InitializeSolutionStep()
 
@@ -111,7 +136,27 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 		self.CheckInactiveNodes()
 		self.UpdateDEMVariables()     # We update coordinates, displ and velocities of the DEM according to FEM
 
-		KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
+		# KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
+
+
+
+		# *******************************************************
+		# extrapolation_settings = KratosMultiphysics.Parameters("""
+		# 	{
+		# 		"echo_level"                 : 0,
+		# 		"area_average"               : true,
+		# 		"average_variable"           : "NODAL_AREA",
+		# 		"list_of_variables"          : ["EQUIVALENT_STRESS_VM"],
+		# 		"extrapolate_non_historical" : true
+		# 	}""")
+		# MeshingApplication.IntegrationValuesExtrapolationToNodesProcess(self.FEM_Solution.main_model_part, extrapolation_settings).Execute()
+		# self.NormalizeUniaxialStress()
+		# *************************************************************
+		# for node in self.FEM_Solution.main_model_part.Nodes:
+		# 	print("Node ", node.Id, " Tension: ", node.GetValue(KratosFemDem.EQUIVALENT_STRESS_VM))
+		# 	# print("Node ", node.Id, " Tension: ", node.GetSolutionStepValue(KratosFemDem.EQUIVALENT_STRESS_VM))
+		# Wait()
+
 
 		self.DEM_Solution.InitializeTimeStep()
 

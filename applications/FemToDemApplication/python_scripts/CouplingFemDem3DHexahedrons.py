@@ -32,20 +32,6 @@ class FEMDEM3DHexahedrons_Solution(CouplingFemDem3D.FEMDEM3D_Solution):
 		self.FEM_Solution.step = self.FEM_Solution.step + 1
 		self.FEM_Solution.main_model_part.ProcessInfo[KratosMultiphysics.STEP] = self.FEM_Solution.step
 
-
-		# *******************************************************
-		default_settings = KratosMultiphysics.Parameters("""
-		{
-			"echo_level"                 : 0,
-			"area_average"               : true,
-			"average_variable"           : "NODAL_AREA",
-			"list_of_variables"          : ["STRESS_VECTOR"],
-			"extrapolate_non_historical" : true
-    	}""")
-		MeshingApplication.IntegrationValuesExtrapolationToNodesProcess(self.FEM_Solution.main_model_part, default_settings).Execute()
-		# *************************************************************
-
-		
 		if self.DoRemeshing:
 			is_remeshing = self.CheckIfHasRemeshed()
 			

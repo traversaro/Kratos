@@ -98,18 +98,11 @@ class FEMDEM_Solution:
             if is_remeshing:
                 # Extrapolate the VonMises normalized stress to nodes (remeshing)
                 KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
-                # Extrapolate the Damage normalized stress to nodes (remeshing)
-                # KratosFemDem.DamageToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
-
             # Perform remeshing
+
             self.RemeshingProcessMMG.ExecuteInitializeSolutionStep()
 
             if is_remeshing:
-                   
-                # write output results GiD: (frequency writing is controlled internally) remove TODO
-                # self.FEM_Solution.graphical_output.PrintOutput()
-                # Wait()
-
                 # Initialize the "flag" IS_DEM in all the nodes
                 KratosMultiphysics.VariableUtils().SetNonHistoricalVariable(KratosFemDem.IS_DEM, False, self.FEM_Solution.main_model_part.Nodes)
                 # Initialize the "flag" NODAL_FORCE_APPLIED in all the nodes
@@ -126,6 +119,17 @@ class FEMDEM_Solution:
                 self.FEM_Solution.model_processes.ExecuteInitialize()
                 self.FEM_Solution.model_processes.ExecuteBeforeSolutionLoop()
                 self.FEM_Solution.model_processes.ExecuteInitializeSolutionStep()
+
+		# Search the skin nodes for the remeshing
+        skin_detection_process_param = KratosMultiphysics.Parameters("""
+        {
+            "name_auxiliar_model_part" : "SkinDEMModelPart",
+            "name_auxiliar_condition"  : "Condition",
+            "echo_level"               : 0
+        }""")
+        skin_detection_process = KratosMultiphysics.SkinDetectionProcess2D(self.FEM_Solution.main_model_part,
+                                                                            skin_detection_process_param)
+        skin_detection_process.Execute()
 
         self.FEM_Solution.InitializeSolutionStep()
 
@@ -842,7 +846,6 @@ class FEMDEM_Solution:
 
         # Loop over the elements of the Submodelpart to create the DEM
         for node in self.FEM_Solution.main_model_part.GetSubModelPart("DemAfterRemeshingNodes").Nodes:
-            
             Id = node.Id
             R = node.GetValue(KratosFemDem.DEM_RADIUS)
             Coordinates = self.GetNodeCoordinates(node)

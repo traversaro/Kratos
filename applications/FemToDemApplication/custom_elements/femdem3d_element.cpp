@@ -98,6 +98,24 @@ void FemDem3DElement::InitializeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 		this->CalculateLchar();
 		this->IterationPlus();
 	}
+
+	// After the mapping, the thresholds of the edges ( are equal to 0.0) are imposed equal to the IP threshold
+	const Vector thresholds = this->GetThresholds();
+	const double ElementThreshold = this->GetValue(STRESS_THRESHOLD);
+	if (thresholds[0] == 0.0 && thresholds[1] == 0.0 && thresholds[2] == 0.0) {
+		for (unsigned int edge = 0; edge < this->GetNumberOfEdges(); edge++) {
+			this->SetThreshold(ElementThreshold, edge);
+		}
+	}
+
+	// IDEM with the edge damages
+	const Vector DamageEdges = this->GetDamages();
+	const double DamageElement = this->GetValue(DAMAGE_ELEMENT);
+	if (DamageEdges[0] == 0.0 && DamageEdges[1] == 0.0 && DamageEdges[2] == 0.0) {
+		for (unsigned int edge = 0; edge < this->GetNumberOfEdges(); edge++) {
+			this->SetConvergedDamages(DamageElement, edge);
+		}
+	}
 }
 
 void FemDem3DElement::ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo)
@@ -708,7 +726,7 @@ void FemDem3DElement::GetValueOnIntegrationPoints(
 	std::vector<double> &rValues,
 	const ProcessInfo &rCurrentProcessInfo)
 {
-	if (rVariable == DAMAGE_ELEMENT || rVariable == IS_DAMAGED || rVariable == STRESS_THRESHOLD) {
+	if (rVariable == DAMAGE_ELEMENT || rVariable == IS_DAMAGED || rVariable == STRESS_THRESHOLD || rVariable == EQUIVALENT_STRESS_VM) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
 	}
 }
@@ -763,6 +781,15 @@ void FemDem3DElement::CalculateOnIntegrationPoints(
 		rOutput.resize(1);
 		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++) {
 			rOutput[PointNumber] = double(this->GetValue(STRESS_THRESHOLD));
+		}
+	} else if (rVariable == EQUIVALENT_STRESS_VM) {
+		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++) {
+			const Vector stress_vector = this->GetValue(STRESS_VECTOR);
+			const double I1 = this->CalculateI1Invariant(stress_vector);
+			Vector deviator;
+			this->CalculateDeviatorVector(deviator, stress_vector, I1);
+			const double J2 = this->CalculateJ2Invariant(deviator);
+			rOutput[PointNumber] = double(std::sqrt(3.0 * J2));
 		}
 	}
 }
