@@ -11,7 +11,6 @@
 //
 
 #include "includes/define.h"
-#include <string>
 #include "includes/constitutive_law.h"
 #include "custom_constitutive/zarate_law.hpp"
 #include "femdem2d_element.hpp"
@@ -116,29 +115,20 @@ void FemDem2DElement::InitializeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 
 void FemDem2DElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 {
-	double current_equivalent_stress = 0.0, damage_element = 0.0;
-
 	//Loop over edges
-	for (int cont = 0; cont < 3; cont++)
-	{
+	for (unsigned int cont = 0; cont < 3; cont++) {
 		this->SetConvergedDamages(this->GetNonConvergedDamages(cont), cont);
 		this->SetConvergedEquivalentStresses(this->GetNonConvergedEquivalentStress(cont), cont);
-		current_equivalent_stress = this->GetConvergedEquivalentStresses(cont);
-		if (current_equivalent_stress > this->GetThreshold(cont))
-		{
+		const double current_equivalent_stress = this->GetConvergedEquivalentStresses(cont);
+		if (current_equivalent_stress > this->GetThreshold(cont)) {
 			this->SetThreshold(current_equivalent_stress, cont);
 		}
 	} // End Loop over edges
 
-	damage_element = this->Get_NonConvergeddamage();
+	const double damage_element = this->Get_NonConvergeddamage();
 	this->SetConvergedDamage(damage_element);
 
-	// if (damage_element > 0.0) {
-	// 	this->SetValue(IS_DAMAGED, 1);
-	// }
-
-	if (damage_element >= 0.98)
-	{
+	if (damage_element >= 0.98) {
 		this->Set(ACTIVE, false);
 		double old_threshold = this->GetValue(STRESS_THRESHOLD);
 		this->SetValue(INITIAL_THRESHOLD, old_threshold);
@@ -152,16 +142,15 @@ void FemDem2DElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 
 	Vector two_min_values;
 	this->Get2MaxValues(two_min_values, thresholds[0], thresholds[1], thresholds[2]); // todo ojo con la funcion modificada
-	double equivalent_threshold = 0.5 * (two_min_values[0] + two_min_values[1]);	  // El menor o mayor?? TODO
+	const double equivalent_threshold = 0.5 * (two_min_values[0] + two_min_values[1]);	  // El menor o mayor?? TODO
 
-	this->SetValue(STRESS_THRESHOLD, equivalent_threshold); // AMR
+	this->SetValue(STRESS_THRESHOLD, equivalent_threshold); // remsehing
 	this->SetThreshold(equivalent_threshold);
 	this->SetValue(DAMAGE_ELEMENT, damage_element);
 
 	// Reset the nodal force flag for the next time step
 	Geometry<Node<3>> &nodes_element = this->GetGeometry();
-	for (int i = 0; i < 3; i++)
-	{
+	for (int i = 0; i < 3; i++) {
 		#pragma omp critical
 		{
 			nodes_element[i].SetValue(NODAL_FORCE_APPLIED, false);
@@ -175,14 +164,12 @@ void FemDem2DElement::InitializeNonLinearIteration(ProcessInfo &rCurrentProcessI
 	KRATOS_TRY
 
 	bool is_active = true;
-	if (this->IsDefined(ACTIVE))
-	{
+	if (this->IsDefined(ACTIVE)) {
 		is_active = this->Is(ACTIVE);
 	}
 
 	// Inactive elements can have negative determinant of the Jacobian
-	if (is_active == true)
-	{
+	if (is_active == true) {
 		//1.-Initialize sizes for the system components:
 		const unsigned int number_of_nodes = GetGeometry().size();
 		const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
@@ -228,15 +215,13 @@ void FemDem2DElement::InitializeNonLinearIteration(ProcessInfo &rCurrentProcessI
 		J = GetGeometry().Jacobian(J, mThisIntegrationMethod, DeltaPosition);
 
 		// Loop Over Integration Points
-		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++)
-		{
+		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
 			Matrix InvJ(dimension, dimension);
 			noalias(InvJ) = ZeroMatrix(dimension, dimension);
 			double detJ = 0;
 			MathUtils<double>::InvertMatrix(J[PointNumber], InvJ, detJ);
 
-			if (detJ < 0)
-			{
+			if (detJ < 0) {
 				this->Set(ACTIVE, false); // element alone inside a crack
 				detJ = fabs(detJ);
 			}
@@ -314,8 +299,7 @@ void FemDem2DElement::CalculateLocalSystem(MatrixType &rLeftHandSideMatrix, Vect
 	noalias(J[0]) = ZeroMatrix(dimension, dimension);
 	J = GetGeometry().Jacobian(J, mThisIntegrationMethod, DeltaPosition);
 
-	for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++)
-	{
+	for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
 		const Matrix &Ncontainer = GetGeometry().ShapeFunctionsValues(mThisIntegrationMethod);
 		Vector N = row(Ncontainer, PointNumber);
 		double detJ = 0.0;
@@ -333,8 +317,7 @@ void FemDem2DElement::CalculateLocalSystem(MatrixType &rLeftHandSideMatrix, Vect
 
 		// Find Neighbour Elements
 		WeakPointerVector<Element> &elem_neigb = this->GetValue(NEIGHBOUR_ELEMENTS);
-		if (elem_neigb.size() == 0)
-		{
+		if (elem_neigb.size() == 0) {
 			KRATOS_THROW_ERROR(std::invalid_argument, " Neighbour Elements not calculated --> size = ", elem_neigb.size())
 		}
 
@@ -342,19 +325,16 @@ void FemDem2DElement::CalculateLocalSystem(MatrixType &rLeftHandSideMatrix, Vect
 		double damage[3] = {0.0, 0.0, 0.0};
 
 		// Loop Over Edges
-		for (int cont = 0; cont < 3; cont++)
-		{
+		for (int cont = 0; cont < 3; cont++) {
 			bool is_active_neigh = true;
-			if (elem_neigb[cont].IsDefined(ACTIVE))
-			{
+			if (elem_neigb[cont].IsDefined(ACTIVE)) {
 				is_active_neigh = elem_neigb[cont].Is(ACTIVE);
 			}
 			double damagee = 0.0;
 			Vector AverageStress;
 			Vector AverageStrain;
 
-			if (is_active_neigh)
-			{
+			if (is_active_neigh) {
 				Vector Stress1, Stress2;
 				Vector Strain1, Strain2;
 

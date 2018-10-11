@@ -218,8 +218,9 @@ void FemDem3DElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 {
 	this->SetToZeroIteration();
 
+	double max_threshold = 0.0;
 	//Loop over edges
-	for (int cont = 0; cont < 6; cont++) {
+	for (unsigned int cont = 0; cont < this->GetNumberOfEdges(); cont++) {
 		this->SetConvergedDamages(this->GetNonConvergedDamages(cont), cont);
 		this->SetConvergedEquivalentStress(this->GetNonConvergedEquivalentStress(cont), cont);
 		const double current_equivalent_stress = this->GetConvergedEquivalentStress(cont);
@@ -235,12 +236,11 @@ void FemDem3DElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 
 	if (damage_element >= 0.98) {
 		this->Set(ACTIVE, false);
-		double old_threshold = this->GetValue(STRESS_THRESHOLD);
-		this->SetValue(INITIAL_THRESHOLD, old_threshold);
 	}
 
 	this->ResetNonConvergedVars();
 	this->SetValue(DAMAGE_ELEMENT, damage_element);
+	this->SetValue(STRESS_THRESHOLD, this->GetMaxValue(this->GetThresholds()));
 
 	// Reset the nodal force flag for the next time step
 	Geometry<Node<3>> &NodesElement = this->GetGeometry();
