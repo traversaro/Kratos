@@ -96,7 +96,7 @@ void BoundingSurfacePlasticFlowRule::InitializeMaterial(YieldCriterionPointer& p
     mPreviousStress         = ZeroVector(3);
     mImagePointStress       = ZeroVector(3);
 
-    mPreviousMainDirections = ZeroMatrix(3);
+    mPreviousMainDirections = IdentityMatrix(3);
 
     mPreviousMeanStressP       = 0.0;
     mPreviousDeviatoricStressQ = 0.0;
