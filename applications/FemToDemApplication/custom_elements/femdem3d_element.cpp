@@ -1460,4 +1460,24 @@ double FemDem3DElement::CalculateElementalDamage(const Vector &EdgeDamages)
 	return this->GetMaxValue(DamageModeFracture);
 }
 
+void FemDem3DElement::SetValueOnIntegrationPoints(
+	const Variable<double> &rVariable,
+	std::vector<double> &rValues,
+	const ProcessInfo &rCurrentProcessInfo)
+{
+	for (unsigned int point_number = 0; point_number < GetGeometry().IntegrationPoints().size(); ++point_number) {
+		this->SetValue(rVariable, rValues[point_number]);
+	}
+}
+
+void FemDem3DElement::SetValueOnIntegrationPoints(
+	const Variable<Vector> &rVariable,
+	std::vector<Vector> &rValues,
+	const ProcessInfo &rCurrentProcessInfo)
+{
+	for (unsigned int point_number = 0; point_number < GetGeometry().IntegrationPoints().size(); ++point_number) {
+		this->SetValue(rVariable, rValues[point_number]);
+	}
+}
+
 } // namespace Kratos

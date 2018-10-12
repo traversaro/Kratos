@@ -49,7 +49,6 @@ class FemDem2DElement : public SmallDisplacementElement // Derived Element from 
 
 	// *************** Methods Alejandro Cornejo ***************
 	//**********************************************************
-
 	void InitializeSolutionStep(ProcessInfo &rCurrentProcessInfo);
 	void FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo);
 	void InitializeNonLinearIteration(ProcessInfo &CurrentProcessInfo);
@@ -92,8 +91,6 @@ class FemDem2DElement : public SmallDisplacementElement // Derived Element from 
 	void SimoJuCriterion(Vector &rIntegratedStress, double &Damage, const Vector &StrainVector, const Vector &StressVector, int cont, double L_char);
 	void RankineFragileLaw(Vector &rIntegratedStress, double &Damage, const Vector &StressVector, int cont, double L_char);
 
-	void TangentModifiedMohrCoulombCriterion(Vector &rIntegratedStress, double &Damage, const Vector &StressVector, int cont, double L_char);
-
 	// Stress Invariants in 2D
 	double CalculateI1Invariant(double sigma1, double sigma2);
 	double CalculateJ2Invariant(double sigma1, double sigma2);
@@ -101,7 +98,7 @@ class FemDem2DElement : public SmallDisplacementElement // Derived Element from 
 
 	void CalculateIntegratedStressVector(Vector &rIntegratedStressVector, const Vector rStressVector, const double Damage)
 	{
-		rIntegratedStressVector = (1 - Damage) * rStressVector;
+		noalias(rIntegratedStressVector) = (1.0 - Damage) * rStressVector;
 	}
 
 	// Lode's angle
@@ -146,9 +143,7 @@ class FemDem2DElement : public SmallDisplacementElement // Derived Element from 
 	{
 		this->Set_NonConvergeddamage(0.0);
 		this->Set_NonConvergedf_sigma(0.0);
-
-		for (int cont = 0; cont < 3; cont++)
-		{
+		for (unsigned int cont = 0; cont < 3; cont++) {
 			this->Set_NonConvergeddamages(0, cont);
 			this->Set_NonConvergedf_sigma(0, cont);
 		}
@@ -159,14 +154,10 @@ class FemDem2DElement : public SmallDisplacementElement // Derived Element from 
 	double Get_l_char(int cont) { return mL_char[cont]; }
 	double CalculateLchar(FemDem2DElement *CurrentElement, const Element &NeibElement, int cont);
 
-	//void   SetJ(double af) { mJac = af; }
-	//double GetJ() { return mJac; }
-
 	// Auxiliar functions...
 	void IterationPlus() { iteration++; }
 	int GetIteration() { return iteration; }
 	void SetToZeroIteration() { iteration = 0; }
-	//void AssignSmoothedStress(Element& Elem);
 
 	void CalculateMassMatrix(MatrixType &rMassMatrix, ProcessInfo &rCurrentProcessInfo);
 	Vector &CalculateVolumeForce(Vector &rVolumeForce, const Vector &rN);
@@ -175,21 +166,13 @@ class FemDem2DElement : public SmallDisplacementElement // Derived Element from 
 	double GetMaxValue(Vector Strain);
 	double GetMaxAbsValue(Vector Strain);
 	double GetMinAbsValue(Vector Strain);
-	void PerturbateStrainComponent(const Vector &rStrainVector, Vector &PertubatedStrain, const double perturbation, int component);
-	double CalculatePerturbation(const Vector &StrainVector, int component);
-	void CalculateTangentTensor(Matrix &rTangentTensor, const Vector &StrainVector, const Vector &IntegratedStressVector, int cont, double L_char);
-
-	//void SetStressVector(Vector toStressVector) { toStressVector.resize(3); mStressVector = toStressVector; }
-	//Vector GetStressVector() { return mStressVector; }
-
-	//void SetStrainVector(Vector toStrainVector) { toStrainVector.resize(3); mStrainVector = toStrainVector; }
-	//Vector GetStrainVector() { return mStrainVector; }
 
 	void SetIntegratedStressVector(Vector toIntegratedStressVector)
 	{
 		toIntegratedStressVector.resize(3);
 		mIntegratedStressVector = toIntegratedStressVector;
 	}
+	
 	Vector GetIntegratedStressVector() { return mIntegratedStressVector; }
 
 	void SetBMatrix(Matrix toBMatrix)
@@ -197,24 +180,20 @@ class FemDem2DElement : public SmallDisplacementElement // Derived Element from 
 		toBMatrix.resize(3, 6);
 		mB = toBMatrix;
 	}
+
 	Matrix GetBMatrix() { return mB; }
 
 	void CalculateDeformationMatrix(Matrix &rB, const Matrix &rDN_DX);
 
-	//void SetIntegrationCoefficient(double tomIntegrationCoefficient){ mIntegrationCoefficient = tomIntegrationCoefficient;}
-	//double GetIntegrationCoefficient(){ return mIntegrationCoefficient; }
-
 	void SetValueOnIntegrationPoints(
-		const Variable<double> &rVariable,
-		std::vector<double> &rValues,
+		const Variable<double> &rVariable, std::vector<double> &rValues,
 		const ProcessInfo &rCurrentProcessInfo) override;
 
 	void SetValueOnIntegrationPoints(
-		const Variable<Vector> &rVariable,
-		std::vector<Vector> &rValues,
+		const Variable<Vector> &rVariable, std::vector<Vector> &rValues,
 		const ProcessInfo &rCurrentProcessInfo) override;
 
-  private:
+       private:
 	int iteration = 0;
 
 	// Each component == Each edge

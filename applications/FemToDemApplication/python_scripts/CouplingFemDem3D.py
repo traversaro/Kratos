@@ -74,10 +74,10 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 			self.RemeshingProcessMMG.ExecuteInitializeSolutionStep()
 
 			# if self.FEM_Solution.step == 21:
-			if is_remeshing:
-				print("despues de remallar")
-				self.FEM_Solution.GraphicalOutputPrintOutput()
-				Wait()
+			# if is_remeshing:
+			# 	print("despues de remallar")
+			# 	self.FEM_Solution.GraphicalOutputPrintOutput()
+			# 	Wait()
 
 			self.nodal_neighbour_finder = KratosMultiphysics.FindNodalNeighboursProcess(self.FEM_Solution.main_model_part, 4, 5)
 			self.nodal_neighbour_finder.Execute()

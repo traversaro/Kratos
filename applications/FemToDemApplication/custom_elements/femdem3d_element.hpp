@@ -236,6 +236,16 @@ class FemDem3DElement : public SmallDisplacementElement // Derived Element from 
 	double CalculateElementalDamage(const Vector &EdgeDamages);
 	double GetNumberOfEdges() {return mNumberOfEdges;}
 
+	void SetValueOnIntegrationPoints(
+		const Variable<double> &rVariable,
+		std::vector<double> &rValues,
+		const ProcessInfo &rCurrentProcessInfo) override;
+
+	void SetValueOnIntegrationPoints(
+		const Variable<Vector> &rVariable,
+		std::vector<Vector> &rValues,
+		const ProcessInfo &rCurrentProcessInfo) override;
+		
   private:
 	int iteration = 0;
 	int mNumberOfEdges = 6;

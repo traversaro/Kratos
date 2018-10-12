@@ -1670,8 +1670,6 @@ namespace Kratos
   int  ContactDomainCondition::Check( const ProcessInfo& rCurrentProcessInfo )
   {
     KRATOS_TRY
-
-
     // Perform base condition checks
     int ErrorCode = 0;
     //ErrorCode = Condition::Check(rCurrentProcessInfo);
