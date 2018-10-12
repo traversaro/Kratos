@@ -254,25 +254,17 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticMultiplier(const Vector& rD
 // Function that compute loading direction in principal space: n
 void BoundingSurfacePlasticFlowRule::CalculateLoadingDirection(const Vector& rPrincipalStressVector, Vector& rLoadingDirection)
 {
-    Vector dF_dsigma = ZeroVector(3);
-    this->CalculateYieldSurfaceDerivatives(rPrincipalStressVector, dF_dsigma);
-    
-    double norm_dF_dsigma = norm_2(dF_dsigma);
-    if (norm_dF_dsigma < 1.e-9) norm_dF_dsigma = 1.e-9;
-
-    rLoadingDirection = dF_dsigma / norm_dF_dsigma;
+    rLoadingDirection = ZeroVector(3);
+    this->CalculateYieldSurfaceDerivatives(rPrincipalStressVector, rLoadingDirection);
+    SolidMechanicsMathUtilities<double>::Normalize(rLoadingDirection);
 }
 
 // Function that compute plastic flow direction in principal space: m
 void BoundingSurfacePlasticFlowRule::CalculatePlasticFlowDirection(const Vector& rPrincipalStressVector, const Vector& rImagePointStressVector, Vector& rPlasticFlowDirection)
 {
-    Vector dG_dsigma = ZeroVector(3);
-    this->CalculatePlasticPotentialDerivatives(rPrincipalStressVector, rImagePointStressVector, dG_dsigma);
-    
-    double norm_dG_dsigma = norm_2(dG_dsigma);
-    if (norm_dG_dsigma < 1.e-9) norm_dG_dsigma = 1.e-9;
-
-    rPlasticFlowDirection = dG_dsigma / norm_dG_dsigma;
+    rPlasticFlowDirection = ZeroVector(3);
+    this->CalculatePlasticPotentialDerivatives(rPrincipalStressVector, rImagePointStressVector, rPlasticFlowDirection);
+    SolidMechanicsMathUtilities<double>::Normalize(rPlasticFlowDirection);
 }
 
 // Function that compute derivative of yield surface (either F or f) with respect to principal stresses
@@ -735,10 +727,73 @@ bool BoundingSurfacePlasticFlowRule::UpdateInternalVariables( RadialReturnVariab
 void BoundingSurfacePlasticFlowRule::CheckOrderOfStress(Vector& rUpdatedStress, Matrix& rMainDirections)
 { 
     // Normalize eigen vectors
-    
-    // Multiply to check
+    Vector principal_direction_1 = ZeroVector(3);
+    Vector principal_direction_2 = ZeroVector(3);
+    Vector principal_direction_3 = ZeroVector(3);
 
-    // Swap if needed
+    for(unsigned int i=0; i<3; i++)
+    {
+        principal_direction_1(i) = rMainDirections(i,0);
+        principal_direction_2(i) = rMainDirections(i,1);
+        principal_direction_3(i) = rMainDirections(i,2);
+    }
+
+    SolidMechanicsMathUtilities<double>::Normalize(principal_direction_1);
+    SolidMechanicsMathUtilities<double>::Normalize(principal_direction_2);
+    SolidMechanicsMathUtilities<double>::Normalize(principal_direction_3);
+    
+    // Multiply to check and Swap if needed
+    if (mIsOnceUnloaded)
+    {
+        // Copy previous value eigenvectors
+        Vector prev_principal_direction_1 = ZeroVector(3);
+        Vector prev_principal_direction_2 = ZeroVector(3);
+        Vector prev_principal_direction_3 = ZeroVector(3);
+
+        for(unsigned int i=0; i<3; i++)
+        {
+            prev_principal_direction_1(i) = mPreviousMainDirections(i,0);
+            prev_principal_direction_2(i) = mPreviousMainDirections(i,1);
+            prev_principal_direction_3(i) = mPreviousMainDirections(i,2);
+        }
+
+        // Compute dot product
+        double dot_product_1 = MathUtils<double>::Dot(principal_direction_1, prev_principal_direction_1);
+        double dot_product_2 = MathUtils<double>::Dot(principal_direction_2, prev_principal_direction_2);
+        double dot_product_3 = MathUtils<double>::Dot(principal_direction_3, prev_principal_direction_3);
+
+        // Identify swap
+        if (std::abs(dot_product_1) < 0.10 && std::abs(dot_product_2) < 0.10)
+        {
+            std::swap(rUpdatedStress[0],rUpdatedStress[1]);
+            Vector temp_vector    = principal_direction_1;
+            principal_direction_1 = principal_direction_2;
+            principal_direction_2 = temp_vector;
+        }
+        else if (std::abs(dot_product_1) < 0.10 && std::abs(dot_product_3) < 0.10)
+        {
+            std::swap(rUpdatedStress[0],rUpdatedStress[2]);
+            Vector temp_vector    = principal_direction_1;
+            principal_direction_1 = principal_direction_3;
+            principal_direction_3 = temp_vector;
+        }
+        else if (std::abs(dot_product_2) < 0.10 && std::abs(dot_product_3) < 0.10)
+        {
+            std::swap(rUpdatedStress[1],rUpdatedStress[2]);
+            Vector temp_vector    = principal_direction_2;
+            principal_direction_2 = principal_direction_3;
+            principal_direction_3 = temp_vector;
+        }
+
+    }
+
+    // Assign to original matrix
+    for(unsigned int i=0; i<3; i++)
+    {
+            rMainDirections(i,0) = principal_direction_1(i);
+            rMainDirections(i,1) = principal_direction_2(i);
+            rMainDirections(i,2) = principal_direction_3(i); 
+    }
 
 }
 
