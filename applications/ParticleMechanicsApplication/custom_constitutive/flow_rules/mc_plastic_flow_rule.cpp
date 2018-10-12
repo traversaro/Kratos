@@ -512,7 +512,7 @@ void MCPlasticFlowRule::CalculateDepLine(Matrix& rInvD, Vector& rFNorm, Vector& 
 
 }
 
-void MCPlasticFlowRule::CalculateTransformationMatrix(const Matrix& rMainDirection, Matrix& rA)
+void MCPlasticFlowRule::CalculateTransformationMatrix(const Matrix& rMainDirections, Matrix& rA)
 {
     Matrix A1 = ZeroMatrix(3,3);
     Matrix A2 = ZeroMatrix(3,3);
@@ -522,7 +522,7 @@ void MCPlasticFlowRule::CalculateTransformationMatrix(const Matrix& rMainDirecti
     {
         for(unsigned int j = 0; j<3 ; j++)
         {
-            A1(i,j) = rMainDirection(i,j) * rMainDirection(i,j);
+            A1(i,j) = rMainDirections(i,j) * rMainDirections(i,j);
             rA(i,j) = A1(i,j);
         }
     }
@@ -540,9 +540,9 @@ void MCPlasticFlowRule::CalculateTransformationMatrix(const Matrix& rMainDirecti
     {
         for(unsigned int l = 0; l<3; l++)
         {
-            A2(k,l) = rMainDirection(k,Hj1[l]) * rMainDirection(k,Hj2[l]);
-            A3(k,l) = rMainDirection(Hj1[k],l) * rMainDirection(Hj2[k],l);
-            A4(k,l) = rMainDirection(Hj1[k],Hj1[l]) * rMainDirection(Hj2[k],Hj2[l]) + rMainDirection(Hj2[k],Hj1[l]) * rMainDirection(Hj1[k],Hj2[l]);
+            A2(k,l) = rMainDirections(k,Hj1[l]) * rMainDirections(k,Hj2[l]);
+            A3(k,l) = rMainDirections(Hj1[k],l) * rMainDirections(Hj2[k],l);
+            A4(k,l) = rMainDirections(Hj1[k],Hj1[l]) * rMainDirections(Hj2[k],Hj2[l]) + rMainDirections(Hj2[k],Hj1[l]) * rMainDirections(Hj1[k],Hj2[l]);
         }
     }
 

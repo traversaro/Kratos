@@ -224,7 +224,7 @@ protected:
 
     void ReturnStressFromPrincipalAxis(const Matrix& rEigenVectors, const Vector& rPrincipalStress, Matrix& rStressMatrix);
 
-    void CalculateTransformationMatrix(const Matrix& rMainDirection, Matrix& rA);
+    void CalculateTransformationMatrix(const Matrix& rMainDirections, Matrix& rA);
 
     
     bool CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, const Vector& rPrincipalStress, const Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated);
@@ -235,7 +235,7 @@ protected:
     
     void CalculateCenterOfHomologyStress(const Vector& rRearrangedStress, Vector& rCenterOfHomologyStress);
 
-    void CheckOrderOfStress(Vector& rUpdatedStress, Matrix& rMainDirection);
+    void CheckOrderOfStress(Vector& rUpdatedStress, Matrix& rMainDirections);
 
 
     void ComputeElasticMatrix(const double& rMeanStressP, Matrix& rElasticMatrix);
