@@ -146,7 +146,7 @@ void FemDem3DElement::ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo)
 	this->SetNodeIndexes(nodes_indexes);
 
 	// Loop over EDGES to assign the elements that share that edge -> Fill mEdgeNeighboursContainer
-	for (int edge = 0; edge < 6; edge++) {
+	for (unsigned int edge = 0; edge < 6; edge++) {
 		const int NodeIndex1 = nodes_indexes(edge, 0);
 		const int NodeIndex2 = nodes_indexes(edge, 1);
 
@@ -159,13 +159,13 @@ void FemDem3DElement::ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo)
 
 		std::vector<Element *> edge_shared_elements_node_1;
 		// Loop over neigh elements of the node 1
-		for (int neigh_elem = 0; neigh_elem < neigh_of_node_1.size(); neigh_elem++) {
+		for (unsigned int neigh_elem = 0; neigh_elem < neigh_of_node_1.size(); neigh_elem++) {
 			// Nodes of the neigh element
 			Geometry<Node<3>> &NodesNeighElem = neigh_of_node_1[neigh_elem].GetGeometry();
 
 			// Loop over the nodes of the neigh element
-			for (int neigh_elem_node = 0; neigh_elem_node < 4; neigh_elem_node++) {
-				int NeighElementNodeId = NodesNeighElem[neigh_elem_node].Id();
+			for (unsigned int neigh_elem_node = 0; neigh_elem_node < 4; neigh_elem_node++) {
+				const int NeighElementNodeId = NodesNeighElem[neigh_elem_node].Id();
 
 				if (NeighElementNodeId == NodeId2 & this->Id() != neigh_of_node_1[neigh_elem].Id()) {
 					edge_shared_elements_node_1.push_back(&neigh_of_node_1[neigh_elem]); // ( [] returns an Element object!!)
@@ -175,13 +175,13 @@ void FemDem3DElement::ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo)
 
 		std::vector<Element *> edge_shared_elements_node_2;
 		// Loop over neigh elements of the node 2
-		for (int neigh_elem = 0; neigh_elem < neigh_of_node_2.size(); neigh_elem++) {
+		for (unsigned int neigh_elem = 0; neigh_elem < neigh_of_node_2.size(); neigh_elem++) {
 			// Nodes of the neigh element
 			Geometry<Node<3>> &NodesNeighElem = neigh_of_node_2[neigh_elem].GetGeometry();
 
 			// Loop over the nodes of the neigh element
-			for (int neigh_elem_node = 0; neigh_elem_node < 4; neigh_elem_node++) {
-				int NeighElementNodeId = NodesNeighElem[neigh_elem_node].Id();
+			for (unsigned int neigh_elem_node = 0; neigh_elem_node < 4; neigh_elem_node++) {
+				const int NeighElementNodeId = NodesNeighElem[neigh_elem_node].Id();
 
 				if (NeighElementNodeId == NodeId1 & this->Id() != neigh_of_node_2[neigh_elem].Id()) {
 					edge_shared_elements_node_2.push_back(&neigh_of_node_2[neigh_elem]);
@@ -193,10 +193,10 @@ void FemDem3DElement::ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo)
 		std::vector<Element *> edge_shared_elements = edge_shared_elements_node_1;
 
 		// Add the neigh elements from the node 2
-		for (int i = 0; i < edge_shared_elements_node_2.size(); i++) {
-			int aux = 0;
+		for (unsigned int i = 0; i < edge_shared_elements_node_2.size(); i++) {
+			const int aux = 0;
 
-			for (int j = 0; j < edge_shared_elements.size(); j++) {
+			for (unsigned int j = 0; j < edge_shared_elements.size(); j++) {
 				if (edge_shared_elements_node_2[i]->Id() == edge_shared_elements[j]->Id())
 					aux++;
 			}
@@ -217,8 +217,6 @@ void FemDem3DElement::ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo)
 void FemDem3DElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 {
 	this->SetToZeroIteration();
-
-	double max_threshold = 0.0;
 	//Loop over edges
 	for (unsigned int cont = 0; cont < this->GetNumberOfEdges(); cont++) {
 		this->SetConvergedDamages(this->GetNonConvergedDamages(cont), cont);
@@ -245,7 +243,7 @@ void FemDem3DElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
 	// Reset the nodal force flag for the next time step
 	Geometry<Node<3>> &NodesElement = this->GetGeometry();
 
-	for (int i = 0; i < 3; i++) {
+	for (unsigned int i = 0; i < 3; i++) {
 		#pragma omp critical 
 		{
 			NodesElement[i].SetValue(NODAL_FORCE_APPLIED, false);
@@ -280,7 +278,6 @@ void FemDem3DElement::InitializeNonLinearIteration(ProcessInfo &rCurrentProcessI
 	noalias(F) = identity_matrix<double>(dimension);
 
 	//3.-Calculate elemental system:
-
 	//reading integration points
 	const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(mThisIntegrationMethod);
 
@@ -397,7 +394,7 @@ void FemDem3DElement::CalculateLocalSystem(
 		Vector DamagesOnEdges = ZeroVector(this->GetNumberOfEdges());
 
 		// Loop over edges of the element
-		for (int edge = 0; edge < this->GetNumberOfEdges(); edge++) {
+		for (unsigned int edge = 0; edge < this->GetNumberOfEdges(); edge++) {
 			std::vector<Element*> EdgeNeighbours = this->GetEdgeNeighbourElements(edge);
 			Vector AverageStressVector, AverageStrainVector, IntegratedStressVectorOnEdge;
 
@@ -411,12 +408,6 @@ void FemDem3DElement::CalculateLocalSystem(
 
 			this->SetNonConvergedDamages(damage_edge, edge);
 			DamagesOnEdges[edge] = damage_edge;
-
-			//if (rCurrentProcessInfo[STEP] == 13 && this->Id() == 358) {
-			//	KRATOS_WATCH(damage_edge)
-			//		//KRATOS_WATCH(damage_element)
-			//}
-
 		} // End loop over edges
 
 		double damage_element = this->CalculateElementalDamage(DamagesOnEdges);
@@ -466,9 +457,9 @@ void FemDem3DElement::AddDEMContactForces(Vector &rNodalRHS)
 		Geometry<Node<3>> &NodesElement = this->GetGeometry();
 
 		// Loop Over nodes to apply the DEM contact forces to the FEM
-		for (int i = 0; i < 4; i++) {
-			bool IsDEM = NodesElement[i].GetValue(IS_DEM);
-			bool NodalForceApplied = NodesElement[i].GetValue(NODAL_FORCE_APPLIED);
+		for (unsigned int i = 0; i < 4; i++) {
+			const bool IsDEM = NodesElement[i].GetValue(IS_DEM);
+			const bool NodalForceApplied = NodesElement[i].GetValue(NODAL_FORCE_APPLIED);
 
 			if (IsDEM == true && NodalForceApplied == false) {
 				const double ForceX = NodesElement[i].GetValue(NODAL_FORCE_X);
@@ -666,7 +657,7 @@ void FemDem3DElement::AverageVector(Vector &rAverageVector, const Vector &v, con
 		KRATOS_ERROR << "The dimension of the vectors are different or null";
 	rAverageVector.resize(n);
 
-	for (int cont = 0; cont < n; cont++) {
+	for (unsigned int cont = 0; cont < n; cont++) {
 		rAverageVector[cont] = (v[cont] + w[cont]) * 0.5;
 	}
 }
@@ -681,7 +672,7 @@ void FemDem3DElement::CalculateAverageStressOnEdge(
 	rAverageVector = CurrentElementStress;
 	int counter = 0;
 
-	for (int elem = 0; elem < VectorOfElems.size(); elem++) {
+	for (unsigned int elem = 0; elem < VectorOfElems.size(); elem++) {
 		// Only take into account the active elements
 		bool is_active = true;
 		if (VectorOfElems[elem]->IsDefined(ACTIVE)) {
@@ -972,9 +963,7 @@ void FemDem3DElement::CalculateMassMatrix(MatrixType &rMassMatrix, ProcessInfo &
 	if (rCurrentProcessInfo.Has(COMPUTE_LUMPED_MASS_MATRIX))
 		if (rCurrentProcessInfo[COMPUTE_LUMPED_MASS_MATRIX] == true)
 			ComputeLumpedMassMatrix = true;
-
 	if (ComputeLumpedMassMatrix == false) {
-
 		//create local system components
 		LocalSystemComponents LocalSystem;
 
@@ -1012,7 +1001,7 @@ void FemDem3DElement::CalculateMassMatrix(MatrixType &rMassMatrix, ProcessInfo &
 		LumpFact = GetGeometry().LumpingFactors(LumpFact);
 
 		for (unsigned int i = 0; i < number_of_nodes; i++) {
-			double temp = LumpFact[i] * TotalMass;
+			const double temp = LumpFact[i] * TotalMass;
 			for (unsigned int j = 0; j < dimension; j++) {
 				unsigned int index = i * dimension + j;
 				rMassMatrix(index, index) = temp;
@@ -1184,7 +1173,6 @@ void FemDem3DElement::ModifiedMohrCoulombCriterion(
 	KRATOS_ERROR_IF(A < 0.0) << " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T" << std::endl;
 
 	double f; /// F = f-c = 0 classical definition of yield surface
-
 	// Check Modified Mohr-Coulomb criterion
 	if (I1 == 0.0) {
 		f = 0.0;

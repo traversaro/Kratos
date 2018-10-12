@@ -62,7 +62,6 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 		self.FEM_Solution.step = self.FEM_Solution.step + 1
 		self.FEM_Solution.main_model_part.ProcessInfo[KratosMultiphysics.STEP] = self.FEM_Solution.step
 
-
 		if self.DoRemeshing:
 			is_remeshing = self.CheckIfHasRemeshed()
 			
