@@ -45,15 +45,15 @@ namespace Kratos
             static inline void SortPrincipalStress(Vector& rPrincipalStress, Vector& rMainStrain, Matrix& rMainDirections)
             {
                   // Create Copy
-                  Vector PrincipalDirection1 = ZeroVector(3);
-                  Vector PrincipalDirection2 = ZeroVector(3);
-                  Vector PrincipalDirection3 = ZeroVector(3);
+                  Vector principal_direction_1 = ZeroVector(3);
+                  Vector principal_direction_2 = ZeroVector(3);
+                  Vector principal_direction_3 = ZeroVector(3);
 
                   for(unsigned int i=0; i<3; i++)
                   {
-                        PrincipalDirection1(i) = rMainDirections(0,i);
-                        PrincipalDirection2(i) = rMainDirections(1,i);
-                        PrincipalDirection3(i) = rMainDirections(2,i);
+                        principal_direction_1(i) = rMainDirections(0,i);
+                        principal_direction_2(i) = rMainDirections(1,i);
+                        principal_direction_3(i) = rMainDirections(2,i);
                   }
 
                   // Reorder and swap
@@ -61,35 +61,35 @@ namespace Kratos
                   {
                         std::swap(rPrincipalStress[0],rPrincipalStress[1]);
                         std::swap(rMainStrain[0],rMainStrain[1]);
-                        Vector temp_vector = PrincipalDirection1;
-                        PrincipalDirection1 = PrincipalDirection2;
-                        PrincipalDirection2 = temp_vector;
+                        Vector temp_vector = principal_direction_1;
+                        principal_direction_1 = principal_direction_2;
+                        principal_direction_2 = temp_vector;
                   }
 
                   if(rPrincipalStress[1]<rPrincipalStress[2])
                   {
                         std::swap(rPrincipalStress[1],rPrincipalStress[2]);
                         std::swap(rMainStrain[1],rMainStrain[2]);
-                        Vector temp_vector = PrincipalDirection2;
-                        PrincipalDirection2 = PrincipalDirection3;
-                        PrincipalDirection3 = temp_vector;
+                        Vector temp_vector = principal_direction_2;
+                        principal_direction_2 = principal_direction_3;
+                        principal_direction_3 = temp_vector;
                   }
 
                   if(rPrincipalStress[0]<rPrincipalStress[1])
                   {
                         std::swap(rPrincipalStress[0],rPrincipalStress[1]);
                         std::swap(rMainStrain[0],rMainStrain[1]);
-                        Vector temp_vector = PrincipalDirection1;
-                        PrincipalDirection1 = PrincipalDirection2;
-                        PrincipalDirection2 = temp_vector;
+                        Vector temp_vector = principal_direction_1;
+                        principal_direction_1 = principal_direction_2;
+                        principal_direction_2 = temp_vector;
                   }
 
                   // Copy back to original matrix
                   for(unsigned int i=0; i<3; i++)
                   {
-                        rMainDirections(i,0) = PrincipalDirection1(i);
-                        rMainDirections(i,1) = PrincipalDirection2(i);
-                        rMainDirections(i,2) = PrincipalDirection3(i);
+                        rMainDirections(i,0) = principal_direction_1(i);
+                        rMainDirections(i,1) = principal_direction_2(i);
+                        rMainDirections(i,2) = principal_direction_3(i);
                   }
             }
 
