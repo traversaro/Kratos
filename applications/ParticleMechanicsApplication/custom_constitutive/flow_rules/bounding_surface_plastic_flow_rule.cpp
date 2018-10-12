@@ -355,18 +355,9 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialSecondDerivatives(
     MPMStressPrincipalInvariantsUtility::CalculateSecondDerivativeMatrices(rPrincipalStressVector, d2p_d2sigma, d2q_d2sigma, d2theta_d2sigma);
 
     // Compute auxiliary matrices
-    Matrix aux_pp           = ZeroMatrix(3);
-    Matrix aux_qq           = ZeroMatrix(3);
-    Matrix aux_thetatheta   = ZeroMatrix(3);
-    for (unsigned int i=0; i<3; i++)
-    {
-        for (unsigned int j=0; j<3; j++)
-        {
-            aux_pp(i,j)         = dp_dsigma[i] * dp_dsigma[j];
-            aux_qq(i,j)         = dq_dsigma[i] * dq_dsigma[j];
-            aux_thetatheta(i,j) = dtheta_dsigma[i] * dtheta_dsigma[j];
-        }
-    }
+    Matrix aux_pp           = MathUtils<double>::TensorProduct3(dp_dsigma, dp_dsigma);
+    Matrix aux_qq           = MathUtils<double>::TensorProduct3(dq_dsigma, dq_dsigma);
+    Matrix aux_thetatheta   = MathUtils<double>::TensorProduct3(dtheta_dsigma, dtheta_dsigma);
 
     // Assemble second derivative matrix (3x3)
     rSecondDerivative  = invariant_second_derivatives[0] * aux_pp + invariant_derivatives[0] * d2p_d2sigma;
