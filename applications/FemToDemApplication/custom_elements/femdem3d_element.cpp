@@ -412,6 +412,11 @@ void FemDem3DElement::CalculateLocalSystem(
 			this->SetNonConvergedDamages(damage_edge, edge);
 			DamagesOnEdges[edge] = damage_edge;
 
+			//if (rCurrentProcessInfo[STEP] == 13 && this->Id() == 358) {
+			//	KRATOS_WATCH(damage_edge)
+			//		//KRATOS_WATCH(damage_element)
+			//}
+
 		} // End loop over edges
 
 		double damage_element = this->CalculateElementalDamage(DamagesOnEdges);
@@ -1120,7 +1125,6 @@ void FemDem3DElement::IntegrateStressDamageMechanics(
 	double l_char)
 {
 	const std::string& yield_surface = this->GetProperties()[YIELD_SURFACE];
-
 	if (yield_surface == "ModifiedMohrCoulomb") {
 		this->ModifiedMohrCoulombCriterion(rIntegratedStress, rdamage, StressVector, cont, l_char);
 	} else if (yield_surface == "SimoJu") {
@@ -1151,19 +1155,14 @@ void FemDem3DElement::ModifiedMohrCoulombCriterion(
 	const double E = this->GetProperties()[YOUNG_MODULUS];
 	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
 
+	KRATOS_WARNING_IF("friction_angle", friction_angle < 1e-24) << "Friction Angle not defined, assumed equal to 32deg" << std::endl;
+	KRATOS_ERROR_IF(sigma_c < 1e-24) << "Yield stress in compression not defined, include YIELD_STRESS_C in .mdpa " << std::endl;
+	KRATOS_ERROR_IF(sigma_t < 1e-24) << "Yield stress in tension not defined, include YIELD_STRESS_T in .mdpa" << std::endl;
+	KRATOS_ERROR_IF(Gt < 1e-24) << " ERROR: Fracture Energy not defined in the model part, include FRAC_ENERGY_T in .mdpa " << std::endl;
 	// Check input variables
 	if (friction_angle < 1e-24) {
 		friction_angle = 32 * 3.14159 / 180;
 		std::cout << "Friction Angle not defined, assumed equal to 32 deg " << std::endl;
-	}
-	if (sigma_c < 1e-24) {
-		KRATOS_ERROR << " ERROR: Yield stress in compression not defined, include YIELD_STRESS_C in .mdpa ";
-	}
-	if (sigma_t < 1e-24) {
-		KRATOS_ERROR << " ERROR: Yield stress in tension not defined, include YIELD_STRESS_T in .mdpa ";
-	}
-	if (Gt < 1e-24) {
-		KRATOS_ERROR << " ERROR: Fracture Energy not defined in the model part, include FRAC_ENERGY_T in .mdpa ";
 	}
 
 	const double R = std::abs(sigma_c / sigma_t);
@@ -1180,13 +1179,11 @@ void FemDem3DElement::ModifiedMohrCoulombCriterion(
 	const double K1 = 0.5 * (1 + alpha_r) - 0.5 * (1 - alpha_r) * sinphi;
 	const double K2 = 0.5 * (1 + alpha_r) - 0.5 * (1 - alpha_r) / sinphi;
 	const double K3 = 0.5 * (1 + alpha_r) * sinphi - 0.5 * (1 - alpha_r);
-
 	const double n = sigma_c / sigma_t;
 	const double A = 1.00 / (n * n * Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
+	KRATOS_ERROR_IF(A < 0.0) << " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T" << std::endl;
 
-	KRATOS_ERROR_IF(A < 0.0) << "Fracture energy too low..."<< std::endl;
-
-	double f, F; /// F = f-c = 0 classical definition of yield surface
+	double f; /// F = f-c = 0 classical definition of yield surface
 
 	// Check Modified Mohr-Coulomb criterion
 	if (I1 == 0.0) {
@@ -1200,12 +1197,13 @@ void FemDem3DElement::ModifiedMohrCoulombCriterion(
 
 	if (this->GetThreshold(cont) == 0) {
 		this->SetThreshold(c_max, cont); // 1st iteration sets threshold as c_max
-	} 
+	}  else if (c_max > this->GetThreshold(cont)) { // remeshing stuff
+		this->SetThreshold(c_max, cont);
+	}
 	const double c_threshold = this->GetThreshold(cont);
 	this->SetNonConvergedEquivalentStress(f, cont);
 
-	F = f - c_threshold;
-
+	const double F = f - c_threshold;
 	if (F <= 0.0) { // Elastic region --> Damage is constant
 		rdamage = this->GetConvergedDamages(cont);
 	} else {
@@ -1213,7 +1211,6 @@ void FemDem3DElement::ModifiedMohrCoulombCriterion(
 		if (rdamage > 0.99)
 			rdamage = 0.99;
 	}
-
 	rIntegratedStress = StressVector;
 	rIntegratedStress *= (1.0 - rdamage);
 }
@@ -1230,26 +1227,28 @@ void FemDem3DElement::RankineCriterion(
 
 	const double sigma_c = this->GetProperties()[YIELD_STRESS_C];
 	const double sigma_t = this->GetProperties()[YIELD_STRESS_T];
-	double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * 3.14159265359 / 180.0; // In radians!
 	const double E = this->GetProperties()[YOUNG_MODULUS];
 	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
 	const double c_max = std::abs(sigma_t);
+	KRATOS_ERROR_IF(sigma_c < 1e-24) << "Yield stress in compression not defined, include YIELD_STRESS_C in .mdpa " << std::endl;
+	KRATOS_ERROR_IF(sigma_t < 1e-24) << "Yield stress in tension not defined, include YIELD_STRESS_T in .mdpa" << std::endl;
+	KRATOS_ERROR_IF(Gt < 1e-24) << " ERROR: Fracture Energy not defined in the model part, include FRAC_ENERGY_T in .mdpa " << std::endl;
 
 	const double A = 1.00 / (Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
-	if (A < 0) {
-		KRATOS_THROW_ERROR(std::invalid_argument, " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T", A)
-	}
+	KRATOS_ERROR_IF(A < 0.0) << " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T" << std::endl;
 
-	double f, F; /// F = f-c = 0 classical definition of yield surface
+	double f; /// F = f-c = 0 classical definition of yield surface
 	f = GetMaxValue(PrincipalStressVector);
 
-	if (this->GetThreshold(cont) == 0.0) {
+	if (this->GetThreshold(cont) == 0) {
+		this->SetThreshold(c_max, cont); // 1st iteration sets threshold as c_max
+	}  else if (c_max > this->GetThreshold(cont)) { // remeshing stuff
 		this->SetThreshold(c_max, cont);
-	} // 1st iteration sets threshold as c_max
+	}
 	const double c_threshold = this->GetThreshold(cont);
 	this->SetNonConvergedEquivalentStress(f, cont);
 
-	F = f - c_threshold;
+	const double F = f - c_threshold;
 
 	if (F <= 0) { // Elastic region --> Damage is constant
 		damage = this->GetConvergedDamages(cont);
@@ -1275,38 +1274,25 @@ void FemDem3DElement::DruckerPragerCriterion(
 	const double E = this->GetProperties()[YOUNG_MODULUS];
 	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
 
+	KRATOS_WARNING_IF("friction_angle", friction_angle < 1e-24) << "Friction Angle not defined, assumed equal to 32deg" << std::endl;
+	KRATOS_ERROR_IF(sigma_c < 1e-24) << "Yield stress in compression not defined, include YIELD_STRESS_C in .mdpa " << std::endl;
+	KRATOS_ERROR_IF(sigma_t < 1e-24) << "Yield stress in tension not defined, include YIELD_STRESS_T in .mdpa" << std::endl;
+	KRATOS_ERROR_IF(Gt < 1e-24) << " ERROR: Fracture Energy not defined in the model part, include FRAC_ENERGY_T in .mdpa " << std::endl;
 	// Check input variables
 	if (friction_angle < 1e-24) {
 		friction_angle = 32 * 3.14159 / 180;
 		std::cout << "Friction Angle not defined, assumed equal to 32� " << std::endl;
 	}
-	if (sigma_c < 1e-24) {
-		KRATOS_ERROR << " ERROR: Yield stress in compression not defined, include YIELD_STRESS_C in .mdpa ";
-	}
-	if (sigma_t < 1e-24) {
-		KRATOS_ERROR << " ERROR: Yield stress in tension not defined, include YIELD_STRESS_T in .mdpa ";
-	}
-	if (Gt < 1e-24) {
-		KRATOS_ERROR << " ERROR: Fracture Energy not defined in the model part, include FRAC_ENERGY_T in .mdpa ";
-	}
-
 	const double c_max = std::abs(sigma_t * (3.0 + std::sin(friction_angle)) / (3.0 * std::sin(friction_angle) - 3.0));
-
-	double I1, J2;
-	I1 = CalculateI1Invariant(StressVector);
+	const double I1 = CalculateI1Invariant(StressVector);
 	Vector Deviator = ZeroVector(6);
 	this->CalculateDeviatorVector(Deviator, StressVector, I1);
-	J2 = CalculateJ2Invariant(Deviator);
-
+	const double J2 = CalculateJ2Invariant(Deviator);
 	const double A = 1.00 / (Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
-	if (A < 0) {
-		KRATOS_THROW_ERROR(std::invalid_argument, " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T", A)
-	}
+	KRATOS_ERROR_IF(A < 0.0) << " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T" << std::endl;
 
-	double f, F; /// F = f-c = 0 classical definition of yield surface
 
-	double CFL = 0.0, TEN0 = 0.0;
-
+	double f, CFL = 0.0, TEN0 = 0.0;
 	// Check DruckerPrager criterion
 	if (I1 == 0.0) {
 		f = 0.0;
@@ -1317,12 +1303,14 @@ void FemDem3DElement::DruckerPragerCriterion(
 	}
 
 	if (this->GetThreshold(cont) == 0) {
+		this->SetThreshold(c_max, cont); // 1st iteration sets threshold as c_max
+	}  else if (c_max > this->GetThreshold(cont)) { // remeshing stuff
 		this->SetThreshold(c_max, cont);
-	} // 1st iteration sets threshold as c_max
+	}
 
 	const double c_threshold = this->GetThreshold(cont);
 	this->SetNonConvergedEquivalentStress(f, cont);
-	F = f - c_threshold;
+	const double F = f - c_threshold;
 
 	if (F <= 0) { // Elastic region --> Damage is constant
 		damage = this->GetConvergedDamages(cont);
@@ -1354,17 +1342,16 @@ void FemDem3DElement::SimoJuCriterion(
 	const double n = std::abs(sigma_c / sigma_t);
 	const double c_max = std::abs(sigma_c) / std::sqrt(E);
 
-	double SumA = 0.0, SumB = 0.0, SumC = 0.0, ere0 = 0.0, ere1 = 0.0;
+	double SumA = 0.0, SumB = 0.0, SumC = 0.0;
 	for (int cont = 0; cont < 2; cont++) {
 		SumA += std::abs(PrincipalStressVector[cont]);
 		SumB += 0.5 * (PrincipalStressVector[cont] + std::abs(PrincipalStressVector[cont]));
 		SumC += 0.5 * (-PrincipalStressVector[cont] + std::abs(PrincipalStressVector[cont]));
 	}
-	ere0 = SumB / SumA;
-	ere1 = SumC / SumA;
+	const double ere0 = SumB / SumA;
+	const double ere1 = SumC / SumA;
 
-	double f, F; /// F = f-c = 0 classical definition of yield surface
-
+	double f; /// F = f-c = 0 classical definition of yield surface
 	// Check SimoJu criterion
 	if (StrainVector[0] == 0 && StrainVector[1] == 0) {
 		f = 0;
@@ -1378,17 +1365,17 @@ void FemDem3DElement::SimoJuCriterion(
 	}
 
 	if (this->GetThreshold(cont) == 0) {
+		this->SetThreshold(c_max, cont); // 1st iteration sets threshold as c_max
+	}  else if (c_max > this->GetThreshold(cont)) { // remeshing stuff
 		this->SetThreshold(c_max, cont);
-	} // 1st iteration sets threshold as c_max
+	}
 
 	const double c_threshold = this->GetThreshold(cont);
 	this->SetNonConvergedEquivalentStress(f, cont);
-	F = f - c_threshold;
+	const double F = f - c_threshold;
 
 	const double A = 1.00 / (Gt * n * n * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
-	if (A < 0) {
-		KRATOS_THROW_ERROR(std::invalid_argument, " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T", A)
-	}
+	KRATOS_ERROR_IF(A < 0.0) << " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T" << std::endl;
 
 	if (F <= 0) { // Elastic region --> Damage is constant
 		damage = this->GetConvergedDamages(cont);
@@ -1419,20 +1406,20 @@ void FemDem3DElement::RankineFragileLaw(
 	const double c_max = std::abs(sigma_t);
 
 	const double  A = 1.00 / (Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
-	if (A < 0) {
-		KRATOS_THROW_ERROR(std::invalid_argument, " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T", A)
-	}
+	KRATOS_ERROR_IF(A < 0.0) << " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T" << std::endl;
 
-	double f, F; /// F = f-c = 0 classical definition of yield surface
+	double f; /// F = f-c = 0 classical definition of yield surface
 	f = GetMaxValue(PrincipalStressVector);
 
 	if (this->GetThreshold(cont) == 0) {
+		this->SetThreshold(c_max, cont); // 1st iteration sets threshold as c_max
+	}  else if (c_max > this->GetThreshold(cont)) { // remeshing stuff
 		this->SetThreshold(c_max, cont);
-	} // 1st iteration sets threshold as c_max
+	}
 	const double c_threshold = this->GetThreshold(cont);
 	this->SetNonConvergedEquivalentStress(f, cont);
 
-	F = f - c_threshold;
+	const double F = f - c_threshold;
 
 	if (F <= 0) { // Elastic region --> Damage is constant
 		damage = this->GetConvergedDamages(cont);

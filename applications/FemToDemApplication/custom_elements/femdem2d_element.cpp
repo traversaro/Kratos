@@ -346,18 +346,15 @@ void FemDem2DElement::CalculateLocalSystem(MatrixType &rLeftHandSideMatrix, Vect
 
 				this->AverageVector(AverageStress, Stress1, Stress2);
 				this->AverageVector(AverageStrain, Strain1, Strain2);
-			}
-			else
-			{
+			} else {
 				AverageStress = this->GetValue(STRESS_VECTOR);
 				AverageStrain = this->GetValue(STRAIN_VECTOR);
 			}
 
-			if (this->GetIteration() < 3) // Computes the l_char on each side only once at each time step
-			{
+			if (this->GetIteration() < 3) { // Computes the l_char on each side only once at each time step 
 				this->CalculateLchar(this, elem_neigb[cont], cont);
 			}
-			double l_char = this->Get_l_char(cont);
+			const double l_char = this->Get_l_char(cont);
 
 			this->IntegrateStressDamageMechanics(IntegratedStressVector, damagee, AverageStrain, AverageStress, cont, l_char);
 			damage[cont] = damagee;
@@ -369,8 +366,7 @@ void FemDem2DElement::CalculateLocalSystem(MatrixType &rLeftHandSideMatrix, Vect
 		TwoMaxDamages.resize(2);
 		this->Get2MaxValues(TwoMaxDamages, damage[0], damage[1], damage[2]);
 		double damage_element = (TwoMaxDamages[0] + TwoMaxDamages[1]) * 0.5;
-		if (damage_element >= 0.999)
-		{
+		if (damage_element >= 0.999) {
 			damage_element = 0.999;
 		}
 		this->Set_NonConvergeddamage(damage_element);
@@ -390,11 +386,9 @@ void FemDem2DElement::CalculateLocalSystem(MatrixType &rLeftHandSideMatrix, Vect
 		Vector VolumeForce = ZeroVector(dimension);
 		VolumeForce = this->CalculateVolumeForce(VolumeForce, N);
 		// RHS
-		for (unsigned int i = 0; i < number_of_nodes; i++)
-		{
+		for (unsigned int i = 0; i < number_of_nodes; i++) {
 			int index = dimension * i;
-			for (unsigned int j = 0; j < dimension; j++)
-			{
+			for (unsigned int j = 0; j < dimension; j++) {
 				rRightHandSideVector[index + j] += IntegrationWeight * N[i] * VolumeForce[j];
 			}
 		}
@@ -408,19 +402,15 @@ void FemDem2DElement::CalculateLocalSystem(MatrixType &rLeftHandSideMatrix, Vect
 			Geometry<Node<3>> &nodes_element = this->GetGeometry();
 
 			// Loop Over nodes to apply the DEM contact forces to the FEM
-			for (int i = 0; i < 3; i++)
-			{
+			for (int i = 0; i < 3; i++) {
 				bool IsDEM = nodes_element[i].GetValue(IS_DEM);
 				bool NodalForceApplied = nodes_element[i].GetValue(NODAL_FORCE_APPLIED);
 
-				if (IsDEM == true && NodalForceApplied == false)
-				{
+				if (IsDEM == true && NodalForceApplied == false) {
 					double ForceX = nodes_element[i].GetValue(NODAL_FORCE_X);
 					double ForceY = nodes_element[i].GetValue(NODAL_FORCE_Y);
-
 					NodalRHS[2 * i] += ForceX;
 					NodalRHS[2 * i + 1] += ForceY;
-
 					nodes_element[i].SetValue(NODAL_FORCE_APPLIED, true);
 				}
 			}
@@ -440,10 +430,8 @@ void FemDem2DElement::CalculateDeformationMatrix(Matrix &rB, const Matrix &rDN_D
 	if (rB.size1() != voigt_size || rB.size2() != dimension * number_of_nodes)
 		rB.resize(voigt_size, dimension * number_of_nodes, false);
 
-	for (unsigned int i = 0; i < number_of_nodes; i++)
-	{
+	for (unsigned int i = 0; i < number_of_nodes; i++) {
 		unsigned int index = 2 * i;
-
 		rB(0, index + 0) = rDN_DX(i, 0);
 		rB(0, index + 1) = 0.0;
 		rB(1, index + 0) = 0.0;
@@ -458,17 +446,14 @@ void FemDem2DElement::CalculateConstitutiveMatrix(Matrix &rConstitutiveMatrix, c
 {
 	rConstitutiveMatrix.clear();
 
-	if (this->GetProperties()[THICKNESS] == 1)
-	{
+	if (this->GetProperties()[THICKNESS] == 1) {
 		// Plane strain constitutive matrix
 		rConstitutiveMatrix(0, 0) = (rYoungModulus * (1.0 - rPoissonCoefficient) / ((1.0 + rPoissonCoefficient) * (1.0 - 2.0 * rPoissonCoefficient)));
 		rConstitutiveMatrix(1, 1) = rConstitutiveMatrix(0, 0);
 		rConstitutiveMatrix(2, 2) = rConstitutiveMatrix(0, 0) * (1.0 - 2.0 * rPoissonCoefficient) / (2.0 * (1.0 - rPoissonCoefficient));
 		rConstitutiveMatrix(0, 1) = rConstitutiveMatrix(0, 0) * rPoissonCoefficient / (1.0 - rPoissonCoefficient);
 		rConstitutiveMatrix(1, 0) = rConstitutiveMatrix(0, 1);
-	}
-	else
-	{
+	} else {
 		// Plane stress constitutive matrix
 		rConstitutiveMatrix(0, 0) = (rYoungModulus) / (1.0 - rPoissonCoefficient * rPoissonCoefficient);
 		rConstitutiveMatrix(1, 1) = rConstitutiveMatrix(0, 0);
@@ -516,14 +501,11 @@ void FemDem2DElement::CalculateDN_DX(Matrix &rDN_DX, int PointNumber)
 void FemDem2DElement::CalculateInfinitesimalStrain(Vector &rStrainVector, const Matrix &rDN_DX)
 {
 	KRATOS_TRY
-
 	const unsigned int number_of_nodes = GetGeometry().PointsNumber();
 	const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
-
 	Matrix H = zero_matrix<double>(dimension); //[dU/dx_n]
 
-	for (unsigned int i = 0; i < number_of_nodes; i++)
-	{
+	for (unsigned int i = 0; i < number_of_nodes; i++) {
 
 		array_1d<double, 3> &Displacement = GetGeometry()[i].FastGetSolutionStepValue(DISPLACEMENT);
 
@@ -563,11 +545,9 @@ void FemDem2DElement::AverageVector(Vector &rAverageVector, const Vector &v, con
 {
 	int n = v.size();
 	int m = w.size();
-	if (n != m)
-		KRATOS_ERROR << "The dimension of the vectors are different or null";
+	KRATOS_ERROR_IF(n != m) << "The dimension of the vectors are different or null" << std::endl;
 	rAverageVector.resize(n);
-	for (int cont = 0; cont < n; cont++)
-	{
+	for (unsigned int cont = 0; cont < n; cont++) {
 		rAverageVector[cont] = (v[cont] + w[cont]) * 0.5;
 	}
 }
@@ -577,8 +557,7 @@ void FemDem2DElement::GetValueOnIntegrationPoints(
 	std::vector<double> &rValues,
 	const ProcessInfo &rCurrentProcessInfo)
 {
-	if (rVariable == DAMAGE_ELEMENT || rVariable == IS_DAMAGED || rVariable == STRESS_THRESHOLD)
-	{
+	if (rVariable == DAMAGE_ELEMENT || rVariable == IS_DAMAGED || rVariable == STRESS_THRESHOLD) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
 	}
 }
@@ -589,40 +568,26 @@ void FemDem2DElement::GetValueOnIntegrationPoints(
 	const ProcessInfo &rCurrentProcessInfo)
 {
 
-	if (rVariable == STRAIN_VECTOR)
-	{
+	if (rVariable == STRAIN_VECTOR) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	}
-	else if (rVariable == STRESS_VECTOR)
-	{
+	} else if (rVariable == STRESS_VECTOR) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	}
-	else if (rVariable == STRESS_VECTOR_INTEGRATED)
-	{
+	} else if (rVariable == STRESS_VECTOR_INTEGRATED) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
 	}
 
-	const unsigned int &integration_points_number = mConstitutiveLawVector.size();
-
+	const unsigned int& integration_points_number = mConstitutiveLawVector.size();
 	if (rValues.size() != integration_points_number)
-		rValues.resize(integration_points_number);
+	rValues.resize(integration_points_number);
 
-	if (rVariable == PK2_STRESS_TENSOR || rVariable == CAUCHY_STRESS_TENSOR)
-	{
+	if (rVariable == PK2_STRESS_TENSOR || rVariable == CAUCHY_STRESS_TENSOR) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	}
-	else if (rVariable == PK2_STRESS_VECTOR || rVariable == CAUCHY_STRESS_VECTOR)
-	{
+	} else if (rVariable == PK2_STRESS_VECTOR || rVariable == CAUCHY_STRESS_VECTOR) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	}
-	else if (rVariable == GREEN_LAGRANGE_STRAIN_TENSOR || rVariable == ALMANSI_STRAIN_TENSOR)
-	{
+	} else if (rVariable == GREEN_LAGRANGE_STRAIN_TENSOR || rVariable == ALMANSI_STRAIN_TENSOR) {
 		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	}
-	else
-	{
-		for (unsigned int PointNumber = 0; PointNumber < integration_points_number; PointNumber++)
-		{
+	} else {
+		for (unsigned int PointNumber = 0; PointNumber < integration_points_number; PointNumber++) {
 			rValues[PointNumber] = mConstitutiveLawVector[PointNumber]->GetValue(rVariable, rValues[PointNumber]);
 		}
 	}
@@ -634,27 +599,19 @@ void FemDem2DElement::CalculateOnIntegrationPoints(
 	std::vector<double> &rOutput,
 	const ProcessInfo &rCurrentProcessInfo)
 {
-	if (rVariable == DAMAGE_ELEMENT)
-	{
+	if (rVariable == DAMAGE_ELEMENT) {
 		rOutput.resize(1);
-		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++)
-		{
+		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++) {
 			rOutput[PointNumber] = double(this->GetValue(DAMAGE_ELEMENT));
 		}
-	}
-	else if (rVariable == IS_DAMAGED)
-	{
+	} else if (rVariable == IS_DAMAGED) {
 		rOutput.resize(1);
-		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++)
-		{
+		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++) {
 			rOutput[PointNumber] = double(this->GetValue(IS_DAMAGED));
 		}
-	}
-	else if (rVariable == STRESS_THRESHOLD)
-	{
+	} else if (rVariable == STRESS_THRESHOLD) {
 		rOutput.resize(1);
-		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++)
-		{
+		for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++) {
 			rOutput[PointNumber] = double(this->GetValue(STRESS_THRESHOLD));
 		}
 	}
@@ -667,46 +624,31 @@ void FemDem2DElement::CalculateOnIntegrationPoints(
 	const ProcessInfo &rCurrentProcessInfo)
 {
 	KRATOS_TRY
-
-	if (rVariable == STRESS_VECTOR)
-	{
-		rOutput[0] = this->GetValue(STRESS_VECTOR);
-	}
-	else if (rVariable == STRAIN_VECTOR)
-	{
-		rOutput[0] = this->GetValue(STRAIN_VECTOR);
-	}
-	else if (rVariable == STRESS_VECTOR_INTEGRATED)
-	{
-		rOutput[0] = this->GetIntegratedStressVector();
-	}
-
 	const unsigned int &integration_points_number = GetGeometry().IntegrationPointsNumber(mThisIntegrationMethod);
-
 	if (rOutput.size() != integration_points_number)
 		rOutput.resize(integration_points_number);
-	else if (rVariable == GREEN_LAGRANGE_STRAIN_VECTOR || rVariable == ALMANSI_STRAIN_VECTOR)
-	{
-		//create and initialize element variables:
-		ElementDataType Variables;
-		this->InitializeElementData(Variables, rCurrentProcessInfo);
 
-		//reading integration points
-		for (unsigned int PointNumber = 0; PointNumber < mConstitutiveLawVector.size(); PointNumber++)
-		{
-			//compute element kinematics B, F, DN_DX ...
-			this->CalculateKinematics(Variables, PointNumber);
+	if (rVariable == STRESS_VECTOR) {
+		rOutput[0] = this->GetValue(STRESS_VECTOR);
+	} else if (rVariable == STRAIN_VECTOR) {
+		rOutput[0] = this->GetValue(STRAIN_VECTOR);
+	} else if (rVariable == STRESS_VECTOR_INTEGRATED) {
+		rOutput[0] = this->GetIntegratedStressVector();
+	} else if (rVariable == GREEN_LAGRANGE_STRAIN_VECTOR || rVariable == ALMANSI_STRAIN_VECTOR) {
+          // create and initialize element variables:
+          ElementDataType Variables;
+          this->InitializeElementData(Variables, rCurrentProcessInfo);
 
-			if (rOutput[PointNumber].size() != Variables.StrainVector.size())
-				rOutput[PointNumber].resize(Variables.StrainVector.size(), false);
-
-			rOutput[PointNumber] = Variables.StrainVector;
-		}
-	}
-	else
-	{
-		for (unsigned int ii = 0; ii < mConstitutiveLawVector.size(); ii++)
-		{
+          // reading integration points
+        for (unsigned int PointNumber = 0; PointNumber < mConstitutiveLawVector.size(); PointNumber++) {
+            // compute element kinematics B, F, DN_DX ...
+            this->CalculateKinematics(Variables, PointNumber);
+            if (rOutput[PointNumber].size() != Variables.StrainVector.size())
+              rOutput[PointNumber].resize(Variables.StrainVector.size(), false);
+            rOutput[PointNumber] = Variables.StrainVector;
+        }
+	} else {
+		for (unsigned int ii = 0; ii < mConstitutiveLawVector.size(); ii++) {
 			rOutput[ii] = mConstitutiveLawVector[ii]->GetValue(rVariable, rOutput[ii]);
 		}
 	}
@@ -725,12 +667,9 @@ double FemDem2DElement::CalculateLchar(FemDem2DElement *CurrentElement, const El
 	// Let's find the two shared nodes between the 2 elements
 	int aux = 0;
 	double l_char = 0;
-	for (int cont = 0; cont < 3; cont++)
-	{
-		for (int cont2 = 0; cont2 < 3; cont2++)
-		{
-			if (NodesElem1[cont].Id() == NodesElem2[cont2].Id())
-			{
+	for (unsigned int cont = 0; cont < 3; cont++) {
+		for (unsigned int cont2 = 0; cont2 < 3; cont2++) {
+			if (NodesElem1[cont].Id() == NodesElem2[cont2].Id()) {
 				Xcoord[aux] = NodesElem1[cont].X0();
 				Ycoord[aux] = NodesElem1[cont].Y0();
 				aux++; // aux > 3 if the two elements are the same one (in fact aux == 9)
@@ -739,19 +678,15 @@ double FemDem2DElement::CalculateLchar(FemDem2DElement *CurrentElement, const El
 	} // End finding nodes
 
 	// Computation of the l_char
-	if (aux < 3)
-	{																									   // It is not an edge element --> The 2 elements are not equal
+	if (aux < 3) {																									   // It is not an edge element --> The 2 elements are not equal
 		l_char = std::pow((std::pow(Xcoord[0] - Xcoord[1], 2) + std::pow(Ycoord[0] - Ycoord[1], 2)), 0.5); // Length of the edge between 2 elements                                                                  // Currently the characteristic length is the edge length (can be modified)
-	}
-	else
-	{ // Edge element
+	} else { // Edge element
 		double ElementArea = std::abs(this->GetGeometry().Area());
 		l_char = std::sqrt(4.0 * ElementArea / std::sqrt(3)); // Cervera's Formula
-	}											  // l_char computed
+	} // l_char computed
 
 	CurrentElement->SetCharacteristicLength(l_char, cont); // Storages the l_char of this side
 	CurrentElement->IterationPlus();
-
 	return 0.0;
 }
 
@@ -763,14 +698,11 @@ void FemDem2DElement::Get2MaxValues(Vector &MaxValues, double a, double b, doubl
 	V[0] = a;
 	V[1] = b;
 	V[2] = c;
-	int n = 3, imin = 0;
+	const int n = 3;
 
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n - 1; j++)
-		{
-			if (V[j] > V[j + 1])
-			{
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n - 1; j++) {
+			if (V[j] > V[j + 1]) {
 				double aux = V[j];
 				V[j] = V[j + 1];
 				V[j + 1] = aux;
@@ -789,15 +721,12 @@ void FemDem2DElement::Get2MinValues(Vector &MaxValues, double a, double b, doubl
 	V[0] = a;
 	V[1] = b;
 	V[2] = c;
-	int n = 3, imin = 0;
+	const int n = 3;
 
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n - 1; j++)
-		{
-			if (V[j] > V[j + 1])
-			{
-				double aux = V[j];
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n - 1; j++) {
+			if (V[j] > V[j + 1]) {
+				const double aux = V[j];
 				V[j] = V[j + 1];
 				V[j + 1] = aux;
 			}
@@ -817,15 +746,11 @@ double FemDem2DElement::CalculateJ3Invariant(double sigma1, double sigma2, doubl
 }
 double FemDem2DElement::CalculateLodeAngle(double J2, double J3)
 {
-	double sint3;
-	sint3 = (-3.0 * std::sqrt(3.0) * J3) / (2.0 * J2 * std::sqrt(J2));
-	if (sint3 < -0.95)
-	{
-		sint3 = -1;
-	}
-	if (sint3 > 0.95)
-	{
-		sint3 = 1;
+	double sint3 = (-3.0 * std::sqrt(3.0) * J3) / (2.0 * J2 * std::sqrt(J2));
+	if (sint3 < -0.95) {
+		sint3 = -1.0;
+	} else if (sint3 > 0.95) {
+		sint3 = 1.0;
 	}
 	return std::asin(sint3) / 3.0;
 }
@@ -839,8 +764,7 @@ void FemDem2DElement::CalculateMassMatrix(MatrixType &rMassMatrix, ProcessInfo &
 		if (rCurrentProcessInfo[COMPUTE_LUMPED_MASS_MATRIX] == true)
 			ComputeLumpedMassMatrix = true;
 
-	if (ComputeLumpedMassMatrix == false)
-	{
+	if (ComputeLumpedMassMatrix == false) {
 
 		//create local system components
 		LocalSystemComponents LocalSystem;
@@ -859,9 +783,7 @@ void FemDem2DElement::CalculateMassMatrix(MatrixType &rMassMatrix, ProcessInfo &
 
 		//Calculate elemental system
 		CalculateDynamicSystem(LocalSystem, rCurrentProcessInfo);
-	}
-	else
-	{
+	} else {
 
 		//lumped
 		unsigned int dimension = GetGeometry().WorkingSpaceDimension();
@@ -881,12 +803,9 @@ void FemDem2DElement::CalculateMassMatrix(MatrixType &rMassMatrix, ProcessInfo &
 
 		LumpFact = GetGeometry().LumpingFactors(LumpFact);
 
-		for (unsigned int i = 0; i < number_of_nodes; i++)
-		{
-			double temp = LumpFact[i] * TotalMass;
-
-			for (unsigned int j = 0; j < dimension; j++)
-			{
+		for (unsigned int i = 0; i < number_of_nodes; i++) {
+			const double temp = LumpFact[i] * TotalMass;
+			for (unsigned int j = 0; j < dimension; j++) {
 				unsigned int index = i * dimension + j;
 				rMassMatrix(index, index) = temp;
 			}
@@ -897,8 +816,6 @@ void FemDem2DElement::CalculateMassMatrix(MatrixType &rMassMatrix, ProcessInfo &
 }
 Vector &FemDem2DElement::CalculateVolumeForce(Vector &rVolumeForce, const Vector &rN)
 {
-	KRATOS_TRY
-
 	const unsigned int number_of_nodes = GetGeometry().PointsNumber();
 	const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
 
@@ -907,10 +824,8 @@ Vector &FemDem2DElement::CalculateVolumeForce(Vector &rVolumeForce, const Vector
 
 	noalias(rVolumeForce) = ZeroVector(dimension);
 
-	for (unsigned int j = 0; j < number_of_nodes; j++)
-	{
-		if (GetGeometry()[j].SolutionStepsDataHas(VOLUME_ACCELERATION))
-		{ // it must be checked once at the begining only
+	for (unsigned int j = 0; j < number_of_nodes; j++) {
+		if (GetGeometry()[j].SolutionStepsDataHas(VOLUME_ACCELERATION)) { // it must be checked once at the begining only
 			array_1d<double, 3> &VolumeAcceleration = GetGeometry()[j].FastGetSolutionStepValue(VOLUME_ACCELERATION);
 			for (unsigned int i = 0; i < dimension; i++)
 				rVolumeForce[i] += rN[j] * VolumeAcceleration[i];
@@ -919,65 +834,46 @@ Vector &FemDem2DElement::CalculateVolumeForce(Vector &rVolumeForce, const Vector
 
 	rVolumeForce *= GetProperties()[DENSITY];
 	return rVolumeForce;
-
-	KRATOS_CATCH("")
 }
 
 double FemDem2DElement::GetMaxValue(Vector Strain)
 {
 	Vector V;
-	int n = Strain.size();
+	const int n = Strain.size();
 	V.resize(n);
 
-	for (int cont = 0; cont < n; cont++)
-	{
+	for (int cont = 0; cont < n; cont++) {
 		V[cont] = Strain[cont];
 	}
-
-	int imin = 0;
-
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n - 1; j++)
-		{
-			if (V[j] > V[j + 1])
-			{
-				double aux = V[j];
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n - 1; j++) {
+			if (V[j] > V[j + 1]) {
+				const double aux = V[j];
 				V[j] = V[j + 1];
 				V[j + 1] = aux;
 			}
 		}
 	}
-
 	return V[n - 1];
 }
 
 double FemDem2DElement::GetMaxAbsValue(Vector Strain)
 {
 	Vector V;
-	int n = Strain.size();
+	const int n = Strain.size();
 	V.resize(n);
-
-	for (int cont = 0; cont < n; cont++)
-	{
+	for (int cont = 0; cont < n; cont++) {
 		V[cont] = std::abs(Strain[cont]);
 	}
-
-	int imin = 0;
-
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n - 1; j++)
-		{
-			if (V[j] > V[j + 1])
-			{
-				double aux = V[j];
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n - 1; j++) {
+			if (V[j] > V[j + 1]) {
+				const double aux = V[j];
 				V[j] = V[j + 1];
 				V[j + 1] = aux;
 			}
 		}
 	}
-
 	return V[n - 1];
 }
 
@@ -988,21 +884,17 @@ double FemDem2DElement::GetMinAbsValue(Vector Strain)
 	V[1] = std::abs(Strain[1]);
 	V[0] = std::abs(Strain[0]);
 	V[2] = std::abs(Strain[2]);
-	int n = 3, imin = 0;
+	const int n = 3;
 
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n - 1; j++)
-		{
-			if (V[j] > V[j + 1])
-			{
-				double aux = V[j];
+	for (unsigned int i = 0; i < n; i++) {
+		for (unsigned int j = 0; j < n - 1; j++) {
+			if (V[j] > V[j + 1]) {
+				const double aux = V[j];
 				V[j] = V[j + 1];
 				V[j + 1] = aux;
 			}
 		}
 	}
-
 	return V[0];
 }
 

@@ -72,12 +72,18 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 
 			# Perform remeshing
 			self.RemeshingProcessMMG.ExecuteInitializeSolutionStep()
+			if is_remeshing:
+				self.RefineMappedVariables()
 
-			# if self.FEM_Solution.step == 21:
 			# if is_remeshing:
-			# 	print("despues de remallar")
 			# 	self.FEM_Solution.GraphicalOutputPrintOutput()
 			# 	Wait()
+			# if self.FEM_Solution.step == 13:
+			for elem in self.FEM_Solution.main_model_part.Elements:
+				if elem.GetValue(KratosFemDem.DAMAGE_ELEMENT) < 0.0:
+					print(elem.Id, elem.GetValue(KratosFemDem.DAMAGE_ELEMENT))
+
+
 
 			self.nodal_neighbour_finder = KratosMultiphysics.FindNodalNeighboursProcess(self.FEM_Solution.main_model_part, 4, 5)
 			self.nodal_neighbour_finder.Execute()
@@ -1082,3 +1088,11 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 				self.PlotFilesElementsList.append(iPlotFileElem)
 				self.PlotFilesElementsIdList.append(Id)
 
+#============================================================================================================================
+
+	def RefineMappedVariables(self):
+		for elem in self.FEM_Solution.main_model_part.Elements:
+			if elem.GetValue(KratosFemDem.DAMAGE_ELEMENT) < 0.0:
+				print(elem.Id, " corregido")
+				Wait()
+				elem.SetValue(KratosFemDem.DAMAGE_ELEMENT, 0.0)
