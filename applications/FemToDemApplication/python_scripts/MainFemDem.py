@@ -135,11 +135,8 @@ class FEM_Solution(MainSolidFEM.Solution):
 	def Run(self):
 
 		self.Initialize()
-
 		self.RunMainTemporalLoop()
-
-		self.Finalize()
-		
+		self.Finalize()	
 #============================================================================================================================		
 	def Initialize(self):
 
@@ -231,11 +228,8 @@ class FEM_Solution(MainSolidFEM.Solution):
 
 #============================================================================================================================
 	def SolveSolutionStep(self):
-
 		self.clock_time = self.StartTimeMeasuring()
-
 		self.solver.Solve()
-
 		self.StopTimeMeasuring(self.clock_time,"Solving", False)
 
 #============================================================================================================================
@@ -255,33 +249,24 @@ class FEM_Solution(MainSolidFEM.Solution):
 		# processes to be executed after witting the output
 		self.model_processes.ExecuteAfterOutputStep()
 
-
-
 #============================================================================================================================
 	def Finalize(self):
 		
 		# Ending the problem (time integration finished)
 		self.GraphicalOutputExecuteFinalize()		
-
 		self.model_processes.ExecuteFinalize()
-
 		print(" ")
 		print("=================================================")
 		print(" - Kratos FemDem Application Calculation End   - ")
 		print("=================================================")
 		print(" ")
-
 		#### END SOLUTION ####
-
 		# Measure process time
 		tfp = timer.clock()
 		# Measure wall time
 		tfw = timer.time()
-
 		print("::[KSM Simulation]:: [Elapsed Time = %.2f" % (tfw - self.t0w),"seconds] (%.2f" % (tfp - self.t0p),"seconds of cpu/s time)")
-
 		print(timer.ctime())
-
 
  #============================================================================================================================	   
 	def SetGraphicalOutput(self):
@@ -336,12 +321,6 @@ class FEM_Solution(MainSolidFEM.Solution):
 			print("::[KSM Simulation]:: [ %.2f" % round(used_time,2),"s", process," ] ")
 
 	#============================================================================================================================
-
-
-		
-
-
-
 if __name__ == "__main__": 
 	Solution().Run()
 

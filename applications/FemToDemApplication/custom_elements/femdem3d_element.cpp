@@ -194,7 +194,7 @@ void FemDem3DElement::ComputeEdgeNeighbours(ProcessInfo &rCurrentProcessInfo)
 
 		// Add the neigh elements from the node 2
 		for (unsigned int i = 0; i < edge_shared_elements_node_2.size(); i++) {
-			const int aux = 0;
+			int aux = 0;
 
 			for (unsigned int j = 0; j < edge_shared_elements.size(); j++) {
 				if (edge_shared_elements_node_2[i]->Id() == edge_shared_elements[j]->Id())

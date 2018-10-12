@@ -74,16 +74,6 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 			if is_remeshing:
 				self.RefineMappedVariables()
 
-			# if is_remeshing:
-			# 	self.FEM_Solution.GraphicalOutputPrintOutput()
-			# 	Wait()
-			# if self.FEM_Solution.step == 13:
-			for elem in self.FEM_Solution.main_model_part.Elements:
-				if elem.GetValue(KratosFemDem.DAMAGE_ELEMENT) < 0.0:
-					print(elem.Id, elem.GetValue(KratosFemDem.DAMAGE_ELEMENT))
-
-
-
 			self.nodal_neighbour_finder = KratosMultiphysics.FindNodalNeighboursProcess(self.FEM_Solution.main_model_part, 4, 5)
 			self.nodal_neighbour_finder.Execute()
 
@@ -142,28 +132,6 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 		self.CheckForPossibleIndentations()
 		self.CheckInactiveNodes()
 		self.UpdateDEMVariables()     # We update coordinates, displ and velocities of the DEM according to FEM
-
-		# KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
-
-
-
-		# *******************************************************
-		# extrapolation_settings = KratosMultiphysics.Parameters("""
-		# 	{
-		# 		"echo_level"                 : 0,
-		# 		"area_average"               : true,
-		# 		"average_variable"           : "NODAL_AREA",
-		# 		"list_of_variables"          : ["EQUIVALENT_STRESS_VM"],
-		# 		"extrapolate_non_historical" : true
-		# 	}""")
-		# MeshingApplication.IntegrationValuesExtrapolationToNodesProcess(self.FEM_Solution.main_model_part, extrapolation_settings).Execute()
-		# self.NormalizeUniaxialStress()
-		# *************************************************************
-		# for node in self.FEM_Solution.main_model_part.Nodes:
-		# 	print("Node ", node.Id, " Tension: ", node.GetValue(KratosFemDem.EQUIVALENT_STRESS_VM))
-		# 	# print("Node ", node.Id, " Tension: ", node.GetSolutionStepValue(KratosFemDem.EQUIVALENT_STRESS_VM))
-		# Wait()
-
 
 		self.DEM_Solution.InitializeTimeStep()
 
@@ -345,10 +313,6 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 						R2 = self.GetMinimumValue(dist02-RadiusOfDem, dist12-R1,dist23*0.5)
 						R3 = self.GetMinimumValue(dist03-RadiusOfDem, dist13-R1, dist23-R2)
 
-						'''R1 = self.GetMinimumValue(dist01-RadiusOfDem, 1000000, 1000000)
-						R2 = self.GetMinimumValue(dist02-RadiusOfDem, dist12-R1, 1000000)
-						R3 = self.GetMinimumValue(dist03-RadiusOfDem, dist13-R1, dist23-R2)'''
-
 						Coordinates1 = self.GetNodeCoordinates(Element.GetNodes()[1])
 						Coordinates2 = self.GetNodeCoordinates(Element.GetNodes()[2])
 						Coordinates3 = self.GetNodeCoordinates(Element.GetNodes()[3])
@@ -372,10 +336,6 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 						R0 = self.GetMinimumValue(dist01-RadiusOfDem, dist02*0.5, dist03*0.5)
 						R2 = self.GetMinimumValue(dist12-RadiusOfDem, dist02-R0, dist23*0.5)
 						R3 = self.GetMinimumValue(dist13-RadiusOfDem, dist03-R0, dist23-R2)
-
-						'''R0 = self.GetMinimumValue(dist01-RadiusOfDem, 1000000, 1000000)
-						R2 = self.GetMinimumValue(dist12-RadiusOfDem, dist02-R0, 1000000)
-						R3 = self.GetMinimumValue(dist13-RadiusOfDem, dist03-R0, dist23-R2)'''
 
 						Coordinates0 = self.GetNodeCoordinates(Element.GetNodes()[0])
 						Coordinates2 = self.GetNodeCoordinates(Element.GetNodes()[2])
@@ -401,10 +361,6 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 						R1 = self.GetMinimumValue(dist12-RadiusOfDem, dist01-R0, dist13*0.5)
 						R3 = self.GetMinimumValue(dist23-RadiusOfDem, dist03-R0, dist13-R1)
 
-						'''R0 = self.GetMinimumValue(dist02-RadiusOfDem, 1000000, 1000000)
-						R1 = self.GetMinimumValue(dist12-RadiusOfDem, dist01-R0, 1000000)
-						R3 = self.GetMinimumValue(dist23-RadiusOfDem, dist03-R0, dist13-R1)'''
-
 						Coordinates0 = self.GetNodeCoordinates(Element.GetNodes()[0])
 						Coordinates1 = self.GetNodeCoordinates(Element.GetNodes()[1])
 						Coordinates3 = self.GetNodeCoordinates(Element.GetNodes()[3])
@@ -428,10 +384,6 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 						R0 = self.GetMinimumValue(dist03-RadiusOfDem, dist01*0.5, dist02*0.5)
 						R1 = self.GetMinimumValue(dist13-RadiusOfDem, dist01-R0, dist12*0.5)
 						R2 = self.GetMinimumValue(dist23-RadiusOfDem, dist02-R0, dist12-R1)
-
-						'''R0 = self.GetMinimumValue(dist03-RadiusOfDem, 1000000, 1000000)
-						R1 = self.GetMinimumValue(dist13-RadiusOfDem, dist01-R0, 1000000)
-						R2 = self.GetMinimumValue(dist23-RadiusOfDem, dist02-R0, dist12-R1)'''
 
 						Coordinates0 = self.GetNodeCoordinates(Element.GetNodes()[0])
 						Coordinates1 = self.GetNodeCoordinates(Element.GetNodes()[1])
@@ -827,13 +779,6 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 							Element.GetNodes()[LocalId1].SetValue(KratosMultiphysics.RADIUS, R1)
 							Element.GetNodes()[LocalId2].SetValue(KratosMultiphysics.RADIUS, R2)
 
-				# DEM generated for this Element -> 4 DEM
-				# Element.SetValue(KratosFemDem.DEM_GENERATED, True)
-				# Element.Set(KratosMultiphysics.TO_ERASE, True)
-
-		# self.FEM_Solution.main_model_part.GetRootModelPart().RemoveElementsFromAllLevels(KratosMultiphysics.TO_ERASE)
-
-
 #============================================================================================================================
 	def CheckInactiveNodes(self):
 
@@ -863,8 +808,6 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 				node.Set(KratosMultiphysics.TO_ERASE, True) # added
 				DEMnode.SetValue(KratosFemDem.INACTIVE_NODE, True)
 				DEMnode.Set(KratosMultiphysics.TO_ERASE, True)
-
-				# print("nodo eiminado: ", node.Id)
 
 			# Reset the value to the next step
 			node.SetValue(KratosFemDem.NUMBER_OF_ACTIVE_ELEMENTS, 0)
@@ -1088,10 +1031,7 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 				self.PlotFilesElementsIdList.append(Id)
 
 #============================================================================================================================
-
 	def RefineMappedVariables(self):
 		for elem in self.FEM_Solution.main_model_part.Elements:
 			if elem.GetValue(KratosFemDem.DAMAGE_ELEMENT) < 0.0:
-				print(elem.Id, " corregido")
-				Wait()
 				elem.SetValue(KratosFemDem.DAMAGE_ELEMENT, 0.0)
