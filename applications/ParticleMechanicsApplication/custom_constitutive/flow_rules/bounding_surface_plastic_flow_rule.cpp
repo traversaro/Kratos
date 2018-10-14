@@ -541,26 +541,48 @@ void BoundingSurfacePlasticFlowRule::ReturnStressFromPrincipalAxis(const Matrix&
 // Function that compute the consistent tangent stiffness matrix (in normal space) considering both elastic and elasto-plastic case
 void BoundingSurfacePlasticFlowRule::ComputeElastoPlasticTangentMatrix(const RadialReturnVariables& rReturnMappingVariables, const Matrix& rNewElasticLeftCauchyGreen, const double& alfa, Matrix& rConsistMatrix)
 {
-    // TODO: Implementation is not complete!
-
     // Calculate  the modification matrix t
     Matrix modification_matrix = IdentityMatrix(6);
     this->CalculateModificationMatrix( modification_matrix );
+
+    // Calculate the Elastic Matrix
+    Matrix D_e  = ZeroMatrix(6);
+    this->ComputeElasticMatrix(mPreviousMeanStressP, D_e);
+
+    // Compute unit direction vectors: n and m
+    Vector unit_n = ZeroVector(3);
+    Vector unit_m = ZeroVector(3);
+    this->CalculateLoadingDirection(mImagePointStress, unit_n);
+    this->CalculatePlasticFlowDirection(mPreviousStress, mImagePointStress, unit_m);
+
+    // Copy to correct size vector
+    Vector direction_n = ZeroVector(6);
+    Vector direction_m = ZeroVector(6);
+    for (unsigned int i=0; i<3; i++)
+    {
+        direction_n[i] = unit_n[i];
+        direction_m[i] = unit_m[i];
+    }
+
+    // Compute extra term
+    Matrix D_extra = ZeroMatrix(6);
+    this->ComputePlasticMatrix(direction_n, direction_m, mHardeningConstant, D_e, D_extra);
     
-    // Calculate the ElastoPlastic Matrix
-    Matrix D_ep = ZeroMatrix(6,6);
+    // Compute elasto plastic matrix
+    Matrix D_ep = ZeroMatrix(6);
+    D_ep = D_e - D_extra;
 
     // Compute Consistent Tangent Stiffness matrix in principal space
-    Matrix D_elasto_plastic = ZeroMatrix(6,6);
+    Matrix D_elasto_plastic = ZeroMatrix(6);
     D_elasto_plastic = prod(modification_matrix, D_ep);
 
     // Return constitutive matrix from principal space to normal space
-    Matrix A = ZeroMatrix(6,6);
-    Matrix A_trans = ZeroMatrix(6,6); 
+    Matrix A = ZeroMatrix(6);
+    Matrix A_trans = ZeroMatrix(6); 
     this->CalculateTransformationMatrix(rReturnMappingVariables.MainDirections, A);
     A_trans = trans(A);
 
-    Matrix aux_mat = ZeroMatrix(6,6);
+    Matrix aux_mat = ZeroMatrix(6);
     aux_mat = prod(A_trans, D_elasto_plastic);
     rConsistMatrix = prod(aux_mat, A);
 
@@ -577,11 +599,8 @@ void BoundingSurfacePlasticFlowRule::CalculateModificationMatrix(Matrix& rModMat
     this->CalculatePlasticPotentialSecondDerivatives(mPrincipalStressUpdated, mImagePointStress, second_order_terms);
     
     // Calculate elastic matrix
-    double prev_mean_stress_p, prev_deviatoric_q;
-    MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(mPreviousStress, prev_mean_stress_p, prev_deviatoric_q);
-    prev_mean_stress_p *= -1.0; // p is defined negative
     Matrix elastic_matrix_D_e = ZeroMatrix(3);
-    this->ComputeElasticMatrix(prev_mean_stress_p, elastic_matrix_D_e);
+    this->ComputeElasticMatrix(mPreviousMeanStressP, elastic_matrix_D_e);
 
     main_mod_3x3 += mPlasticMultiplier * prod(elastic_matrix_D_e,second_order_terms);
     double det_main_mod_3x3 = MathUtils<double>::Det(main_mod_3x3);
