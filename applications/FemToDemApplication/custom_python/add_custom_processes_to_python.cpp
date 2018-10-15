@@ -38,7 +38,7 @@ void AddCustomProcessesToPython(pybind11::module &m)
 		.def("Execute", &DamageToNodesProcess::Execute);
 
 	class_<DemAfterRemeshIdentificatorProcess, DemAfterRemeshIdentificatorProcess::Pointer, Process>(m, "DemAfterRemeshIdentificatorProcess")
-		.def(init<ModelPart &>())
+		.def(init<ModelPart &, const double >())
 		.def("Execute", &DemAfterRemeshIdentificatorProcess::Execute);
 
 	class_<InitialDemSkinProcess, InitialDemSkinProcess::Pointer, Process>(m, "InitialDemSkinProcess")

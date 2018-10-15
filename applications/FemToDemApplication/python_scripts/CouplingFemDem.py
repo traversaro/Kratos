@@ -842,7 +842,7 @@ class FEMDEM_Solution:
         KratosFemDem.DamageToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
 
         # we create a submodelpart containing the nodes and radius of the corresponding DEM
-        KratosFemDem.DemAfterRemeshIdentificatorProcess(self.FEM_Solution.main_model_part).Execute()
+        KratosFemDem.DemAfterRemeshIdentificatorProcess(self.FEM_Solution.main_model_part, 0.95).Execute()
 
         # Loop over the elements of the Submodelpart to create the DEM
         for node in self.FEM_Solution.main_model_part.GetSubModelPart("DemAfterRemeshingNodes").Nodes:

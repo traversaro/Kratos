@@ -32,8 +32,8 @@ class DemAfterRemeshIdentificatorProcess : public Process
     KRATOS_CLASS_POINTER_DEFINITION(DemAfterRemeshIdentificatorProcess);
 
     // Constructor
-    DemAfterRemeshIdentificatorProcess(ModelPart &rModelPart)
-        : mrModelPart(rModelPart)
+    DemAfterRemeshIdentificatorProcess(ModelPart &rModelPart, const double DamageThreshold)
+        : mrModelPart(rModelPart), mDamageThreshold(DamageThreshold)
     {
     }
 
@@ -54,7 +54,7 @@ class DemAfterRemeshIdentificatorProcess : public Process
 
         for (ModelPart::NodeIterator it = (*p_skin_model_part).NodesBegin(); it != (*p_skin_model_part).NodesEnd(); ++it) {
             const double &nodal_damage = it->GetSolutionStepValue(NODAL_DAMAGE);
-            if (nodal_damage > 0.95) {
+            if (nodal_damage > mDamageThreshold) {
                 p_auxiliar_model_part->AddNode(*(it.base()));
             }
         } // DemAfterRemeshingNodes SubModelPart Filled with nodes
@@ -119,7 +119,7 @@ class DemAfterRemeshIdentificatorProcess : public Process
     {
         int size = array_values.size();
         double aux = array_values[0];
-        for (int i = 1; i < size; i++) {
+        for (unsigned int i = 1; i < size; i++) {
             if (array_values[i] < aux)
                 aux = array_values[i];
         }
@@ -129,6 +129,7 @@ class DemAfterRemeshIdentificatorProcess : public Process
   protected:
     // Member Variables
     ModelPart &mrModelPart;
+    double mDamageThreshold;
 };
 } // namespace Kratos
 #endif

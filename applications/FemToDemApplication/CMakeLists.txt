@@ -8,6 +8,7 @@ include(pybind11Tools)
 include_directories( ${CMAKE_SOURCE_DIR}/kratos )
 include_directories( ${CMAKE_SOURCE_DIR}/applications/SolidMechanicsApplication )
 include_directories( ${CMAKE_SOURCE_DIR}/applications/DEM_application )
+include_directories( ${CMAKE_SOURCE_DIR}/applications/MeshingApplication )
 
 
 # generate variables with the sources
@@ -31,7 +32,8 @@ set( KRATOS_FEM_TO_DEM_APPLICATION_SOURCES
 #add_library(KratosFemToDemApplication SHARED ${KRATOS_FEM_TO_DEM_APPLICATION_SOURCES})
 pybind11_add_module(KratosFemToDemApplication MODULE ${KRATOS_FEM_TO_DEM_APPLICATION_SOURCES})
 #target_link_libraries(KratosFemToDemApplication KratosSolidMechanicsApplication KratosCore )
-target_link_libraries(KratosFemToDemApplication KratosSolidMechanicsCore KratosCore )
+#target_link_libraries(KratosFemToDemApplication KratosSolidMechanicsCore KratosCore )
+target_link_libraries(KratosFemToDemApplication PRIVATE KratosSolidMechanicsCore KratosCore )
 set_target_properties(KratosFemToDemApplication PROPERTIES PREFIX "")
 install(TARGETS KratosFemToDemApplication DESTINATION libs )
 
