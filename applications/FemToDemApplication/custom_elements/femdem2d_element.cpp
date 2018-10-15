@@ -19,6 +19,7 @@
 #include "includes/kratos_flags.h"
 #include "containers/flags.h"
 #include "solid_mechanics_application_variables.h"
+#include "includes/global_variables.h"
 
 namespace Kratos
 {
@@ -943,7 +944,7 @@ void FemDem2DElement::ModifiedMohrCoulombCriterion(
 
 	const double sigma_c = this->GetProperties()[YIELD_STRESS_C];
 	const double sigma_t = this->GetProperties()[YIELD_STRESS_T];
-	double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * 3.14159 / 180; // In radians!
+	double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * Globals::Pi / 180; // In radians!
 	const double E = this->GetProperties()[YOUNG_MODULUS];
 	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
 
@@ -952,12 +953,12 @@ void FemDem2DElement::ModifiedMohrCoulombCriterion(
 	KRATOS_ERROR_IF(sigma_t < 1e-24) << "Yield stress in tension not defined, include YIELD_STRESS_T in .mdpa" << std::endl;
 	KRATOS_ERROR_IF(Gt < 1e-24) << " ERROR: Fracture Energy not defined in the model part, include FRAC_ENERGY_T in .mdpa " << std::endl;
 	if (friction_angle < 1e-24) {
-		friction_angle = 32 * 3.14159 / 180;
+		friction_angle = 32 * Globals::Pi / 180;
 		std::cout << "Friction Angle not defined, assumed equal to 32 " << std::endl;
 	}
 
 	const double R = std::abs(sigma_c / sigma_t);
-	const double Rmorh = std::pow(tan((3.14159 / 4) + friction_angle / 2), 2);
+	const double Rmorh = std::pow(tan((Globals::Pi / 4) + friction_angle / 2), 2);
 	const double alpha_r = R / Rmorh;
 	const double c_max = std::abs(sigma_c);
 	const double I1 = CalculateI1Invariant(PrincipalStressVector[0], PrincipalStressVector[1]);
@@ -976,8 +977,8 @@ void FemDem2DElement::ModifiedMohrCoulombCriterion(
 		f = 0;
 	} else {
 		const double theta = CalculateLodeAngle(J2, J3);
-		f = (2.00 * std::tan(3.14159 * 0.25 + friction_angle * 0.5) / std::cos(friction_angle)) * ((I1 * K3 / 3) + 
-			std::sqrt(J2) * (K1 * std::cos(theta) - K2 * std::sin(theta) * std::sin(friction_angle) / std::sqrt(3)));
+		f = (2.00 * std::tan(Globals::Pi * 0.25 + friction_angle * 0.5) / std::cos(friction_angle)) * ((I1 * K3 / 3.0) + 
+			std::sqrt(J2) * (K1 * std::cos(theta) - K2 * std::sin(theta) * std::sin(friction_angle) / std::sqrt(3.0)));
 	}
 
 	if (this->GetThreshold(cont) == 0) {
@@ -988,10 +989,10 @@ void FemDem2DElement::ModifiedMohrCoulombCriterion(
 
 	const double F = f - c_threshold;
 
-	if (F <= 0) {// Elastic region --> Damage is constant
+	if (F <= 0.0) {// Elastic region --> Damage is constant
 		damage = this->GetConvergedDamages(cont);
 	} else {
-		damage = 1.0 - (c_max / f) * std::exp(A * (1 - f / c_max)); // Exponential softening law
+		damage = 1.0 - (c_max / f) * std::exp(A * (1.0 - f / c_max)); // Exponential softening law
 		if (damage > 0.99) {
 			damage = 0.99;
 		}
@@ -1016,12 +1017,7 @@ void FemDem2DElement::RankineCriterion(
 	const double E = this->GetProperties()[YOUNG_MODULUS];
 	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
 	const double c_max = std::abs(sigma_t);
-
 	const double A = 1.00 / (Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
-	if (A < 0)
-	{
-		KRATOS_THROW_ERROR(std::invalid_argument, " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T", A)
-	}
 	KRATOS_ERROR_IF(A < 0.0)<< " 'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T" << std::endl;
 
 	double f; /// F = f-c = 0 classical definition of yield surface
@@ -1060,7 +1056,7 @@ void FemDem2DElement::DruckerPragerCriterion(
 
 	const double sigma_c = this->GetProperties()[YIELD_STRESS_C];
 	const double sigma_t = this->GetProperties()[YIELD_STRESS_T];
-	double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * 3.14159 / 180; // In radians!
+	double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * Globals::Pi / 180; // In radians!
 	const double E = this->GetProperties()[YOUNG_MODULUS];
 	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
 
@@ -1071,7 +1067,7 @@ void FemDem2DElement::DruckerPragerCriterion(
 
 	// Check input variables
 	if (friction_angle < 1e-24) {
-		friction_angle = 32 * 3.14159 / 180;
+		friction_angle = 32 * Globals::Pi / 180;
 		std::cout << "Friction Angle not defined, assumed equal to 32deg " << std::endl;
 	}
 
@@ -1183,13 +1179,13 @@ void FemDem2DElement::RankineFragileLaw(
 
 	const double sigma_c = this->GetProperties()[YIELD_STRESS_C];
 	const double sigma_t = this->GetProperties()[YIELD_STRESS_T];
-	const double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * 3.14159 / 180; // In radians!
+	const double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * Globals::Pi / 180; // In radians!
 	const double E = this->GetProperties()[YOUNG_MODULUS];
 	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
 	const double c_max = std::abs(sigma_t);
 
 	const double A = 1.00 / (Gt * E / (l_char * std::pow(sigma_c, 2)) - 0.5);
-	KRATOS_ERROR_IF(A < 0) << "'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T" << std::endl;
+	KRATOS_ERROR_IF(A < 0.0) << "'A' damage parameter lower than zero --> Increase FRAC_ENERGY_T" << std::endl;
 
 	const double f = GetMaxValue(PrincipalStressVector);
 

@@ -17,7 +17,7 @@
 
 namespace Kratos
 {
-class FemDem3DHexahedronElement : public FemDem3DElement 
+class FemDem3DHexahedronElement : public FemDem3DElement
 {
 
   public:

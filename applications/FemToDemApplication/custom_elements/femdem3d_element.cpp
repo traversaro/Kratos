@@ -19,6 +19,7 @@
 #include "containers/flags.h"
 #include "solid_mechanics_application_variables.h"
 #include "processes/find_nodal_neighbours_process.h"
+#include "includes/global_variables.h"
 
 namespace Kratos
 {
@@ -1140,7 +1141,7 @@ void FemDem3DElement::ModifiedMohrCoulombCriterion(
 	rIntegratedStress.resize(6);
 	const double sigma_c = this->GetProperties()[YIELD_STRESS_C];
 	const double sigma_t = this->GetProperties()[YIELD_STRESS_T];
-	double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * 3.14159265359 / 180.0; // In radians!
+	double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * Globals::Pi / 180.0; // In radians!
 	const double E = this->GetProperties()[YOUNG_MODULUS];
 	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
 
@@ -1150,12 +1151,12 @@ void FemDem3DElement::ModifiedMohrCoulombCriterion(
 	KRATOS_ERROR_IF(Gt < 1e-24) << " ERROR: Fracture Energy not defined in the model part, include FRAC_ENERGY_T in .mdpa " << std::endl;
 	// Check input variables
 	if (friction_angle < 1e-24) {
-		friction_angle = 32 * 3.14159 / 180;
-		std::cout << "Friction Angle not defined, assumed equal to 32 deg " << std::endl;
+		friction_angle = 32.0 * Globals::Pi / 180;
+		KRATOS_WARNING("friction_angle") << " Friction Angle not defined, assumed equal to 32 deg " << std::endl;
 	}
 
 	const double R = std::abs(sigma_c / sigma_t);
-	const double Rmorh = std::pow(std::tan((3.14159265359 / 4.0) + friction_angle / 2.0), 2.0);
+	const double Rmorh = std::pow(std::tan((Globals::Pi / 4.0) + friction_angle / 2.0), 2.0);
 	const double alpha_r = R / Rmorh;
 	const double c_max = std::abs(sigma_c);
 	const double sinphi = std::sin(friction_angle);
@@ -1178,7 +1179,7 @@ void FemDem3DElement::ModifiedMohrCoulombCriterion(
 		f = 0.0;
 	} else {
 		const double theta = CalculateLodeAngle(J2, J3);
-		f = (2.00 * std::tan(3.14159265359 * 0.25 + friction_angle * 0.5) / std::cos(friction_angle)) *
+		f = (2.00 * std::tan(Globals::Pi * 0.25 + friction_angle * 0.5) / std::cos(friction_angle)) *
 			((I1 * K3 / 3.0) + std::sqrt(J2) * (K1 * std::cos(theta) - K2 * std::sin(theta) * sinphi /
 			std::sqrt(3.0)));
 	}
@@ -1199,7 +1200,7 @@ void FemDem3DElement::ModifiedMohrCoulombCriterion(
 		if (rdamage > 0.99)
 			rdamage = 0.99;
 	}
-	rIntegratedStress = StressVector;
+	noalias(rIntegratedStress) = StressVector;
 	rIntegratedStress *= (1.0 - rdamage);
 }
 
@@ -1245,7 +1246,7 @@ void FemDem3DElement::RankineCriterion(
 		if (damage > 0.99)
 			damage = 0.99;
 	}
-	rIntegratedStress = StressVector;
+	noalias(rIntegratedStress) = StressVector;
 	rIntegratedStress *= (1.0 - damage);
 }
 
@@ -1258,7 +1259,7 @@ void FemDem3DElement::DruckerPragerCriterion(
 {
 	const double sigma_c = this->GetProperties()[YIELD_STRESS_C];
 	const double sigma_t = this->GetProperties()[YIELD_STRESS_T];
-	double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * 3.14159265359 / 180; // In radians!
+	double friction_angle = this->GetProperties()[INTERNAL_FRICTION_ANGLE] * Globals::Pi / 180; // In radians!
 	const double E = this->GetProperties()[YOUNG_MODULUS];
 	const double Gt = this->GetProperties()[FRAC_ENERGY_T];
 
@@ -1268,8 +1269,8 @@ void FemDem3DElement::DruckerPragerCriterion(
 	KRATOS_ERROR_IF(Gt < 1e-24) << " ERROR: Fracture Energy not defined in the model part, include FRAC_ENERGY_T in .mdpa " << std::endl;
 	// Check input variables
 	if (friction_angle < 1e-24) {
-		friction_angle = 32 * 3.14159 / 180;
-		std::cout << "Friction Angle not defined, assumed equal to 32� " << std::endl;
+		friction_angle = 32 * Globals::Pi / 180;
+		std::cout << "Friction Angle not defined, assumed equal to 32deg " << std::endl;
 	}
 	const double c_max = std::abs(sigma_t * (3.0 + std::sin(friction_angle)) / (3.0 * std::sin(friction_angle) - 3.0));
 	const double I1 = CalculateI1Invariant(StressVector);
@@ -1308,7 +1309,7 @@ void FemDem3DElement::DruckerPragerCriterion(
 			damage = 0.99;
 		}
 	}
-	rIntegratedStress = StressVector;
+	noalias(rIntegratedStress) = StressVector;
 	rIntegratedStress *= (1.0 - damage);
 }
 
@@ -1373,7 +1374,7 @@ void FemDem3DElement::SimoJuCriterion(
 			damage = 0.99;
 		}
 	}
-	rIntegratedStress = StressVector;
+	noalias(rIntegratedStress) = StressVector;
 	rIntegratedStress *= (1.0 - damage);
 }
 
@@ -1414,7 +1415,7 @@ void FemDem3DElement::RankineFragileLaw(
 	} else {
 		damage = 0.98; // Fragile  law
 	}
-	rIntegratedStress = StressVector;
+	noalias(rIntegratedStress) = StressVector;
 	rIntegratedStress *= (1 - damage);
 }
 

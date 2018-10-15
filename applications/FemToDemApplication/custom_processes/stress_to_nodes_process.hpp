@@ -80,8 +80,6 @@ class StressToNodesProcess : public Process
     {
 
         Vector GaussPointsStresses;
-        double damage;
-
         // Loop over elements to extrapolate the stress to the nodes
         for (ElementsArrayType::ptr_iterator it = mr_model_part.Elements().ptr_begin(); it != mr_model_part.Elements().ptr_end(); ++it) {
             bool condition_is_active = true;
@@ -91,7 +89,7 @@ class StressToNodesProcess : public Process
             if (condition_is_active) {
                 if ((*it)->GetGeometry().PointsNumber() == 3) {
                     GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR);
-                    for (int i = 0; i < 3; i++) {
+                    for (unsigned int i = 0; i < 3; i++) {
                         pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id() - 1].EffectiveStressVector[0] += GaussPointsStresses[0];
                         pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id() - 1].EffectiveStressVector[1] += GaussPointsStresses[1];
                         pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id() - 1].EffectiveStressVector[3] += GaussPointsStresses[2];
@@ -100,7 +98,7 @@ class StressToNodesProcess : public Process
                 } else {
                     GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR);
 
-                    for (int i = 0; i < 4; i++) {
+                    for (unsigned int i = 0; i < 4; i++) {
                         pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id() - 1].EffectiveStressVector[0] += GaussPointsStresses[0];
                         pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id() - 1].EffectiveStressVector[1] += GaussPointsStresses[1];
                         pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id() - 1].EffectiveStressVector[2] += GaussPointsStresses[2];
@@ -155,7 +153,7 @@ class StressToNodesProcess : public Process
         Deviator[1] -= Pmean;
         Deviator[2] -= Pmean;
 
-        double J2 = 0.5 * (Deviator[0] * Deviator[0] + Deviator[1] * Deviator[1] + Deviator[2] * Deviator[2]) +
+        const double J2 = 0.5 * (Deviator[0] * Deviator[0] + Deviator[1] * Deviator[1] + Deviator[2] * Deviator[2]) +
                     (Deviator[3] * Deviator[3] + Deviator[4] * Deviator[4] + Deviator[5] * Deviator[5]);
 
         return std::sqrt(3.0 * J2);

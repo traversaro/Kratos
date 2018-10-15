@@ -245,7 +245,7 @@ class FemDem3DElement : public SmallDisplacementElement // Derived Element from 
 		const Variable<Vector> &rVariable,
 		std::vector<Vector> &rValues,
 		const ProcessInfo &rCurrentProcessInfo) override;
-		
+
   private:
 	int iteration = 0;
 	int mNumberOfEdges = 6;

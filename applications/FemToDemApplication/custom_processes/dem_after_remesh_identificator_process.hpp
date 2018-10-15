@@ -44,8 +44,7 @@ class DemAfterRemeshIdentificatorProcess : public Process
     {
         const std::string &name_dem_model_part = "DemAfterRemeshingNodes";
 
-        if (mrModelPart.HasSubModelPart(name_dem_model_part))
-        {
+        if (mrModelPart.HasSubModelPart(name_dem_model_part)) {
             mrModelPart.RemoveSubModelPart(name_dem_model_part);
         }
 
@@ -53,11 +52,9 @@ class DemAfterRemeshIdentificatorProcess : public Process
         ModelPart* p_auxiliar_model_part = mrModelPart.pGetSubModelPart(name_dem_model_part);
         ModelPart* p_skin_model_part = mrModelPart.pGetSubModelPart("SkinDEMModelPart");
 
-        for (ModelPart::NodeIterator it = (*p_skin_model_part).NodesBegin(); it != (*p_skin_model_part).NodesEnd(); ++it)
-        {
+        for (ModelPart::NodeIterator it = (*p_skin_model_part).NodesBegin(); it != (*p_skin_model_part).NodesEnd(); ++it) {
             const double &nodal_damage = it->GetSolutionStepValue(NODAL_DAMAGE);
-            if (nodal_damage > 0.95)
-            {
+            if (nodal_damage > 0.95) {
                 p_auxiliar_model_part->AddNode(*(it.base()));
             }
         } // DemAfterRemeshingNodes SubModelPart Filled with nodes
@@ -66,34 +63,26 @@ class DemAfterRemeshIdentificatorProcess : public Process
         FindNodalNeighboursProcess neighbour_finder = FindNodalNeighboursProcess(mrModelPart, 4, 4);
         neighbour_finder.Execute();
 
-        for (ModelPart::NodeIterator it = (*p_auxiliar_model_part).NodesBegin(); it != (*p_auxiliar_model_part).NodesEnd(); ++it)
-        {
+        for (ModelPart::NodeIterator it = (*p_auxiliar_model_part).NodesBegin(); it != (*p_auxiliar_model_part).NodesEnd(); ++it) {
             WeakPointerVector<Node<3>> &rneigh = (*it).GetValue(NEIGHBOUR_NODES);
             KRATOS_ERROR_IF(rneigh.size() == 0) << "Nodal neighbours not computed..." << std::endl;
             std::vector<double> radius_is_dems, radius_not_dem;
-            double distance, radius_dem, min_radius, min_radius_is_dem, min_radius_no_dem;
+            double radius_dem, min_radius, min_radius_is_dem, min_radius_no_dem;
 
-            for (int i = 0; i < rneigh.size(); i++)
-            {
-                distance = this->CalculateDistanceBetweenNodes((*it), rneigh[i]);
-                if (rneigh[i].GetValue(DEM_RADIUS) != 0.0)
-                {
+            for (unsigned int i = 0; i < rneigh.size(); i++) {
+                const double distance = this->CalculateDistanceBetweenNodes((*it), rneigh[i]);
+                if (rneigh[i].GetValue(DEM_RADIUS) != 0.0) {
                     radius_dem = distance - rneigh[i].GetValue(DEM_RADIUS);
                     radius_is_dems.push_back(radius_dem);
-                }
-                else
-                {
+                } else {
                     radius_dem = 0.5 * distance;
                     radius_not_dem.push_back(radius_dem);
                 }
             }
-            if (radius_is_dems.size() == 0)
-            {
+            if (radius_is_dems.size() == 0) {
                 min_radius = this->GetMinimumValue(radius_not_dem);
                 (*it).SetValue(DEM_RADIUS, min_radius);
-            }
-            else
-            {
+            } else {
                 if (radius_is_dems.size() != 0)
                     min_radius_is_dem = this->GetMinimumValue(radius_is_dems);
                 else
@@ -130,8 +119,7 @@ class DemAfterRemeshIdentificatorProcess : public Process
     {
         int size = array_values.size();
         double aux = array_values[0];
-        for (int i = 1; i < size; i++)
-        {
+        for (int i = 1; i < size; i++) {
             if (array_values[i] < aux)
                 aux = array_values[i];
         }
