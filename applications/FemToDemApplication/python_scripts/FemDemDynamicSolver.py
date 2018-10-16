@@ -27,12 +27,17 @@ class ImplicitMechanicalSolver(BaseSolver.FemDemMechanicalSolver):
             "rayleigh_beta" : 0.0
         }
         """)
+        
         self._validate_and_transfer_matching_settings(custom_settings, self.dynamic_settings)
         # Validate the remaining settings in the base class.
         if not custom_settings.Has("scheme_type"): # Override defaults in the base class.
             custom_settings.AddEmptyValue("scheme_type")
             custom_settings["scheme_type"].SetString("Newmark")
-        
+
+        if not custom_settings.Has("extrapolation_required"):
+            custom_settings.AddEmptyValue("extrapolation_required")
+            custom_settings["extrapolation_required"].SetBool(false)
+
         # Construct the base solver.
         super(ImplicitMechanicalSolver, self).__init__(main_model_part, custom_settings)
 
@@ -86,7 +91,10 @@ class ImplicitMechanicalSolver(BaseSolver.FemDemMechanicalSolver):
             else:
                 mechanical_solver = self._create_line_search_strategy()
         else:
-            mechanical_solver = self._create_newton_raphson_strategy()
+            if self.settings["extrapolation_required"].GetBool():
+                mechanical_solver = self._create_newton_raphson_hexaedrons_strategy()
+            else:
+                mechanical_solver = self._create_newton_raphson_strategy()
         return mechanical_solver
 
 

@@ -14,14 +14,12 @@ def CreateSolver(main_model_part, custom_settings):
     return StaticMechanicalSolver(main_model_part, custom_settings)
 
 class StaticMechanicalSolver(BaseSolver.FemDemMechanicalSolver):
+
     """The solid mechanics static solver.
-
     This class creates the mechanical solvers for static analysis.
-
     Public member variables:
-
     See solid_mechanics_solver.py for more information.
-    """    
+    """
     def __init__(self, main_model_part, custom_settings):
         
         # Set defaults and validate custom settings.
@@ -38,6 +36,9 @@ class StaticMechanicalSolver(BaseSolver.FemDemMechanicalSolver):
         if not custom_settings.Has("scheme_type"): 
             custom_settings.AddEmptyValue("scheme_type")
             custom_settings["scheme_type"].SetString("Non-Linear") # Override defaults in the base class.
+        if not custom_settings.Has("extrapolation_required"):
+            custom_settings.AddEmptyValue("extrapolation_required")
+            custom_settings["extrapolation_required"].SetBool(false)
 
         # Construct the base solver.
         super(StaticMechanicalSolver, self).__init__(main_model_part, custom_settings)
@@ -81,7 +82,10 @@ class StaticMechanicalSolver(BaseSolver.FemDemMechanicalSolver):
             if(self.settings["scheme_type"].GetString() == "Linear"):
                 mechanical_solver = self._create_linear_strategy()
             else:
-                mechanical_solver = self._create_newton_raphson_strategy()
+                if self.settings["extrapolation_required"].GetBool():
+                    mechanical_solver = self._create_newton_raphson_hexaedrons_strategy()
+                else:
+                    mechanical_solver = self._create_newton_raphson_strategy()
                 
         return mechanical_solver
 

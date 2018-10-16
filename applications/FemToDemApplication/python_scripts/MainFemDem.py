@@ -8,7 +8,7 @@ import os
 import KratosMultiphysics
 import KratosMultiphysics.SolidMechanicsApplication	 as KratosSolid
 import KratosMultiphysics.ExternalSolversApplication as KratosSolvers
-import KratosMultiphysics.FemToDemApplication   as KratosFemDem
+import KratosMultiphysics.FemToDemApplication as KratosFemDem
 import MainSolidFEM
 
 def Wait():

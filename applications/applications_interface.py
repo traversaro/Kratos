@@ -506,10 +506,11 @@ def ImportApplications(kernel, applications_path=application_directory):
         print("importing KratosFemToDemApplication ...")
         sys.path.append(applications_path + '/ConstitutiveModels/python_scripts')
         sys.path.append(applications_path + '/ConstitutiveModels/Linux')
-        from KratosShallowWaterApplication import *
+        from KratosFemToDemApplication import *
         fem_to_dem_application = KratosFemToDemApplication()
         kernel.AddApplication(fem_to_dem_application)
         print("KratosFemToDemApplication Succesfully imported")
+
     # dynamic renumbering of variables to ensure the consistency
     kernel.Initialize()
     if(Import_SolidMechanicsApplication):
@@ -595,7 +596,3 @@ def ImportApplications(kernel, applications_path=application_directory):
     if(Import_FemToDemApplication):
         kernel.InitializeApplication(fem_to_dem_application)
 
-# def ImportApplications(kernel  ):
-    # import os.path
-    # application_directory = os.path.dirname( os.path.realpath(__file__)  )
-    # ImportApplications(kernel, application_directory )

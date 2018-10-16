@@ -261,21 +261,14 @@ class HexahedraNewtonRaphsonStrategy
         bool residual_is_updated = false;
         p_scheme->InitializeNonLinIteration(BaseType::GetModelPart(), rA, rDx, rb);
 
-
-
-
-
+        // We extrapolate the stress to the nodes to perform the smoothing
         ModelPart& rModelPart = BaseType::GetModelPart();
         Parameters extrapolation_parameters = Parameters(R"(
         {
             "list_of_variables" : [STRESS_VECTOR],
         })");
-
         auto extrapolation_process = IntegrationValuesExtrapolationToNodesProcess(rModelPart, extrapolation_parameters);
-        //extrapolation_process.Execute();
-
-
-
+        extrapolation_process.Execute();
 
         is_converged = mpConvergenceCriteria->PreCriteria(BaseType::GetModelPart(), p_builder_and_solver->GetDofSet(), rA, rDx, rb);
 
@@ -316,6 +309,7 @@ class HexahedraNewtonRaphsonStrategy
             BaseType::GetModelPart().GetProcessInfo()[NL_ITERATION_NUMBER] = iteration_number;
             p_scheme->InitializeNonLinIteration(BaseType::GetModelPart(), rA, rDx, rb);
             is_converged = mpConvergenceCriteria->PreCriteria(BaseType::GetModelPart(), p_builder_and_solver->GetDofSet(), rA, rDx, rb);
+            extrapolation_process.Execute();
 
             //call the linear system solver to find the correction mDx for the
             //it is not called if there is no system to solve

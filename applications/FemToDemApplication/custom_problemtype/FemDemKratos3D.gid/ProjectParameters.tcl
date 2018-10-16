@@ -51,7 +51,7 @@ proc WriteProjectParameters { basename dir problemtypedir TableDict} {
     puts $FileVar "            \"residual_relative_tolerance\":          [GiD_AccessValue get gendata Residual_Relative_Tolerance],"
     puts $FileVar "            \"residual_absolute_tolerance\":          [GiD_AccessValue get gendata Residual_Absolute_Tolerance],"
     puts $FileVar "            \"max_iteration\":                        [GiD_AccessValue get gendata Max_Iterations],"
-
+    puts $FileVar "            \"extrapolation_required\":               [GiD_AccessValue get gendata Use_Hexahedrons]," 
     puts $FileVar "            \"linear_solver_settings\":     \{"
     puts $FileVar "                 \"solver_type\":      \"[GiD_AccessValue get gendata Solver_Type]\","
     puts $FileVar "                 \"scaling\":           false"
