@@ -1784,11 +1784,11 @@ class DEMIo(object):
         self.PrintingGlobalVariables(self.mixed_model_part, time)
         self.PrintingSpheresAndClustersVariables(self.mixed_spheres_and_clusters_model_part, time)
         self.PrintingSpheresNotInClusterAndClustersVariables(self.mixed_spheres_not_in_cluster_and_clusters_model_part, time)
-        self.PrintingSpheresVariables(spheres_model_part, time)
-        self.PrintingFEMBoundaryVariables(rigid_face_model_part, time)
-        self.PrintingRigidBodyVariables(rigid_face_model_part, time)
-        self.PrintingClusterVariables(cluster_model_part, time)
-        self.PrintingContactElementsVariables(contact_model_part, time)
+        self.PrintingSpheresVariables(self.spheres_model_part, time)
+        self.PrintingFEMBoundaryVariables(self.rigid_face_model_part, time)
+        self.PrintingRigidBodyVariables(self.rigid_face_model_part, time)
+        self.PrintingClusterVariables(self.cluster_model_part, time)
+        self.PrintingContactElementsVariables(self.contact_model_part, time)
 
         self.RemoveElementsAndNodes()
 
