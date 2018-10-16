@@ -36,13 +36,12 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
                                                                              self.DEMParameters)
 
 		self.nodal_neighbour_finder = KratosMultiphysics.FindNodalNeighboursProcess(self.FEM_Solution.main_model_part, 4, 5)
-		self.nodal_neighbour_finder.Execute()
 
 		if self.DoRemeshing:
 			self.InitializeMMGvariables()
 			self.RemeshingProcessMMG.ExecuteInitialize()
 
-		print("/$$$$$$$$ /$$$$$$$$ /$$      /$$  /$$$$$$  /$$$$$$$  /$$$$$$$$ /$$      /$$ ")
+		print(" /$$$$$$$$ /$$$$$$$$ /$$      /$$  /$$$$$$  /$$$$$$$  /$$$$$$$$ /$$      /$$")
 		print("| $$_____/| $$_____/| $$$    /$$$ /$$__  $$| $$__  $$| $$_____/| $$$    /$$$")
 		print("| $$      | $$      | $$$$  /$$$$|__/  \ $$| $$  \ $$| $$      | $$$$  /$$$$")
 		print("| $$$$$   | $$$$$   | $$ $$/$$ $$  /$$$$$$/| $$  | $$| $$$$$   | $$ $$/$$ $$")
@@ -74,7 +73,6 @@ class FEMDEM3D_Solution(CouplingFemDem.FEMDEM_Solution):
 			if is_remeshing:
 				self.RefineMappedVariables()
 
-			self.nodal_neighbour_finder = KratosMultiphysics.FindNodalNeighboursProcess(self.FEM_Solution.main_model_part, 4, 5)
 			self.nodal_neighbour_finder.Execute()
 
 			if is_remeshing:

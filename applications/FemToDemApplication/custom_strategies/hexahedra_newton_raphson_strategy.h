@@ -263,9 +263,9 @@ class HexahedraNewtonRaphsonStrategy
 
         // We extrapolate the stress to the nodes to perform the smoothing
         ModelPart& rModelPart = BaseType::GetModelPart();
-        Parameters extrapolation_parameters = Parameters(R"(
+        Parameters extrapolation_parameters(R"(
         {
-            "list_of_variables" : [STRESS_VECTOR],
+        	"list_of_variables": ["STRESS_VECTOR"]
         })");
         auto extrapolation_process = IntegrationValuesExtrapolationToNodesProcess(rModelPart, extrapolation_parameters);
         extrapolation_process.Execute();
@@ -447,90 +447,9 @@ class HexahedraNewtonRaphsonStrategy
 
     bool mKeepSystemConstantDuringIterations; // Flag to allow keeping system matrix constant during iterations
 
-    Parameters mExtrapolationParameters = Parameters(R"(
-    {
-        "echo_level"                 : 0,
-        "area_average"               : true,
-        "average_variable"           : "NODAL_AREA",
-        "list_of_variables"          : [STRESS_VECTOR],
-        "extrapolate_non_historical" : true
-    })");
-
     ///@}
     ///@name Private Operators
     ///@{
-
-    /**
-     * @brief Here the database is updated
-     * @param A The LHS matrix of the system of equations
-     * @param Dx The incremement in the solution
-     * @param b The RHS vector of the system of equations
-     * @param MoveMesh The flag that allows to move the mesh
-     */
-
-    // virtual void UpdateDatabase(
-    //     TSystemMatrixType& rA,
-    //     TSystemVectorType& rDx,
-    //     TSystemVectorType& rb,
-    //     const bool MoveMesh)
-    // {
-    //     typename TSchemeType::Pointer p_scheme = GetScheme();
-    //     typename TBuilderAndSolverType::Pointer p_builder_and_solver = GetBuilderAndSolver();
-
-    //     p_scheme->Update(BaseType::GetModelPart(), p_builder_and_solver->GetDofSet(), rA, rDx, rb);
-
-    //     // Move the mesh if needed
-    //     if (MoveMesh == true)
-    //         BaseType::MoveMesh();
-    // }
-
-    /**
-     * @brief This method returns the components of the system of equations depending of the echo level
-     * @param IterationNumber The non linear iteration in the solution loop
-     */
-    // virtual void EchoInfo(const unsigned int IterationNumber)
-    // {
-    //     TSystemMatrixType& rA  = *mpA;
-    //     TSystemVectorType& rDx = *mpDx;
-    //     TSystemVectorType& rb  = *mpb;
-
-    //     if (this->GetEchoLevel() == 2) //if it is needed to print the debug info
-    //     {
-    //         KRATOS_INFO("Dx")  << "Solution obtained = " << rDx << std::endl;
-    //         KRATOS_INFO("RHS") << "RHS  = " << rb << std::endl;
-    //     }
-    //     else if (this->GetEchoLevel() == 3) //if it is needed to print the debug info
-    //     {
-    //         KRATOS_INFO("LHS") << "SystemMatrix = " << rA << std::endl;
-    //         KRATOS_INFO("Dx")  << "Solution obtained = " << rDx << std::endl;
-    //         KRATOS_INFO("RHS") << "RHS  = " << rb << std::endl;
-    //     }
-    //     else if (this->GetEchoLevel() == 4) //print to matrix market file
-    //     {
-    //         std::stringstream matrix_market_name;
-    //         matrix_market_name << "A_" << BaseType::GetModelPart().GetProcessInfo()[TIME] << "_" << IterationNumber << ".mm";
-    //         TSparseSpace::WriteMatrixMarketMatrix((char *)(matrix_market_name.str()).c_str(), rA, false);
-
-    //         std::stringstream matrix_market_vectname;
-    //         matrix_market_vectname << "b_" << BaseType::GetModelPart().GetProcessInfo()[TIME] << "_" << IterationNumber << ".mm.rhs";
-    //         TSparseSpace::WriteMatrixMarketVector((char *)(matrix_market_vectname.str()).c_str(), rb);
-    //     }
-    // }
-
-    /**
-     * @brief This method prints information after reach the max number of iterations
-     * @todo Replace by logger
-     */
-
-    // virtual void MaxIterationsExceeded()
-    // {
-    //     if (this->GetEchoLevel() != 0 && BaseType::GetModelPart().GetCommunicator().MyPID() == 0)
-    //     {
-    //         std::cout << "***************************************************" << std::endl;
-    //         std::cout << "******* ATTENTION: max iterations exceeded ********" << std::endl;
-    //         std::cout << "***************************************************" << std::endl;
-    //     }
-    // }
 
     ///@}
     ///@name Private Operations
