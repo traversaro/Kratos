@@ -2,6 +2,7 @@ from __future__ import print_function, absolute_import, division  # makes Kratos
 #import kratos core and applications
 import KratosMultiphysics
 import KratosMultiphysics.SolidMechanicsApplication as KratosSolid
+import KratosMultiphysics.FemToDemApplication as KratosFemDem
 
 # Check that KratosMultiphysics was imported in the main script
 KratosMultiphysics.CheckForPreviousImport()
@@ -153,4 +154,20 @@ class ImplicitMechanicalSolver(BaseSolver.FemDemMechanicalSolver):
                                                                      self.settings["compute_reactions"].GetBool(),
                                                                      self.settings["reform_dofs_at_each_step"].GetBool(),
                                                                      self.settings["move_mesh_flag"].GetBool())
+
+    def _create_newton_raphson_hexaedrons_strategy(self):
+        computing_model_part = self.GetComputingModelPart()
+        mechanical_scheme = self._get_solution_scheme()
+        linear_solver = self._get_linear_solver()
+        mechanical_convergence_criterion = self._get_convergence_criterion()
+        builder_and_solver = self._get_builder_and_solver()
+        return KratosFemDem.HexahedraNewtonRaphsonStrategy(computing_model_part, 
+                                                                     mechanical_scheme, 
+                                                                     linear_solver, 
+                                                                     mechanical_convergence_criterion, 
+                                                                     builder_and_solver,
+                                                                     self.settings["max_iteration"].GetInt(),
+                                                                     self.settings["compute_reactions"].GetBool(),
+                                                                     self.settings["reform_dofs_at_each_step"].GetBool(),
+                                                                     self.settings["move_mesh_flag"].GetBool()) 
 

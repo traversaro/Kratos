@@ -33,7 +33,7 @@ set( KRATOS_FEM_TO_DEM_APPLICATION_SOURCES
 pybind11_add_module(KratosFemToDemApplication MODULE ${KRATOS_FEM_TO_DEM_APPLICATION_SOURCES})
 #target_link_libraries(KratosFemToDemApplication KratosSolidMechanicsApplication KratosCore )
 #target_link_libraries(KratosFemToDemApplication KratosSolidMechanicsCore KratosCore )
-target_link_libraries(KratosFemToDemApplication PRIVATE KratosSolidMechanicsCore KratosCore )
+target_link_libraries(KratosFemToDemApplication PRIVATE KratosSolidMechanicsCore KratosMeshingCore KratosCore )
 set_target_properties(KratosFemToDemApplication PROPERTIES PREFIX "")
 install(TARGETS KratosFemToDemApplication DESTINATION libs )
 
