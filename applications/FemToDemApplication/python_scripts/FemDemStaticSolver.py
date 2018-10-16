@@ -25,7 +25,6 @@ class StaticMechanicalSolver(BaseSolver.FemDemMechanicalSolver):
         # Set defaults and validate custom settings.
         static_settings = KratosMultiphysics.Parameters("""
         {
-
         }
         """)
         self._validate_and_transfer_matching_settings(custom_settings, static_settings)
@@ -38,7 +37,7 @@ class StaticMechanicalSolver(BaseSolver.FemDemMechanicalSolver):
             custom_settings["scheme_type"].SetString("Non-Linear") # Override defaults in the base class.
         if not custom_settings.Has("extrapolation_required"):
             custom_settings.AddEmptyValue("extrapolation_required")
-            custom_settings["extrapolation_required"].SetBool(false)
+            custom_settings["extrapolation_required"].SetBool(False)
 
         # Construct the base solver.
         super(StaticMechanicalSolver, self).__init__(main_model_part, custom_settings)

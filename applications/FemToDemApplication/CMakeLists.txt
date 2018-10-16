@@ -10,7 +10,6 @@ include_directories( ${CMAKE_SOURCE_DIR}/applications/SolidMechanicsApplication 
 include_directories( ${CMAKE_SOURCE_DIR}/applications/DEM_application )
 include_directories( ${CMAKE_SOURCE_DIR}/applications/MeshingApplication )
 
-
 # generate variables with the sources
 set( KRATOS_FEM_TO_DEM_APPLICATION_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/fem_to_dem_application.cpp

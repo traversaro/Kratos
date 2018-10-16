@@ -27,7 +27,7 @@ class ImplicitMechanicalSolver(BaseSolver.FemDemMechanicalSolver):
             "rayleigh_beta" : 0.0
         }
         """)
-        
+
         self._validate_and_transfer_matching_settings(custom_settings, self.dynamic_settings)
         # Validate the remaining settings in the base class.
         if not custom_settings.Has("scheme_type"): # Override defaults in the base class.
@@ -36,7 +36,7 @@ class ImplicitMechanicalSolver(BaseSolver.FemDemMechanicalSolver):
 
         if not custom_settings.Has("extrapolation_required"):
             custom_settings.AddEmptyValue("extrapolation_required")
-            custom_settings["extrapolation_required"].SetBool(false)
+            custom_settings["extrapolation_required"].SetBool(False)
 
         # Construct the base solver.
         super(ImplicitMechanicalSolver, self).__init__(main_model_part, custom_settings)

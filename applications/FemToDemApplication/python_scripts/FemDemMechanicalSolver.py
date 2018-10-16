@@ -71,6 +71,7 @@ class FemDemMechanicalSolver(object):
             "residual_relative_tolerance": 1.0e-4,
             "residual_absolute_tolerance": 1.0e-9,
             "max_iteration": 10,
+            "extrapolation_required" : false,
             "linear_solver_settings":{
                 "solver_type": "SuperLUSolver",
                 "max_iteration": 500,
