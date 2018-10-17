@@ -193,7 +193,7 @@ namespace Kratos
 	if( mParallel == false )
 	  number_of_threads = 1;
 
-	vector<unsigned int> element_partition;
+	DenseVector<unsigned int> element_partition;
         OpenMPUtils::CreatePartition(number_of_threads, pElements.size(), element_partition);
 
 	Vector ModelVolumePartition = ZeroVector(number_of_threads);
@@ -245,7 +245,7 @@ namespace Kratos
 	if( mParallel == false )
 	  number_of_threads = 1;
 
-	vector<unsigned int> element_partition;
+	DenseVector<unsigned int> element_partition;
         OpenMPUtils::CreatePartition(number_of_threads, pElements.size(), element_partition);
 
 	Vector ModelVolumePartition = ZeroVector(number_of_threads);

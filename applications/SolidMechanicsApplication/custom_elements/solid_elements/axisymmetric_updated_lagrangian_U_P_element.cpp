@@ -223,7 +223,7 @@ void AxisymmetricUpdatedLagrangianUPElement::Initialize()
     for ( unsigned int PointNumber = 0; PointNumber < integration_points_number; PointNumber++ )
     {
         mDeterminantF0[PointNumber] = 1;
-        mDeformationGradientF0[PointNumber] = identity_matrix<double> (3);
+        mDeformationGradientF0[PointNumber] = IdentityMatrix(3);
     }
 
 
@@ -359,7 +359,7 @@ void AxisymmetricUpdatedLagrangianUPElement::CalculateKinematics(ElementDataType
     noalias( rVariables.DN_DX ) = prod( DN_De[rPointNumber], InvJ );
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row(Ncontainer, rPointNumber);
 
     //Calculate IntegrationPoint radius
     this->CalculateRadius (rVariables.CurrentRadius, rVariables.ReferenceRadius, rVariables.N);
@@ -454,9 +454,9 @@ void AxisymmetricUpdatedLagrangianUPElement::CalculateDeformationGradient(Matrix
     const SizeType number_of_nodes  = GetGeometry().PointsNumber();
     const SizeType dimension        = GetGeometry().WorkingSpaceDimension();
 
-    rF = identity_matrix<double> ( 3 );
+    rF = IdentityMatrix(3);
 
-    if( dimension == 2 )
+    if(dimension == 2)
     {
 
         for ( SizeType i = 0; i < number_of_nodes; i++ )
@@ -469,7 +469,7 @@ void AxisymmetricUpdatedLagrangianUPElement::CalculateDeformationGradient(Matrix
 
         rF ( 2 , 2 ) = rCurrentRadius/rReferenceRadius;
     }
-    else if( dimension == 3)
+    else if(dimension == 3)
     {
 
         std::cout<<" AXISYMMETRIC case and 3D is not possible "<<std::endl;

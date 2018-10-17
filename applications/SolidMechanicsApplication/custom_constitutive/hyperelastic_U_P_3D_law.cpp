@@ -88,7 +88,7 @@ void  HyperElasticUP3DLaw::CalculateMaterialResponsePK2 (Parameters& rValues)
 
     //0.- Initialize parameters
     MaterialResponseVariables ElasticVariables;
-    ElasticVariables.Identity = identity_matrix<double> ( 3 );
+    ElasticVariables.Identity = IdentityMatrix(3);
 
     ElasticVariables.SetElementGeometry(DomainGeometry);
     ElasticVariables.SetShapeFunctionsValues(ShapeFunctions);
@@ -234,7 +234,7 @@ void HyperElasticUP3DLaw::CalculateMaterialResponseKirchhoff (Parameters& rValue
 
     //0.- Initialize parameters
     MaterialResponseVariables ElasticVariables;
-    ElasticVariables.Identity = identity_matrix<double> ( 3 );
+    ElasticVariables.Identity = IdentityMatrix(3);
 
     ElasticVariables.SetElementGeometry(DomainGeometry);
     ElasticVariables.SetShapeFunctionsValues(ShapeFunctions);

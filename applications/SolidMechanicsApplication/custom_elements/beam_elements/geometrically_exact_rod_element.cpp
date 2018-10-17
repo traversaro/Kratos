@@ -246,7 +246,7 @@ namespace Kratos
     rVariables.PointNumber = rPointNumber;
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row(Ncontainer, rPointNumber);
 
     //Get the parent coodinates derivative [dN/d£]
     const GeometryType::ShapeFunctionsGradientsType& DN_De = rVariables.GetShapeFunctionsGradients();
@@ -530,7 +530,7 @@ namespace Kratos
 
     //Mapping Matrix
     if( rMappingTensor.size1() !=12 || rMappingTensor.size2() != 6 )
-      rMappingTensor.resize(12,6);
+      rMappingTensor.resize(12,6,false);
 
     noalias(rMappingTensor) = ZeroMatrix(12,6);
 
@@ -688,7 +688,7 @@ namespace Kratos
 	Variables.PointNumber = PointNumber;
 
 	//set shape functions values for this integration point
-	noalias(Variables.N) = matrix_row<const Matrix>( Ncontainer, PointNumber);
+	noalias(Variables.N) = row(Ncontainer, PointNumber);
 
 
 	Directors.CurrentNode.resize(number_of_nodes);
@@ -1869,7 +1869,7 @@ namespace Kratos
     unsigned int RowIndex = 0;
     unsigned int ColIndex = 0;
 
-    Matrix DiagonalMatrix = identity_matrix<double> (3);
+    Matrix DiagonalMatrix = IdentityMatrix(3);
 
     for ( SizeType i = 0; i < number_of_nodes; i++ )
       {
@@ -2163,5 +2163,3 @@ namespace Kratos
 
 
 } // Namespace Kratos
-
-

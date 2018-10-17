@@ -32,7 +32,7 @@ class ShellQ4_LocalCoordinateSystem
 
   typedef std::vector<Vector3Type> Vector3ContainerType;
 
-  typedef Matrix MatrixType;
+  typedef Kratos::Matrix MatrixType;
 
   typedef matrix_row< const MatrixType > ConstMatrixRowType;
 
@@ -241,7 +241,7 @@ class ShellQ4_LocalCoordinateSystem
     if(W.size1() != mat_size || W.size2() != mat_size)
       W.resize(mat_size, mat_size, false);
 
-    noalias( W ) = IdentityMatrix(mat_size, mat_size);
+    noalias( W ) = IdentityMatrix(mat_size);
 
     W( 0,  4) = -wf;
     W( 1,  3) =  wf;
@@ -281,7 +281,7 @@ class ShellQ4_LocalCoordinateSystem
     // if needed, include the warpage correction.
     if(this->IsWarped())
     {
-      MatrixType W( IdentityMatrix(24, 24) );
+      MatrixType W( IdentityMatrix(24) );
       RealType z1 = this->Z1();
       RealType z2 = this->Z2();
       RealType z3 = this->Z3();

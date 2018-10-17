@@ -202,7 +202,7 @@ void SmallDisplacementElement::CalculateKinematics(ElementDataType& rVariables, 
     this->CalculateDisplacementGradient( rVariables.H, rVariables.DN_DX );
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row( Ncontainer, rPointNumber);
 
     //Compute the deformation matrix B
     const GeometryType& rGeometry = GetGeometry();

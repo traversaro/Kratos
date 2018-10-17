@@ -111,7 +111,7 @@ void AxisymmetricSmallDisplacementElement::InitializeElementData (ElementDataTyp
 
     //needed parameters for consistency with the general constitutive law: small displacements
     rVariables.detF  = 1;
-    rVariables.F     = identity_matrix<double>(3);
+    rVariables.F     = IdentityMatrix(3);
 
     //set variables including all integration points values
 
@@ -227,7 +227,7 @@ void AxisymmetricSmallDisplacementElement::CalculateKinematics(ElementDataType& 
     noalias( rVariables.DN_DX ) = prod( DN_De[rPointNumber], InvJ );
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row( Ncontainer, rPointNumber);
 
     //Calculate IntegrationPoint radius
     CalculateRadius(rVariables.ReferenceRadius, rVariables.N);
@@ -457,5 +457,3 @@ void AxisymmetricSmallDisplacementElement::load( Serializer& rSerializer )
 
 
 } // Namespace Kratos
-
-

@@ -815,21 +815,21 @@ void ShellCrossSection::InitializeParameters(Parameters& rValues, ConstitutiveLa
 
   rVariables.DeterminantF = 1.0;
 
-  rVariables.DeformationGradientF_2D = IdentityMatrix(2,2);
+  rVariables.DeformationGradientF_2D = IdentityMatrix(2);
   rVariables.StrainVector_2D.resize(3);
   rVariables.StressVector_2D.resize(3);
-  rVariables.ConstitutiveMatrix_2D.resize(3,3);
+  rVariables.ConstitutiveMatrix_2D.resize(3,3,false);
   noalias( rVariables.StrainVector_2D ) = ZeroVector(3);
   noalias( rVariables.StressVector_2D ) = ZeroVector(3);
   noalias( rVariables.ConstitutiveMatrix_2D ) = ZeroMatrix(3,3);
 
   if(mNeedsOOPCondensation) // avoid useless allocations
   {
-    rVariables.DeformationGradientF_3D = IdentityMatrix(3,3);
-    rVariables.DeformationGradientF0_3D = IdentityMatrix(3,3);
+    rVariables.DeformationGradientF_3D = IdentityMatrix(3);
+    rVariables.DeformationGradientF0_3D = IdentityMatrix(3);
     rVariables.StrainVector_3D.resize(6);
     rVariables.StressVector_3D.resize(6);
-    rVariables.ConstitutiveMatrix_3D.resize(6,6);
+    rVariables.ConstitutiveMatrix_3D.resize(6,6,false);
   }
 
   // by default set the 2D data for materials

@@ -222,7 +222,7 @@ void UpdatedLagrangianUPElement::Initialize()
     for ( unsigned int PointNumber = 0; PointNumber < integration_points_number; PointNumber++ )
     {
         mDeterminantF0[PointNumber] = 1;
-        mDeformationGradientF0[PointNumber] = identity_matrix<double> (dimension);
+        mDeformationGradientF0[PointNumber] = IdentityMatrix(dimension);
     }
 
     KRATOS_CATCH( "" )
@@ -323,7 +323,7 @@ void UpdatedLagrangianUPElement::CalculateKinematics(ElementDataType& rVariables
     noalias( rVariables.DN_DX ) = prod( DN_De[rPointNumber], InvJ );
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row(Ncontainer, rPointNumber);
 
     //Current Deformation Gradient [dx_n+1/dx_n]
     //this->CalculateDeformationGradient (rVariables.F, rVariables.DN_DX, rVariables.DeltaPosition);
@@ -366,9 +366,9 @@ void UpdatedLagrangianUPElement::CalculateDeformationGradient(Matrix& rF,
     const SizeType number_of_nodes = GetGeometry().PointsNumber();
     const SizeType dimension        = GetGeometry().WorkingSpaceDimension();
 
-    rF = identity_matrix<double> ( dimension );
+    rF = IdentityMatrix(dimension);
 
-    if( dimension == 2 )
+    if(dimension == 2)
     {
 
         for ( SizeType i = 0; i < number_of_nodes; i++ )
@@ -380,7 +380,7 @@ void UpdatedLagrangianUPElement::CalculateDeformationGradient(Matrix& rF,
         }
 
     }
-    else if( dimension == 3)
+    else if(dimension == 3)
     {
 
         for ( SizeType i = 0; i < number_of_nodes; i++ )
@@ -455,5 +455,3 @@ void UpdatedLagrangianUPElement::load( Serializer& rSerializer )
 
 
 } // Namespace Kratos
-
-

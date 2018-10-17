@@ -229,7 +229,7 @@ void UpdatedLagrangianElement::Initialize()
     for ( unsigned int PointNumber = 0; PointNumber < integration_points_number; PointNumber++ )
     {
         mDeterminantF0[PointNumber] = 1;
-        mDeformationGradientF0[PointNumber] = identity_matrix<double> (dimension);
+        mDeformationGradientF0[PointNumber] = IdentityMatrix(dimension);
     }
 
     KRATOS_CATCH( "" )
@@ -315,7 +315,7 @@ void UpdatedLagrangianElement::CalculateKinematics(ElementDataType& rVariables,
     rVariables.F0    = mDeformationGradientF0[rPointNumber];
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row( Ncontainer, rPointNumber);
 
     //Compute the deformation matrix B
     const GeometryType& rGeometry = GetGeometry();
@@ -362,10 +362,10 @@ void UpdatedLagrangianElement::CalculateKinetics(ElementDataType& rVariables, co
     //Determinant of the Deformation Gradient F0
     // (in this element F = F0, then F0 is set to the identity for coherence in the constitutive law)
     rVariables.detF0 = 1;
-    rVariables.F0    = identity_matrix<double> ( dimension );
+    rVariables.F0    = IdentityMatrix(dimension);
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row(Ncontainer, rPointNumber);
 
     KRATOS_CATCH( "" )
 }
@@ -383,7 +383,7 @@ void UpdatedLagrangianElement::CalculateDeformationGradient(Matrix& rF,
     const SizeType number_of_nodes  = GetGeometry().PointsNumber();
     const SizeType dimension        = GetGeometry().WorkingSpaceDimension();
 
-    rF = identity_matrix<double> ( dimension );
+    rF = IdentityMatrix(dimension);
 
     if( dimension == 2 )
     {

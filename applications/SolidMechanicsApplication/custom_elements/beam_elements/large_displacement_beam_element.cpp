@@ -233,7 +233,7 @@ namespace Kratos
     for ( unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++ )
       {
 	//set shape functions values for this integration point
-	noalias(Variables.N) = matrix_row<const Matrix>( Ncontainer, PointNumber);
+	noalias(Variables.N) = row(Ncontainer, PointNumber);
 
 	//compute local to global frame
 	this->CalculateFrameMapping( Variables, PointNumber );
@@ -257,7 +257,7 @@ namespace Kratos
     for ( unsigned int PointNumber = 0; PointNumber < full_integration_points.size(); PointNumber++ )
       {
 	//set shape functions values for this integration point
-	noalias(Variables.N) = matrix_row<const Matrix>( NFcontainer, PointNumber);
+	noalias(Variables.N) = row(NFcontainer, PointNumber);
 
 	//compute local to global frame
 	this->CalculateFrameMapping( Variables, PointNumber );
@@ -463,7 +463,7 @@ namespace Kratos
     rVariables.PointNumber = rPointNumber;
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row(Ncontainer, rPointNumber);
 
     //Get the parent coodinates derivative [dN/d£]
     const GeometryType::ShapeFunctionsGradientsType& DN_De = rVariables.GetShapeFunctionsGradients();
@@ -689,7 +689,7 @@ namespace Kratos
 	Variables.PointNumber = PointNumber;
 
 	//set shape functions values for this integration point
-	noalias(Variables.N) = matrix_row<const Matrix>( Ncontainer, PointNumber);
+	noalias(Variables.N) = row(Ncontainer, PointNumber);
 
 	//compute local to global frame
 	this->CalculateFrameMapping( Variables, PointNumber );
@@ -2182,7 +2182,7 @@ namespace Kratos
     Matrix CurrentInertiaDyadic = prod(rVariables.CurrentRotationMatrix,InertiaDyadic);
     CurrentInertiaDyadic = prod(CurrentInertiaDyadic,trans(rVariables.CurrentRotationMatrix));
 
-    Matrix DiagonalMatrix = identity_matrix<double> (3);
+    Matrix DiagonalMatrix = IdentityMatrix(3);
 
     Vector CurrentValueVector(3);
     noalias(CurrentValueVector) = ZeroVector(3);
@@ -2276,7 +2276,7 @@ namespace Kratos
     KRATOS_TRY
 
     if( rKineticMatrix.size1() != 6 || rKineticMatrix.size2() != 6 )
-      rKineticMatrix.resize(6,6);
+      rKineticMatrix.resize(6,6,false);
 
     noalias(rKineticMatrix) = ZeroMatrix(6,6);
 
@@ -2570,10 +2570,10 @@ namespace Kratos
 	  Variables.PointNumber = PointNumber;
 
 	  //set shape functions values for this integration point
-	  noalias(Variables.N) = matrix_row<const Matrix>( Ncontainer, PointNumber);
+	  noalias(Variables.N) = row(Ncontainer, PointNumber);
 
 	  //compute local to global frame
-	  this->CalculateFrameMapping( Variables, PointNumber );
+	  this->CalculateFrameMapping(Variables, PointNumber);
 
 	  Variables.detJ = 1.0/mInvJ0;
 
@@ -2731,7 +2731,7 @@ namespace Kratos
 	  Variables.PointNumber = PointNumber;
 
 	  //set shape functions values for this integration point
-	  noalias(Variables.N) = matrix_row<const Matrix>( Ncontainer, PointNumber);
+	  noalias(Variables.N) = row(Ncontainer, PointNumber);
 
 	  //compute local to global frame
 	  this->CalculateFrameMapping( Variables, PointNumber );

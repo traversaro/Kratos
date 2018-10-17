@@ -217,7 +217,7 @@ void AxisymmetricUpdatedLagrangianElement::Initialize()
     for ( unsigned int PointNumber = 0; PointNumber < integration_points_number; PointNumber++ )
     {
         mDeterminantF0[PointNumber] = 1;
-        mDeformationGradientF0[PointNumber] = identity_matrix<double> (3);
+        mDeformationGradientF0[PointNumber] = IdentityMatrix(3);
     }
 
 
@@ -381,7 +381,7 @@ void AxisymmetricUpdatedLagrangianElement::CalculateKinematics(ElementDataType& 
     noalias( rVariables.DN_DX ) = prod( DN_De[rPointNumber], InvJ );
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row(Ncontainer, rPointNumber);
 
     //Calculate IntegrationPoint radius
     CalculateRadius (rVariables.CurrentRadius, rVariables.ReferenceRadius, rVariables.N);
@@ -475,7 +475,7 @@ void AxisymmetricUpdatedLagrangianElement::CalculateDeformationGradient(Matrix& 
     const SizeType number_of_nodes  = GetGeometry().PointsNumber();
     const SizeType dimension        = GetGeometry().WorkingSpaceDimension();
 
-    rF = identity_matrix<double> ( 3 );
+    rF = IdentityMatrix(3);
 
     if( dimension == 2 )
     {

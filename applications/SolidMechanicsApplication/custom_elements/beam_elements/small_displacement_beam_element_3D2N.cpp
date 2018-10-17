@@ -404,7 +404,7 @@ void SmallDisplacementBeamElement3D2N::CalculateElementalSystem( LocalSystemComp
     for ( unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++ )
       {
 
-	Vector N = matrix_row<const Matrix>( Ncontainer, PointNumber);
+	Vector N = row(Ncontainer, PointNumber);
 
 	if ( rLocalSystem.CalculationFlags.Is(SmallDisplacementBeamElement3D2N::COMPUTE_LHS_MATRIX) ) //calculation of the matrix is required
 	  {
@@ -1270,7 +1270,7 @@ void SmallDisplacementBeamElement3D2N::CalculateOnIntegrationPoints(  const Vari
     for ( unsigned int PointNumber = 0; PointNumber < integration_points_number; PointNumber++ )
       {
 
-	Vector N = matrix_row<const Matrix>( Ncontainer, PointNumber);
+	Vector N = row(Ncontainer, PointNumber);
 
 	//contribution to external forces
 	Vector VolumeForce;
@@ -1538,5 +1538,3 @@ int  SmallDisplacementBeamElement3D2N::Check(const ProcessInfo& rCurrentProcessI
 
 
 } // Namespace Kratos
-
-

@@ -230,10 +230,10 @@ void TotalLagrangianElement::CalculateKinematics(ElementDataType& rVariables,
     //Determinant of the Deformation Gradient F0
     // (in this element F = F0, then F0 is set to the identity for coherence in the constitutive law)
     rVariables.detF0 = 1;
-    rVariables.F0    = identity_matrix<double> ( dimension );
+    rVariables.F0    = IdentityMatrix( dimension );
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row( Ncontainer, rPointNumber);
 
     //Compute the deformation matrix B
     CalculateDeformationMatrix(rVariables.B,rVariables.F,rVariables.DN_DX);
@@ -279,10 +279,10 @@ void TotalLagrangianElement::CalculateKinetics(ElementDataType& rVariables, cons
     //Determinant of the Deformation Gradient F0
     // (in this element F = F0, then F0 is set to the identity for coherence in the constitutive law)
     rVariables.detF0 = 1;
-    rVariables.F0    = identity_matrix<double> ( dimension );
+    rVariables.F0    = IdentityMatrix(dimension);
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row(Ncontainer, rPointNumber);
 
     KRATOS_CATCH( "" )
 }

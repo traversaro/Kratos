@@ -216,7 +216,7 @@ void UpdatedLagrangianVElement::Initialize()
     for ( unsigned int PointNumber = 0; PointNumber < integration_points_number; PointNumber++ )
     {
         mDeterminantF0[PointNumber] = 1;
-        mDeformationGradientF0[PointNumber] = identity_matrix<double> (dimension);
+        mDeformationGradientF0[PointNumber] = IdentityMatrix(dimension);
     }
 
     KRATOS_CATCH( "" )
@@ -268,7 +268,7 @@ void UpdatedLagrangianVElement::CalculateKinematics(ElementDataType& rVariables,
     const Matrix& Ncontainer = rVariables.GetShapeFunctions();
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row( Ncontainer, rPointNumber);
 
     //Parent to reference configuration
     rVariables.StressMeasure = ConstitutiveLaw::StressMeasure_Cauchy;
@@ -342,10 +342,10 @@ void UpdatedLagrangianVElement::CalculateKinetics(ElementDataType& rVariables, c
     //Determinant of the Deformation Gradient F0
     // (in this element F = F0, then F0 is set to the identity for coherence in the constitutive law)
     rVariables.detF0 = 1;
-    rVariables.F0    = identity_matrix<double> ( dimension );
+    rVariables.F0    = IdentityMatrix(dimension);
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row( Ncontainer, rPointNumber);
 
     KRATOS_CATCH( "" )
 }

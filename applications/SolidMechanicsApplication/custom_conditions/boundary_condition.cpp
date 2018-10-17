@@ -942,7 +942,7 @@ namespace Kratos
     const SizeType& dimension = GetGeometry().WorkingSpaceDimension();
 
     rDeltaPosition.resize(number_of_nodes , dimension, false);
-    rDeltaPosition = zero_matrix<double>( number_of_nodes , dimension);
+    noalias(rDeltaPosition) = ZeroMatrix(number_of_nodes , dimension);
 
     for ( SizeType i = 0; i < number_of_nodes; i++ )
       {
@@ -973,7 +973,7 @@ namespace Kratos
     const SizeType& dimension = GetGeometry().WorkingSpaceDimension();
 
     rDeltaPosition.resize(number_of_nodes , dimension, false);
-    rDeltaPosition = zero_matrix<double>( number_of_nodes , dimension);
+    noalias(rDeltaPosition) = ZeroMatrix(number_of_nodes, dimension);
 
     for ( SizeType i = 0; i < number_of_nodes; i++ )
       {

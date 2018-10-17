@@ -362,7 +362,7 @@ void NonLinearAssociativePlasticFlowRule::CalculateScalingFactors(const RadialRe
 {
 
  	//1.-Identity build
-	Matrix Identity   = identity_matrix<double> (3);
+	Matrix Identity = IdentityMatrix(3);
 
 	//2.-Auxiliar matrices
 	rScalingFactors.Normal      = rReturnMappingVariables.TrialIsoStressMatrix * ( 1.0 / rReturnMappingVariables.NormIsochoricStress );

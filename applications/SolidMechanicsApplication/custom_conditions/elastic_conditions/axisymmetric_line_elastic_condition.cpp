@@ -103,7 +103,7 @@ namespace Kratos
     rVariables.Jacobian = norm_2(rVariables.Tangent2);
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row(Ncontainer, rPointNumber);
 
     //Get geometry size
     rVariables.GeometrySize = GetGeometry().Length();

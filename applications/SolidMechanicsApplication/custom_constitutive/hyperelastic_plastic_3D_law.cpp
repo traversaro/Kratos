@@ -190,7 +190,7 @@ void HyperElasticPlastic3DLaw::InitializeMaterial( const Properties& rMaterialPr
 
   HyperElastic3DLaw::InitializeMaterial(rMaterialProperties,rElementGeometry,rShapeFunctionsValues);
 
-  mElasticLeftCauchyGreen       = identity_matrix<double> (3);
+  mElasticLeftCauchyGreen  = IdentityMatrix(3);
 
   mpFlowRule->InitializeMaterial( mpYieldCriterion, mpHardeningLaw, rMaterialProperties );
   //mpFlowRule->InitializeMaterial( rMaterialProperties );
@@ -301,7 +301,7 @@ void HyperElasticPlastic3DLaw::CalculateMaterialResponseKirchhoff (Parameters& r
 
     //0.- Initialize parameters
     MaterialResponseVariables ElasticVariables;
-    ElasticVariables.Identity = identity_matrix<double> ( 3 );
+    ElasticVariables.Identity = IdentityMatrix(3);
 
     ElasticVariables.SetElementGeometry(DomainGeometry);
     ElasticVariables.SetShapeFunctionsValues(ShapeFunctions);

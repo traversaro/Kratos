@@ -338,7 +338,7 @@ class ShellQ4_CorotationalCoordinateTransformation : public ShellQ4_CoordinateTr
                                                          const Vector& globalDisplacements,
                                                          size_t nodeid) override
   {
-    if(nodeid>3) return IdentityMatrix(3,3);
+    if(nodeid>3) return IdentityMatrix(3);
 
     QuaternionType Q = QuaternionType::FromRotationMatrix( LCS.Orientation() );
 

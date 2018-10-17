@@ -325,7 +325,7 @@ namespace Kratos
 	  array_1d<double,3> EigenVector;
 	  for(unsigned int i=0; i<3; i++)
 	  {
-	      noalias(EigenVector) = matrix_row<const MatrixType>(rVariables.Strain.Eigen.Vectors,i);
+	      noalias(EigenVector) = row(rVariables.Strain.Eigen.Vectors,i);
 	      EigenVector /= rVariables.Strain.Eigen.Values[i];
 	      noalias(rStressMatrix) += MainStresses[i] * outer_prod(EigenVector,EigenVector);
 	  }
@@ -336,7 +336,7 @@ namespace Kratos
 	  array_1d<double,3> EigenVector;
 	  for(unsigned int i=0; i<3; i++)
 	  {
-	      noalias(EigenVector) = matrix_row<const MatrixType>(rVariables.Strain.Eigen.Vectors,i);
+	      noalias(EigenVector) = row(rVariables.Strain.Eigen.Vectors,i);
 	      noalias(rStressMatrix) += MainStresses[i] * outer_prod(EigenVector,EigenVector);
 	  }
 
@@ -846,7 +846,7 @@ namespace Kratos
       double Dabcd = 0;
 
       array_1d<double,3> EigenVector;
-      noalias(EigenVector) = matrix_row<const MatrixType>(rVariables.Strain.Eigen.Vectors,i);
+      noalias(EigenVector) = row(rVariables.Strain.Eigen.Vectors,i);
       EigenVector /= rVariables.Strain.Eigen.Values[i];
 
       Dabcd = ConstitutiveModelUtilities::CalculateFourthOrderUnitTensor(this->msIdentityMatrix,Dabcd,a,b,c,d);
@@ -892,7 +892,7 @@ namespace Kratos
       double Dabcd = 0;
 
       array_1d<double,3> EigenVector;
-      noalias(EigenVector) = matrix_row<const MatrixType>(rVariables.Strain.Eigen.Vectors,i);
+      noalias(EigenVector) = row(rVariables.Strain.Eigen.Vectors,i);
 
       Dabcd = ConstitutiveModelUtilities::CalculateFourthOrderTensor(rVariables.Strain.Matrix,Dabcd,a,b,c,d);
       rCabcd += Dabcd;

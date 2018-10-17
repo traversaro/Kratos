@@ -333,7 +333,7 @@ namespace Kratos
 	  Variables.PointNumber = PointNumber;
 
 	  //set shape functions values for this integration point
-	  noalias(Variables.N) = matrix_row<const Matrix>( Ncontainer, PointNumber);
+	  noalias(Variables.N) = row(Ncontainer, PointNumber);
 
 	  //compute local to global frame
 	  this->CalculateFrameMapping( Variables, PointNumber );
@@ -821,5 +821,3 @@ namespace Kratos
 
 
 } // Namespace Kratos
-
-

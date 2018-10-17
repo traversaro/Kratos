@@ -35,9 +35,9 @@ class KRATOS_API(SOLID_MECHANICS_APPLICATION) EICR
 
   typedef std::vector<Vector3Type> Vector3ContainerType;
 
-  typedef Vector VectorType;
+  typedef Kratos::Vector VectorType;
 
-  typedef Matrix MatrixType;
+  typedef Kratos::Matrix MatrixType;
 
   typedef Quaternion<RealType> QuaternionType;
 
@@ -280,7 +280,7 @@ class KRATOS_API(SOLID_MECHANICS_APPLICATION) EICR
 
       Spin( rv, Omega );
 
-      noalias( Hi ) = IdentityMatrix(3, 3);
+      noalias( Hi ) = IdentityMatrix(3);
       noalias( Hi ) -= 0.5 * Omega;
       noalias( Hi ) += eta * prod( Omega, Omega );
 
@@ -348,7 +348,7 @@ class KRATOS_API(SOLID_MECHANICS_APPLICATION) EICR
 
       noalias( LiTemp2 ) = outer_prod( momentVector, rotationVector );
 
-      noalias( Li ) = inner_prod( rotationVector, momentVector ) * IdentityMatrix(3, 3);
+      noalias( Li ) = inner_prod( rotationVector, momentVector ) * IdentityMatrix(3);
       noalias( Li ) += outer_prod( rotationVector, momentVector );
       noalias( Li ) -= LiTemp2;
 

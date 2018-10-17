@@ -290,7 +290,7 @@ void ThermalElement::InitializeGeneralVariables (GeneralVariables & rVariables, 
 
   rVariables.DeltaTime = rCurrentProcessInfo[DELTA_TIME];
 
-  rVariables.DN_DX.resize( number_of_nodes, dimension );
+  rVariables.DN_DX.resize( number_of_nodes, dimension, false);
 
   //reading shape functions
   rVariables.SetShapeFunctions(GetGeometry().ShapeFunctionsValues( mThisIntegrationMethod ));
@@ -545,7 +545,7 @@ void ThermalElement::CalculateElementalSystem( MatrixType& rLeftHandSideMatrix,
             HeatSource = GetProperties()[HEAT_SOURCE];
             // std::cout<<" HeatSource "<<HeatSource<<std::endl;
           }
-          
+
           Variables.PlasticDissipation=0;
           if( thermo_mechanical ){
             //std::cout<<" thermo_mechanical element RHS ["<<this->Id()<<"]"<<std::endl;
@@ -942,14 +942,14 @@ int  ThermalElement::Check( const ProcessInfo& rCurrentProcessInfo )
 
      // Check that all required variables have been registered
      KRATOS_CHECK_VARIABLE_KEY(TEMPERATURE);
-     
+
      KRATOS_CHECK_VARIABLE_KEY(HEAT_CAPACITY);
      KRATOS_CHECK_VARIABLE_KEY(HEAT_CONDUCTIVITY);
-     
+
      KRATOS_CHECK_VARIABLE_KEY(HEAT_SOURCE);
      KRATOS_CHECK_VARIABLE_KEY(PLASTIC_DISSIPATION);
      KRATOS_CHECK_VARIABLE_KEY(DELTA_PLASTIC_DISSIPATION);
-     
+
      return 0;
 
      KRATOS_CATCH( "" );
