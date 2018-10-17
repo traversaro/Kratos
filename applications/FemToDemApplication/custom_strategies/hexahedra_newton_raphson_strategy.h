@@ -58,7 +58,7 @@ namespace Kratos
  * @ingroup KratosCore
  * @brief This is the base Newton Raphson strategy
  * @details This strategy iterates until the convergence is achieved (or the maximum number of iterations is surpassed) using a Newton Raphson algorithm
- * @author Riccardo Rossi
+ * @author Alejandro Cornejo
  */
 template <class TSparseSpace,
           class TDenseSpace,  // = DenseSpace<double>,
@@ -414,38 +414,6 @@ class HexahedraNewtonRaphsonStrategy
     ///@}
     ///@name Member Variables
     ///@{
-
-    typename TLinearSolver::Pointer mpLinearSolver; /// The pointer to the linear solver considered
-    typename TSchemeType::Pointer mpScheme; /// The pointer to the time scheme employed
-    typename TBuilderAndSolverType::Pointer mpBuilderAndSolver; /// The pointer to the builder and solver employed
-    typename TConvergenceCriteriaType::Pointer mpConvergenceCriteria; /// The pointer to the convergence criteria employed
-
-    TSystemVectorPointerType mpDx; /// The incremement in the solution
-    TSystemVectorPointerType mpb; /// The RHS vector of the system of equations
-    TSystemMatrixPointerType mpA; /// The LHS matrix of the system of equations
-
-    /**
-     * @brief Flag telling if it is needed to reform the DofSet at each
-    solution step or if it is possible to form it just once
-    * @details Default = false
-        - true  : Reforme at each time step
-        - false : Form just one (more efficient)
-     */
-    bool mReformDofSetAtEachStep;
-
-    /**
-     * @brief Flag telling if it is needed or not to compute the reactions
-     * @details default = true
-     */
-    bool mCalculateReactionsFlag;
-
-    bool mSolutionStepIsInitialized; /// Flag to set as initialized the solution step
-
-    unsigned int mMaxIterationNumber; /// The maximum number of iterations, 30 by default
-
-    bool mInitializeWasPerformed; /// Flag to set as initialized the strategy
-
-    bool mKeepSystemConstantDuringIterations; // Flag to allow keeping system matrix constant during iterations
 
     ///@}
     ///@name Private Operators
