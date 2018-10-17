@@ -30,6 +30,7 @@
 
 //#include "custom_elements/zaratipito_element.hpp"
 #include "custom_constitutive/zarate_law.hpp"
+#include "custom_constitutive/fem_dem_elastic_law.hpp"
 #include "custom_elements/femdem2d_element.hpp"
 #include "custom_elements/femdem3d_element.hpp"
 #include "custom_elements/romfemdem3d_element.hpp"
@@ -113,6 +114,7 @@ private:
 
 	//elastic laws
    const ZarateLaw mZarateLaw;
+   const FemDemElasticLaw mFemDemElasticLaw;
 	
 
 	/// Assignment operator.

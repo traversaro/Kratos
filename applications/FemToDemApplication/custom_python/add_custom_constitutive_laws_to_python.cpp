@@ -31,23 +31,21 @@
 //Application includes
 #include "custom_python/add_custom_constitutive_laws_to_python.h"
 
-//hardening laws
+//constitutive laws
 #include "custom_constitutive/zarate_law.hpp"
+#include "custom_constitutive/fem_dem_elastic_law.hpp"
 
 namespace Kratos
 {
-	
-
 	namespace Python
 	{
-
 		void  AddCustomConstitutiveLawsToPython(pybind11::module& m)
 		{
-			typedef ConstitutiveLaw                  ConstitutiveLawBaseType;
+			class_<ZarateLaw, ZarateLaw::Pointer>(m, "ZarateLaw")
+				.def(init<>());
 
-		    class_<ZarateLaw, ZarateLaw::Pointer>(m, "ZarateLaw")
-        	.def(init<>());
+			class_<FemDemElasticLaw, FemDemElasticLaw::Pointer>(m, "FemDemElasticLaw")
+				.def(init<>());
 		}
-
 	}  // namespace Python.
 }  // namespace Kratos.

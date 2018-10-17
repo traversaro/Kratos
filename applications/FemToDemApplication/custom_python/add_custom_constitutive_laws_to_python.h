@@ -5,7 +5,6 @@
 // System includes
 
 // External includes
-//#include "boost/smart_ptr.hpp"
 #include <pybind11/pybind11.h>
 
 // Project includes
@@ -18,7 +17,6 @@ namespace Kratos
 	{
 
 		void  AddCustomConstitutiveLawsToPython(pybind11::module& m);
-		//void  AddCustomPropertiesToPython();
 
 	}  // namespace Python.
 

@@ -16,7 +16,7 @@
 // Project includes
 #include "custom_constitutive/fem_dem_elastic_law.hpp"
 
-// #include "solid_mechanics_application_variables.h"
+#include "fem_to_dem_application_variables.h"
 
 namespace Kratos
 {

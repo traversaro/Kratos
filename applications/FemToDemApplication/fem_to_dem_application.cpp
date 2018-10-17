@@ -114,6 +114,9 @@ void KratosFemToDemApplication::Register()
 	
 	//Register Constitutive Laws
 	Serializer::Register("ZarateLaw", mZarateLaw);
+	Serializer::Register("FemDemElasticLaw", mFemDemElasticLaw);
+
+	KRATOS_REGISTER_CONSTITUTIVE_LAW("FemDemElasticLaw", mFemDemElasticLaw)
 
 	
 
