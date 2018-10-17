@@ -77,9 +77,36 @@ public:
     ~FemDemElasticLaw() override;
 
 
-    double& CalculateValue(Parameters& rParameterValues, const Variable<double>& rThisVariable, double& rValue) override;
+    double& CalculateValue(Parameters& rParameterValues,
+                                            const Variable<double>& rThisVariable,
+                                            double& rValue);
 
-    double& GetValue( const Variable<double>& rThisVariable, double& rValue ) override;
+
+    double& GetValue(const Variable<double>& rThisVariable,
+                                    double& rValue);
+
+
+    Vector& GetValue(const Variable<Vector>& rThisVariable,
+                                    Vector& rValue);
+
+
+    Matrix& GetValue(const Variable<Matrix>& rThisVariable,
+                                    Matrix& rValue);
+
+
+    void SetValue(const Variable<double>& rThisVariable,
+                                    const double& rValue,
+                                    const ProcessInfo& rCurrentProcessInfo);
+
+
+    void SetValue(const Variable<Vector>& rThisVariable,
+                                    const Vector& rValue,
+                                    const ProcessInfo& rCurrentProcessInfo);
+
+
+    void SetValue(const Variable<Matrix>& rThisVariable,
+                                    const Matrix& rValue,
+                                    const ProcessInfo& rCurrentProcessInfo);
 
 private:
 
