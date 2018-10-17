@@ -530,7 +530,8 @@ namespace Kratos
          this->mpRigidWall->GetParametricDirections( BoxParameters, T1, T2);
       }
 
-      Matrix F = ZeroMatrix(3);
+      Matrix F(3,3);
+      noalias(F) = ZeroMatrix(3,3);
       for (unsigned int i = 0; i < 3; i++) {
          for (unsigned int j = 0; j < 3; j++) {
             F(i,j) = T1(i)*PreviousT1(j) + T2(i)*PreviousT2(j) + Normal(i) * PreviousNormal(j);

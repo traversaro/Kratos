@@ -166,7 +166,9 @@ namespace Kratos
    {
 
       KRATOS_TRY
-      Matrix ConstitutiveMatrix = ZeroMatrix(6);
+
+      Matrix ConstitutiveMatrix(6,6);
+      noalias(ConstitutiveMatrix) = ZeroMatrix(6,6);
       this->CalculateStressAndConstitutiveTensors( rValues, rStressMatrix, ConstitutiveMatrix);
 
       KRATOS_CATCH(" ")
@@ -262,14 +264,15 @@ namespace Kratos
       rStressMatrix = ConstitutiveModelUtilities::VectorToSymmetricTensor(StressVector,rStressMatrix);
 
       // Save constitutive matrix
-      Matrix Matrix = ZeroMatrix(6);
+      Matrix ThisMatrix(6,6);
+      noalias(ThisMatrix)= ZeroMatrix(6,6);
       for (unsigned int i = 0; i < 6; i++) {
          for (unsigned int j = 0; j< 6; j++) {
-            Matrix(i,j) = pConstitutiveMatrix[i][j];
+            ThisMatrix(i,j) = pConstitutiveMatrix[i][j];
          }
       }
 
-      this->SetConstitutiveMatrix( rConstitutiveMatrix, Matrix, rStressMatrix);
+      this->SetConstitutiveMatrix( rConstitutiveMatrix, ThisMatrix, rStressMatrix);
 
 
       // update internal variables

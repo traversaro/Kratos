@@ -120,7 +120,8 @@ namespace Kratos
    {
       KRATOS_TRY
 
-      Matrix ExtraMatrix = ZeroMatrix(6);
+      Matrix ExtraMatrix(6,6);
+      noalias(ExtraMatrix) = ZeroMatrix(6,6);
       ExtraMatrix = CalculateExtraMatrix( rStressMatrix, ExtraMatrix);
       for (unsigned int i = 0; i < 6; i++){
          for (unsigned int j = 0; j < 6; j++){
@@ -140,8 +141,10 @@ namespace Kratos
       KRATOS_TRY
 
       // NO SE M'ACUT UNA MANERA MÉS GUARRA DE FER AIXÒ.
-      Matrix ExtraMatrix = ZeroMatrix(6,6);
-      Matrix Identity = identity_matrix<double>(3);
+      Matrix ExtraMatrix(6,6);
+      noalias(ExtraMatrix) = ZeroMatrix(6,6);
+      Matrix Identity(3,3);
+      noalias(Identity) = IdentityMatrix(3);
 
       unsigned indexi, indexj;
       for ( unsigned int i = 0; i < 3; i++) {
