@@ -27,7 +27,8 @@ class AssignVectorComponentsToNodesProcess(KratosMultiphysics.Process):
              "compound_assignment": "direct",
              "constrained":true,
              "interval": [0.0, "End"],
-             "local_axes" : {}
+             "local_axes" : {},
+             "flags_list": []
         }
         """)
 
@@ -103,6 +104,8 @@ class AssignVectorComponentsToNodesProcess(KratosMultiphysics.Process):
                     params.AddEmptyValue("value").SetString(self.settings["value"][counter].GetString())
 
                 params.AddValue("local_axes", self.settings["local_axes"])
+
+                params.AddValue("flags_list", self.settings["flags_list"])
 
                 import assign_scalar_to_nodes_process as assign_scalar_process
 

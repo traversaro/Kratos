@@ -53,6 +53,8 @@ class PfemSolution(MainSolid.Solution):
             processes_parameters.AddValue("constraints_process_list", extended_constraints_processes)
             extended_constraints_processes = self._set_selected_elements_management_process(constraints_processes)
             processes_parameters.AddValue("constraints_process_list", extended_constraints_processes)
+            extended_constraints_processes = self._set_ale_mesh_movement_constraints(constraints_processes)
+            processes_parameters.AddValue("constraints_process_list", extended_constraints_processes)
             if(self.echo_level>1):
                 print(" EXTENDED_CONSTRAINTS_PROCESSES ", processes_parameters["constraints_process_list"].PrettyPrintJsonString())
 
@@ -190,6 +192,28 @@ class PfemSolution(MainSolid.Solution):
         problem_processes.Append(default_settings)
 
         return problem_processes
+
+    def _set_ale_mesh_movement_constraints(self, constraints_processes):
+
+        solver_parameters = self.ProjectParameters["solver_settings"]["Parameters"]
+        if solver_parameters.Has("time_integration_settings"):
+            if solver_parameters["time_integration_settings"].Has("analysis_type"):
+                if solver_parameters["time_integration_settings"]["analysis_type"].GetString() == "ALE":
+                    for i in range(constraints_processes.size()):
+                        if constraints_processes[i].Has("Parameters"):
+                            if constraints_processes[i]["Parameters"].Has("variable_name"):
+                                variable_name = constraints_processes[i]["Parameters"]["variable_name"].GetString()
+                                if variable_name == "DISPLACEMENT" or variable_name == "VELOCITY" or variable_name == "ACCELERATION":
+                                    ale_settings = constraints_processes[i]
+                                    ale_settings["Parameters"]["variable_name"].SetString("MESH"+"_"+variable_name)
+                                    flags_list = ["SLIP"]
+                                    ale_settings["Parameters"].AddValue("flags_list", flags_list)
+                                    ale_settings["Parameters"].AddValue("constrained", False)
+                                    flags_list = ["NO_SLIP"]
+                                    constraints_processes[i]["Parameters"].AddValue("flags_list", flags_list)
+                                    constraints_processes.Append(ale_settings)
+
+        return constraints_processes
 
     @classmethod
     def _class_prefix(self):

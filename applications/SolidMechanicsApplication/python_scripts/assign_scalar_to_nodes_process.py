@@ -37,7 +37,8 @@ class AssignScalarToNodesProcess(KratosMultiphysics.Process):
              "compound_assignment": "direct",
              "constrained": true,
              "interval": [0.0, "End"],
-             "local_axes" : {}
+             "local_axes" : {},
+             "flags_list": []
         }
         """)
 
@@ -134,6 +135,9 @@ class AssignScalarToNodesProcess(KratosMultiphysics.Process):
             self.SetFixAndFreeProcesses(params)
 
         params.AddValue("compound_assignment", self.settings["compound_assignment"])
+
+        params.AddValue("flags_list", self.settings["flags_list"])
+
         self.CreateAssignmentProcess(params)
 
         self.SetCurrentTime()
