@@ -195,8 +195,8 @@ class MassResponseFunction(ResponseFunctionBase):
         self.model = model
         self.model_part_needs_to_be_imported = False
 
+        model_part_name = response_settings["model_part_name"].GetString()
         input_type = response_settings["model_import_settings"]["input_type"].GetString()
-        model_part_name = response_settings["model_import_settings"]["input_filename"].GetString()
         if input_type == "mdpa":
             self.model_part = ModelPart(model_part_name)
             self.model.AddModelPart(self.model_part)
@@ -215,7 +215,7 @@ class MassResponseFunction(ResponseFunctionBase):
 
         if self.model_part_needs_to_be_imported:
             # import model part
-            model_part_io = ModelPartIO(self.model_part.Name)
+            model_part_io = ModelPartIO(self.response_settings["model_import_settings"]["input_filename"].GetString())
             self.model_part.ProcessInfo.SetValue(DOMAIN_SIZE, 3)
             model_part_io.ReadModelPart(self.model_part)
 
@@ -310,7 +310,7 @@ class AdjointResponseFunction(ResponseFunctionBase):
 
     def CalculateValue(self):
         startTime = timer.time()
-        value = self._GetResponseFunctionUtility().CalculateValue(self.adjoint_model_part)
+        value = self._GetResponseFunctionUtility().CalculateValue(self.primal_model_part)
         Logger.PrintInfo("> Time needed for calculating the response value = ",round(timer.time() - startTime,2),"s")
 
         self.primal_model_part.ProcessInfo[StructuralMechanicsApplication.RESPONSE_VALUE] = value
@@ -361,15 +361,4 @@ class AdjointResponseFunction(ResponseFunctionBase):
             adjoint_node.Y = primal_node.Y
             adjoint_node.Z = primal_node.Z
 
-# ==============================================================================
-class AdjointLinearStrainEnergyResponse(AdjointResponseFunction):
-    def __init__(self, identifier, project_parameters, model):
-        super(AdjointLinearStrainEnergyResponse, self).__init__(identifier, project_parameters, model)
 
-    def CalculateValue(self):
-        startTime = timer.time()
-        #The linear strain energy response needs the primal model part to calculate the response value!
-        value = self._GetResponseFunctionUtility().CalculateValue(self.primal_model_part)
-        Logger.PrintInfo("> Time needed for calculating the response value = ",round(timer.time() - startTime,2),"s")
-
-        self.primal_model_part.ProcessInfo[StructuralMechanicsApplication.RESPONSE_VALUE] = value

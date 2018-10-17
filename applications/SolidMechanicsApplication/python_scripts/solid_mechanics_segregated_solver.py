@@ -80,7 +80,7 @@ class SegregatedSolver(BaseSolver.MonolithicSolver):
     def Clear(self):
         for solver in self.solvers:
             solver.Clear()
-               
+
     #### Solver internal methods ####
 
     def _check_initialized(self):
@@ -100,10 +100,17 @@ class SegregatedSolver(BaseSolver.MonolithicSolver):
         strategies = []
         for solver in self.solvers:
             strategies.append(solver._get_mechanical_solver())
-
         options = KratosMultiphysics.Flags()
-        return KratosSolid.SegregatedStrategy(self.model_part, options, strategies)
+        mechanical_solver =  KratosSolid.SegregatedStrategy(self.model_part, options, strategies)
+        mechanical_solver.Set(KratosSolid.SolverLocalFlags.ADAPTIVE_SOLUTION,self._check_adaptive_solution())
+        return mechanical_solver
 
+    #
+    def _check_adaptive_solution(self):
+        for solver in self.solvers:
+            if solver._check_adaptive_solution():
+                return True
+        return False
     #
     def _get_dofs(self):
         dof_variables = []
