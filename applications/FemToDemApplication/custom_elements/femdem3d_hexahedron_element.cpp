@@ -22,272 +22,366 @@
 
 namespace Kratos
 {
-//***********************DEFAULT CONSTRUCTOR******************************************
-//************************************************************************************
+	//***********************DEFAULT CONSTRUCTOR******************************************
+	//************************************************************************************
 
-FemDem3DHexahedronElement::FemDem3DHexahedronElement(IndexType NewId, GeometryType::Pointer pGeometry)
-	: FemDem3DElement(NewId, pGeometry)
-{
-	//DO NOT ADD DOFS HERE!!!
-}
-//******************************CONSTRUCTOR*******************************************
-//************************************************************************************
+	FemDem3DHexahedronElement::FemDem3DHexahedronElement(IndexType NewId, GeometryType::Pointer pGeometry)
+		: FemDem3DElement(NewId, pGeometry)
+	{
+		//DO NOT ADD DOFS HERE!!!
+	}
+	//******************************CONSTRUCTOR*******************************************
+	//************************************************************************************
 
-FemDem3DHexahedronElement::FemDem3DHexahedronElement(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
-	: FemDem3DElement(NewId, pGeometry, pProperties)
-{
-	//BY DEFAULT, THE GEOMETRY WILL DEFINE THE INTEGRATION METHOD
-	mThisIntegrationMethod = GetGeometry().GetDefaultIntegrationMethod();
-}
+	FemDem3DHexahedronElement::FemDem3DHexahedronElement(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
+		: FemDem3DElement(NewId, pGeometry, pProperties)
+	{
+		//BY DEFAULT, THE GEOMETRY WILL DEFINE THE INTEGRATION METHOD
+		mThisIntegrationMethod = GetGeometry().GetDefaultIntegrationMethod();
+	}
 
-//******************************COPY CONSTRUCTOR**************************************
-//************************************************************************************
+	//******************************COPY CONSTRUCTOR**************************************
+	//************************************************************************************
 
-FemDem3DHexahedronElement::FemDem3DHexahedronElement(FemDem3DHexahedronElement const &rOther)
-	: FemDem3DElement(rOther)
-{
-	//ALL MEMBER VARIABLES THAT MUST BE KEPT AFTER COPYING AN ELEMENT HAVE TO BE DEFINED HERE
-	//IF NO ASSIGMENT OPERATOR IS DEFINED THE COPY CONSTRUCTOR WILL DEFINE IT BY DEFFAULT
-}
+	FemDem3DHexahedronElement::FemDem3DHexahedronElement(FemDem3DHexahedronElement const &rOther)
+		: FemDem3DElement(rOther)
+	{
+		//ALL MEMBER VARIABLES THAT MUST BE KEPT AFTER COPYING AN ELEMENT HAVE TO BE DEFINED HERE
+		//IF NO ASSIGMENT OPERATOR IS DEFINED THE COPY CONSTRUCTOR WILL DEFINE IT BY DEFFAULT
+	}
 
-//*******************************ASSIGMENT OPERATOR***********************************
-//************************************************************************************
+	//*******************************ASSIGMENT OPERATOR***********************************
+	//************************************************************************************
 
-FemDem3DHexahedronElement &FemDem3DHexahedronElement::operator=(FemDem3DHexahedronElement const &rOther)
-{
-	//ALL MEMBER VARIABLES THAT MUST BE KEPT IN AN "=" OPERATION NEEDS TO BE COPIED HERE
+	FemDem3DHexahedronElement &FemDem3DHexahedronElement::operator=(FemDem3DHexahedronElement const &rOther)
+	{
+		//ALL MEMBER VARIABLES THAT MUST BE KEPT IN AN "=" OPERATION NEEDS TO BE COPIED HERE
+		FemDem3DElement::operator=(rOther);
+		return *this;
+	}
 
-	FemDem3DElement::operator=(rOther);
-	return *this;
-}
+	//*********************************OPERATIONS*****************************************
+	//************************************************************************************
 
-//*********************************OPERATIONS*****************************************
-//************************************************************************************
+	Element::Pointer FemDem3DHexahedronElement::Create(IndexType NewId, NodesArrayType const &rThisNodes, PropertiesType::Pointer pProperties) const
+	{
+		//NEEDED TO CREATE AN ELEMENT
+		return Element::Pointer(new FemDem3DHexahedronElement(NewId, GetGeometry().Create(rThisNodes), pProperties));
+	}
 
-Element::Pointer FemDem3DHexahedronElement::Create(IndexType NewId, NodesArrayType const &rThisNodes, PropertiesType::Pointer pProperties) const
-{
-	//NEEDED TO CREATE AN ELEMENT
-	return Element::Pointer(new FemDem3DHexahedronElement(NewId, GetGeometry().Create(rThisNodes), pProperties));
-}
+	//************************************CLONE*******************************************
+	//************************************************************************************
 
-//************************************CLONE*******************************************
-//************************************************************************************
+	Element::Pointer FemDem3DHexahedronElement::Clone(IndexType NewId, NodesArrayType const &rThisNodes) const
+	{
 
-Element::Pointer FemDem3DHexahedronElement::Clone(IndexType NewId, NodesArrayType const &rThisNodes) const
-{
+		//YOU CREATE A NEW ELEMENT CLONING THEIR VARIABLES
+		//ALL MEMBER VARIABLES THAT MUST BE CLONED HAVE TO BE DEFINED HERE
+		FemDem3DHexahedronElement NewElement(NewId, GetGeometry().Create(rThisNodes), pGetProperties());
+		return Element::Pointer(new FemDem3DHexahedronElement(NewElement));
+	}
 
-	//YOU CREATE A NEW ELEMENT CLONING THEIR VARIABLES
-	//ALL MEMBER VARIABLES THAT MUST BE CLONED HAVE TO BE DEFINED HERE
+	//*******************************DESTRUCTOR*******************************************
+	//************************************************************************************
 
-	FemDem3DHexahedronElement NewElement(NewId, GetGeometry().Create(rThisNodes), pGetProperties());
+	FemDem3DHexahedronElement::~FemDem3DHexahedronElement()
+	{
+	}
 
-	return Element::Pointer(new FemDem3DHexahedronElement(NewElement));
-}
+	void FemDem3DHexahedronElement::CalculateLocalSystem(
+		MatrixType &rLeftHandSideMatrix,
+		VectorType &rRightHandSideVector,
+		ProcessInfo &rCurrentProcessInfo)
+	{
+		// provisional elastic
+		KRATOS_TRY
 
-//*******************************DESTRUCTOR*******************************************
-//************************************************************************************
+		const unsigned int number_of_nodes = GetGeometry().size();
+		const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
+		unsigned int voigt_size = dimension * (dimension + 1) / 2;
 
-FemDem3DHexahedronElement::~FemDem3DHexahedronElement()
-{
-}
+		const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(mThisIntegrationMethod);
+		unsigned int system_size = number_of_nodes * dimension;
+		if (rLeftHandSideMatrix.size1() != system_size)
+			rLeftHandSideMatrix.resize(system_size, system_size, false);
+		noalias(rLeftHandSideMatrix) = ZeroMatrix(system_size, system_size);
+
+		if (rRightHandSideVector.size() != system_size)
+			rRightHandSideVector.resize(system_size, false);
+		noalias(rRightHandSideVector) = ZeroVector(system_size);
+
+		Matrix DeltaPosition(number_of_nodes, dimension);
+		noalias(DeltaPosition) = ZeroMatrix(number_of_nodes, dimension);
+		DeltaPosition = this->CalculateDeltaPosition(DeltaPosition);
+
+		GeometryType::JacobiansType J;
+		J.resize(1, false);
+		J[0].resize(dimension, dimension, false);
+		noalias(J[0]) = ZeroMatrix(dimension, dimension);
+		J = GetGeometry().Jacobian(J, mThisIntegrationMethod, DeltaPosition);
+
+		Vector damages_edges = ZeroVector(mNumberOfEdges);
+		Vector average_stress_edge = ZeroVector(voigt_size);
+		Vector average_strain_edge = ZeroVector(voigt_size);
+		double characteristic_length;
+
+		// Loop over edges to compute the elemental damage
+		for (unsigned int edge = 0; edge < mNumberOfEdges; edge++) {
+			this->CalculateAverageStressOnEdge(average_stress_edge, edge);
+			this->CalculateAverageStrainOnEdge(average_strain_edge, edge);
+			this->CalculateCharacteristicLength(characteristic_length, edge);
+			Vector integrated_edge_stress;
+
+			this->IntegrateStressDamageMechanics(
+				integrated_edge_stress, damages_edges(edge),
+				average_strain_edge, average_stress_edge, edge,
+				characteristic_length);
+
+			this->SetNonConvergedDamages(damages_edges(edge), edge);
+			damages_edges[edge] = damages_edges(edge);
+		}
+
+		double damage_element = this->CalculateElementalDamage(damages_edges);
+		if (damage_element >= 0.999)
+			damage_element = 0.999;
+		this->SetNonConvergedDamages(damage_element);
+
+		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+			const Matrix &Ncontainer = GetGeometry().ShapeFunctionsValues(mThisIntegrationMethod);
+			Vector N = row(Ncontainer, PointNumber);
+
+			double detJ = 0;
+			Matrix InvJ(dimension, dimension);
+			noalias(InvJ) = ZeroMatrix(dimension, dimension);
+			MathUtils<double>::InvertMatrix(J[PointNumber], InvJ, detJ);
+
+			double IntegrationWeight = integration_points[PointNumber].Weight() * detJ;
+			const Matrix &B = this->GetBMatrix();
+			const Vector &StressVector = this->GetValue(STRESS_VECTOR);
+
+			const Vector integrated_stress_vector = (1.0 - damage_element) * StressVector;
+			this->SetIntegratedStressVector(integrated_stress_vector);
+
+			Matrix ConstitutiveMatrix = ZeroMatrix(voigt_size, voigt_size);
+			const double E = this->GetProperties()[YOUNG_MODULUS];
+			const double nu = this->GetProperties()[POISSON_RATIO];
+			this->CalculateConstitutiveMatrix(ConstitutiveMatrix, E, nu);
+
+			noalias(rLeftHandSideMatrix) += prod(
+				trans(B), IntegrationWeight * (1.0 - damage_element) * Matrix(prod(ConstitutiveMatrix, B)));  // LHS
+
+            Vector VolumeForce = ZeroVector(dimension);
+			VolumeForce = this->CalculateVolumeForce(VolumeForce, N);
+
+			// RHS
+			for (unsigned int i = 0; i < number_of_nodes; i++) {
+				int index = dimension * i;
+				for (unsigned int j = 0; j < dimension; j++) {
+					rRightHandSideVector[index + j] += IntegrationWeight * N[i] * VolumeForce[j];
+				}
+			}
+
+			//compute and add internal forces (RHS = rRightHandSideVector = Fext - Fint)
+			noalias(rRightHandSideVector) -= IntegrationWeight * prod(trans(B), integrated_stress_vector);
+		}
+		KRATOS_CATCH("")
+	}
+
+	void FemDem3DHexahedronElement::CalculateAverageStressOnEdge(
+		Vector& rEdgeStressVector,
+		const unsigned int edge
+		)
+	{
+		const Geometry<Node<3>>& nodes_element = this->GetGeometry();
+		const Matrix node_edges = this->GetEdgeNodeNumbering();
+		const Vector stress_node1 = nodes_element[node_edges(edge, 0)].GetValue(STRESS_VECTOR);
+		const Vector stress_node2 = nodes_element[node_edges(edge, 1)].GetValue(STRESS_VECTOR);
+
+		// Here, the average edge stress is the average between the
+		// extrapolated stress on the nodes
+		noalias(rEdgeStressVector) = 0.5 * (stress_node1 + stress_node2);
+	}
+
+	void FemDem3DHexahedronElement::CalculateAverageStrainOnEdge(
+		Vector& rEdgeStrainVector,
+		const unsigned int edge
+		)
+	{
+		const Geometry<Node<3>>& nodes_element = this->GetGeometry();
+		const Matrix node_edges = this->GetEdgeNodeNumbering();
+		const Vector strain_node1 = nodes_element[node_edges(edge, 0)].GetValue(STRAIN_VECTOR);
+		const Vector strain_node2 = nodes_element[node_edges(edge, 1)].GetValue(STRAIN_VECTOR);
+
+		// Here, the average edge strain is the average between the
+		// extrapolated strain on the nodes
+		noalias(rEdgeStrainVector) = 0.5 * (strain_node1 + strain_node2);
+	}
+
+	void FemDem3DHexahedronElement::CalculateCharacteristicLength(double& rcharacteristic_length, const int Edge)
+	{
+		const Geometry<Node<3>> &nodes_element = this->GetGeometry();
+		const Matrix node_edges = this->GetEdgeNodeNumbering();
+
+		const double X1 = nodes_element[node_edges(Edge, 0)].X();
+		const double X2 = nodes_element[node_edges(Edge, 1)].X();
+		const double Y1 = nodes_element[node_edges(Edge, 0)].Y();
+		const double Y2 = nodes_element[node_edges(Edge, 1)].Y();
+		const double Z1 = nodes_element[node_edges(Edge, 0)].Z();
+		const double Z2 = nodes_element[node_edges(Edge, 1)].Z();
+
+		rcharacteristic_length = std::sqrt(
+			(X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2) + (Z1 - Z2) * (Z1 - Z2));
+	}
+
+	// Computes the damage of the element considering different fracture modes
+	double FemDem3DHexahedronElement::CalculateElementalDamage(const Vector &EdgeDamages)
+	{
+		// 11 modes of fracture of the hexaedron
+		Vector DamageModeFracture = ZeroVector(11);
+		const double one_third = 1.0 / 3.0;
+
+		DamageModeFracture[0]  = one_third * (EdgeDamages[0] + EdgeDamages[3] + EdgeDamages[8]);
+		DamageModeFracture[1]  = one_third * (EdgeDamages[0] + EdgeDamages[1] + EdgeDamages[9]);
+		DamageModeFracture[2]  = one_third * (EdgeDamages[1] + EdgeDamages[2] + EdgeDamages[10]);
+		DamageModeFracture[3]  = one_third * (EdgeDamages[2] + EdgeDamages[3] + EdgeDamages[11]);
+		DamageModeFracture[4]  = one_third * (EdgeDamages[4] + EdgeDamages[7] + EdgeDamages[8]);
+		DamageModeFracture[5]  = one_third * (EdgeDamages[4] + EdgeDamages[5] + EdgeDamages[9]);
+		DamageModeFracture[6]  = one_third * (EdgeDamages[6] + EdgeDamages[5] + EdgeDamages[10]);
+		DamageModeFracture[7]  = one_third * (EdgeDamages[6] + EdgeDamages[7] + EdgeDamages[11]);
+		DamageModeFracture[8]  = 0.25 * (EdgeDamages[8] + EdgeDamages[9] + EdgeDamages[10] + EdgeDamages[11]);
+		DamageModeFracture[9]  = 0.25 * (EdgeDamages[0] + EdgeDamages[2] + EdgeDamages[6] + EdgeDamages[4]);
+		DamageModeFracture[10] = 0.25 * (EdgeDamages[1] + EdgeDamages[3] + EdgeDamages[7] + EdgeDamages[5]);
+
+		return this->GetMaxValue(DamageModeFracture);
+	}
 
 
-void FemDem3DHexahedronElement::CalculateLocalSystem(
-	MatrixType &rLeftHandSideMatrix,
-	VectorType &rRightHandSideVector,
-	ProcessInfo &rCurrentProcessInfo)
-{
-	// provisional elastic
-	KRATOS_TRY
+	void FemDem3DHexahedronElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
+	{
+	}
 
-	const unsigned int number_of_nodes = GetGeometry().size();
-	const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
-	unsigned int voigt_size = dimension * (dimension + 1) / 2;
 
-	const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(mThisIntegrationMethod);
-	unsigned int system_size = number_of_nodes * dimension;
-	if (rLeftHandSideMatrix.size1() != system_size)
-		rLeftHandSideMatrix.resize(system_size, system_size, false);
-	noalias(rLeftHandSideMatrix) = ZeroMatrix(system_size, system_size);
+	// Double values
+	void FemDem3DHexahedronElement::GetValueOnIntegrationPoints(
+		const Variable<double> &rVariable,
+		std::vector<double> &rValues,
+		const ProcessInfo &rCurrentProcessInfo)
+	{
+		if (rVariable == DAMAGE_ELEMENT || rVariable == IS_DAMAGED || rVariable == STRESS_THRESHOLD) {
+			CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+		}
+	}
 
-	if (rRightHandSideVector.size() != system_size)
-		rRightHandSideVector.resize(system_size, false);
-	noalias(rRightHandSideVector) = ZeroVector(system_size);
+	// Vector Values
+	void FemDem3DHexahedronElement::GetValueOnIntegrationPoints(
+		const Variable<Vector> &rVariable,
+		std::vector<Vector> &rValues,
+		const ProcessInfo &rCurrentProcessInfo)
+	{
+		if (rVariable == STRAIN_VECTOR) {
+			CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+		} else if (rVariable == STRESS_VECTOR) {
+			CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+		} else if (rVariable == STRESS_VECTOR_INTEGRATED) {
+			CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+		}
+	}
 
-	Matrix DeltaPosition(number_of_nodes, dimension);
-	noalias(DeltaPosition) = ZeroMatrix(number_of_nodes, dimension);
-	DeltaPosition = this->CalculateDeltaPosition(DeltaPosition);
+	// Tensor variables
+	void FemDem3DHexahedronElement::GetValueOnIntegrationPoints(
+		const Variable<Matrix> &rVariable,
+		std::vector<Matrix> &rValues,
+		const ProcessInfo &rCurrentProcessInfo)
+	{
+		if (rVariable == STRAIN_TENSOR) {
+			CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+		} else if (rVariable == STRESS_TENSOR) {
+			CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+		} else if (rVariable == STRESS_TENSOR_INTEGRATED) {
+			CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
+		}
+	}
 
-	GeometryType::JacobiansType J;
-	J.resize(1, false);
-	J[0].resize(dimension, dimension, false);
-	noalias(J[0]) = ZeroMatrix(dimension, dimension);
-	J = GetGeometry().Jacobian(J, mThisIntegrationMethod, DeltaPosition);
+	// double variables
+	void FemDem3DHexahedronElement::CalculateOnIntegrationPoints(
+		const Variable<double> &rVariable,
+		std::vector<double> &rOutput,
+		const ProcessInfo &rCurrentProcessInfo)
+	{
+		const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
+		if (rOutput.size() != integration_points.size())
+			rOutput.resize(integration_points.size());
 
-	for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-		const Matrix &Ncontainer = GetGeometry().ShapeFunctionsValues(mThisIntegrationMethod);
-		Vector N = row(Ncontainer, PointNumber);
-
-		double detJ = 0;
-		Matrix InvJ(dimension, dimension);
-		noalias(InvJ) = ZeroMatrix(dimension, dimension);
-		MathUtils<double>::InvertMatrix(J[PointNumber], InvJ, detJ);
-
-		double IntegrationWeight = integration_points[PointNumber].Weight() * detJ;
-		const Matrix &B = this->GetBMatrix();
-		const Vector &StressVector = this->GetValue(STRESS_VECTOR);
-
-		Matrix ConstitutiveMatrix = ZeroMatrix(voigt_size, voigt_size);
-		const double E = this->GetProperties()[YOUNG_MODULUS];
-		const double nu = this->GetProperties()[POISSON_RATIO];
-		this->CalculateConstitutiveMatrix(ConstitutiveMatrix, E, nu);
-
-		noalias(rLeftHandSideMatrix) += prod(trans(B), IntegrationWeight * Matrix(prod(ConstitutiveMatrix, B))); // LHS
-
-		Vector VolumeForce = ZeroVector(dimension);
-		VolumeForce = this->CalculateVolumeForce(VolumeForce, N);
-
-		// RHS
-		for (unsigned int i = 0; i < number_of_nodes; i++) {
-			int index = dimension * i;
-			for (unsigned int j = 0; j < dimension; j++) {
-				rRightHandSideVector[index + j] += IntegrationWeight * N[i] * VolumeForce[j];
+		if (rVariable == DAMAGE_ELEMENT) {
+			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+				rOutput[PointNumber] = double(this->GetValue(DAMAGE_ELEMENT));
+			}
+		} else if (rVariable == IS_DAMAGED) {
+			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+				rOutput[PointNumber] = double(this->GetValue(IS_DAMAGED));
+			}
+		} else if (rVariable == STRESS_THRESHOLD) {
+			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+				rOutput[PointNumber] = double(this->GetValue(STRESS_THRESHOLD));
 			}
 		}
-
-		//compute and add internal forces (RHS = rRightHandSideVector = Fext - Fint)
-		noalias(rRightHandSideVector) -= IntegrationWeight * prod(trans(B), StressVector);
-
 	}
-	KRATOS_CATCH("")
-}
 
-void FemDem3DHexahedronElement::FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo)
-{
-}
+	// 	VECTOR VARIABLES
+	void FemDem3DHexahedronElement::CalculateOnIntegrationPoints(
+		const Variable<Vector> &rVariable,
+		std::vector<Vector> &rOutput,
+		const ProcessInfo &rCurrentProcessInfo)
+	{
+		const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
+		if (rOutput.size() != integration_points.size())
+			rOutput.resize(integration_points.size());
 
-
-// Double values
-void FemDem3DHexahedronElement::GetValueOnIntegrationPoints(
-	const Variable<double> &rVariable,
-	std::vector<double> &rValues,
-	const ProcessInfo &rCurrentProcessInfo)
-{
-	if (rVariable == DAMAGE_ELEMENT || rVariable == IS_DAMAGED || rVariable == STRESS_THRESHOLD) {
-		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	}
-}
-
-// Vector Values
-void FemDem3DHexahedronElement::GetValueOnIntegrationPoints(
-	const Variable<Vector> &rVariable,
-	std::vector<Vector> &rValues,
-	const ProcessInfo &rCurrentProcessInfo)
-{
-	if (rVariable == STRAIN_VECTOR) {
-		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	} else if (rVariable == STRESS_VECTOR) {
-		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	} else if (rVariable == STRESS_VECTOR_INTEGRATED) {
-		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	}
-}
-
-// Tensor variables
-void FemDem3DHexahedronElement::GetValueOnIntegrationPoints(
-	const Variable<Matrix> &rVariable,
-	std::vector<Matrix> &rValues,
-	const ProcessInfo &rCurrentProcessInfo)
-{
-	if (rVariable == STRAIN_TENSOR) {
-		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	} else if (rVariable == STRESS_TENSOR) {
-		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	} else if (rVariable == STRESS_TENSOR_INTEGRATED) {
-		CalculateOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
-	}
-}
-
-// double variables
-void FemDem3DHexahedronElement::CalculateOnIntegrationPoints(
-	const Variable<double> &rVariable,
-	std::vector<double> &rOutput,
-	const ProcessInfo &rCurrentProcessInfo)
-{
-    const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
-	if (rOutput.size() != integration_points.size())
-		rOutput.resize(integration_points.size());
-
-	if (rVariable == DAMAGE_ELEMENT) {
-		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-			rOutput[PointNumber] = double(this->GetValue(DAMAGE_ELEMENT));
-		}
-	} else if (rVariable == IS_DAMAGED) {
-		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-			rOutput[PointNumber] = double(this->GetValue(IS_DAMAGED));
-		}
-	} else if (rVariable == STRESS_THRESHOLD) {
-		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-			rOutput[PointNumber] = double(this->GetValue(STRESS_THRESHOLD));
+		if (rVariable == STRESS_VECTOR) {
+			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+				rOutput[PointNumber] = this->GetValue(STRESS_VECTOR);
+			}
+		} else if (rVariable == STRAIN_VECTOR) {
+			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+				rOutput[PointNumber] = this->GetValue(STRAIN_VECTOR);
+			}
+		} else if (rVariable == STRESS_VECTOR_INTEGRATED) {
+			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+				rOutput[PointNumber] = this->GetValue(STRESS_VECTOR_INTEGRATED);
+			}
 		}
 	}
-}
 
-// 	VECTOR VARIABLES
-void FemDem3DHexahedronElement::CalculateOnIntegrationPoints(
-	const Variable<Vector> &rVariable,
-	std::vector<Vector> &rOutput,
-	const ProcessInfo &rCurrentProcessInfo)
-{
-    const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
-	if (rOutput.size() != integration_points.size())
-		rOutput.resize(integration_points.size());
+	// 	TENSOR VARIABLES
+	void FemDem3DHexahedronElement::CalculateOnIntegrationPoints(
+		const Variable<Matrix> &rVariable,
+		std::vector<Matrix> &rOutput,
+		const ProcessInfo &rCurrentProcessInfo)
+	{
+		const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
+		if (rOutput.size() != integration_points.size())
+			rOutput.resize(integration_points.size());
+		const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
 
-	if (rVariable == STRESS_VECTOR) {
-		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-			rOutput[PointNumber] = this->GetValue(STRESS_VECTOR);
-		}
-	} else if (rVariable == STRAIN_VECTOR) {
-		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-			rOutput[PointNumber] = this->GetValue(STRAIN_VECTOR);
-		}
-	} else if (rVariable == STRESS_VECTOR_INTEGRATED) {
-		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-			rOutput[PointNumber] = this->GetValue(STRESS_VECTOR_INTEGRATED);
+		if (rVariable == STRESS_TENSOR) {
+			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+				if (rOutput[PointNumber].size2() != dimension)
+					rOutput[PointNumber].resize(dimension, dimension, false);
+				rOutput[PointNumber] = MathUtils<double>::StressVectorToTensor(this->GetValue(STRESS_VECTOR));
+			}
+		} else if (rVariable == STRAIN_TENSOR) {
+			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+				if (rOutput[PointNumber].size2() != dimension)
+					rOutput[PointNumber].resize(dimension, dimension, false);
+				rOutput[PointNumber] = MathUtils<double>::StrainVectorToTensor(this->GetValue(STRAIN_VECTOR));
+			}
+		} else if (rVariable == STRESS_TENSOR_INTEGRATED) {
+			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
+				if (rOutput[PointNumber].size2() != dimension)
+					rOutput[PointNumber].resize(dimension, dimension, false);
+				rOutput[PointNumber] = MathUtils<double>::StressVectorToTensor(this->GetIntegratedStressVector());
+			}
 		}
 	}
-}
-
-// 	TENSOR VARIABLES
-void FemDem3DHexahedronElement::CalculateOnIntegrationPoints(
-	const Variable<Matrix> &rVariable,
-	std::vector<Matrix> &rOutput,
-	const ProcessInfo &rCurrentProcessInfo)
-{
-    const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
-	if (rOutput.size() != integration_points.size())
-		rOutput.resize(integration_points.size());
-	const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
-
-	if (rVariable == STRESS_TENSOR) {
-		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-			if (rOutput[PointNumber].size2() != dimension)
-				rOutput[PointNumber].resize(dimension, dimension, false);
-			rOutput[PointNumber] = MathUtils<double>::StressVectorToTensor(this->GetValue(STRESS_VECTOR));
-		}
-	} else if (rVariable == STRAIN_TENSOR) {
-		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-			if (rOutput[PointNumber].size2() != dimension)
-				rOutput[PointNumber].resize(dimension, dimension, false);
-			rOutput[PointNumber] = MathUtils<double>::StrainVectorToTensor(this->GetValue(STRAIN_VECTOR));
-		}
-	} else if (rVariable == STRESS_TENSOR_INTEGRATED) {
-		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-			if (rOutput[PointNumber].size2() != dimension)
-				rOutput[PointNumber].resize(dimension, dimension, false);
-			rOutput[PointNumber] = MathUtils<double>::StressVectorToTensor(this->GetIntegratedStressVector());
-		}
-	}
-}
 
 } // namespace Kratos

@@ -402,7 +402,7 @@ void FemDem3DElement::CalculateLocalSystem(
 			this->CalculateAverageStressOnEdge(AverageStressVector, EdgeNeighbours);
 			this->CalculateAverageStrainOnEdge(AverageStrainVector, EdgeNeighbours);
 
-			double damage_edge = 0.0;
+			double damage_edge;
 			const double characteristic_length = this->Get_l_char(edge);
 			this->IntegrateStressDamageMechanics(IntegratedStressVectorOnEdge, damage_edge,
 												 AverageStrainVector, AverageStressVector, edge, characteristic_length);
@@ -458,7 +458,7 @@ void FemDem3DElement::AddDEMContactForces(Vector &rNodalRHS)
 		Geometry<Node<3>> &NodesElement = this->GetGeometry();
 
 		// Loop Over nodes to apply the DEM contact forces to the FEM
-		for (unsigned int i = 0; i < 4; i++) {
+		for (unsigned int i = 0; i < NodesElement.size(); i++) {
 			const bool IsDEM = NodesElement[i].GetValue(IS_DEM);
 			const bool NodalForceApplied = NodesElement[i].GetValue(NODAL_FORCE_APPLIED);
 
@@ -838,7 +838,7 @@ void FemDem3DElement::CalculateLchar()
 	Matrix Indexes;
 	this->SetNodeIndexes(Indexes);
 
-	for (int edge = 0; edge < 6; edge++) {
+	for (unsigned int edge = 0; edge < 6; edge++) {
 		const double X1 = NodesElem[Indexes(edge, 0)].X();
 		const double X2 = NodesElem[Indexes(edge, 1)].X();
 		const double Y1 = NodesElem[Indexes(edge, 0)].Y();

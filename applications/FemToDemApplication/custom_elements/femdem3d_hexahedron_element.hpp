@@ -80,7 +80,39 @@ class FemDem3DHexahedronElement : public FemDem3DElement
 		std::vector<Matrix> &rOutput,
 		const ProcessInfo &rCurrentProcessInfo);
 
+	Matrix GetEdgeNodeNumbering() 
+	{
+		Matrix M = ZeroMatrix(mNumberOfEdges, 2);
+		M(0, 0)  = 0; M(0, 1)  = 1;
+		M(1, 0)  = 1; M(1, 1)  = 2;
+		M(2, 0)  = 2; M(2, 1)  = 3;
+		M(3, 0)  = 3; M(3, 1)  = 0;
+		M(4, 0)  = 4; M(4, 1)  = 5;
+		M(5, 0)  = 5; M(5, 1)  = 6;
+		M(6, 0)  = 6; M(6, 1)  = 7;
+		M(7, 0)  = 7; M(7, 1)  = 4;
+		M(8, 0)  = 0; M(8, 1)  = 4;
+		M(9, 0)  = 5; M(9, 1)  = 1;
+		M(10, 0) = 6; M(10, 1) = 2;
+		M(11, 0) = 7; M(11, 1) = 3;
+		return M;
+	}
 
+	void CalculateAverageStressOnEdge(
+		Vector& rEdgeStressVector,
+		const unsigned int edge);
+
+	void CalculateAverageStrainOnEdge(
+		Vector& rEdgeStrainVector,
+		const unsigned int edge);
+
+	void CalculateCharacteristicLength(
+		double& rcharacteristic_length, 
+		const int Edge);
+
+	double CalculateElementalDamage(const Vector &EdgeDamages);
+
+	
   private:
 
 	int mNumberOfEdges = 12;
