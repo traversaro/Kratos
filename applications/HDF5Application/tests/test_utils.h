@@ -19,7 +19,7 @@
 // External includes
 
 // Project includes
-#include "includes/model_part.h"
+#include "containers/model.h"
 #include "containers/data_value_container.h"
 
 // Application includes
