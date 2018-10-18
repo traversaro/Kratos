@@ -37,15 +37,17 @@
 
 namespace Kratos
 {
-	namespace Python
+namespace Python
+{
+	void  AddCustomConstitutiveLawsToPython(pybind11::module& m)
 	{
-		void  AddCustomConstitutiveLawsToPython(pybind11::module& m)
-		{
-			class_<ZarateLaw, ZarateLaw::Pointer>(m, "ZarateLaw")
-				.def(init<>());
+		class_<ZarateLaw, typename ZarateLaw::Pointer, ConstitutiveLaw >
+			(m, "ZarateLaw").def(init<>() )
+			;
 
-			class_<FemDemElasticLaw, FemDemElasticLaw::Pointer>(m, "FemDemElasticLaw")
-				.def(init<>());
-		}
-	}  // namespace Python.
+		class_<FemDemElasticLaw, typename FemDemElasticLaw::Pointer, ConstitutiveLaw >
+			(m, "FemDemElasticLaw").def(init<>() )
+			;
+	}
+}  // namespace Python.
 }  // namespace Kratos.

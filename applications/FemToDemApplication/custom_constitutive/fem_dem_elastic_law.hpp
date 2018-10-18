@@ -136,6 +136,18 @@ private:
     ///@name Serialization
     ///@{
 
+    friend class Serializer;
+
+    void save(Serializer& rSerializer) const override
+    {
+        KRATOS_SERIALIZE_SAVE_BASE_CLASS( rSerializer, LinearElastic3DLaw )
+    }
+
+    void load(Serializer& rSerializer) override
+    {
+        KRATOS_SERIALIZE_LOAD_BASE_CLASS( rSerializer, LinearElastic3DLaw )
+    }
+
 }; // Class LinearElastic3DLaw
 }  // namespace Kratos.
 #endif // KRATOS_FEM_DEM_ELASTIC_LAW_H_INCLUDED  defined
