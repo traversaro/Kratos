@@ -4,7 +4,7 @@
 
 #include "containers/array_1d.h"
 #include "includes/kratos_parameters.h"
-#include "containers/model.h"
+#include "includes/model_part.h"
 #include "includes/kratos_components.h"
 #include "testing/testing.h"
 #include "custom_io/hdf5_file_serial.h"
