@@ -336,13 +336,15 @@ namespace Kratos
 		std::vector<double> &rOutput,
 		const ProcessInfo &rCurrentProcessInfo)
 	{
+		ConstitutiveLaw::Parameters Values(GetGeometry(),GetProperties(),rCurrentProcessInfo);
 		const GeometryType::IntegrationPointsArrayType &integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
+
 		if (rOutput.size() != integration_points.size())
 			rOutput.resize(integration_points.size());
 
 		if (rVariable == DAMAGE_ELEMENT) {
 			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-				rOutput[PointNumber] = double(this->GetValue(DAMAGE_ELEMENT));
+				rOutput[PointNumber] = mConstitutiveLawVector[PointNumber]->CalculateValue(Values, rVariable, rOutput[PointNumber]);
 			}
 		} else if (rVariable == IS_DAMAGED) {
 			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
@@ -350,7 +352,7 @@ namespace Kratos
 			}
 		} else if (rVariable == STRESS_THRESHOLD) {
 			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-				rOutput[PointNumber] = double(this->GetValue(STRESS_THRESHOLD));
+				rOutput[PointNumber] = mConstitutiveLawVector[PointNumber]->CalculateValue(Values,rVariable,rOutput[PointNumber]);
 			}
 		}
 	}

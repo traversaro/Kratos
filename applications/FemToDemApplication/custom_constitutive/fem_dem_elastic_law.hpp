@@ -115,6 +115,8 @@ private:
     ///@}
     ///@name Member Variables
     ///@{
+    double mDamage = 0.0;
+    double mThreshold = 0.0;
 
 
     ///@}

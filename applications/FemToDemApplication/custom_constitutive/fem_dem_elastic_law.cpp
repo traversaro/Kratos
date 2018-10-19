@@ -55,27 +55,29 @@ double& FemDemElasticLaw::CalculateValue(Parameters& rParameterValues,
                                          const Variable<double>& rThisVariable,
                                          double& rValue) 
 {
-    rValue = 0.0;
-    return rValue;
+    if (rThisVariable == DAMAGE_ELEMENT) {
+        return rValue = mDamage;
+    } else if(rThisVariable == STRESS_THRESHOLD) {
+        return rValue = mThreshold;
+    }
 }
 
 double& FemDemElasticLaw::GetValue(const Variable<double>& rThisVariable,
                                    double& rValue) 
 {
-    rValue = 0.0;
-    return rValue;
+    return LinearElastic3DLaw::GetValue(rThisVariable, rValue);
 }
 
 Vector& FemDemElasticLaw::GetValue(const Variable<Vector>& rThisVariable,
                                    Vector& rValue) 
 {
-    return (rValue);
+	return rValue;
 }
 
 Matrix& FemDemElasticLaw::GetValue(const Variable<Matrix>& rThisVariable,
                                    Matrix& rValue)
 {
-    return (rValue);
+	return rValue;
 }
 
 void FemDemElasticLaw::SetValue(const Variable<double>& rThisVariable,
@@ -84,6 +86,10 @@ void FemDemElasticLaw::SetValue(const Variable<double>& rThisVariable,
 {
     if (rThisVariable == DETERMINANT_F) {
         mDeterminantF0 = rValue;
+    } else if(rThisVariable == DAMAGE_ELEMENT) {
+        mDamage = rValue;
+    } else if (rThisVariable == STRESS_THRESHOLD) {
+        mThreshold = rValue;
     }
 }
 
@@ -91,14 +97,14 @@ void FemDemElasticLaw::SetValue(const Variable<Vector>& rThisVariable,
                                 const Vector& rValue,
                                 const ProcessInfo& rCurrentProcessInfo) 
 {
-
+    LinearElastic3DLaw::SetValue(rThisVariable, rValue, rCurrentProcessInfo);
 }
 
 void FemDemElasticLaw::SetValue(const Variable<Matrix>& rThisVariable,
                                 const Matrix& rValue,
                                 const ProcessInfo& rCurrentProcessInfo) 
 {
-
+    LinearElastic3DLaw::SetValue(rThisVariable, rValue, rCurrentProcessInfo);
 }
 
 } // Namespace Kratos
