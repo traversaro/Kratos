@@ -368,16 +368,93 @@ namespace Kratos
 			rOutput.resize(integration_points.size());
 
 		if (rVariable == STRESS_VECTOR) {
-			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-				rOutput[PointNumber] = this->GetValue(STRESS_VECTOR);
+			//create and initialize element variables:
+			ElementDataType Variables;
+			this->InitializeElementData(Variables,rCurrentProcessInfo);
+
+			//create constitutive law parameters:
+			ConstitutiveLaw::Parameters Values(GetGeometry(),GetProperties(),rCurrentProcessInfo);
+
+			//set constitutive law flags:
+			Flags &ConstitutiveLawOptions=Values.GetOptions();
+
+			ConstitutiveLawOptions.Set(ConstitutiveLaw::COMPUTE_STRESS);
+
+			//reading integration points
+			for ( unsigned int PointNumber = 0; PointNumber < mConstitutiveLawVector.size(); PointNumber++ ) {
+				//compute element kinematic variables B, F, DN_DX ...
+				this->CalculateKinematics(Variables,PointNumber);
+
+				//set general variables to constitutivelaw parameters
+				this->SetElementData(Variables,Values,PointNumber);
+
+				//call the constitutive law to update material variables
+				if( rVariable == CAUCHY_STRESS_VECTOR)
+					mConstitutiveLawVector[PointNumber]->CalculateMaterialResponseCauchy(Values);
+				else
+					mConstitutiveLawVector[PointNumber]->CalculateMaterialResponsePK2(Values);
+
+				if ( rOutput[PointNumber].size() != Variables.StressVector.size() )
+						rOutput[PointNumber].resize( Variables.StressVector.size(), false );
+				rOutput[PointNumber] = Variables.StressVector;
 			}
 		} else if (rVariable == STRAIN_VECTOR) {
-			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-				rOutput[PointNumber] = this->GetValue(STRAIN_VECTOR);
+			//create and initialize element variables:
+			ElementDataType Variables;
+			this->InitializeElementData(Variables,rCurrentProcessInfo);
+
+			//create constitutive law parameters:
+			ConstitutiveLaw::Parameters Values(GetGeometry(),GetProperties(),rCurrentProcessInfo);
+
+			//set constitutive law flags:
+			Flags &ConstitutiveLawOptions=Values.GetOptions();
+
+			ConstitutiveLawOptions.Set(ConstitutiveLaw::COMPUTE_STRESS);
+
+			//reading integration points
+			for ( unsigned int PointNumber = 0; PointNumber < mConstitutiveLawVector.size(); PointNumber++ ) {
+				//compute element kinematic variables B, F, DN_DX ...
+				this->CalculateKinematics(Variables,PointNumber);
+
+				//set general variables to constitutivelaw parameters
+				this->SetElementData(Variables,Values,PointNumber);
+
+				if ( rOutput[PointNumber].size() != Variables.StrainVector.size() )
+						rOutput[PointNumber].resize( Variables.StrainVector.size(), false );
+				rOutput[PointNumber] = Variables.StrainVector;
 			}
 		} else if (rVariable == STRESS_VECTOR_INTEGRATED) {
-			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-				rOutput[PointNumber] = this->GetValue(STRESS_VECTOR_INTEGRATED);
+			//create and initialize element variables:
+			ElementDataType Variables;
+			this->InitializeElementData(Variables,rCurrentProcessInfo);
+
+			//create constitutive law parameters:
+			ConstitutiveLaw::Parameters Values(GetGeometry(),GetProperties(),rCurrentProcessInfo);
+
+			//set constitutive law flags:
+			Flags &ConstitutiveLawOptions=Values.GetOptions();
+
+			ConstitutiveLawOptions.Set(ConstitutiveLaw::COMPUTE_STRESS);
+
+			//reading integration points
+			for ( unsigned int PointNumber = 0; PointNumber < mConstitutiveLawVector.size(); PointNumber++ ) {
+				//compute element kinematic variables B, F, DN_DX ...
+				this->CalculateKinematics(Variables,PointNumber);
+
+				//set general variables to constitutivelaw parameters
+				this->SetElementData(Variables,Values,PointNumber);
+
+				//call the constitutive law to update material variables
+				if( rVariable == CAUCHY_STRESS_VECTOR)
+					mConstitutiveLawVector[PointNumber]->CalculateMaterialResponseCauchy(Values);
+				else
+					mConstitutiveLawVector[PointNumber]->CalculateMaterialResponsePK2(Values);
+
+				if ( rOutput[PointNumber].size() != Variables.StressVector.size() )
+						rOutput[PointNumber].resize( Variables.StressVector.size(), false );
+
+				const double damage = this->GetDamage();
+				rOutput[PointNumber] = (1.0 - damage) * Variables.StressVector;
 			}
 		}
 	}
@@ -394,23 +471,38 @@ namespace Kratos
 		const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
 
 		if (rVariable == STRESS_TENSOR) {
-			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-				if (rOutput[PointNumber].size2() != dimension)
-					rOutput[PointNumber].resize(dimension, dimension, false);
-				rOutput[PointNumber] = MathUtils<double>::StressVectorToTensor(this->GetValue(STRESS_VECTOR));
+			std::vector<Vector> StressVector;
+			this->CalculateOnIntegrationPoints( STRESS_VECTOR, StressVector, rCurrentProcessInfo );
+
+			//loop integration points
+			for ( unsigned int PointNumber = 0; PointNumber < mConstitutiveLawVector.size(); PointNumber++ ) {
+				if ( rOutput[PointNumber].size2() != dimension )
+					rOutput[PointNumber].resize( dimension, dimension, false );
+				rOutput[PointNumber] = MathUtils<double>::StressVectorToTensor(StressVector[PointNumber]);
 			}
+
 		} else if (rVariable == STRAIN_TENSOR) {
-			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-				if (rOutput[PointNumber].size2() != dimension)
-					rOutput[PointNumber].resize(dimension, dimension, false);
-				rOutput[PointNumber] = MathUtils<double>::StrainVectorToTensor(this->GetValue(STRAIN_VECTOR));
+			std::vector<Vector> StrainVector;
+			this->CalculateOnIntegrationPoints( STRAIN_VECTOR, StrainVector, rCurrentProcessInfo );
+
+			//loop integration points
+			for ( unsigned int PointNumber = 0; PointNumber < mConstitutiveLawVector.size(); PointNumber++ ) {
+				if ( rOutput[PointNumber].size2() != dimension )
+					rOutput[PointNumber].resize( dimension, dimension, false );
+				rOutput[PointNumber] = MathUtils<double>::StrainVectorToTensor(StrainVector[PointNumber]);
 			}
+
 		} else if (rVariable == STRESS_TENSOR_INTEGRATED) {
-			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-				if (rOutput[PointNumber].size2() != dimension)
-					rOutput[PointNumber].resize(dimension, dimension, false);
-				rOutput[PointNumber] = MathUtils<double>::StressVectorToTensor(this->GetIntegratedStressVector());
+			std::vector<Vector> IntegratedStressVector;
+			this->CalculateOnIntegrationPoints( STRESS_VECTOR_INTEGRATED, IntegratedStressVector, rCurrentProcessInfo );
+
+			//loop integration points
+			for ( unsigned int PointNumber = 0; PointNumber < mConstitutiveLawVector.size(); PointNumber++ ) {
+				if ( rOutput[PointNumber].size2() != dimension )
+					rOutput[PointNumber].resize( dimension, dimension, false );
+				rOutput[PointNumber] = MathUtils<double>::StressVectorToTensor(IntegratedStressVector[PointNumber]);
 			}
+
 		}
 	}
 

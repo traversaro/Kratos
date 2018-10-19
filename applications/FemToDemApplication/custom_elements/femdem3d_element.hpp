@@ -124,7 +124,7 @@ class FemDem3DElement : public SmallDisplacementElement // Derived Element from 
 	double GetThreshold() { return mThreshold; }
 
 	void SetConvergedDamage(double af) { mDamage = af; }
-	double Get_Convergeddamage() { return mDamage; }
+	double GetDamage() { return mDamage; }
 
 	void SetConvergedEquivalentStress(double af) { mF_sigma = af; }
 	double GetConvergedEquivalentStress() { return mF_sigma; }
