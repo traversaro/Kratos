@@ -18,7 +18,7 @@
 #include "includes/define_python.h"
 #include "add_response_functions_to_python.h"
 #include "response_functions/adjoint_response_function.h"
-#include "response_functions/sensitivity_builder.h"
+#include "utilities/sensitivity_builder.h"
 
 namespace Kratos
 {
@@ -58,7 +58,7 @@ void AddResponseFunctionsToPython(pybind11::module& m)
         .def("CalculateValue", &AdjointResponseFunction::CalculateValue);
     
     py::class_<SensitivityBuilder>(m, "SensitivityBuilder")
-        .def(py::init<Parameters&, ModelPart&, AdjointResponseFunction::Pointer>())
+        .def(py::init<Parameters, ModelPart&, AdjointResponseFunction::Pointer>())
         .def("Initialize", &SensitivityBuilder::Initialize)
         .def("UpdateSensitivities", &SensitivityBuilder::UpdateSensitivities);
 }

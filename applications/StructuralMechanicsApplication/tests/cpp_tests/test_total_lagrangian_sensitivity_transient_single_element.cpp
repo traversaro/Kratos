@@ -26,7 +26,7 @@
 #include "linear_solvers/skyline_lu_custom_scalar_solver.h"
 #include "spaces/ublas_space.h"
 #include "solving_strategies/schemes/residual_based_adjoint_bossak_scheme.h"
-#include "response_functions/sensitivity_builder.h"
+#include "utilities/sensitivity_builder.h"
 #include "containers/model.h"
 
 // Application includes
@@ -375,7 +375,7 @@ double CalculateSensitivity(unsigned NodeToPerturb, char Direction)
         AdjointSolverFactory::Execute(adjoint_model_part, p_response_function);
     p_adjoint_solver->Initialize();
     SensitivityBuilder sensitivity_builder(
-        Parameters(R"({"nodal_sensitivity_variables": ["SHAPE_SENSITIVITY"], "integrate_in_time": true})"),
+        Parameters(R"({"nodal_solution_step_sensitivity_variables": ["SHAPE_SENSITIVITY"]})"),
         adjoint_model_part, p_response_function);
     sensitivity_builder.Initialize();
     adjoint_model_part.CloneTimeStep(end_time + delta_time);
