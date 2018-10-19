@@ -31,19 +31,6 @@ void RegisterPoint1D(
     pybind11::module& m,
     const std::string& name)
 {
-    KRATOS_REGISTER_IN_PYTHON_VARIABLE(m, COORDINATES)
-    KRATOS_REGISTER_IN_PYTHON_VARIABLE(m, TANGENTS)
-
-    KRATOS_REGISTER_IN_PYTHON_VARIABLE(m, CROSS_AREA)
-    KRATOS_REGISTER_IN_PYTHON_VARIABLE(m, PRESTRESS_CAUCHY)
-
-    KRATOS_REGISTER_IN_PYTHON_VARIABLE(m, SHAPE_FUNCTION_VALUES)
-    KRATOS_REGISTER_IN_PYTHON_VARIABLE(m, SHAPE_FUNCTION_LOCAL_DERIVATIVES)
-
-    KRATOS_REGISTER_IN_PYTHON_VARIABLE(m, RAYLEIGH_ALPHA)
-    KRATOS_REGISTER_IN_PYTHON_VARIABLE(m, RAYLEIGH_BETA)
-
-
     namespace py = pybind11;
 
     using namespace pybind11::literals;
@@ -183,6 +170,8 @@ void RegisterSurfaceShapeEvaluator(
             &Type::NbNonzeroPolesU)
         .def_property_readonly("NumberOfNonzeroPolesV",
             &Type::NbNonzeroPolesV)
+        .def_property_readonly("NumberOfNonzeroPoles",
+            &Type::NbNonzeroPoles)
         .def_property_readonly("FirstNonzeroPoleU",
             &Type::FirstNonzeroPoleU)
         .def_property_readonly("FirstNonzeroPoleV",
@@ -191,6 +180,7 @@ void RegisterSurfaceShapeEvaluator(
             &Type::LastNonzeroPoleU)
         .def_property_readonly("LastNonzeroPoleV",
             &Type::LastNonzeroPoleV)
+        .def_property_readonly("NonzeroPoleIndices", &Type::NonzeroPoleIndices)
         .def("__call__", (double (Type::*)(const int, const int, const int)
             const) &Type::operator(),
             "Derivative"_a,
@@ -291,8 +281,14 @@ void RegisterSurfaceGeometryBase(
         .def_property_readonly("DegreeV", &Type::DegreeV)
         .def_property_readonly("DomainU", &Type::DomainU)
         .def_property_readonly("DomainV", &Type::DomainV)
-        .def_property_readonly("NbKnotsU", &Type::NbKnotsU)
-        .def_property_readonly("NbKnotsV", &Type::NbKnotsV)
+        .def_property_readonly("NumberOfKnotsU", &Type::NbKnotsU)
+        .def_property_readonly("NumberOfKnotsV", &Type::NbKnotsV)
+        .def_property_readonly("NumberOfPolesU", &Type::NbPolesU)
+        .def_property_readonly("NumberOfPolesV", &Type::NbPolesV)
+        .def("KnotsU", &Type::KnotsU)
+        .def("KnotsV", &Type::KnotsV)
+        .def("SpansU", &Type::SpansU)
+        .def("SpansV", &Type::SpansV)
         .def("KnotU", &Type::KnotU,
             "Index"_a)
         .def("KnotV", &Type::KnotV,
@@ -306,14 +302,24 @@ void RegisterSurfaceGeometryBase(
         .def("Pole", &Type::Pole,
             "IndexU"_a,
             "IndexV"_a)
-        .def("SetPole", &Type::SetPole,
+        .def("SetPole", (void (Type::*)(const int, const VectorType&))
+            &Type::SetPole,
+            "Index"_a,
+            "Value"_a)
+        .def("SetPole", (void (Type::*)(const int, const int,
+            const VectorType&)) &Type::SetPole,
             "IndexU"_a,
             "IndexV"_a,
             "Value"_a)
         .def("Weight", &Type::Weight,
             "IndexU"_a,
             "IndexV"_a)
-        .def("SetWeight", &Type::SetWeight,
+        .def("SetWeight", (void (Type::*)(const int, const double))
+            &Type::SetWeight,
+            "Index"_a,
+            "Value"_a)
+        .def("SetWeight", (void (Type::*)(const int, const int,
+            const double)) &Type::SetWeight,
             "IndexU"_a,
             "IndexV"_a,
             "Value"_a)
@@ -703,7 +709,7 @@ void RegisterCurveTessellation(
         .def("Compute", &Type::Compute,
             "Curve"_a,
             "Tolerance"_a)
-        .def_property_readonly("NbPoints", &Type::NbPoints)
+        .def_property_readonly("NumberOfPoints", &Type::NbPoints)
         .def("Parameter", &Type::Parameter,
             "index"_a)
         .def("Point", &Type::Point,
@@ -721,7 +727,7 @@ void RegisterIntegrationPoint1(
     using Type = ANurbs::IntegrationPoint1<double>;
 
     pybind11::class_<Type>(m, name.c_str())
-        .def("__iter__", 
+        .def("__iter__",
             [](const Type &self) {
                 return pybind11::make_iterator(&self.t, &self.t + 2);
             }, pybind11::keep_alive<0, 1>())
@@ -740,6 +746,10 @@ void RegisterIntegrationPoint2(
     using Type = ANurbs::IntegrationPoint2<double>;
 
     pybind11::class_<Type>(m, name.c_str())
+        .def("__iter__",
+            [](const Type &self) {
+                return pybind11::make_iterator(&self.u, &self.u + 3);
+            }, pybind11::keep_alive<0, 1>())
         .def_readwrite("u", &Type::u)
         .def_readwrite("v", &Type::v)
         .def_readwrite("weight", &Type::weight)
@@ -756,14 +766,24 @@ void RegisterIntegrationPoints(
     using Type = ANurbs::IntegrationPoints<double>;
 
     pybind11::class_<Type>(m, name.c_str())
-        .def_static("Points1", &Type::Points1,
+        .def_static("Points1D", &Type::Points1,
             "Degree"_a,
             "Domain"_a)
-        .def_static("Points2", &Type::Points2,
+        .def_static("Points2D", (std::vector<ANurbs::IntegrationPoint2<double>>
+            (*)(const size_t, const size_t, const ANurbs::Interval<double>&,
+            const ANurbs::Interval<double>&)) &Type::Points2,
             "DegreeU"_a,
             "DegreeV"_a,
             "DomainU"_a,
             "DomainV"_a)
+        .def_static("Points2D", (std::vector<ANurbs::IntegrationPoint2<double>>
+            (*)(const size_t, const size_t,
+            const std::vector<ANurbs::Interval<double>>&,
+            const std::vector<ANurbs::Interval<double>>&)) &Type::Points2,
+            "DegreeU"_a,
+            "DegreeV"_a,
+            "DomainsU"_a,
+            "DomainsV"_a)
     ;
 }
 
@@ -788,7 +808,7 @@ void AddCustomUtilitiesToPython(
     RegisterCurveGeometry<1>(m, "CurveGeometry1D");
     RegisterCurveGeometry<2>(m, "CurveGeometry2D");
     RegisterCurveGeometry<3>(m, "CurveGeometry3D");
-    
+
     RegisterSurfaceGeometryBase<1>(m, "SurfaceGeometryBase1D");
     RegisterSurfaceGeometryBase<2>(m, "SurfaceGeometryBase2D");
     RegisterSurfaceGeometryBase<3>(m, "SurfaceGeometryBase3D");

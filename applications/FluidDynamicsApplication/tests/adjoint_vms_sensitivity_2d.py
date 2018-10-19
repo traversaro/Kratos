@@ -2,6 +2,7 @@ import os
 from KratosMultiphysics import *
 import KratosMultiphysics.KratosUnittest as KratosUnittest
 import KratosMultiphysics.FluidDynamicsApplication
+import KratosMultiphysics.kratos_utilities as kratos_utils
 
 missing_applications_message = ["Missing required application(s):",]
 have_required_applications = True
@@ -32,14 +33,10 @@ class AdjointVMSSensitivity2D(KratosUnittest.TestCase):
     def setUp(self):
         pass
 
-    def _removeFile(self, file_path):
-        if os.path.isfile(file_path):
-            os.remove(file_path)
-
     def _removeH5Files(self, model_part_name):
         for name in os.listdir():
             if name.find(model_part_name) == 0:
-                self._removeFile(name)
+                kratos_utils.DeleteFileIfExisting(name)
 
     def _readNodalCoordinates(self,node_id,model_part_file_name):
         with open(model_part_file_name + '.mdpa', 'r') as model_part_file:
@@ -115,10 +112,9 @@ class AdjointVMSSensitivity2D(KratosUnittest.TestCase):
             previous_time = current_time
             current_time = _time
 
-        total_time = (current_time-start_time)
-        delta_t = current_time - previous_time
-
-        total_drag *= (delta_t)
+        if len(_time_steps) > 1:
+            delta_t = current_time - previous_time
+            total_drag *= (delta_t)
 
         return total_drag
 
@@ -182,10 +178,11 @@ class AdjointVMSSensitivity2D(KratosUnittest.TestCase):
             self.assertAlmostEqual(Sensitivity[0][0], FDSensitivity[0][0], 4)
             self.assertAlmostEqual(Sensitivity[0][1], FDSensitivity[0][1], 4)
             self._removeH5Files("MainModelPart")
-            self._removeFile("Structure_drag.dat")
-            self._removeFile("./AdjointVMSSensitivity2DTest/one_element_test.time")
-            self._removeFile("./one_element.post.bin")
-            self._removeFile("./tests.post.lst")
+            kratos_utils.DeleteFileIfExisting("./AdjointVMSSensitivity2DTest/one_element_test.dat")
+            kratos_utils.DeleteFileIfExisting("./AdjointVMSSensitivity2DTest/one_element_test.time")
+            kratos_utils.DeleteFileIfExisting("./Structure_drag.dat")
+            kratos_utils.DeleteFileIfExisting("./one_element.post.bin")
+            kratos_utils.DeleteFileIfExisting("./tests.post.lst")
 
     def testCylinder(self):
         with ControlledExecutionScope(os.path.dirname(os.path.realpath(__file__))):
@@ -204,14 +201,37 @@ class AdjointVMSSensitivity2D(KratosUnittest.TestCase):
             self.assertAlmostEqual(Sensitivity[0][0], FDSensitivity[0][0], 5)
             self.assertAlmostEqual(Sensitivity[0][1], FDSensitivity[0][1], 5)
             self._removeH5Files("MainModelPart")
-            self._removeFile("NoSlip2D_Cylinder_drag.dat")
-            self._removeFile("./AdjointVMSSensitivity2DTest/cylinder_test.time")
-            self._removeFile("./AdjointVMSSensitivity2DTest/cylinder_test_probe1.dat")
-            self._removeFile("./AdjointVMSSensitivity2DTest/cylinder_test_probe2.dat")
-            self._removeFile("./AdjointVMSSensitivity2DTest/cylinder_test_adjoint_probe1.dat")
-            self._removeFile("./AdjointVMSSensitivity2DTest/cylinder_test_adjoint_probe2.dat")
-            self._removeFile("./AdjointVMSSensitivity2DTest/cylinder_test_adjoint_probe3.dat")
-            self._removeFile("./cylinder_test.post.bin")
+            kratos_utils.DeleteFileIfExisting("./AdjointVMSSensitivity2DTest/cylinder_test.dat")
+            kratos_utils.DeleteFileIfExisting("./AdjointVMSSensitivity2DTest/cylinder_test.time")
+            kratos_utils.DeleteFileIfExisting("./AdjointVMSSensitivity2DTest/cylinder_test_probe1.dat")
+            kratos_utils.DeleteFileIfExisting("./AdjointVMSSensitivity2DTest/cylinder_test_probe2.dat")
+            kratos_utils.DeleteFileIfExisting("./AdjointVMSSensitivity2DTest/cylinder_test_adjoint_probe1.dat")
+            kratos_utils.DeleteFileIfExisting("./AdjointVMSSensitivity2DTest/cylinder_test_adjoint_probe2.dat")
+            kratos_utils.DeleteFileIfExisting("./AdjointVMSSensitivity2DTest/cylinder_test_adjoint_probe3.dat")
+            kratos_utils.DeleteFileIfExisting("./NoSlip2D_Cylinder_drag.dat")
+            kratos_utils.DeleteFileIfExisting("./cylinder_test.post.bin")
+
+    def testSteadyCylinder(self):
+        with ControlledExecutionScope(os.path.dirname(os.path.realpath(__file__))):
+            # solve fluid
+            self.solve('AdjointVMSSensitivity2DTest/steady_cylinder_test')
+            # solve adjoint
+            test = self._createAdjointTest('AdjointVMSSensitivity2DTest/steady_cylinder_test_adjoint')
+            test.Run()
+            Sensitivity = [[]]
+            Sensitivity[0].append(test._GetSolver().main_model_part.GetNode(1968).GetSolutionStepValue(SHAPE_SENSITIVITY_X))
+            Sensitivity[0].append(test._GetSolver().main_model_part.GetNode(1968).GetSolutionStepValue(SHAPE_SENSITIVITY_Y))
+
+            # calculate sensitivity by finite difference
+            step_size = 0.00000001
+            FDSensitivity = self._computeFiniteDifferenceDragSensitivity([1968],step_size,'./AdjointVMSSensitivity2DTest/steady_cylinder_test',[1.0,0.0,0.0],'NoSlip2D_Cylinder_drag.dat')
+            self.assertAlmostEqual(Sensitivity[0][0], FDSensitivity[0][0], 4)
+            self.assertAlmostEqual(Sensitivity[0][1], FDSensitivity[0][1], 2)
+            self._removeH5Files("MainModelPart")
+            kratos_utils.DeleteFileIfExisting("./AdjointVMSSensitivity2DTest/steady_cylinder_test.dat")
+            kratos_utils.DeleteFileIfExisting("./NoSlip2D_Cylinder_drag.dat")
+            kratos_utils.DeleteFileIfExisting("./steady_cylinder_test.time")
+            kratos_utils.DeleteFileIfExisting("./steady_cylinder_test.post.bin")
 
     def tearDown(self):
         pass

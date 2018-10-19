@@ -1,14 +1,12 @@
 {
-    "test_settings" : {
-        "execute_solve" : true
-    },
     "problem_data"                     : {
         "problem_name"    : "steady_cylinder_test",
         "model_part_name" : "MainModelPart",
         "domain_size"     : 2,
         "start_step"      : 2.0,
         "nsteps"          : 1,
-        "time_step"       :-1.0
+        "echo_level"      : 0,
+        "parallel_type"   : "OpenMP"
     },
     "output_configuration" : {
         "result_file_configuration" : {
@@ -31,18 +29,21 @@
         "point_data_configuration"  : []
     },
     "solver_settings"                  : {
-        "solver_type"                  : "adjoint_vmsmonolithic_solver",
+        "solver_type"                  : "Monolithic",
         "scheme_settings" : {
             "scheme_type"              : "steady"
         },
         "response_function_settings" : {
             "response_type"            : "drag",
-            "sensitivity_model_part_name" : "NoSlip2D_Cylinder",
-            "nodal_sensitivity_variables" : ["SHAPE_SENSITIVITY"],
             "custom_settings" : {
                 "structure_model_part_name" : "NoSlip2D_Cylinder",
                 "drag_direction"            : [1.0, 0.0, 0.0]
             }
+        },
+        "sensitivity_settings" : {
+            "sensitivity_model_part_name": "NoSlip2D_Cylinder",
+            "nodal_sensitivity_variables": ["SHAPE_SENSITIVITY"],
+            "integrate_in_time": false
         },
         "dynamic_tau"                  : 0,
         "oss_switch"                   : 0,
@@ -57,7 +58,11 @@
         },
         "model_import_settings"        : {
             "input_type"     : "mdpa",
-            "input_filename" : "test_vms_sensitivity_2d/steady_cylinder_test"
+            "input_filename" : "AdjointVMSSensitivity2DTest/steady_cylinder_test"
+        },
+        "time_stepping"               : {
+            "automatic_time_step" : false,
+            "time_step"           : -1.0
         }
     },
     "initial_conditions_process_list"  : [],
@@ -68,7 +73,7 @@
         "Parameters"    : {
             "mesh_id"         : 0,
             "model_part_name" : "Inlet2D_Inlet",
-            "variable_name"   : "ADJOINT_VELOCITY",
+            "variable_name"   : "ADJOINT_FLUID_VECTOR_1",
             "value"           : [0.0, 0.0, 0.0]
         }
     },{
@@ -78,7 +83,7 @@
         "Parameters"    : {
             "mesh_id"         : 0,
             "model_part_name" : "Outlet2D_Outlet",
-            "variable_name"   : "ADJOINT_PRESSURE",
+            "variable_name"   : "ADJOINT_FLUID_SCALAR_1",
             "value"           : 0
         }
     },{
@@ -88,7 +93,7 @@
         "Parameters"    : {
             "mesh_id"         : 0,
             "model_part_name" : "NoSlip2D_Cylinder",
-            "variable_name"   : "ADJOINT_VELOCITY",
+            "variable_name"   : "ADJOINT_FLUID_VECTOR_1",
             "value"           : [0.0, 0.0, 0.0]
         }
     },{
@@ -98,7 +103,7 @@
         "Parameters"    : {
             "mesh_id"         : 0,
             "model_part_name" : "NoSlip2D_Wall",
-            "variable_name"   : "ADJOINT_VELOCITY",
+            "variable_name"   : "ADJOINT_FLUID_VECTOR_1",
             "value"           : [0.0, 0.0, 0.0]
         }
     }],
@@ -115,9 +120,9 @@
             "direction"       : [0.0,-1.0,0.0]
         }
     }],
-    "list_other_processes" :[{
+    "auxiliar_process_list" :[{
         "kratos_module" : "KratosMultiphysics.HDF5Application",
-        "python_module" : "single_mesh_primal_input_process",
+        "python_module" : "single_mesh_temporal_input_process",
         "help"          : "",
         "process_name"  : "",
         "Parameters" : {
@@ -125,7 +130,7 @@
             "file_settings" : {
                 "file_access_mode" : "read_only"
             },
-            "nodal_results_settings" : {
+            "nodal_solution_step_data_settings" : {
                 "list_of_variables": ["VELOCITY", "PRESSURE"]
             }
         }

@@ -1,10 +1,6 @@
 import KratosMultiphysics
 import KratosMultiphysics.KratosUnittest as KratosUnittest
 
-#import test_input_output
-import test_vms_adjoint_element_2d
-import test_vms_sensitivity_2d
-
 ## NIGTHLY TESTS
 
 ## VALIDATION TESTS
@@ -25,7 +21,6 @@ def AssembleTestSuites():
 
     # Create a test suite with the selected tests (Small tests):
     smallSuite = suites['small']
-    smallSuite.addTest(test_vms_sensitivity_2d.TestCase('test_SteadyCylinder'))
 
 
     # Create a test suite with the selected tests plus all small tests

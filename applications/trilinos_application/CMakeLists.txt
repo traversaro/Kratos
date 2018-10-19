@@ -20,7 +20,7 @@ link_directories(${TRILINOS_LIBRARIES})
 
 if(TRILINOS_USE_AMGCL MATCHES ON)
     add_definitions(-DAMGCL_INCLUDED)
-    add_definitions(-DAMGCL_PROFILING)
+    #add_definitions(-DAMGCL_PROFILING)
 #     add_definitions(-lrt)
 
     find_package(Pastix QUIET)

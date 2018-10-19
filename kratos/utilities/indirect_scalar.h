@@ -27,33 +27,6 @@ namespace Kratos
 ///@name Kratos Classes
 ///@{
 
-template <class T>
-class Function : public std::function<T>
-{
-    public:
-    Function() : std::function<T>() {}
-
-    template <class F>
-    Function(F f) : std::function<T>(f) {}
-
-    private:
-    friend class Serializer;
-
-    void save(Serializer& rSerializer) const
-    {
-    }
-
-    void load(Serializer& rSerializer)
-    {
-    }
-};
-
-template <class T>
-std::ostream& operator<<(std::ostream& os, const Function<T>& f)
-{
-    return os;
-}
-
 /**
  * @class IndirectScalar
  * @ingroup KratosCore
@@ -83,7 +56,7 @@ public:
     IndirectScalar<T, S>& operator=(const T value)
     {
         set(value);
-        return value;
+        return *this;
     }
 
     IndirectScalar<T, S>& operator+=(const T value)

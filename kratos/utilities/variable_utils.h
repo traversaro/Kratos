@@ -47,14 +47,11 @@ namespace Kratos
 ///@{
 
 /**
- * @class Serializer
- *
+ * @class VariableUtils
  * @ingroup KratosCore
- *
  * @brief This class implements a set of auxiliar, already parallelized, methods to
  * perform some common tasks related with the variable values and fixity.
  * @details The methods are exported to python in order to add this improvements to the python interface
- *
  * @author Riccardo Rossi
  * @author Ruben Zorrilla
  * @author Vicente Mataix Ferrandiz
@@ -79,6 +76,9 @@ public:
 
     /// A definition of the double variable
     typedef Variable< double > DoubleVarType;
+
+    /// A definition of the component variable
+    typedef VariableComponent< VectorComponentAdaptor<array_1d<double, 3> > > ComponentVarType;
 
     /// A definition of the array variable
     typedef Variable< array_1d<double, 3 > > ArrayVarType;
@@ -338,9 +338,9 @@ public:
      * @param Value Value to be set
      * @param rContainer reference
      */
-    template< class TType, class TContainerType >
+    template< class TType, class TContainerType, class TVarType =  Variable< TType >>
     void SetNonHistoricalVariable(
-        Variable< TType >& rVariable,
+        TVarType& rVariable,
         const TType& Value,
         TContainerType& rContainer
         )
@@ -465,6 +465,18 @@ public:
     void CopyVectorVar(
         const ArrayVarType& OriginVariable,
         ArrayVarType& DestinationVariable,
+        NodesContainerType& rNodes
+        );
+
+    /**
+     * @brief Takes the value of an historical component variable and sets it in other variable
+     * @param OriginVariable reference to the origin component variable
+     * @param DestinationVariable reference to the destination component variable
+     * @param rNodes reference to the objective node set
+     */
+    void CopyComponentVar(
+        const ComponentVarType& OriginVariable,
+        ComponentVarType& DestinationVariable,
         NodesContainerType& rNodes
         );
 
@@ -633,8 +645,8 @@ public:
         double sum_value = 0.0;
 
         #pragma omp parallel for reduction(+:sum_value)
-        for (int k = 0; k < static_cast<int>(rModelPart.NumberOfNodes()); ++k) {
-            NodesContainerType::iterator it_node = rModelPart.NodesBegin() + k;
+        for (int k = 0; k < static_cast<int>(rModelPart.GetCommunicator().LocalMesh().NumberOfNodes()); ++k) {
+            NodesContainerType::iterator it_node = rModelPart.GetCommunicator().LocalMesh().NodesBegin() + k;
             sum_value += it_node->GetValue(rVar);
         }
 
@@ -675,8 +687,8 @@ public:
         double sum_value = 0.0;
 
         #pragma omp parallel for reduction(+:sum_value)
-        for (int k = 0; k < static_cast<int>(rModelPart.NumberOfNodes()); ++k) {
-            NodesContainerType::iterator it_node = rModelPart.NodesBegin() + k;
+        for (int k = 0; k < static_cast<int>(rModelPart.GetCommunicator().LocalMesh().NumberOfNodes()); ++k) {
+            NodesContainerType::iterator it_node = rModelPart.GetCommunicator().LocalMesh().NodesBegin() + k;
             sum_value += it_node->GetSolutionStepValue(rVar, rBuffStep);
         }
 
@@ -715,8 +727,8 @@ public:
         double sum_value = 0.0;
 
         #pragma omp parallel for reduction(+:sum_value)
-        for (int k = 0; k < static_cast<int>(rModelPart.NumberOfConditions()); ++k) {
-            ConditionsContainerType::iterator it_cond = rModelPart.ConditionsBegin() + k;
+        for (int k = 0; k < static_cast<int>(rModelPart.GetCommunicator().LocalMesh().NumberOfConditions()); ++k) {
+            ConditionsContainerType::iterator it_cond = rModelPart.GetCommunicator().LocalMesh().ConditionsBegin() + k;
             sum_value += it_cond->GetValue(rVar);
         }
 
@@ -755,8 +767,8 @@ public:
         double sum_value = 0.0;
 
         #pragma omp parallel for reduction(+:sum_value)
-        for (int k = 0; k < static_cast<int>(rModelPart.NumberOfElements()); ++k) {
-            ElementsContainerType::iterator it_elem = rModelPart.ElementsBegin() + k;
+        for (int k = 0; k < static_cast<int>(rModelPart.GetCommunicator().LocalMesh().NumberOfElements()); ++k) {
+            ElementsContainerType::iterator it_elem = rModelPart.GetCommunicator().LocalMesh().ElementsBegin() + k;
             sum_value += it_elem->GetValue(rVar);
         }
 

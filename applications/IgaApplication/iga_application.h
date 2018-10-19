@@ -22,7 +22,8 @@
 #include "includes/kratos_application.h"
 #include "includes/variables.h"
 
-#include "custom_elements/truss_discrete_element.h"
+#include "custom_elements/iga_truss_element.h"
+#include "custom_elements/shell_kl_discrete_element.h"
 
 namespace Kratos {
 
@@ -65,7 +66,7 @@ public:
     KratosIgaApplication();
 
     /// Destructor.
-    virtual ~KratosIgaApplication(){}
+    ~KratosIgaApplication() override {}
 
     ///@}
     ///@name Operators
@@ -159,7 +160,8 @@ private:
     ///@name Member Variables
     ///@{
 
-    const TrussDiscreteElement mTrussDiscreteElement;
+    const IgaTrussElement mIgaTrussElement;
+    const ShellKLDiscreteElement mShellKLDiscreteElement;
 
     ///@}
     ///@name Private Operators

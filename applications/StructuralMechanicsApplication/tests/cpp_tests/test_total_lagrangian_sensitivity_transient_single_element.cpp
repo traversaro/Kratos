@@ -27,6 +27,7 @@
 #include "spaces/ublas_space.h"
 #include "solving_strategies/schemes/residual_based_adjoint_bossak_scheme.h"
 #include "response_functions/sensitivity_builder.h"
+#include "containers/model.h"
 
 // Application includes
 #include "custom_elements/total_lagrangian.h"
@@ -156,9 +157,9 @@ class AdjointModelPartFactory
             mrAdjointModelPart.GetNodalSolutionStepVariablesList() =
                 mrPrimalModelPart.GetNodalSolutionStepVariablesList();
             mrAdjointModelPart.AddNodalSolutionStepVariable(ADJOINT_DISPLACEMENT);
-            mrAdjointModelPart.AddNodalSolutionStepVariable(ADJOINT_FLUID_VECTOR_2);
-            mrAdjointModelPart.AddNodalSolutionStepVariable(ADJOINT_FLUID_VECTOR_3);
-            mrAdjointModelPart.AddNodalSolutionStepVariable(AUX_ADJOINT_FLUID_VECTOR_1);
+            mrAdjointModelPart.AddNodalSolutionStepVariable(ADJOINT_VECTOR_2);
+            mrAdjointModelPart.AddNodalSolutionStepVariable(ADJOINT_VECTOR_3);
+            mrAdjointModelPart.AddNodalSolutionStepVariable(AUX_ADJOINT_VECTOR_1);
             mrAdjointModelPart.AddNodalSolutionStepVariable(SHAPE_SENSITIVITY);
         }
 
@@ -319,7 +320,8 @@ struct AdjointSolverFactory
 
 double CalculateResponseValue(unsigned NodeToPerturb, char Direction, double Perturbation)
 {
-    ModelPart primal_model_part("primal");
+    Model this_model;
+    ModelPart& primal_model_part = this_model.CreateModelPart("primal");
     PrimalModelPartFactory(primal_model_part).Execute();
     if (Direction == 'x')
         primal_model_part.GetNode(NodeToPerturb).X0() += Perturbation;
@@ -348,7 +350,8 @@ double CalculateResponseValue(unsigned NodeToPerturb, char Direction, double Per
 
 double CalculateSensitivity(unsigned NodeToPerturb, char Direction)
 {
-    ModelPart primal_model_part("primal");
+    Model this_model;
+    ModelPart& primal_model_part = this_model.CreateModelPart("primal");
     PrimalModelPartFactory(primal_model_part).Execute();
     auto p_solver = PrimalSolverFactory().Execute(primal_model_part);
     p_solver->Initialize();
@@ -365,7 +368,7 @@ double CalculateSensitivity(unsigned NodeToPerturb, char Direction)
         p_solver->Solve();
     }
 
-    ModelPart adjoint_model_part("adjoint");
+    ModelPart& adjoint_model_part = this_model.CreateModelPart("adjoint");
     AdjointModelPartFactory(primal_model_part, adjoint_model_part).Execute();
     auto p_response_function = ResponseFunctionFactory(adjoint_model_part);
     auto p_adjoint_solver =

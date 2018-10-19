@@ -3,6 +3,8 @@
 #include <sstream>
 
 #include "testing/testing.h"
+#include "containers/model.h"
+
 #include "includes/define.h"
 #include "includes/shared_pointers.h"
 #include "includes/model_part.h"
@@ -18,7 +20,8 @@
 #include "solving_strategies/convergencecriterias/residual_criteria.h"
 #include "utilities/indirect_scalar.h"
 #include "response_functions/adjoint_response_function.h"
-#include "response_functions/sensitivity_builder.h"
+#include "utilities/sensitivity_builder.h"
+#include "utilities/adjoint_extensions.h"
 
 
 namespace Kratos
@@ -252,65 +255,75 @@ private:
 
 class AdjointElement : public Element
 {
-    struct GetFirstDerivativesVectorExtension
+    class ThisExtensions : public AdjointExtensions
     {
         Element* mpElement;
-        void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
+
+    public:
+        ThisExtensions(Element* pElement) : mpElement{pElement}
+        {
+        }
+
+        void GetFirstDerivativesVector(std::size_t NodeId,
+                                       std::vector<IndirectScalar<double>>& rVector,
+                                       std::size_t Step) override
         {
             auto& r_node = mpElement->GetGeometry()[NodeId];
-            rVector.resize(1);
+            if (rVector.size() != 1)
+            {
+                rVector.resize(1);
+            }
             rVector[0] = MakeIndirectScalar(r_node, ADJOINT_VECTOR_2_X, Step);
         }
-    };
 
-    struct GetSecondDerivativesVectorExtension
-    {
-        Element* mpElement;
-        void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
+        void GetSecondDerivativesVector(std::size_t NodeId,
+                                        std::vector<IndirectScalar<double>>& rVector,
+                                        std::size_t Step) override
         {
             auto& r_node = mpElement->GetGeometry()[NodeId];
-            rVector.resize(1);
+            if (rVector.size() != 1)
+            {
+                rVector.resize(1);
+            }
             rVector[0] = MakeIndirectScalar(r_node, ADJOINT_VECTOR_3_X, Step);
         }
-    };
 
-    struct GetAuxAdjointVectorExtension
-    {
-        Element* mpElement;
-        void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
+        void GetAuxiliaryVector(std::size_t NodeId,
+                                std::vector<IndirectScalar<double>>& rVector,
+                                std::size_t Step) override
         {
             auto& r_node = mpElement->GetGeometry()[NodeId];
-            rVector.resize(1);
+            if (rVector.size() != 1)
+            {
+                rVector.resize(1);
+            }
             rVector[0] = MakeIndirectScalar(r_node, AUX_ADJOINT_VECTOR_1_X, Step);
         }
-    };
 
-    struct GetFirstDerivativesVariablesExtension
-    {
-        Element* mpElement;
-        void operator()(std::vector<VariableData const*>& rVariables)
+        void GetFirstDerivativesVariables(std::vector<VariableData const*>& rVariables) const override
         {
-            rVariables.resize(1);
+            if (rVariables.size() != 1)
+            {
+                rVariables.resize(1);
+            }
             rVariables[0] = &ADJOINT_VECTOR_2;
         }
-    };
-    
-    struct GetSecondDerivativesVariablesExtension
-    {
-        Element* mpElement;
-        void operator()(std::vector<VariableData const*>& rVariables)
+
+        void GetSecondDerivativesVariables(std::vector<VariableData const*>& rVariables) const override
         {
-            rVariables.resize(1);
+            if (rVariables.size() != 1)
+            {
+                rVariables.resize(1);
+            }
             rVariables[0] = &ADJOINT_VECTOR_3;
         }
-    };
-    
-    struct GetAuxAdjointVariablesExtension
-    {
-        Element* mpElement;
-        void operator()(std::vector<VariableData const*>& rVariables)
+
+        void GetAuxiliaryVariables(std::vector<VariableData const*>& rVariables) const override
         {
-            rVariables.resize(1);
+            if (rVariables.size() != 1)
+            {
+                rVariables.resize(1);
+            }
             rVariables[0] = &AUX_ADJOINT_VECTOR_1;
         }
     };
@@ -329,12 +342,7 @@ public:
     AdjointElement(const NodesArrayType& ThisNodes)
         : Element(0, ThisNodes), mPrimalElement(ThisNodes)
     {
-        SetValue(GetFirstDerivativesIndirectVector, GetFirstDerivativesVectorExtension{this});
-        SetValue(GetSecondDerivativesIndirectVector, GetSecondDerivativesVectorExtension{this});
-        SetValue(GetAuxAdjointIndirectVector, GetAuxAdjointVectorExtension{this});
-        SetValue(GetFirstDerivativesVariables, GetFirstDerivativesVariablesExtension{this});
-        SetValue(GetSecondDerivativesVariables, GetSecondDerivativesVariablesExtension{this});
-        SetValue(GetAuxAdjointVariables, GetAuxAdjointVariablesExtension{this});
+        SetValue(ADJOINT_EXTENSIONS, Kratos::make_shared<ThisExtensions>(this));
     }
 
     void EquationIdVector(EquationIdVectorType& rResult, ProcessInfo& rCurrentProcessInfo) override
@@ -626,7 +634,9 @@ KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, 
 {
     namespace Nlsmd = NonLinearSpringMassDamper;
     // Solve the primal problem.
-    ModelPart model_part("test");
+    Model current_model;
+    ModelPart& model_part = current_model.CreateModelPart("test");
+    
     Nlsmd::InitializePrimalModelPart(model_part);
     auto p_results_data = Kratos::make_shared<Nlsmd::PrimalResults>();
     Base::PrimalStrategy solver(model_part, p_results_data);
@@ -645,14 +655,15 @@ KRATOS_TEST_CASE_IN_SUITE(ResidualBasedAdjointBossak_TwoMassSpringDamperSystem, 
     }
 
     // Solve the adjoint problem.
-    ModelPart adjoint_model_part("test");
+    ModelPart& adjoint_model_part = current_model.CreateModelPart("test_adjoint");
+
     Nlsmd::InitializeAdjointModelPart(adjoint_model_part);
     auto p_response_function =
         Kratos::make_shared<Nlsmd::ResponseFunction>(adjoint_model_part);
     Base::AdjointStrategy adjoint_solver(adjoint_model_part, p_results_data, p_response_function);
     adjoint_solver.Initialize();
     SensitivityBuilder sensitivity_builder(
-        Parameters{R"({ "element_sensitivity_variables": ["SCALAR_SENSITIVITY"] })"},
+        Parameters{R"({ "element_data_sensitivity_variables": ["SCALAR_SENSITIVITY"] })"},
         adjoint_model_part, p_response_function);
     sensitivity_builder.Initialize();
     adjoint_model_part.CloneTimeStep(end_time + 2. * delta_time);

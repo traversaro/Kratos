@@ -25,6 +25,7 @@
 #include "includes/serializer.h"
 #include "utilities/geometry_utilities.h"
 #include "utilities/indirect_scalar.h"
+#include "utilities/adjoint_extensions.h"
 
 // Application includes
 #include "fluid_dynamics_application_variables.h"
@@ -44,11 +45,19 @@ namespace Kratos {
  */
 template< unsigned int TDim >
 class VMSAdjointElement: public Element {
-    struct GetFirstDerivativesVectorImpl
+    
+    class ThisExtensions : public AdjointExtensions
     {
         Element* mpElement;
 
-        void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
+    public:
+        ThisExtensions(Element* pElement) : mpElement{pElement}
+        {
+        }
+
+        void GetFirstDerivativesVector(std::size_t NodeId,
+                                       std::vector<IndirectScalar<double>>& rVector,
+                                       std::size_t Step) override
         {
             auto& r_node = mpElement->GetGeometry()[NodeId];
             rVector.resize(mpElement->GetGeometry().WorkingSpaceDimension() + 1);
@@ -61,13 +70,10 @@ class VMSAdjointElement: public Element {
             }
             rVector[index] = IndirectScalar<double>{};
         }
-    };
 
-    struct GetSecondDerivativesVectorImpl
-    {
-        Element* mpElement;
-
-        void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
+        void GetSecondDerivativesVector(std::size_t NodeId,
+                                        std::vector<IndirectScalar<double>>& rVector,
+                                        std::size_t Step) override
         {
             auto& r_node = mpElement->GetGeometry()[NodeId];
             rVector.resize(mpElement->GetGeometry().WorkingSpaceDimension() + 1);
@@ -80,13 +86,10 @@ class VMSAdjointElement: public Element {
             }
             rVector[index] = IndirectScalar<double>{};
         }
-    };
 
-    struct GetAuxAdjointVectorImpl
-    {
-        Element* mpElement;
-
-        void operator()(std::size_t NodeId, std::vector<IndirectScalar<double>>& rVector, std::size_t Step)
+        void GetAuxiliaryVector(std::size_t NodeId,
+                                std::vector<IndirectScalar<double>>& rVector,
+                                std::size_t Step) override
         {
             auto& r_node = mpElement->GetGeometry()[NodeId];
             rVector.resize(mpElement->GetGeometry().WorkingSpaceDimension() + 1);
@@ -99,37 +102,26 @@ class VMSAdjointElement: public Element {
             }
             rVector[index] = IndirectScalar<double>{};
         }
-    };
 
-    struct GetFirstDerivativesVariablesImpl
-    {
-        Element* mpElement;
-        void operator()(std::vector<VariableData const*>& rVariables)
+        void GetFirstDerivativesVariables(std::vector<VariableData const*>& rVariables) const override
         {
             rVariables.resize(1);
             rVariables[0] = &ADJOINT_FLUID_VECTOR_2;
         }
-    };
-    
-    struct GetSecondDerivativesVariablesImpl
-    {
-        Element* mpElement;
-        void operator()(std::vector<VariableData const*>& rVariables)
+
+        void GetSecondDerivativesVariables(std::vector<VariableData const*>& rVariables) const override
         {
             rVariables.resize(1);
             rVariables[0] = &ADJOINT_FLUID_VECTOR_3;
         }
-    };
-    
-    struct GetAuxAdjointVariablesImpl
-    {
-        Element* mpElement;
-        void operator()(std::vector<VariableData const*>& rVariables)
+
+        void GetAuxiliaryVariables(std::vector<VariableData const*>& rVariables) const override
         {
             rVariables.resize(1);
             rVariables[0] = &AUX_ADJOINT_FLUID_VECTOR_1;
         }
     };
+
 public:
 
     ///@name Type Definitions
@@ -193,12 +185,7 @@ public:
 
     void Initialize() override
     {
-        this->SetValue(GetFirstDerivativesIndirectVector, GetFirstDerivativesVectorImpl{this});
-        this->SetValue(GetSecondDerivativesIndirectVector, GetSecondDerivativesVectorImpl{this});
-        this->SetValue(GetAuxAdjointIndirectVector, GetAuxAdjointVectorImpl{this});
-        this->SetValue(GetFirstDerivativesVariables, GetFirstDerivativesVariablesImpl{this});
-        this->SetValue(GetSecondDerivativesVariables, GetSecondDerivativesVariablesImpl{this});
-        this->SetValue(GetAuxAdjointVariables, GetAuxAdjointVariablesImpl{this});
+        this->SetValue(ADJOINT_EXTENSIONS, Kratos::make_shared<ThisExtensions>(this));
     }
 
     /**
