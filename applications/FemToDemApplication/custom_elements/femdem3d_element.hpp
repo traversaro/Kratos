@@ -45,6 +45,7 @@ class FemDem3DElement : public SmallDisplacementElement // Derived Element from 
 
 	// *************** Methods Alejandro Cornejo ***************
 	//**********************************************************
+	static constexpr double tolerance = std::numeric_limits<double>::epsilon();
 
 	void InitializeSolutionStep(ProcessInfo &rCurrentProcessInfo);
 	void FinalizeSolutionStep(ProcessInfo &rCurrentProcessInfo);
@@ -246,31 +247,31 @@ class FemDem3DElement : public SmallDisplacementElement // Derived Element from 
 		std::vector<Vector> &rValues,
 		const ProcessInfo &rCurrentProcessInfo) override;
 
-  private:
-	int iteration = 0;
-	int mNumberOfEdges = 6;
+  protected:
 
+	 // Each component == Each edge
+	 int mNumberOfEdges;
+	 Vector mF_sigmas;   // Equivalent stress
+	 Vector mThresholds; // Stress mThreshold on edge
+	 Vector mDamages; // Converged mDamage on each edge
+	 
+	 Vector mNonConvergedDamages; // mDamages on edges of "i" iteration
+	 Vector mNonConvergedFsigmas; // Equivalent stress of "i" iteration
+
+  private:
+
+	int iteration = 0;
 	const unsigned int number_of_nodes = GetGeometry().size();
 	const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
 	unsigned int voigt_size = dimension * (dimension + 1) * 0.5;
 
-	// Each component == Each edge
-	Vector mF_sigmas = ZeroVector(mNumberOfEdges);   // Equivalent stress
-	Vector mThresholds = ZeroVector(mNumberOfEdges); // Stress mThreshold on edge
-
 	double mThreshold = 0.0;
 	double mF_sigma = 0.0;
-
-	Vector mDamages = ZeroVector(mNumberOfEdges); // Converged mDamage on each edge
 	double mDamage = 0.0;			 // Converged mDamage
-
-	Vector mNonConvergedDamages = ZeroVector(mNumberOfEdges); // mDamages on edges of "i" iteration
-	Vector mNonConvergedFsigmas = ZeroVector(mNumberOfEdges); // Equivalent stress of "i" iteration
-
 	double mNonConvergedFsigma = 0.0;
 	double mNonConvergedDamage = 0.0; // mDamage of the element of "i" iteration
 
-	Vector mL_char = ZeroVector(mNumberOfEdges); // Characteristic length on each edge
+	Vector mL_char; // Characteristic length on each edge
 
 	Vector mStressVector = ZeroVector(voigt_size);
 	Vector mStrainVector = ZeroVector(voigt_size);

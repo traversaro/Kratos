@@ -38,6 +38,14 @@ namespace Kratos
 	{
 		//BY DEFAULT, THE GEOMETRY WILL DEFINE THE INTEGRATION METHOD
 		mThisIntegrationMethod = GetGeometry().GetDefaultIntegrationMethod();
+
+		// Each component == Each edge
+		mNumberOfEdges = 12;
+		mF_sigmas = ZeroVector(mNumberOfEdges);   // Equivalent stress
+		mThresholds = ZeroVector(mNumberOfEdges); // Stress mThreshold on edge
+		mDamages = ZeroVector(mNumberOfEdges); // Converged mDamage on each edge
+		mNonConvergedDamages = ZeroVector(mNumberOfEdges); // mDamages on edges of "i" iteration
+		mNonConvergedFsigmas = ZeroVector(mNumberOfEdges); // Equivalent stress of "i" iteration
 	}
 
 	//******************************COPY CONSTRUCTOR**************************************
@@ -138,9 +146,7 @@ namespace Kratos
 				characteristic_length);
 
 			this->SetNonConvergedDamages(damages_edges(edge), edge);
-			damages_edges[edge] = damages_edges(edge);
 		}
-
 		double damage_element = this->CalculateElementalDamage(damages_edges);
 		if (damage_element >= 0.999)
 			damage_element = 0.999;

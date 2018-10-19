@@ -39,6 +39,15 @@ FemDem3DElement::FemDem3DElement(IndexType NewId, GeometryType::Pointer pGeometr
 {
 	//BY DEFAULT, THE GEOMETRY WILL DEFINE THE INTEGRATION METHOD
 	mThisIntegrationMethod = GetGeometry().GetDefaultIntegrationMethod();
+
+	// Each component == Each edge
+	mNumberOfEdges = 6;
+	mF_sigmas = ZeroVector(mNumberOfEdges);   // Equivalent stress
+	mThresholds = ZeroVector(mNumberOfEdges); // Stress mThreshold on edge
+	mDamages = ZeroVector(mNumberOfEdges); // Converged mDamage on each edge
+	mNonConvergedDamages = ZeroVector(mNumberOfEdges); // mDamages on edges of "i" iteration
+	mNonConvergedFsigmas = ZeroVector(mNumberOfEdges); // Equivalent stress of "i" iteration
+	mL_char = ZeroVector(mNumberOfEdges); // Characteristic length on each edge
 }
 
 //******************************COPY CONSTRUCTOR**************************************
@@ -1175,7 +1184,7 @@ void FemDem3DElement::ModifiedMohrCoulombCriterion(
 
 	double f; /// F = f-c = 0 classical definition of yield surface
 	// Check Modified Mohr-Coulomb criterion
-	if (I1 == 0.0) {
+	if (I1 < tolerance) {
 		f = 0.0;
 	} else {
 		const double theta = CalculateLodeAngle(J2, J3);

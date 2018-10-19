@@ -115,9 +115,7 @@ class FemDem3DHexahedronElement : public FemDem3DElement
 	
   private:
 
-	int mNumberOfEdges = 12;
-
-
+	
 }; // Class FemDem3DHexahedronElement
 
 } // Namespace Kratos
