@@ -21,7 +21,7 @@
 
 // Project includes
 #include "custom_constitutive/flow_rules/bounding_surface_plastic_flow_rule.hpp"
-#include "custom_utilities/solid_mechanics_math_utilities.hpp"
+#include "custom_utilities/particle_mechanics_math_utilities.h"
 
 #include "particle_mechanics_application.h"
 #include "custom_utilities/mpm_stress_principal_invariants_utility.h"
@@ -113,24 +113,24 @@ void BoundingSurfacePlasticFlowRule::InitializeMaterialParameters(){
 
     mMaterialParameters.SpecificVolume = GetProperties()[SPECIFIC_VOLUME_REFERENCE];
     mMaterialParameters.PreconsolidationPressureIP = GetProperties()[PRE_CONSOLIDATION_STRESS];
-    
+
     // Get necessary parameters
     const double p_0         = GetProperties()[INITIAL_MEAN_STRESS];
     const double q_0         = GetProperties()[INITIAL_DEVIATORIC_STRESS];
     const double curvature_N = GetProperties()[BOUNDING_SURFACE_CURVATURE];
     const double ratio_R     = GetProperties()[MODEL_PARAMETER_R];
     const double shear_M     = GetProperties()[CRITICAL_STATE_LINE];
-    
+
     mMaterialParameters.PreconsolidationPressure = std::exp(std::log(ratio_R) * std::pow(q_0/shear_M/p_0, curvature_N) + std::log(p_0));
 }
 
 
-bool BoundingSurfacePlasticFlowRule::CalculateReturnMapping( RadialReturnVariables& rReturnMappingVariables, const Matrix& rIncrementalDeformationGradient, 
+bool BoundingSurfacePlasticFlowRule::CalculateReturnMapping( RadialReturnVariables& rReturnMappingVariables, const Matrix& rIncrementalDeformationGradient,
     Matrix& rStressMatrix, Matrix& rNewElasticLeftCauchyGreen)
 {
     bool plasticity_active = false;
     rReturnMappingVariables.Options.Set(PLASTIC_REGION,false);
-    
+
     // Predicted new total delta strain
     for (unsigned int i = 0; i<3; ++i)
         mElasticPrincipalStrain[i] = rNewElasticLeftCauchyGreen(i,i);
@@ -162,13 +162,13 @@ bool BoundingSurfacePlasticFlowRule::CalculateReturnMapping( RadialReturnVariabl
 
     // rStressMatrix is the matrix of the updated stress in cartesian configuration -- this function perform back transformation
     this->ReturnStressFromPrincipalAxis(rReturnMappingVariables.MainDirections, mPrincipalStressUpdated, rStressMatrix);
- 
+
     Vector DeltaPrincipalStress = mPrincipalStressTrial - mPrincipalStressUpdated;
 
     // Updated the PrincipalStrain vector
     Matrix inv_elastic_matrix = ZeroMatrix(3,3);
     this->ComputeInverseElasticMatrix(mPreviousMeanStressP, inv_elastic_matrix);
-  
+
     // Delta plastic strain
     Vector plastic_strain = prod(inv_elastic_matrix, DeltaPrincipalStress);
 
@@ -191,7 +191,7 @@ bool BoundingSurfacePlasticFlowRule::CalculateReturnMapping( RadialReturnVariabl
 
 }
 
-bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, const Vector& rPrincipalStress, 
+bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, const Vector& rPrincipalStress,
     const Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated)
 {
     // Calculate stress return in principal stress space
@@ -212,7 +212,7 @@ bool BoundingSurfacePlasticFlowRule::CalculateConsistencyCondition(RadialReturnV
     if (!mImagePointComputedBool)
     {
         this->CalculateImagePointStress(mCenterOfHomologyStress, mPreviousStress, mImagePointStress, constant_B, is_b_known);
-    
+
         // Calculate hardening parameters
         mHardeningConstant = this->ComputePlasticHardeningParameter(constant_B);
     }
@@ -256,7 +256,7 @@ void BoundingSurfacePlasticFlowRule::CalculateLoadingDirection(const Vector& rPr
 {
     rLoadingDirection = ZeroVector(3);
     this->CalculateYieldSurfaceDerivatives(rPrincipalStressVector, rLoadingDirection);
-    SolidMechanicsMathUtilities<double>::Normalize(rLoadingDirection);
+    ParticleMechanicsMathUtilities<double>::Normalize(rLoadingDirection);
 }
 
 // Function that compute plastic flow direction in principal space: m
@@ -264,7 +264,7 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticFlowDirection(const Vector&
 {
     rPlasticFlowDirection = ZeroVector(3);
     this->CalculatePlasticPotentialDerivatives(rPrincipalStressVector, rImagePointStressVector, rPlasticFlowDirection);
-    SolidMechanicsMathUtilities<double>::Normalize(rPlasticFlowDirection);
+    ParticleMechanicsMathUtilities<double>::Normalize(rPlasticFlowDirection);
 }
 
 // Function that compute derivative of yield surface (either F or f) with respect to principal stresses
@@ -313,7 +313,7 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantDerivativ
     double shear_M           = GetProperties()[CRITICAL_STATE_LINE];
     if (!fix_csl_M)
         shear_M = this->CalculateCriticalStateLineSlope(lode_angle);
-    const double direction_T = this->GetDirectionParameter(rPrincipalStressVector, rImagePointPrincipalStressVector); 
+    const double direction_T = this->GetDirectionParameter(rPrincipalStressVector, rImagePointPrincipalStressVector);
     const double alpha       = this->GetAlphaParameter();
 
     rFirstDerivative = ZeroVector(3);
@@ -366,7 +366,7 @@ void BoundingSurfacePlasticFlowRule::CalculatePlasticPotentialInvariantSecondDer
 
     // Get material parameters
     const double parameter_A = GetProperties()[MODEL_PARAMETER_A];
-    const double direction_T = this->GetDirectionParameter(rPrincipalStressVector, rImagePointPrincipalStressVector); 
+    const double direction_T = this->GetDirectionParameter(rPrincipalStressVector, rImagePointPrincipalStressVector);
     const double alpha       = this->GetAlphaParameter();
 
     rSecondDerivative = ZeroVector(3);
@@ -382,10 +382,10 @@ void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix(const double& rMeanStr
 {
     // Initial Check
     KRATOS_ERROR_IF(rMeanStressP < 0.0) << "The given mean stress to compute elastic matrix is invalid. Please check the sign convention (expecting positive value)!" << std::endl;
-    
+
     // Size of matrix
     const unsigned int size = rElasticMatrix.size1();
-    
+
     const double poisson_ratio  = GetProperties()[POISSON_RATIO];
     const double swelling_slope = GetProperties()[SWELLING_SLOPE];
 
@@ -410,7 +410,7 @@ void BoundingSurfacePlasticFlowRule::ComputeElasticMatrix(const double& rMeanStr
             rElasticMatrix(i,i) = shear_modulus;
         }
     }
-    
+
 }
 
 // Function that compute the inverse of elastic matrix D_e
@@ -418,10 +418,10 @@ void BoundingSurfacePlasticFlowRule::ComputeInverseElasticMatrix(const double& r
 {
     // Initial Check
     KRATOS_ERROR_IF(rMeanStressP < 0.0) << "The given mean stress to compute elastic matrix is invalid. Please check the sign convention (expecting positive value)!" << std::endl;
-    
+
     // Size of matrix
     const unsigned int size = rInverseElasticMatrix.size1();
-    
+
     const double poisson_ratio  = GetProperties()[POISSON_RATIO];
     const double swelling_slope = GetProperties()[SWELLING_SLOPE];
 
@@ -449,7 +449,7 @@ void BoundingSurfacePlasticFlowRule::ComputeInverseElasticMatrix(const double& r
             rInverseElasticMatrix(i,i) = 1.0 / (shear_modulus);
         }
     }
-    
+
 }
 
 // Function that compute elastic matrix D_p = D_e m n^T D_e / (n^T D_e m + h)
@@ -457,7 +457,7 @@ void BoundingSurfacePlasticFlowRule::ComputePlasticMatrix(const Vector& rDirecti
 {
     // Size of matrix
     const unsigned int size = rElasticMatrix.size1();
-    
+
     // Compute multiplications
     const Vector aux_De_m  = prod(rElasticMatrix, rDirectionM);
     const Vector aux_nT_De = prod(trans(rDirectionN), rElasticMatrix);
@@ -526,7 +526,7 @@ void BoundingSurfacePlasticFlowRule::CalculateStrainInvariantsFromPrincipalStrai
 // Function to return matrix from principal space to normal space
 void BoundingSurfacePlasticFlowRule::ReturnStressFromPrincipalAxis(const Matrix& rEigenVectors, const Vector& rPrincipalStress, Matrix& rStressMatrix)
 {
-    rStressMatrix = ZeroMatrix(3,3); 
+    rStressMatrix = ZeroMatrix(3,3);
     Vector aux_N  = ZeroVector(3);
     Matrix aux_M  = ZeroMatrix(3,3);
     for (unsigned int i = 0; i<3; ++i)
@@ -567,7 +567,7 @@ void BoundingSurfacePlasticFlowRule::ComputeElastoPlasticTangentMatrix(const Rad
     // Compute extra term
     Matrix D_extra = ZeroMatrix(6);
     this->ComputePlasticMatrix(direction_n, direction_m, mHardeningConstant, D_e, D_extra);
-    
+
     // Compute elasto plastic matrix
     Matrix D_ep = ZeroMatrix(6);
     D_ep = D_e - D_extra;
@@ -578,7 +578,7 @@ void BoundingSurfacePlasticFlowRule::ComputeElastoPlasticTangentMatrix(const Rad
 
     // Return constitutive matrix from principal space to normal space
     Matrix A = ZeroMatrix(6);
-    Matrix A_trans = ZeroMatrix(6); 
+    Matrix A_trans = ZeroMatrix(6);
     this->CalculateTransformationMatrix(rReturnMappingVariables.MainDirections, A);
     A_trans = trans(A);
 
@@ -597,7 +597,7 @@ void BoundingSurfacePlasticFlowRule::CalculateModificationMatrix(Matrix& rModMat
     // Calculate plastic potential second derivatives
     Matrix second_order_terms = ZeroMatrix(3);
     this->CalculatePlasticPotentialSecondDerivatives(mPrincipalStressUpdated, mImagePointStress, second_order_terms);
-    
+
     // Calculate elastic matrix
     Matrix elastic_matrix_D_e = ZeroMatrix(3);
     this->ComputeElasticMatrix(mPreviousMeanStressP, elastic_matrix_D_e);
@@ -738,13 +738,13 @@ bool BoundingSurfacePlasticFlowRule::UpdateInternalVariables( RadialReturnVariab
 
     // Reset bool
     mImagePointComputedBool = false;
-    
+
     return true;
 }
 
 // Function to check whether the order of stress are changed and return region
 void BoundingSurfacePlasticFlowRule::CheckOrderOfStress(Vector& rUpdatedStress, Matrix& rMainDirections)
-{ 
+{
     // Normalize eigen vectors
     Vector principal_direction_1 = ZeroVector(3);
     Vector principal_direction_2 = ZeroVector(3);
@@ -757,10 +757,10 @@ void BoundingSurfacePlasticFlowRule::CheckOrderOfStress(Vector& rUpdatedStress, 
         principal_direction_3(i) = rMainDirections(i,2);
     }
 
-    SolidMechanicsMathUtilities<double>::Normalize(principal_direction_1);
-    SolidMechanicsMathUtilities<double>::Normalize(principal_direction_2);
-    SolidMechanicsMathUtilities<double>::Normalize(principal_direction_3);
-    
+    ParticleMechanicsMathUtilities<double>::Normalize(principal_direction_1);
+    ParticleMechanicsMathUtilities<double>::Normalize(principal_direction_2);
+    ParticleMechanicsMathUtilities<double>::Normalize(principal_direction_3);
+
     // Multiply to check and Swap if needed
     if (mIsOnceUnloaded)
     {
@@ -811,7 +811,7 @@ void BoundingSurfacePlasticFlowRule::CheckOrderOfStress(Vector& rUpdatedStress, 
     {
             rMainDirections(i,0) = principal_direction_1(i);
             rMainDirections(i,1) = principal_direction_2(i);
-            rMainDirections(i,2) = principal_direction_3(i); 
+            rMainDirections(i,2) = principal_direction_3(i);
     }
 
 }
@@ -829,7 +829,7 @@ void BoundingSurfacePlasticFlowRule::CalculateCenterOfHomologyStress(const Vecto
         if (mInternalVariables.DeltaPlasticDeviatoricStrain > 1.e-5)
         {
             rCenterOfHomologyStress = rRearrangedStress;
-            mIsOnceUnloaded         = true;   
+            mIsOnceUnloaded         = true;
         }
     }
 
@@ -849,7 +849,7 @@ void BoundingSurfacePlasticFlowRule::CalculateImagePointStress(const Vector& rCe
         // Compute the initial guess of state_function F
         double state_function;
         state_function = mpYieldCriterion->CalculateYieldCondition(state_function, image_point_stress, mMaterialParameters.PreconsolidationPressureIP);
-        
+
         // Current stress state is inside bounding surface
         if (state_function < 0.0)
         {
@@ -859,15 +859,15 @@ void BoundingSurfacePlasticFlowRule::CalculateImagePointStress(const Vector& rCe
             /*  Try to find ratio b, which gives state_function F > 0.0.
                 The ratio b obtained will be fed as initial guess of the following Newton Raphson iteration.
                 The prediction process is done in order to provide a better initial guess for the NR loop.
-                Without this prediction process, the NR loop might gives b < 1.0. 
-                Which means that the obtained image point is at the opposite parametric side (and this is wrong).*/ 
+                Without this prediction process, the NR loop might gives b < 1.0.
+                Which means that the obtained image point is at the opposite parametric side (and this is wrong).*/
             double mean_stress_p, deviatoric_q;
             MPMStressPrincipalInvariantsUtility::CalculateStressInvariants(image_point_stress, mean_stress_p, deviatoric_q);
             mean_stress_p *= -1.0;
 
             // Calculate the minimum increment of stress shooting
             double min_increment = std::abs((mMaterialParameters.PreconsolidationPressureIP - mean_stress_p) / mMaterialParameters.PreconsolidationPressureIP);
-            
+
             Vector aux_diff_vector = rCurrentStress - rCenterOfHomologyStress;
 
             // Loop to predict ratio b > 1.0 outside the bounding surface
@@ -876,7 +876,7 @@ void BoundingSurfacePlasticFlowRule::CalculateImagePointStress(const Vector& rCe
             while(!iteration_converged)
             {
                 iteration_counter += 1;
-                
+
                 // Predict new ratio_b, image point stress and state function
                 ratio_b += min_increment;
                 image_point_stress = rCenterOfHomologyStress + aux_diff_vector * ratio_b;
@@ -888,17 +888,17 @@ void BoundingSurfacePlasticFlowRule::CalculateImagePointStress(const Vector& rCe
             // Newton Raphson loop -- find the ratio b which makes F zero
             bool nr_iteration_converged = false;
             iteration_counter = 0;
-            
+
             while(!nr_iteration_converged)
             {
                 iteration_counter += 1;
                 double rhs, lhs, delta_b;
-                
+
                 // Assign right hand side value
                 rhs = -state_function;
 
                 // Compute left hand side value
-                Vector first_derivative_vector = ZeroVector(3); 
+                Vector first_derivative_vector = ZeroVector(3);
                 this->CalculateYieldSurfaceDerivatives(image_point_stress, first_derivative_vector);
                 lhs = MathUtils<double>::Dot(first_derivative_vector, aux_diff_vector);
 
@@ -909,7 +909,7 @@ void BoundingSurfacePlasticFlowRule::CalculateImagePointStress(const Vector& rCe
                 // Check the new state function (residual)
                 image_point_stress = rCenterOfHomologyStress + aux_diff_vector * ratio_b;
                 state_function = mpYieldCriterion->CalculateYieldCondition(state_function, image_point_stress, mMaterialParameters.PreconsolidationPressureIP);
-                
+
                 if (iteration_counter == max_num_iteration || std::abs(state_function) < 1.e-5) nr_iteration_converged = true;
             }
 
@@ -942,8 +942,8 @@ double BoundingSurfacePlasticFlowRule::ComputePlasticHardeningParameter(const do
 
     // Calculate plastic hardening modulus h_b at the imagepoint stress on the bounding surface
     double hardening_b = 0.0;
-    
-    Vector dF_dsigma = ZeroVector(3); 
+
+    Vector dF_dsigma = ZeroVector(3);
     this->CalculateYieldSurfaceDerivatives(mImagePointStress, dF_dsigma);
     const double norm_dF_dsigma = norm_2(dF_dsigma);
 
@@ -982,7 +982,7 @@ double BoundingSurfacePlasticFlowRule::ComputePlasticHardeningParameter(const do
 
     // Total hardening modulus
     hardening_parameter = hardening_b + hardening_f;
-    
+
     return hardening_parameter;
 }
 
@@ -1002,7 +1002,7 @@ double BoundingSurfacePlasticFlowRule::CalculateCriticalStateLineSlope(const dou
 
 double BoundingSurfacePlasticFlowRule::GetScalingHardeningParameter()
 {
-    if (!mIsOnceUnloaded) {return GetProperties()[INITIAL_SCALING_HARDENING_PARAMETER];} 
+    if (!mIsOnceUnloaded) {return GetProperties()[INITIAL_SCALING_HARDENING_PARAMETER];}
     else {return GetProperties()[RELOAD_SCALING_HARDENING_PARAMETER];}
 }
 
@@ -1053,7 +1053,7 @@ double BoundingSurfacePlasticFlowRule::GetAlphaParameter()
     const double shear_M = GetProperties()[CRITICAL_STATE_LINE];
     const double phi_csl = (3.0 * shear_M) / (6.0 + shear_M);
     const double alpha   = (3.0 - std::sin(phi_csl)) / (3.0 + std::sin(phi_csl));
-    
+
     return alpha;
 }
 

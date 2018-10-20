@@ -177,13 +177,13 @@ void  AddCustomConstitutiveLawsToPython(pybind11::module& m)
     class_< HenckyBoundingSurfacePlasticPlaneStrain2DLaw, typename HenckyBoundingSurfacePlasticPlaneStrain2DLaw::Pointer, ConstitutiveLaw >
     (m, "HenckyBoundingSurfacePlasticPlaneStrain2DLaw")
     .def(init<>() )
-    .def( init<MPMFlowRulePointer, YieldCriterionPointer, HardeningLawPointer>() )
+    .def( init<MPMFlowRulePointer, MPMYieldCriterionPointer, MPMHardeningLawPointer>() )
     ;
 
     class_< HenckyBoundingSurfacePlastic3DLaw, typename HenckyBoundingSurfacePlastic3DLaw::Pointer, ConstitutiveLaw >
     (m, "HenckyBoundingSurfacePlastic3DLaw")
     .def(init<>() )
-    .def( init<MPMFlowRulePointer, YieldCriterionPointer, HardeningLawPointer>() )
+    .def( init<MPMFlowRulePointer, MPMYieldCriterionPointer, MPMHardeningLawPointer>() )
     ;
 }
 

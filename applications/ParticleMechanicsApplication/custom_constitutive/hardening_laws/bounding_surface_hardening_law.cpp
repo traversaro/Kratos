@@ -31,9 +31,9 @@ namespace Kratos
 //************************************************************************************
 
 BoundingSurfaceHardeningLaw::BoundingSurfaceHardeningLaw()
-	:HardeningLaw()
+	:MPMHardeningLaw()
 {
-   
+
 }
 
 
@@ -42,7 +42,7 @@ BoundingSurfaceHardeningLaw::BoundingSurfaceHardeningLaw()
 
 BoundingSurfaceHardeningLaw& BoundingSurfaceHardeningLaw::operator=(BoundingSurfaceHardeningLaw const& rOther)
 {
-   HardeningLaw::operator=(rOther);
+   MPMHardeningLaw::operator=(rOther);
    return *this;
 }
 
@@ -50,7 +50,7 @@ BoundingSurfaceHardeningLaw& BoundingSurfaceHardeningLaw::operator=(BoundingSurf
 //************************************************************************************
 
 BoundingSurfaceHardeningLaw::BoundingSurfaceHardeningLaw(BoundingSurfaceHardeningLaw const& rOther)
-	:HardeningLaw(rOther)
+	:MPMHardeningLaw(rOther)
 {
 
 }
@@ -73,17 +73,17 @@ double& BoundingSurfaceHardeningLaw::CalculateHardening(double &rHardening, cons
 
     return rHardening;
 }
-  
+
 
 void BoundingSurfaceHardeningLaw::save( Serializer& rSerializer ) const
 {
-    KRATOS_SERIALIZE_SAVE_BASE_CLASS( rSerializer, HardeningLaw )
+    KRATOS_SERIALIZE_SAVE_BASE_CLASS( rSerializer, MPMHardeningLaw )
 
 }
 
 void BoundingSurfaceHardeningLaw::load( Serializer& rSerializer )
 {
-    KRATOS_SERIALIZE_LOAD_BASE_CLASS( rSerializer, HardeningLaw )
+    KRATOS_SERIALIZE_LOAD_BASE_CLASS( rSerializer, MPMHardeningLaw )
 
 }
 

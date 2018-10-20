@@ -31,8 +31,8 @@ namespace Kratos
 HenckyBoundingSurfacePlasticPlaneStrain2DLaw::HenckyBoundingSurfacePlasticPlaneStrain2DLaw()
     : HenckyElasticPlasticPlaneStrain2DLaw()
 {
-    mpHardeningLaw   = HardeningLaw::Pointer( new BoundingSurfaceHardeningLaw() );
-    mpYieldCriterion = YieldCriterion::Pointer( new BoundingSurfaceYieldCriterion(mpHardeningLaw) );
+    mpHardeningLaw   = MPMHardeningLaw::Pointer( new BoundingSurfaceHardeningLaw() );
+    mpYieldCriterion = MPMYieldCriterion::Pointer( new BoundingSurfaceYieldCriterion(mpHardeningLaw) );
     mpMPMFlowRule    = MPMFlowRule::Pointer( new BoundingSurfacePlasticFlowRule(mpYieldCriterion) );
 }
 
@@ -43,7 +43,7 @@ HenckyBoundingSurfacePlasticPlaneStrain2DLaw::HenckyBoundingSurfacePlasticPlaneS
 HenckyBoundingSurfacePlasticPlaneStrain2DLaw::HenckyBoundingSurfacePlasticPlaneStrain2DLaw(FlowRulePointer pMPMFlowRule, YieldCriterionPointer pYieldCriterion, HardeningLawPointer pHardeningLaw)
 {
     mpHardeningLaw    =  pHardeningLaw;
-    mpYieldCriterion  =  YieldCriterion::Pointer( new BoundingSurfaceYieldCriterion(mpHardeningLaw) );
+    mpYieldCriterion  =  MPMYieldCriterion::Pointer( new BoundingSurfaceYieldCriterion(mpHardeningLaw) );
     mpMPMFlowRule     =  pMPMFlowRule;
 }
 
@@ -86,7 +86,7 @@ int HenckyBoundingSurfacePlasticPlaneStrain2DLaw::Check(const Properties& rPrope
     // KRATOS_ERROR_IF(NORMAL_COMPRESSION_SLOPE.Key() == 0 || rProperties[NORMAL_COMPRESSION_SLOPE] <= 0.00) << "NORMAL_COMPRESSION_SLOPE has Key zero or invalid value " << std::endl;
     // KRATOS_ERROR_IF(CRITICAL_STATE_LINE.Key() == 0 || rProperties[CRITICAL_STATE_LINE] <= 0.00) << "CRITICAL_STATE_LINE has Key zero or invalid value " << std::endl;
     // KRATOS_ERROR_IF(INITIAL_SHEAR_MODULUS.Key() == 0 || rProperties[INITIAL_SHEAR_MODULUS] <= 0.00) << "INITIAL_SHEAR_MODULUS has Key zero or invalid value " << std::endl;
-    
+
     // KRATOS_ERROR_IF(ALPHA_SHEAR.Key() == 0 ) << "ALPHA_SHEAR has Key zero " << std::endl;
 
     return 0;

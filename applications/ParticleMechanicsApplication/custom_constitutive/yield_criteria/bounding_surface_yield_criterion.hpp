@@ -19,7 +19,7 @@
 // External includes
 
 // Project includes
-#include "custom_constitutive/custom_yield_criteria/yield_criterion.hpp"
+#include "custom_constitutive/yield_criteria/MPM_yield_criterion.hpp"
 #include "custom_constitutive/hardening_laws/bounding_surface_hardening_law.hpp"
 
 namespace Kratos
@@ -50,7 +50,7 @@ namespace Kratos
 /** Detail class definition.
 */
 class BoundingSurfaceYieldCriterion
-	: public YieldCriterion 
+	: public MPMYieldCriterion
 {
     public:
         ///@name Type Definitions
@@ -96,7 +96,7 @@ class BoundingSurfaceYieldCriterion
         ///@}
         ///@name Access
         ///@{
-        
+
 
         ///@}
         ///@name Inquiry
@@ -134,8 +134,8 @@ class BoundingSurfaceYieldCriterion
         ///@}
         ///@name Protected member Variables
         ///@{
-	
-	
+
+
         ///@}
         ///@name Protected Operators
         ///@{
@@ -187,7 +187,7 @@ class BoundingSurfaceYieldCriterion
         ///@name Private  Access
         ///@{
 
-	
+
 	///@}
 	///@name Serialization
 	///@{
@@ -243,6 +243,6 @@ class BoundingSurfaceYieldCriterion
 
 }  // namespace Kratos.
 
-#endif // KRATOS_BOUNDING_SURFACE_YIELD_CRITERION_H_INCLUDED  defined 
+#endif // KRATOS_BOUNDING_SURFACE_YIELD_CRITERION_H_INCLUDED  defined
 
 

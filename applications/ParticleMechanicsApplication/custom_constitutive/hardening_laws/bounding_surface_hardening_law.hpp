@@ -19,7 +19,7 @@
 // External includes
 
 // Project includes
-#include "custom_constitutive/custom_hardening_laws/hardening_law.hpp"
+#include "custom_constitutive/hardening_laws/MPM_hardening_law.hpp"
 
 namespace Kratos
 {
@@ -48,8 +48,8 @@ namespace Kratos
 /// Short class definition.
 /** Detail class definition.
 */
-class BoundingSurfaceHardeningLaw 
-        : public HardeningLaw 
+class BoundingSurfaceHardeningLaw
+        : public MPMHardeningLaw
 {
 public:
     ///@name Type Definitions
@@ -85,7 +85,7 @@ public:
     ///@{
 
     double& CalculateHardening(double &rHardening, const double &rAlpha, const Variable<double>& rThisVariable) override;
-	
+
     ///@}
     ///@name Access
     ///@{
@@ -126,7 +126,7 @@ protected:
     ///@name Protected member Variables
     ///@{
 
-     
+
     ///@}
     ///@name Protected Operators
     ///@{
@@ -163,7 +163,7 @@ private:
     ///@name Member Variables
     ///@{
 
-	
+
     ///@}
     ///@name Private Operators
     ///@{
