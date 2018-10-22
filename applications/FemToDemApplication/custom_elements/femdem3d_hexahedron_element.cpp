@@ -353,15 +353,15 @@ namespace Kratos
 
 		if (rVariable == DAMAGE_ELEMENT) {
 			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-				rOutput[PointNumber] = mConstitutiveLawVector[PointNumber]->CalculateValue(Values, rVariable, rOutput[PointNumber]);
+				rOutput[PointNumber] = this->GetDamage();
 			}
 		} else if (rVariable == IS_DAMAGED) {
 			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-				rOutput[PointNumber] = double(this->GetValue(IS_DAMAGED));
+				rOutput[PointNumber] = this->GetValue(IS_DAMAGED);
 			}
 		} else if (rVariable == STRESS_THRESHOLD) {
 			for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
-				rOutput[PointNumber] = mConstitutiveLawVector[PointNumber]->CalculateValue(Values,rVariable,rOutput[PointNumber]);
+				rOutput[PointNumber] = this->GetValue(STRESS_THRESHOLD);
 			}
 		}
 	}
