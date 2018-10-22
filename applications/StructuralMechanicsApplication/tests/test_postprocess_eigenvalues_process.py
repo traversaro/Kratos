@@ -42,12 +42,39 @@ def GetEigenVectorMatrix(num_eigenvalues, node_id):
 
     return eigenvec_matrix
 
+def CheckResults(ref_file_name, out_file_name):
+    settings_check_process = KratosMultiphysics.Parameters("""
+    {
+        "reference_file_name"   : \"""" + ref_file_name + """\",
+        "output_file_name"      : \"""" + out_file_name + """\",
+        "remove_output_file"    : true,
+        "comparison_type"       : "post_res_file"
+    }
+    """)
+
+    settings_check_process["reference_file_name"].SetString(GetFilePath("test_postprocess_eigenvalues_process.ref"))
+    settings_check_process["output_file_name"].SetString("Structure_EigenResults_0.post.res")
+
+    check_process = CompareTwoFilesCheckProcess(settings_check_process)
+
+    check_process.ExecuteInitialize()
+    check_process.ExecuteBeforeSolutionLoop()
+    check_process.ExecuteInitializeSolutionStep()
+    check_process.ExecuteFinalizeSolutionStep()
+    check_process.ExecuteBeforeOutputStep()
+    check_process.ExecuteAfterOutputStep()
+    check_process.ExecuteFinalize()
+
 
 class TestPostprocessEigenvaluesProcess(KratosUnittest.TestCase):
-    def tearDown(self):
-        kratos_utils.DeleteFileIfExisting("Structure_EigenResults_0.post.msh")
-        kratos_utils.DeleteFileIfExisting("Structure_EigenResults_0.post.res") # usually this is deleted by the check process but not if it fails
-
+    @classmethod
+    def tearDownClass(cls):
+        for file_name in os.listdir():
+            if file_name.endswith("_EigenResults_0.post.msh"):
+                kratos_utils.DeleteFileIfExisting(file_name)
+            if file_name.endswith("_EigenResults_0.post.res"):
+                # usually this is deleted by the check process but not if it fails:
+                kratos_utils.DeleteFileIfExisting(file_name)
 
     def test_PostprocessEigenvaluesProcess(self):
         test_model = KratosMultiphysics.Model()
@@ -68,7 +95,6 @@ class TestPostprocessEigenvaluesProcess(KratosUnittest.TestCase):
         KratosMultiphysics.VariableUtils().AddDof(KratosMultiphysics.ROTATION_X, KratosMultiphysics.REACTION_MOMENT_X,model_part)
         KratosMultiphysics.VariableUtils().AddDof(KratosMultiphysics.ROTATION_Y, KratosMultiphysics.REACTION_MOMENT_Y,model_part)
         KratosMultiphysics.VariableUtils().AddDof(KratosMultiphysics.ROTATION_Z, KratosMultiphysics.REACTION_MOMENT_Z,model_part)
-
 
         # set EigenValues and -Vectors
         num_eigenvalues = 4
@@ -93,28 +119,24 @@ class TestPostprocessEigenvaluesProcess(KratosUnittest.TestCase):
         post_eigen_process.ExecuteAfterOutputStep()
         post_eigen_process.ExecuteFinalize()
 
-        # check the results
-        settings_check_process = KratosMultiphysics.Parameters("""
-        {
-            "reference_file_name"   : "",
-            "output_file_name"      : "",
-            "remove_output_file"    : true,
-            "comparison_type"       : "post_res_file"
-        }
-        """)
+        ref_file_name = GetFilePath("test_postprocess_eigenvalues_process.ref")
+        out_file_name = "Structure_EigenResults_0.post.res"
 
-        settings_check_process["reference_file_name"].SetString(GetFilePath("test_postprocess_eigenvalues_process.ref"))
-        settings_check_process["output_file_name"].SetString("Structure_EigenResults_0.post.res")
+        CheckResults(ref_file_name, out_file_name)
 
-        check_process = CompareTwoFilesCheckProcess(settings_check_process)
+    def test_PostprocessEigenvaluesProcessWithConstraints(self):
+        def solve_without_constraints():
+            pass
 
-        check_process.ExecuteInitialize()
-        check_process.ExecuteBeforeSolutionLoop()
-        check_process.ExecuteInitializeSolutionStep()
-        check_process.ExecuteFinalizeSolutionStep()
-        check_process.ExecuteBeforeOutputStep()
-        check_process.ExecuteAfterOutputStep()
-        check_process.ExecuteFinalize()
+        def solve_with_constraints():
+            pass
+
+
+
+        # ref_file_name = "Without_Constraints_EigenResults_0.ref"
+        # out_file_name = "With_Constraints_EigenResults_0.post.res"
+
+        # CheckResults(ref_file_name, out_file_name)
 
 
 if __name__ == '__main__':
