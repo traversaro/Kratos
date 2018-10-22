@@ -122,6 +122,10 @@ namespace Kratos
 		noalias(DeltaPosition) = ZeroMatrix(number_of_nodes, dimension);
 		DeltaPosition = this->CalculateDeltaPosition(DeltaPosition);
 
+		Matrix InvJ(dimension, dimension);;
+		Matrix B = ZeroMatrix(voigt_size, dimension * number_of_nodes);
+		Matrix DN_DX(number_of_nodes, dimension);
+
 		GeometryType::JacobiansType J;
 		J.resize(1, false);
 		J[0].resize(dimension, dimension, false);
@@ -152,6 +156,9 @@ namespace Kratos
 			damage_element = 0.999;
 		this->SetNonConvergedDamages(damage_element);
 
+		//get the shape functions parent coodinates derivative [dN/d�] (for the order of the default integration method)
+		const GeometryType::ShapeFunctionsGradientsType &DN_De = GetGeometry().ShapeFunctionsLocalGradients(mThisIntegrationMethod);
+
 		for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); PointNumber++) {
 			const Matrix &Ncontainer = GetGeometry().ShapeFunctionsValues(mThisIntegrationMethod);
 			Vector N = row(Ncontainer, PointNumber);
@@ -161,17 +168,21 @@ namespace Kratos
 			noalias(InvJ) = ZeroMatrix(dimension, dimension);
 			MathUtils<double>::InvertMatrix(J[PointNumber], InvJ, detJ);
 
-			double IntegrationWeight = integration_points[PointNumber].Weight() * detJ;
-			const Matrix &B = this->GetBMatrix();
-			const Vector &StressVector = this->GetValue(STRESS_VECTOR);
+			//compute cartesian derivatives for this integration point  [dN/dx_n]
+			noalias(DN_DX) = prod(DN_De[PointNumber], InvJ);
 
-			const Vector integrated_stress_vector = (1.0 - damage_element) * StressVector;
-			this->SetIntegratedStressVector(integrated_stress_vector);
+			double IntegrationWeight = integration_points[PointNumber].Weight() * detJ;
+			this->CalculateDeformationMatrix(B, DN_DX);
 
 			Matrix ConstitutiveMatrix = ZeroMatrix(voigt_size, voigt_size);
 			const double E = this->GetProperties()[YOUNG_MODULUS];
 			const double nu = this->GetProperties()[POISSON_RATIO];
 			this->CalculateConstitutiveMatrix(ConstitutiveMatrix, E, nu);
+
+			Vector strain_vector, predictive_stress_vector;
+			this->CalculateInfinitesimalStrain(strain_vector, DN_DX);
+			this->CalculateStressVector(predictive_stress_vector, ConstitutiveMatrix, strain_vector);
+			const Vector integrated_stress_vector = (1.0 - damage_element) * predictive_stress_vector;
 
 			noalias(rLeftHandSideMatrix) += prod(
 				trans(B), IntegrationWeight * (1.0 - damage_element) * Matrix(prod(ConstitutiveMatrix, B)));  // LHS
@@ -282,10 +293,8 @@ namespace Kratos
 		if (damage_element >= 0.98) {
 			this->Set(ACTIVE, false);
 		}
-
 		this->ResetNonConvergedVars();
 		this->SetValue(DAMAGE_ELEMENT, damage_element);
-
 	}
 
 
@@ -389,10 +398,7 @@ namespace Kratos
 				this->SetElementData(Variables,Values,PointNumber);
 
 				//call the constitutive law to update material variables
-				if( rVariable == CAUCHY_STRESS_VECTOR)
-					mConstitutiveLawVector[PointNumber]->CalculateMaterialResponseCauchy(Values);
-				else
-					mConstitutiveLawVector[PointNumber]->CalculateMaterialResponsePK2(Values);
+				mConstitutiveLawVector[PointNumber]->CalculateMaterialResponseCauchy(Values);
 
 				if ( rOutput[PointNumber].size() != Variables.StressVector.size() )
 						rOutput[PointNumber].resize( Variables.StressVector.size(), false );
@@ -437,7 +443,7 @@ namespace Kratos
 			ConstitutiveLawOptions.Set(ConstitutiveLaw::COMPUTE_STRESS);
 
 			//reading integration points
-			for ( unsigned int PointNumber = 0; PointNumber < mConstitutiveLawVector.size(); PointNumber++ ) {
+			for (unsigned int PointNumber = 0; PointNumber < mConstitutiveLawVector.size(); PointNumber++) {
 				//compute element kinematic variables B, F, DN_DX ...
 				this->CalculateKinematics(Variables,PointNumber);
 
@@ -445,10 +451,7 @@ namespace Kratos
 				this->SetElementData(Variables,Values,PointNumber);
 
 				//call the constitutive law to update material variables
-				if( rVariable == CAUCHY_STRESS_VECTOR)
-					mConstitutiveLawVector[PointNumber]->CalculateMaterialResponseCauchy(Values);
-				else
-					mConstitutiveLawVector[PointNumber]->CalculateMaterialResponsePK2(Values);
+				mConstitutiveLawVector[PointNumber]->CalculateMaterialResponseCauchy(Values);
 
 				if ( rOutput[PointNumber].size() != Variables.StressVector.size() )
 						rOutput[PointNumber].resize( Variables.StressVector.size(), false );

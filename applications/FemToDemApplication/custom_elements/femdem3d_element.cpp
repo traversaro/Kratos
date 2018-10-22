@@ -614,6 +614,10 @@ void FemDem3DElement::CalculateStressVector(
 	const Vector &rInfinitesimalStrainVector
 	)
 {
+	//Infinitesimal Strain Calculation
+	if (rStressVector.size() != 6)
+		rStressVector.resize(6, false);
+
 	noalias(rStressVector) = prod(rConstitutiveMAtrix, rInfinitesimalStrainVector);
 }
 
