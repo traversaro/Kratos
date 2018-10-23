@@ -160,6 +160,7 @@ namespace Kratos
 
                   // change given vector to tensor
                   const Matrix aux_tensor = MathUtils<double>::StressVectorToTensor( rVector );
+
                   // d2I1/d2tensor
                   rD2I1 = ZeroMatrix(3);
 
@@ -211,6 +212,7 @@ namespace Kratos
             {
                   // Calculate first two stress invariant
                   CalculateStressInvariants( rStress, rMeanStressP, rDeviatoricQ);
+
                   // Lode Angle
                   CalculateThirdStressInvariant(rStress, rLodeAngle);
             }
@@ -232,6 +234,7 @@ namespace Kratos
                   if ( std::abs(j_2) > 1E-9) {
                         for (unsigned int i = 0; i < 3; i++)
                               rC2[i] = rStress[i] - i_1/3.0;
+
                         rC2 *= 3.0 / (2.0 * std::sqrt(3 * j_2));
                   }
 
@@ -264,6 +267,7 @@ namespace Kratos
                   // Calculate stress invariants
                   double i_1, j_2;
                   CalculateTensorInvariants( rStress, i_1, j_2);
+
                   // d2P/d2stress
                   r2C1 = ZeroMatrix(3);
 
