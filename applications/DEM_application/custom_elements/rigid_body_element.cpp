@@ -219,7 +219,7 @@ namespace Kratos {
         array_1d<double, 3>& center_torque = central_node.FastGetSolutionStepValue(PARTICLE_MOMENT);
         center_forces[0] = center_forces[1] = center_forces[2] = center_torque[0] = center_torque[1] = center_torque[2] = 0.0;
 
-        #pragma omp parallel for schedule(dynamic, 100)
+        #pragma omp parallel for schedule(dynamic, 1000)
         for (int k = 0; k < (int)mListOfNodes.size(); k++) {
             ModelPart::NodeIterator i = mListOfNodes.begin() + k;
 
@@ -240,7 +240,6 @@ namespace Kratos {
             center_torque[1] += additional_torque[1];
             center_torque[2] += additional_torque[2];
         }
-        #pragma omp barrier
     }
 
     void RigidBodyElement3D::ComputeExternalForces(const array_1d<double,3>& gravity) {
