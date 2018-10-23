@@ -122,7 +122,7 @@ namespace Kratos
 
                   // Purely calculate invariant J3
                   rJ3 = 0;
-                  Matrix tensor = MathUtils<double>::StressVectorToTensor( rVector); 
+                  Matrix tensor = MathUtils<double>::StressVectorToTensor( rVector);
                   for (unsigned int i = 0; i < 3; ++i)
                         tensor(i,i) -= rI1/3.0;
                   rJ3 = MathUtils<double>::Det(tensor); // J_3 = det(tensor)
@@ -133,7 +133,7 @@ namespace Kratos
             {
                   double i_1, j_2, j_3;
                   CalculateTensorInvariants(rVector, i_1, j_2, j_3);
-                  
+
                   // dI1/dtensor
                   rDI1 = ZeroVector(rVector.size());
                   for (unsigned int i = 0; i < 3; i++)
@@ -145,7 +145,7 @@ namespace Kratos
                         rDJ2[i] -= i_1/3.0;
 
                   // dJ3/dtensor
-                  Matrix s_tensor = MathUtils<double>::StressVectorToTensor( rDJ2 ); 
+                  Matrix s_tensor = MathUtils<double>::StressVectorToTensor( rDJ2 );
                   Matrix t_tensor = prod(s_tensor,s_tensor);
                   for (unsigned int i = 0; i < 3; ++i)
                         t_tensor(i,i) -= 2.0/3.0 * j_2;
@@ -160,7 +160,6 @@ namespace Kratos
 
                   // change given vector to tensor
                   const Matrix aux_tensor = MathUtils<double>::StressVectorToTensor( rVector );
-                  
                   // d2I1/d2tensor
                   rD2I1 = ZeroMatrix(3);
 
@@ -184,7 +183,7 @@ namespace Kratos
                   rMeanStressP = rMeanStressP / 3.0;
 
                   // Deviatoric Equivalent
-                  rDeviatoricQ = std::sqrt(3 * rDeviatoricQ);            
+                  rDeviatoricQ = std::sqrt(3 * rDeviatoricQ);
             }
 
             // Calculate the third stress invariants lode angle (we are using positive sine definition)
@@ -198,10 +197,10 @@ namespace Kratos
                   double epsilon = 1.0e-9;
                   if ( std::abs(j_2) < epsilon ) {                                               // if j_2 is 0
                         rLodeAngle = GetPI() / 6.0;
-                  } 
+                  }
                   else if ( std::abs( rLodeAngle ) > (1.0 - epsilon) ) {                        // if current rLodeAngle magnitude is larger than 1.0
                         rLodeAngle = ( GetPI() / 6.0 ) * rLodeAngle / std::abs(rLodeAngle);
-                  }                 
+                  }
                   else {                                                                        // otherwise
                         rLodeAngle = std::asin( rLodeAngle ) / 3.0;
                   }
@@ -212,7 +211,6 @@ namespace Kratos
             {
                   // Calculate first two stress invariant
                   CalculateStressInvariants( rStress, rMeanStressP, rDeviatoricQ);
-                  
                   // Lode Angle
                   CalculateThirdStressInvariant(rStress, rLodeAngle);
             }
@@ -234,7 +232,6 @@ namespace Kratos
                   if ( std::abs(j_2) > 1E-9) {
                         for (unsigned int i = 0; i < 3; i++)
                               rC2[i] = rStress[i] - i_1/3.0;
-                  
                         rC2 *= 3.0 / (2.0 * std::sqrt(3 * j_2));
                   }
 
@@ -245,10 +242,10 @@ namespace Kratos
             {
                   double i_1, j_2, j_3;
                   CalculateTensorInvariants(rStress, i_1, j_2, j_3);
-                  
-                  Vector di_1, dj_2, dj_3;      
+
+                  Vector di_1, dj_2, dj_3;
                   CalculateTensorInvariantsDerivatives(rStress, di_1, dj_2, dj_3);
-                  
+
                   // Compute dP/dstress and dQ/dstress
                   CalculateDerivativeVectors(rStress, rC1, rC2);
 
@@ -267,7 +264,6 @@ namespace Kratos
                   // Calculate stress invariants
                   double i_1, j_2;
                   CalculateTensorInvariants( rStress, i_1, j_2);
-                  
                   // d2P/d2stress
                   r2C1 = ZeroMatrix(3);
 
@@ -282,10 +278,10 @@ namespace Kratos
             {
                   double i_1, j_2, j_3;
                   CalculateTensorInvariants(rStress, i_1, j_2, j_3);
-                  
-                  Matrix d2i_1, d2j_2, d2j_3;      
+
+                  Matrix d2i_1, d2j_2, d2j_3;
                   CalculateTensorInvariantsSecondDerivatives(rStress, d2i_1, d2j_2, d2j_3);
-                  
+
                   // Compute d2P/d2stress and d2Q/d2stress
                   CalculateSecondDerivativeMatrices(rStress, r2C1, r2C2);
 
