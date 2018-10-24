@@ -22,6 +22,7 @@
 // Project includes
 #include "solving_strategies/strategies/solving_strategy.h"
 #include "utilities/builtin_timer.h"
+#include "solving_strategies/builder_and_solvers/residualbased_block_builder_and_solver_with_constraints.h" // needed for now to reconstruct the solution on slave-dofs
 
 // Application includes
 #include "structural_mechanics_application_variables.h"
@@ -418,6 +419,44 @@ public:
 
         KRATOS_INFO_IF("System Solve Time", BaseType::GetEchoLevel() > 0 && rank == 0)
                 << system_solve_time.ElapsedSeconds() << std::endl;
+
+        // for slave-dofs the solution has to be reconstructed
+        if (rModelPart.NumberOfMasterSlaveConstraints() > 0) {
+            typedef ResidualBasedBlockBuilderAndSolverWithConstraints<TSparseSpace, TDenseSpace, TLinearSolver> BAndSWithConstraintsType;
+            // the type-check along with the cast is currently necessary bcs "ReconstructSlaveSolutionAfterSolve"
+            // is not part of the baseclass "BuilderAndSolver"
+            auto& r_builder_and_solver = *(this->pGetBuilderAndSolver());
+
+            KRATOS_ERROR_IF_NOT(typeid(r_builder_and_solver) == typeid(BAndSWithConstraintsType))
+                << "If constraints are in the ModelPart, then the corresponding B&S has to be used!" << std::endl;
+
+            auto& r_b_and_s_with_constraints = dynamic_cast<BAndSWithConstraintsType&>(r_builder_and_solver);
+
+            // creating a vector to reconstruct the solution
+            SparseVectorPointerType pDx = SparseSpaceType::CreateEmptyVectorPointer();
+            std::size_t num_dofs = Eigenvectors.size1();
+            SparseSpaceType::Resize(pDx, num_dofs);
+
+            // Initialize dummy matrix and vector (needed for the function-call)
+            SparseMatrixPointerType pA = SparseSpaceType::CreateEmptyMatrixPointer();
+            SparseVectorPointerType pb = SparseSpaceType::CreateEmptyVectorPointer();
+            auto& rA = *pA;
+            auto& rDx = *pDx;
+            auto& rb = *pb;
+
+            std::size_t num_eigenvalues = Eigenvalues.size();
+            for (std::size_t i=0; i< num_eigenvalues; ++i) {
+                for (std::size_t j=0; j<num_dofs; ++j) {
+                    SparseSpaceType::SetValue(rDx, j, Eigenvectors(i, j));
+                }
+
+                r_b_and_s_with_constraints.ReconstructSlaveSolutionAfterSolve(rModelPart, rA, rDx, rb);
+
+                for (std::size_t j=0; j<num_dofs; ++j) {
+                    Eigenvectors(i, j) = SparseSpaceType::GetValue(rDx, j);
+                }
+            }
+        }
 
         this->AssignVariables(Eigenvalues,Eigenvectors);
 
