@@ -364,6 +364,12 @@ protected:
     void SetNonConvThreshold(const double toThreshold) { mNonConvThreshold = toThreshold; }
     void SetNonConvDamage(const double toDamage) { mNonConvDamage = toDamage; }
 
+    /**
+     * @brief This method computes the tangent tensor
+     * @param rValues The constitutive law parameters and flags
+     */
+    void CalculateTangentTensor(ConstitutiveLaw::Parameters &rValues);
+    
     ///@}
     ///@name Protected  Access
     ///@{
@@ -401,12 +407,6 @@ private:
     ///@}
     ///@name Private Operations
     ///@{
-
-    /**
-     * @brief This method computes the tangent tensor
-     * @param rValues The constitutive law parameters and flags
-     */
-    void CalculateTangentTensor(ConstitutiveLaw::Parameters &rValues);
 
     ///@}
     ///@name Private  Access
