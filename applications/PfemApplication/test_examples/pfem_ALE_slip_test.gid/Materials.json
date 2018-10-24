@@ -1,0 +1,22 @@
+{
+    "material_models_list" : [{
+        "python_module" : "assign_materials_process",
+        "kratos_module" : "ConstitutiveModelsApplication",
+        "help"          : "This process creates a material and assigns its properties",
+        "process_name"  : "AssignMaterialsProcess",
+        "Parameters"    : {
+            "model_part_name"  : "Parts_water_group",
+            "properties_id"    : 1,
+            "material_name"    : "Water",
+            "constitutive_law" : {
+                "name" : "KratosMultiphysics.ConstitutiveModelsApplication.NewtonianPlaneStrain2DLaw"
+            },
+            "variables"        : {
+                "DENSITY"           : 1000.0,
+                "DYNAMIC_VISCOSITY" : 0.001,
+                "BULK_MODULUS"      : 2200000000.0
+            },
+            "tables"           : {}
+        }
+    }]
+}
