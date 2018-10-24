@@ -18,6 +18,8 @@
 #include "includes/variables.h"
 #include "includes/deprecated_variables.h"
 #include "includes/cfd_variables.h"
+#include "includes/node.h"
+#include "geometries/geometry.h"
 
 #include "custom_solvers/solution_schemes/dynamic_scheme.hpp"
 #include "custom_utilities/slip_coordinate_transformation.hpp"
@@ -86,6 +88,9 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
   typedef typename BaseType::IntegrationMethodsVectorType  IntegrationMethodsVectorType;
   typedef typename BaseType::IntegrationMethodsScalarType  IntegrationMethodsScalarType;
 
+  typedef Geometry<NodeType>      GeometryType;
+  typedef typename GeometryType::SizeType      SizeType;
+
 
   ///@}
   ///@name Life Cycle
@@ -124,23 +129,23 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
 
     // Set dofs size
     unsigned int DofsSize = 0;
-    for(typename IntegrationMethodsVectorType::iterator it=mTimeVectorIntegrationMethods.begin();
-        it!=mTimeVectorIntegrationMethods.end(); ++it)
+    for(typename IntegrationMethodsVectorType::iterator it=(this->mTimeVectorIntegrationMethods).begin();
+        it!=(this->mTimeVectorIntegrationMethods).end(); ++it)
       DofsSize += dimension;
 
-    for(typename IntegrationMethodsScalarType::iterator it=mTimeScalarIntegrationMethods.begin();
-        it!=mTimeScalarIntegrationMethods.end(); ++it)
+    for(typename IntegrationMethodsScalarType::iterator it=(this->mTimeScalarIntegrationMethods).begin();
+        it!=(this->mTimeScalarIntegrationMethods).end(); ++it)
       ++DofsSize;
 
     mRotationTool.SetBlockSize(DofsSize);
 
     // Set time integration of MESH_ variables needed for ALE
-    for(typename IntegrationMethodsVectorType::iterator it=mTimeVectorIntegrationMethods.begin(); it!=mTimeVectorIntegrationMethods.end(); ++it)
+    for(typename IntegrationMethodsVectorType::iterator it=(this->mTimeVectorIntegrationMethods).begin(); it!=(this->mTimeVectorIntegrationMethods).end(); ++it)
     {
       if( (*it)->GetPrimaryVariableName() == "VELOCITY" )
       {
-        mTimeVectorIntegrationMethods.push_back( (*it)->Clone() );
-        mTimeVectorIntegrationMethods.back().SetVariables(MESH_DISPLACEMENT,MESH_VELOCITY,MESH_ACCELERATION,MESH_VELOCITY);
+        (this->mTimeVectorIntegrationMethods).push_back( (*it)->Clone() );
+        (this->mTimeVectorIntegrationMethods).back().SetVariables(MESH_DISPLACEMENT,MESH_VELOCITY,MESH_ACCELERATION,MESH_VELOCITY);
         break;
       }
     }

@@ -99,7 +99,7 @@ class SlipCoordinateTransformation
                       TLocalVectorType& rLocalVector,
                       GeometryType& rGeometry) const
   {
-    const SizeType dimension = rGeometry.WorkigSpaceDimension();
+    const SizeType dimension = rGeometry.WorkingSpaceDimension();
 
     if(mBlockSize != dimension) //Monolithic case
     {
@@ -121,7 +121,7 @@ class SlipCoordinateTransformation
     //const unsigned int LocalSize = rLocalVector.size(); // We expect this to work both with elements (4 nodes) and conditions (3 nodes)
 
     unsigned int Index = 0;
-    const SizeType dimension = rGeometry.WorkigSpaceDimension();
+    const SizeType dimension = rGeometry.WorkingSpaceDimension();
 
     if (rLocalVector.size() > 0)
     {
@@ -324,7 +324,7 @@ class SlipCoordinateTransformation
   /// Transform nodal velocities from the rotated system to the original one
   virtual void RecoverVelocities(ModelPart& rModelPart) const
   {
-    const SizeType dimension = rModelPart.ProcessInfo()[SPACE_DIMENSION];
+    const SizeType dimension = rModelPart.GetProcessInfo()[SPACE_DIMENSION];
 
     TLocalVectorType Vel(dimension);
     TLocalVectorType Tmp(dimension);

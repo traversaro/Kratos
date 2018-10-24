@@ -206,11 +206,11 @@ class PfemSolution(MainSolid.Solution):
                                 if variable_name == "DISPLACEMENT" or variable_name == "VELOCITY" or variable_name == "ACCELERATION":
                                     ale_settings = constraints_processes[i]
                                     ale_settings["Parameters"]["variable_name"].SetString("MESH"+"_"+variable_name)
-                                    flags_list = ["SLIP"]
-                                    ale_settings["Parameters"].AddValue("flags_list", flags_list)
-                                    ale_settings["Parameters"].AddValue("constrained", False)
-                                    flags_list = ["NO_SLIP"]
-                                    constraints_processes[i]["Parameters"].AddValue("flags_list", flags_list)
+                                    ale_settings["Parameters"].AddEmptyList("flags_list")
+                                    ale_settings["Parameters"]["flags_list"].Append("SLIP")
+                                    ale_settings["Parameters"].AddEmptyValue("constrained").SetBool(False)
+                                    constraints_processes[i]["Parameters"].AddEmptyList("flags_list")
+                                    constraints_processes[i]["Parameters"]["flags_list"].Append("NOT_SLIP")
                                     constraints_processes.Append(ale_settings)
 
         return constraints_processes

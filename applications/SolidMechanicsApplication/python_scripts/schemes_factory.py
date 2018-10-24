@@ -133,7 +133,8 @@ class SolutionScheme:
             if(self.settings["time_integration"].GetString() == "Implicit"):
                 if(self.settings["analysis_type"].GetString() == "ALE"):
                     if(len(vector_integration_methods) and len(scalar_integration_methods)):
-                        solution_scheme = KratosSolid.AleDynamicScheme(vector_integration_methods,scalar_integration_methods)
+                        import KratosMultiphysics.PfemApplication as KratosPfem
+                        solution_scheme = KratosPfem.AleDynamicScheme(vector_integration_methods,scalar_integration_methods)
                     else:
                         raise Exception("ALE scheme needs vector and scalar integration methods.")
                 else:

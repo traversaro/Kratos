@@ -148,7 +148,7 @@ public:
 
         for(unsigned int i=0; i<rParameters["flags_list"].size(); ++i)
         {
-          mflags_list.push_back(KratosComponents< Variable<Flags> >::Get( rParameters["flags_list"][i].GetString() ));
+          mflags_list.push_back(KratosComponents< Flags >::Get( rParameters["flags_list"][i].GetString() ));
         }
 
         KRATOS_CATCH("")
