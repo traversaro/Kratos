@@ -149,8 +149,33 @@ public:
 
 	static void CalculateFatigueReductionFactor(const double MaxStress,
                                                 const double MinStress,
-                                                double& rReversionFactor,)
+                                                double& rReversionFactor,
+                                                const Parameters& rMaterialParameters,
+                                                const double NumbreOfCycles,
+                                                double& rFatigueReductionFactor
+                                                )
 	{
+        CalculateReversionFactor(MaxStress, MinStress, rReversionFactor);
+        const Vector& r_fatigue_parameters = rMaterialParameters[HIGH_CYCLE_FATIGUE_PARAMETERS];
+        const double yield_stress = rMaterialParameters.Has(YIELD_STRESS) ? r_material_properties[YIELD_STRESS] : r_material_properties[YIELD_STRESS_TENSION];
+
+        const double Se = r_fatigue_parameters[0] * yield_stress;
+        const double STHR1 = r_fatigue_parameters[1];
+        const double STHR2 = r_fatigue_parameters[2];
+        const double ALFAF = r_fatigue_parameters[3];
+        const double BETAF = r_fatigue_parameters[4];
+        const double AUXR1 = r_fatigue_parameters[5];
+        const double AUXR2 = r_fatigue_parameters[6];
+
+        double Sth, alphat;
+        if (rReversionFactor < 1.0) {
+            Sth = Se + (yield_stress - Se) * std::pow((0.5 + 0.5 * rReversionFactor), STHR1);
+            alphat = ALFAF + (0.5 + 0.5 * rReversionFactor) * AUXR1
+        } else {
+            Sth = Se + (yield_stress - Se) * std::pow((0.5 + 0.5 / rReversionFactor), STHR2);
+            alphat = ALFAF - (0.5 + 0.5 / rReversionFactor) * AUXR2
+        }
+
 
 	}
     ///@}
