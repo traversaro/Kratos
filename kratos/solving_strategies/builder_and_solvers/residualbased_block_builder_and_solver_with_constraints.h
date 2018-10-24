@@ -224,6 +224,56 @@ class ResidualBasedBlockBuilderAndSolverWithConstraints
         KRATOS_CATCH("ResidualBasedBlockBuilderAndSolverWithConstraints failed to finalize solution step.")
     }
 
+    /**
+     * @brief This method reconstructs the slave solution after Solving.
+     * @param rModelPart Reference to the ModelPart containing the problem.
+     * @param A System matrix
+     * @param Dx Vector of results (variations on nodal variables)
+     * @param b RHS vector (residual)
+     */
+    void ReconstructSlaveSolutionAfterSolve(
+        ModelPart& rModelPart,
+        TSystemMatrixType& rA,
+        TSystemVectorType& rDx,
+        TSystemVectorType& rb)
+    {
+        KRATOS_TRY
+        const int number_of_constraints = static_cast<int>(mGlobalMasterSlaveConstraints.size());
+        // Getting the beginning iterator
+
+        const GlobalMasterSlaveRelationContainerType::iterator constraints_begin = mGlobalMasterSlaveConstraints.begin();
+        //contributions to the system
+        VectorType master_weights_vector;
+        double constant = 0.0;
+
+        IndexType slave_equation_id = 0;
+        EquationIdVectorType master_equation_ids = EquationIdVectorType(0);
+
+#pragma omp parallel for schedule(guided, 512) firstprivate(slave_equation_id, master_equation_ids, master_weights_vector, constant)
+        for (int i_constraints = 0; i_constraints < number_of_constraints; i_constraints++)
+        {
+            //GlobalMasterSlaveRelationContainerType::iterator it = constraints_begin + i_constraints;
+            GlobalMasterSlaveRelationContainerType::iterator it = constraints_begin;
+            std::advance(it, i_constraints);
+
+            double slave_dx_value = 0.0;
+            //get the equation Ids of the constraint
+            (it->second)->EquationIdsVector(slave_equation_id, master_equation_ids);
+            //calculate constraint's T and b matrices
+            (it->second)->CalculateLocalSystem(master_weights_vector, constant);
+            int master_index = 0;
+            for (auto &master_equation_id : master_equation_ids)
+            {
+                slave_dx_value += TSparseSpace::GetValue(rDx, master_equation_id) * master_weights_vector(master_index);
+                master_index++;
+            }
+            slave_dx_value += constant;
+
+            rDx[slave_equation_id] = slave_dx_value; // this access is always unique for an object so no need of special care for openmp
+        }
+        KRATOS_CATCH("ResidualBasedBlockBuilderAndSolverWithConstraints::ReconstructSlaveSolutionAfterSolve failed ..");
+    }
+
     ///@}
     ///@name Access
     ///@{
@@ -752,56 +802,6 @@ class ResidualBasedBlockBuilderAndSolverWithConstraints
             slave_index++;
         }
         KRATOS_CATCH("ResidualBasedBlockBuilderAndSolverWithConstraints::UpdateMasterSlaveConstraint failed ..");
-    }
-
-    /**
-     * @brief This method reconstructs the slave solution after Solving.
-     * @param rModelPart Reference to the ModelPart containing the problem.
-     * @param A System matrix
-     * @param Dx Vector of results (variations on nodal variables)
-     * @param b RHS vector (residual)
-     */
-    void ReconstructSlaveSolutionAfterSolve(
-        ModelPart& rModelPart,
-        TSystemMatrixType& rA,
-        TSystemVectorType& rDx,
-        TSystemVectorType& rb)
-    {
-        KRATOS_TRY
-        const int number_of_constraints = static_cast<int>(mGlobalMasterSlaveConstraints.size());
-        // Getting the beginning iterator
-
-        const GlobalMasterSlaveRelationContainerType::iterator constraints_begin = mGlobalMasterSlaveConstraints.begin();
-        //contributions to the system
-        VectorType master_weights_vector;
-        double constant = 0.0;
-
-        IndexType slave_equation_id = 0;
-        EquationIdVectorType master_equation_ids = EquationIdVectorType(0);
-
-#pragma omp parallel for schedule(guided, 512) firstprivate(slave_equation_id, master_equation_ids, master_weights_vector, constant)
-        for (int i_constraints = 0; i_constraints < number_of_constraints; i_constraints++)
-        {
-            //GlobalMasterSlaveRelationContainerType::iterator it = constraints_begin + i_constraints;
-            GlobalMasterSlaveRelationContainerType::iterator it = constraints_begin;
-            std::advance(it, i_constraints);
-
-            double slave_dx_value = 0.0;
-            //get the equation Ids of the constraint
-            (it->second)->EquationIdsVector(slave_equation_id, master_equation_ids);
-            //calculate constraint's T and b matrices
-            (it->second)->CalculateLocalSystem(master_weights_vector, constant);
-            int master_index = 0;
-            for (auto &master_equation_id : master_equation_ids)
-            {
-                slave_dx_value += TSparseSpace::GetValue(rDx, master_equation_id) * master_weights_vector(master_index);
-                master_index++;
-            }
-            slave_dx_value += constant;
-
-            rDx[slave_equation_id] = slave_dx_value; // this access is always unique for an object so no need of special care for openmp
-        }
-        KRATOS_CATCH("ResidualBasedBlockBuilderAndSolverWithConstraints::ReconstructSlaveSolutionAfterSolve failed ..");
     }
 
     ///@}
