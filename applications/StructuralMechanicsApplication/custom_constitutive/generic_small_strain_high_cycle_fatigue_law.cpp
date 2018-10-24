@@ -133,7 +133,7 @@ void GenericSmallStrainHighCycleFatigueLaw<TConstLawIntegratorType>::CalculateMa
 
 
 
-
+        //uniaxial_stress /= fatigue_reduction_factor;
         const double F = uniaxial_stress - threshold;
 
         if (F <= 0.0) { // Elastic case

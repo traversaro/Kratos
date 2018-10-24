@@ -152,7 +152,8 @@ public:
                                                 double& rReversionFactor,
                                                 const Parameters& rMaterialParameters,
                                                 const double NumbreOfCycles,
-                                                double& rFatigueReductionFactor
+                                                double& rFatigueReductionFactor,
+                                                double& rB0
                                                 )
 	{
         CalculateReversionFactor(MaxStress, MinStress, rReversionFactor);
@@ -176,6 +177,12 @@ public:
             alphat = ALFAF - (0.5 + 0.5 / rReversionFactor) * AUXR2
         }
 
+        const square_betaf = std::pow(BETAF, 2);
+        if (MaxStress > yield_stress) {
+            rFatigueReductionFactor = std::exp(-rB0 * std::pow(std::log10(NumbreOfCycles), square_betaf));
+        } else if (MaxStress > Sth) {
+            // linea 73
+        }
 
 	}
     ///@}

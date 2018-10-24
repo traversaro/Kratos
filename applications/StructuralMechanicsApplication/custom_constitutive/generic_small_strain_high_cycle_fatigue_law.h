@@ -186,6 +186,9 @@ protected:
     double GetReversionFactor() {return mReversionFactor;}
     void SetReversionFactor(const double toReversionFactor) {mReversionFactor = toReversionFactor;}
 
+    double GetFatigueReductionParameter() {return mFatigueReductionParameter;}
+    void SetFatigueReductionParameter(const double toFatigueReductionParameter) {mFatigueReductionParameter = toFatigueReductionParameter;}
+
     ///@}
     ///@name Protected  Access
     ///@{
@@ -213,6 +216,7 @@ private:
     double mMinStress = 0.0;
     unsigned int mNumberOfCycles = 0;
     double mReversionFactor = 0.0;  // = mMinStress/mMaxStress
+    double mFatigueReductionParameter = 0.0; // B0
 
     ///@}
     ///@name Private Operators
