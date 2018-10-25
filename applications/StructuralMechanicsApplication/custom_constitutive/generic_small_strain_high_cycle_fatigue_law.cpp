@@ -201,6 +201,83 @@ void GenericSmallStrainHighCycleFatigueLaw<TConstLawIntegratorType>::FinalizeSol
 /***********************************************************************************/
 /***********************************************************************************/
 
+template <class TConstLawIntegratorType>
+bool GenericSmallStrainIsotropicDamage<TConstLawIntegratorType>::Has(const Variable<double>& rThisVariable)
+{
+    if (rThisVariable == DAMAGE) {
+        return true;
+    } else if (rThisVariable == THRESHOLD) {
+        return true;
+    } else if (rThisVariable == UNIAXIAL_STRESS) {
+        return true;
+    } else if (rThisVariable == FATIGUE_REDUCTION_FACTOR) {
+        return true;
+    } else if (rThisVariable == NUMBER_OF_CYCLES) {
+        return true;
+    } else if (rThisVariable == WOHLER_STRESS) {
+        return true;
+    } else {
+        return BaseType::Has(rThisVariable);
+    }
+
+    return false;
+}
+
+/***********************************************************************************/
+/***********************************************************************************/
+
+template <class TConstLawIntegratorType>
+void GenericSmallStrainIsotropicDamage<TConstLawIntegratorType>::SetValue(
+    const Variable<double>& rThisVariable,
+    const double& rValue,
+    const ProcessInfo& rCurrentProcessInfo
+    )
+{
+    if (rThisVariable == DAMAGE) {
+        mDamage = rValue;
+    } else if (rThisVariable == THRESHOLD) {
+        mThreshold = rValue;
+    } else if (rThisVariable == UNIAXIAL_STRESS) {
+        mUniaxialStress = rValue;
+    } else if (rThisVariable == FATIGUE_REDUCTION_FACTOR) {
+        mFatigueReductionFactor = rValue;
+    } else if (rThisVariable == NUMBER_OF_CYCLES) {
+        mNumberOfCycles = rValue;
+    } else if (rThisVariable == WOHLER_STRESS) {
+        //mUniaxialStress = rValue;
+    } else {
+        return BaseType::SetValue(rThisVariable, rValue, rCurrentProcessInfo);
+    }
+}
+
+/***********************************************************************************/
+/***********************************************************************************/
+
+template <class TConstLawIntegratorType>
+double& GenericSmallStrainIsotropicDamage<TConstLawIntegratorType>::GetValue(
+    const Variable<double>& rThisVariable,
+    double& rValue
+    )
+{
+    if (rThisVariable == DAMAGE) {
+        rValue = mDamage;
+    } else if (rThisVariable == THRESHOLD) {
+        rValue = mThreshold;
+    } else if (rThisVariable == UNIAXIAL_STRESS) {
+        rValue = mUniaxialStress;
+    } else if (rThisVariable == FATIGUE_REDUCTION_FACTOR) {
+        rValue = mFatigueReductionFactor;
+    } else if (rThisVariable == NUMBER_OF_CYCLES) {
+        rValue = mNumberOfCycles;
+    } else if (rThisVariable == WOHLER_STRESS) {
+        rValue = 0.0;
+    } else {
+        return BaseType::GetValue(rThisVariable, rValue);
+    }
+
+    return rValue;
+}
+
 template class GenericSmallStrainHighCycleFatigueLaw<GenericConstitutiveLawIntegratorDamage<VonMisesYieldSurface<VonMisesPlasticPotential<6>>>>;
 template class GenericSmallStrainHighCycleFatigueLaw<GenericConstitutiveLawIntegratorDamage<VonMisesYieldSurface<ModifiedMohrCoulombPlasticPotential<6>>>>;
 template class GenericSmallStrainHighCycleFatigueLaw<GenericConstitutiveLawIntegratorDamage<VonMisesYieldSurface<DruckerPragerPlasticPotential<6>>>>;
