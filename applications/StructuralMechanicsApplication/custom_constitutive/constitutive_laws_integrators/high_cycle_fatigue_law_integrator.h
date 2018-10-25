@@ -150,7 +150,7 @@ public:
 	static void CalculateFatigueReductionFactor(const double MaxStress,
                                                 const double MinStress,
                                                 double& rReversionFactor,
-                                                const Parameters& rMaterialParameters,
+                                                const Properties& rMaterialParameters,
                                                 const double NumbreOfCycles,
                                                 double& rFatigueReductionFactor,
                                                 double& rB0
@@ -158,7 +158,7 @@ public:
 	{
         CalculateReversionFactor(MaxStress, MinStress, rReversionFactor);
         const Vector& r_fatigue_parameters = rMaterialParameters[HIGH_CYCLE_FATIGUE_PARAMETERS];
-        const double yield_stress = rMaterialParameters.Has(YIELD_STRESS) ? r_material_properties[YIELD_STRESS] : r_material_properties[YIELD_STRESS_TENSION];
+        const double yield_stress = rMaterialParameters.Has(YIELD_STRESS) ? rMaterialParameters[YIELD_STRESS] : rMaterialParameters[YIELD_STRESS_TENSION];
 
         const double Se = r_fatigue_parameters[0] * yield_stress;
         const double STHR1 = r_fatigue_parameters[1];
@@ -171,20 +171,23 @@ public:
         double Sth, alphat;
         if (rReversionFactor < 1.0) {
             Sth = Se + (yield_stress - Se) * std::pow((0.5 + 0.5 * rReversionFactor), STHR1);
-            alphat = ALFAF + (0.5 + 0.5 * rReversionFactor) * AUXR1
+			alphat = ALFAF + (0.5 + 0.5 * rReversionFactor) * AUXR1;
         } else {
             Sth = Se + (yield_stress - Se) * std::pow((0.5 + 0.5 / rReversionFactor), STHR2);
-            alphat = ALFAF - (0.5 + 0.5 / rReversionFactor) * AUXR2
+			alphat = ALFAF - (0.5 + 0.5 / rReversionFactor) * AUXR2;
         }
 
-        const square_betaf = std::pow(BETAF, 2);
+        const double square_betaf = std::pow(BETAF, 2);
         if (MaxStress > yield_stress) {
             rFatigueReductionFactor = std::exp(-rB0 * std::pow(std::log10(NumbreOfCycles), square_betaf));
         } else if (MaxStress > Sth) {
-            // linea 73
+            const double N_F = std::pow(10,(-std::log((MaxStress - Sth) / (yield_stress - Sth))) / (alphat * BETAF));
+            rB0 = -(std::log(MaxStress / yield_stress) / std::pow((std::log10(N_F)), square_betaf));
+            rFatigueReductionFactor = std::exp(-rB0 * std::pow(std::log10(NumbreOfCycles), square_betaf));
         }
+    }
 
-	}
+
     ///@}
     ///@name Access
     ///@{

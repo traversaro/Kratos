@@ -122,18 +122,24 @@ void GenericSmallStrainHighCycleFatigueLaw<TConstLawIntegratorType>::CalculateMa
         if (std::abs(min_stress) > 0.0 || min_stress != this->GetMinStress()) {
             this->SetMinStress(min_stress);
         }
+
         double fatigue_reduction_factor = this->GetFatigueReductionFactor();
         if (number_of_cycles > this->GetNumberOfCycles() && max_stress > 0.0 && std::abs(min_stress) > 0.0) {
-            //HighCycleFatigueLawIntegrator<6>::CalculateFatigueReductionFactor()
+            double reversion_factor = this->GetReversionFactor();
+            double B0 = this->GetFatigueReductionParameter();
+            HighCycleFatigueLawIntegrator<6>::CalculateFatigueReductionFactor(this->GetMaxStress(),
+                                                                              this->GetMinStress(),
+                                                                              reversion_factor,
+                                                                              rValues.GetMaterialProperties(),
+                                                                              this->GetNumberOfCycles(),
+                                                                              fatigue_reduction_factor,
+                                                                              B0);
+            this->SetReversionFactor(reversion_factor);
+            this->SetFatigueReductionParameter(B0);
+            this->SetFatigueReductionFactor(fatigue_reduction_factor);
         }
         
-
-
-
-
-
-
-        //uniaxial_stress /= fatigue_reduction_factor;
+        uniaxial_stress /= fatigue_reduction_factor;  // Fatigue contribution
         const double F = uniaxial_stress - threshold;
 
         if (F <= 0.0) { // Elastic case
@@ -149,7 +155,6 @@ void GenericSmallStrainHighCycleFatigueLaw<TConstLawIntegratorType>::CalculateMa
 
                 this->SetValue(UNIAXIAL_STRESS, uniaxial_stress, rValues.GetProcessInfo());
             }
-
         } else { // Damage case
             const double characteristic_length = rValues.GetElementGeometry().Length();
             // This routine updates the PredictiveStress to verify the yield surf
@@ -168,7 +173,6 @@ void GenericSmallStrainHighCycleFatigueLaw<TConstLawIntegratorType>::CalculateMa
 
                 this->SetValue(UNIAXIAL_STRESS, uniaxial_stress, rValues.GetProcessInfo());
             }
-            
             noalias(integrated_stress_vector) = auxiliar_integrated_stress_vector;
         }
     }
