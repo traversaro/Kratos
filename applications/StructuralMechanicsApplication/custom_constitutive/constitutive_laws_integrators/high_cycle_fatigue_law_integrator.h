@@ -103,18 +103,20 @@ public:
         double &MaximumStress, 
         double &MinimumStress, 
         const Vector &rPreviousStresses,
-        unsigned int& rNumberOfCycles
+        unsigned int& rNumberOfCycles,
+        bool& rCycleCounter
         )
     {
         const double Stress1 = rPreviousStresses[1];
         const double Stress2 = rPreviousStresses[0];
-
+		
         const double StressIncrement1 = Stress1 - Stress2;
         const double StressIncrement2 = CurrentStress - Stress1;
 
-        if (StressIncrement1 >= 0.001 && StressIncrement2 <= 0.0) {
+        if (StressIncrement1 >= 0.001 && StressIncrement2 <= 0.0 && rCycleCounter == false) {
             MaximumStress = Stress1;
             rNumberOfCycles++;
+            rCycleCounter = true;
         }
         if (StressIncrement1 <= 0.0 && StressIncrement2 >= 0.001) {
             MinimumStress = StressIncrement1;

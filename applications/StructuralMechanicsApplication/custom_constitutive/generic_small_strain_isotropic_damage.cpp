@@ -364,9 +364,9 @@ Matrix& GenericSmallStrainIsotropicDamage<TConstLawIntegratorType>::CalculateVal
 {
     if (rThisVariable == INTEGRATED_STRESS_TENSOR) {
         //1.-Compute total deformation gradient
+        
         const Matrix& deformation_gradient_F = rParameterValues.GetDeformationGradientF();
         //2.-Right Cauchy-Green tensor C
-		KRATOS_WATCH(deformation_gradient_F)
         Matrix right_cauchy_green = prod(trans(deformation_gradient_F), deformation_gradient_F);
         Vector strain_vector = ZeroVector(6);
 

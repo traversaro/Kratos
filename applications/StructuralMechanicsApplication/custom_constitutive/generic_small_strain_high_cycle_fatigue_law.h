@@ -126,7 +126,6 @@ void CalculateMaterialResponsePK1(ConstitutiveLaw::Parameters& rValues);
 
 void CalculateMaterialResponseCauchy(ConstitutiveLaw::Parameters& rValues);
 
-
 void FinalizeSolutionStep(
     const Properties& rMaterialProperties,
     const GeometryType &rElementGeometry,
@@ -134,23 +133,57 @@ void FinalizeSolutionStep(
     const ProcessInfo& rCurrentProcessInfo
     );
 
-    ///@}
-    ///@name Access
-    ///@{
+bool Has(const Variable<double>& rThisVariable);
 
-    ///@}
-    ///@name Inquiry
-    ///@{
+void SetValue(const Variable<double>& rThisVariable, const double& rValue,
+              const ProcessInfo& rCurrentProcessInfo);
 
-    ///@}
-    ///@name Input and output
-    ///@{
+double& GetValue(const Variable<double>& rThisVariable, double& rValue);
 
-    ///@}
-    ///@name Friends
-    ///@{
+Matrix& CalculateValue(
+    ConstitutiveLaw::Parameters& rParameterValues,
+    const Variable<Matrix>& rThisVariable,
+    Matrix& rValue
+    );
 
-    ///@}
+Vector& CalculateValue(
+    ConstitutiveLaw::Parameters& rParameterValues,
+    const Variable<Vector>& rThisVariable,
+    Vector& rValue
+    );
+
+double& CalculateValue(
+    ConstitutiveLaw::Parameters& rParameterValues,
+    const Variable<double>& rThisVariable,
+    double& rValue
+    );
+
+Matrix& GetValue(
+    const Variable<Matrix>& rThisVariable,
+    Matrix& rValue
+    );
+
+Vector& GetValue(
+    const Variable<Vector>& rThisVariable,
+    Vector& rValue
+    );
+///@}
+///@name Access
+///@{
+
+///@}
+///@name Inquiry
+///@{
+
+///@}
+///@name Input and output
+///@{
+
+///@}
+///@name Friends
+///@{
+
+///@}
 
 protected:
     ///@name Protected static Member Variables
@@ -189,6 +222,12 @@ protected:
     double GetFatigueReductionParameter() {return mFatigueReductionParameter;}
     void SetFatigueReductionParameter(const double toFatigueReductionParameter) {mFatigueReductionParameter = toFatigueReductionParameter;}
 
+    Vector GetStressVector() {return mStressVector;}
+    void SetStressVector(const Vector toStressVector) {mStressVector = toStressVector;}
+
+    void ResetCycleCounter(){mHasCountedCycle = false;}
+    void SetCycleCounter(const bool tocycle){mHasCountedCycle = tocycle;}
+
     ///@}
     ///@name Protected  Access
     ///@{
@@ -217,6 +256,8 @@ private:
     unsigned int mNumberOfCycles = 0;
     double mReversionFactor = 0.0;  // = mMinStress/mMaxStress
     double mFatigueReductionParameter = 0.0; // B0
+    Vector mStressVector = ZeroVector(VoigtSize);
+    bool mHasCountedCycle = false;
 
     ///@}
     ///@name Private Operators
