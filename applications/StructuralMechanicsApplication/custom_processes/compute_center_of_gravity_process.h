@@ -6,7 +6,8 @@
 //  License:             BSD License
 //                                       license: StructuralMechanicsApplication/license.txt
 //
-//  Main authors:    Vicente Mataix Ferrandiz
+//  Main authors:    Philipp Bucher
+//                   Salman Yousaf
 //
 
 #if !defined(KRATOS_COMPUTE_CENTER_OF_GRAVITY_PROCESS)
@@ -42,10 +43,10 @@ namespace Kratos
  *
  * @ingroup StructuralMechanicsApplication
  *
- * @brief This method computes the tonal mass of a structure
- * @details It takes into account the beam, shells and solid elements
+ * @brief This method computes the center of gravity
+ * @details It takes into account all elements in the ModelPart
  *
- * @author Vicente Mataix Ferrandiz
+ * @author Philipp Bucher, Salman Yousaf
 */
 class KRATOS_API(STRUCTURAL_MECHANICS_APPLICATION) ComputeCenterOfGravityProcess
     : public Process
@@ -56,15 +57,6 @@ public:
 
     /// Pointer definition of ComputeCenterOfGravityProcess
     KRATOS_CLASS_POINTER_DEFINITION(ComputeCenterOfGravityProcess);
-
-    // General type definitions
-    typedef Node<3>                                          NodeType;
-    typedef Point                                           PointType;
-    typedef Geometry<NodeType>                           GeometryType;
-    typedef Geometry<PointType>                     GeometryPointType;
-    typedef ModelPart::NodesContainerType              NodesArrayType;
-    typedef ModelPart::ConditionsContainerType    ConditionsArrayType;
-    typedef ModelPart::ElementsContainerType        ElementsArrayType;
 
     ///@}
     ///@name Life Cycle
