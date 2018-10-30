@@ -111,26 +111,33 @@ void GenericSmallStrainHighCycleFatigueLaw<TConstLawIntegratorType>::CalculateMa
         HighCycleFatigueLawIntegrator<6>::CalculateTensionCompressionFactor(predictive_stress_vector, sign_factor);
         uniaxial_stress *= sign_factor;
         unsigned int number_of_cycles = this->GetNumberOfCycles();
-        bool cycle_counted = mHasCountedCycle;
+        bool cycle_counted = this->GetCycleCounter();
         HighCycleFatigueLawIntegrator<6>::CalculateMaximumAndMinimumStresses(uniaxial_stress, max_stress, min_stress, 
                                                                             this->GetPreviousStresses(), number_of_cycles, cycle_counted);
 		this->SetCycleCounter(cycle_counted);
 
         this->SetValue(UNIAXIAL_STRESS, uniaxial_stress, rValues.GetProcessInfo());
         uniaxial_stress *= sign_factor;
-        this->SetNumberOfCycles(number_of_cycles);
-        KRATOS_WATCH(number_of_cycles)
+        // this->SetNumberOfCycles(number_of_cycles);
+        //KRATOS_WATCH(number_of_cycles)
 
-        unsigned int aux = 0;
-        if (std::abs(max_stress) > 0.0 || max_stress != this->GetMaxStress()) {
+        if ((std::abs(max_stress) > 0.0 && max_stress != this->GetMaxStress()) && cycle_counted == true) {
             this->SetMaxStress(max_stress);
         }
-        if (std::abs(min_stress) > 0.0 || min_stress != this->GetMinStress()) {
+        if ((std::abs(min_stress) > 0.0 && min_stress != this->GetMinStress()) && cycle_counted == true) {
             this->SetMinStress(min_stress);
         }
 
         double fatigue_reduction_factor = this->GetFatigueReductionFactor();
-        if (number_of_cycles > this->GetNumberOfCycles() && max_stress > 0.0 && std::abs(min_stress) > 0.0) {
+
+        KRATOS_WATCH(this->GetMinStress())
+        //KRATOS_WATCH(uniaxial_stress)
+        KRATOS_WATCH(this->GetMaxStress())
+		KRATOS_WATCH(fatigue_reduction_factor)
+		KRATOS_WATCH(this->GetNumberOfCycles())
+
+
+        if (std::abs(this->GetMinStress()) > 0.0 && std::abs(this->GetMaxStress()) > 0.0) {
             double reversion_factor = this->GetReversionFactor();
             double B0 = this->GetFatigueReductionParameter();
             HighCycleFatigueLawIntegrator<6>::CalculateFatigueReductionFactor(this->GetMaxStress(),
@@ -144,7 +151,8 @@ void GenericSmallStrainHighCycleFatigueLaw<TConstLawIntegratorType>::CalculateMa
             this->SetFatigueReductionParameter(B0);
             this->SetFatigueReductionFactor(fatigue_reduction_factor);
         }
-        
+
+        this->SetNumberOfCycles(number_of_cycles);
         uniaxial_stress /= fatigue_reduction_factor;  // Fatigue contribution
         const double F = uniaxial_stress - threshold;
 

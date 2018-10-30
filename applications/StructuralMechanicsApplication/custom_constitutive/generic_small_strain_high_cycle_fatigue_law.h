@@ -227,6 +227,7 @@ protected:
 
     void ResetCycleCounter(){mHasCountedCycle = false;}
     void SetCycleCounter(const bool tocycle){mHasCountedCycle = tocycle;}
+    bool GetCycleCounter() {return mHasCountedCycle;}
 
     ///@}
     ///@name Protected  Access

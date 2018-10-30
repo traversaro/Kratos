@@ -118,8 +118,9 @@ public:
             rNumberOfCycles++;
             rCycleCounter = true;
         }
-        if (StressIncrement1 <= 0.0 && StressIncrement2 >= 0.001) {
-            MinimumStress = StressIncrement1;
+        if (StressIncrement1 <= 0.0 && StressIncrement2 >= 0.001 && rCycleCounter == false) {
+            MinimumStress = Stress1;
+            rCycleCounter = true;
         }
     }
 
@@ -171,7 +172,7 @@ public:
         const double AUXR2 = r_fatigue_parameters[6];
 
         double Sth, alphat;
-        if (rReversionFactor < 1.0) {
+        if (std::abs(rReversionFactor) < 1.0) {
             Sth = Se + (yield_stress - Se) * std::pow((0.5 + 0.5 * rReversionFactor), STHR1);
 			alphat = ALFAF + (0.5 + 0.5 * rReversionFactor) * AUXR1;
         } else {
@@ -179,12 +180,17 @@ public:
 			alphat = ALFAF - (0.5 + 0.5 / rReversionFactor) * AUXR2;
         }
 
+		KRATOS_WATCH(Sth)
+			KRATOS_WATCH(alphat)
+			KRATOS_WATCH(rReversionFactor)
         const double square_betaf = std::pow(BETAF, 2);
         if (MaxStress > yield_stress) {
             rFatigueReductionFactor = std::exp(-rB0 * std::pow(std::log10(NumbreOfCycles), square_betaf));
         } else if (MaxStress > Sth) {
             const double N_F = std::pow(10,(-std::log((MaxStress - Sth) / (yield_stress - Sth))) / (alphat * BETAF));
+			KRATOS_WATCH(N_F)
             rB0 = -(std::log(MaxStress / yield_stress) / std::pow((std::log10(N_F)), square_betaf));
+            KRATOS_WATCH(rB0)
             rFatigueReductionFactor = std::exp(-rB0 * std::pow(std::log10(NumbreOfCycles), square_betaf));
         }
     }
