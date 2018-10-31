@@ -739,7 +739,7 @@ class SlipCoordinateTransformation
   /// Number of matrix or vector rows associated to each node.
   /** @note Velocity Dofs are assumed to be the first rows (with dimension size).
    */
-  const unsigned int mBlockSize;
+  unsigned int mBlockSize;
 
   ///@}
   ///@name Private Operators
