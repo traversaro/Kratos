@@ -19,7 +19,8 @@
             "parts_list" : ["Parts_wall_group"]
         }],
         "domain_parts_list"    : ["Parts_water_group","Parts_wall_group"],
-        "processes_parts_list" : ["VELOCITY_Velocity_Auto1"]
+        "processes_parts_list" : ["VELOCITY_Velocity_Auto1"],
+	"variables" : ["BODY_FORCE","MESH_DISPLACEMENT","MESH_ACCELERATION"]
     },
     "time_settings"            : {
         "time_step" : 0.001,
@@ -140,7 +141,7 @@
         "kratos_module" : "KratosMultiphysics.SolidMechanicsApplication",
         "Parameters"    : {
             "model_part_name" : "water_body",
-            "variable_name"   : "VOLUME_ACCELERATION",
+            "variable_name"   : "BODY_FORCE",
             "value"           : [0.0,-9.81,0.0],
             "constrained"     : false
         }
