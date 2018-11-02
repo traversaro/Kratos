@@ -41,12 +41,12 @@ namespace Python
 {
 	void  AddCustomConstitutiveLawsToPython(pybind11::module& m)
 	{
-		class_<ZarateLaw, typename ZarateLaw::Pointer, ConstitutiveLaw >
-			(m, "ZarateLaw").def(init<>() )
+		py::class_<ZarateLaw, typename ZarateLaw::Pointer, ConstitutiveLaw >
+			(m, "ZarateLaw").def(py::init<>() )
 			;
 
-		class_<FemDemElasticLaw, typename FemDemElasticLaw::Pointer, ConstitutiveLaw >
-			(m, "FemDemElasticLaw").def(init<>() )
+		py::class_<FemDemElasticLaw, typename FemDemElasticLaw::Pointer, ConstitutiveLaw >
+			(m, "FemDemElasticLaw").def(py::init<>() )
 			;
 	}
 }  // namespace Python.
