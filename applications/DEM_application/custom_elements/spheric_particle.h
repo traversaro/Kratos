@@ -265,6 +265,8 @@ virtual void PrintData(std::ostream& rOStream) const override {}
 double mElasticEnergy;
 double mInelasticFrictionalEnergy;
 double mInelasticViscodampingEnergy;
+
+std::vector<ParticleContactElement*> mBondElements;
 std::vector<SphericParticle*>     mNeighbourElements;
 std::vector<int>                  mContactingNeighbourIds;
 std::vector<int>                  mContactingFaceNeighbourIds;
@@ -286,6 +288,7 @@ std::vector<double>               mNeighbourRigidIndentation;
 
 virtual void ComputeAdditionalForces(array_1d<double, 3>& externally_applied_force, array_1d<double, 3>& externally_applied_moment, const ProcessInfo& r_process_info, const array_1d<double,3>& gravity);
 virtual array_1d<double,3> ComputeWeight(const array_1d<double,3>& gravity, const ProcessInfo& r_process_info);
+virtual void CalculateOnContactElements(size_t i_neighbour_count, double LocalElasticContactForce[3]);
 
 array_1d<double, 3> mContactMoment; //SLS
 
@@ -293,7 +296,7 @@ Matrix* mStressTensor;
 Matrix* mSymmStressTensor;
 double mPartialRepresentativeVolume;
 
-
+unsigned int mNeighborsSize;
 std::vector<int> mFemOldNeighbourIds;
 
 protected:

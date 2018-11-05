@@ -31,6 +31,7 @@ SphericParticle::SphericParticle()
 {
     mRadius = 0;
     mRealMass = 0;
+    mNeighborsSize = 0;
     mStressTensor = NULL;
     mSymmStressTensor = NULL;
     mpTranslationalIntegrationScheme = NULL;
@@ -42,6 +43,7 @@ SphericParticle::SphericParticle(IndexType NewId, GeometryType::Pointer pGeometr
     : DiscreteElement(NewId, pGeometry), mRealMass(0){
     mRadius = 0;
     mRealMass = 0;
+    mNeighborsSize = 0;
     mStressTensor = NULL;
     mSymmStressTensor = NULL;
     mpTranslationalIntegrationScheme = NULL;
@@ -54,6 +56,7 @@ SphericParticle::SphericParticle(IndexType NewId, GeometryType::Pointer pGeometr
 {
     mRadius = 0;
     mRealMass = 0;
+    mNeighborsSize = 0;
     mStressTensor = NULL;
     mSymmStressTensor = NULL;
     mpTranslationalIntegrationScheme = NULL;
@@ -66,6 +69,7 @@ SphericParticle::SphericParticle(IndexType NewId, NodesArrayType const& ThisNode
 {
     mRadius = 0;
     mRealMass = 0;
+    mNeighborsSize = 0;
     mStressTensor = NULL;
     mSymmStressTensor = NULL;
     mpTranslationalIntegrationScheme = NULL;
@@ -417,6 +421,7 @@ void SphericParticle::ComputeNewNeighboursHistoricalData(DenseVector<int>& mTemp
         }
     }
 
+    mNeighborsSize = new_size;
     vector_of_ids_of_neighbours.swap(mTempNeighboursIds);
     mNeighbourElasticContactForces.swap(mTempNeighbourElasticContactForces);
     mNeighbourElasticExtraContactForces.swap(mTempNeighbourElasticExtraContactForces);
@@ -872,6 +877,17 @@ void SphericParticle::ComputeBallToBallContactForce(SphericParticle::ParticleDat
 
             if (this->Is(DEMFlags::HAS_STRESS_TENSOR)) {
                 AddNeighbourContributionToStressTensor(GlobalElasticContactForce, data_buffer.mLocalCoordSystem[2], data_buffer.mDistance, data_buffer.mRadiusSum, this);
+            }
+
+            if (r_process_info[CONTACT_MESH_OPTION] == 1) {
+                unsigned int neighbour_iterator_id = data_buffer.mpOtherParticle->Id();
+                if ((i < (int)mNeighborsSize) && this->Id() < neighbour_iterator_id) {
+                    double total_local_elastic_contact_force[3] = {0.0};
+                    total_local_elastic_contact_force[0] = LocalElasticContactForce[0] + LocalElasticExtraContactForce[0];
+                    total_local_elastic_contact_force[1] = LocalElasticContactForce[1] + LocalElasticExtraContactForce[1];
+                    total_local_elastic_contact_force[2] = LocalElasticContactForce[2] + LocalElasticExtraContactForce[2];
+                    CalculateOnContactElements(i, total_local_elastic_contact_force);
+                }
             }
 
             DEM_SET_COMPONENTS_TO_ZERO_3(DeltDisp)
@@ -1991,6 +2007,20 @@ void SphericParticle::ApplyGlobalDampingToContactForcesAndMoments(array_1d<doubl
             total_moment[2] *= (1.0 - mGlobalDamping * GeometryFunctions::sign(total_moment[2] * angular_velocity[2]));
         }
 
+        KRATOS_CATCH("")
+    }
+
+    void SphericParticle::CalculateOnContactElements(size_t i, double LocalElasticContactForce[3]) {
+
+        KRATOS_TRY
+
+        if (!mBondElements.size()) return; // we skip this function if the vector of bonds hasn't been filled yet.
+        ParticleContactElement* bond = mBondElements[i];
+        if (bond == NULL) return; //This bond was never created (happens in some MPI cases, see CreateContactElements() in explicit_solve_continumm.h)
+
+        bond->mLocalContactForce[0] = LocalElasticContactForce[0];
+        bond->mLocalContactForce[1] = LocalElasticContactForce[1];
+        bond->mLocalContactForce[2] = LocalElasticContactForce[2];
         KRATOS_CATCH("")
     }
 
