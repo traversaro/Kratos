@@ -14,6 +14,7 @@
 
 // Project includes
 #include "custom_python/add_custom_constitutive_laws_to_python.h"
+#include "custom_python/add_custom_utilities_to_python.h"
 
 #include "constitutive_models_application.h"
 
@@ -39,6 +40,10 @@ PYBIND11_MODULE(KratosConstitutiveModelsApplication,m)
   AddCustomConstitutiveLawsToPython(m);
 
   KRATOS_REGISTER_IN_PYTHON_VARIABLE(m, GEL_STRENGTH )
+  AddCustomUtilitiesToPython(m);
+
+  KRATOS_REGISTER_IN_PYTHON_VARIABLE(m, PROPERTIES_LAYOUT )
+
 }
 
 
