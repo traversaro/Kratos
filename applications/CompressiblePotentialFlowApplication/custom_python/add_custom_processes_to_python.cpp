@@ -19,19 +19,27 @@
 #include "includes/define.h"
 #include "custom_python/add_custom_processes_to_python.h"
 #include "custom_processes/kutta_condition_process.h"
+#include "custom_processes/compute_lift_level_set_process.h"
 
 namespace Kratos {
 namespace Python {
 
 void  AddCustomProcessesToPython(pybind11::module& m)
 {
-	namespace py = pybind11;
+	using namespace pybind11;
 
-    py::class_<KuttaConditionProcess, KuttaConditionProcess::Pointer, Process >
+        class_<KuttaConditionProcess, KuttaConditionProcess::Pointer, Process >
         (m, "KuttaConditionProcess")
-        .def(py::init<ModelPart&>())
-        ;
-}
+        .def(init<ModelPart&>())
+        .def("Execute",&KuttaConditionProcess::Execute)
+            ;
+
+        class_<ComputeLiftLevelSetProcess, ComputeLiftLevelSetProcess::Pointer, Process >
+        (m, "ComputeLiftLevelSetProcess")
+        .def(init<ModelPart&,Vector&>())
+        .def("Execute",&ComputeLiftLevelSetProcess::Execute)
+            ;
+  }
 
 }  // namespace Python.
 

@@ -11,8 +11,8 @@
 //
 
 
-#ifndef KRATOS_POTENTIAL_WALL_CONDITION_H
-#define KRATOS_POTENTIAL_WALL_CONDITION_H
+#ifndef KRATOS_INCOMPRESSIBLE_POTENTIAL_WALL_CONDITION_H
+#define KRATOS_INCOMPRESSIBLE_POTENTIAL_WALL_CONDITION_H
 
 // System includes
 #include <string>
@@ -60,14 +60,14 @@ namespace Kratos
 
 /// Implements a wall condition for the potential flow formulation
 template< unsigned int TDim, unsigned int TNumNodes = TDim >
-class PotentialWallCondition : public Condition
+class IncompressiblePotentialWallCondition : public Condition
 {
 public:
     ///@name Type Definitions
     ///@{
 
-    /// Pointer definition of PotentialWallCondition
-    KRATOS_CLASS_POINTER_DEFINITION(PotentialWallCondition);
+    /// Pointer definition of IncompressiblePotentialWallCondition
+    KRATOS_CLASS_POINTER_DEFINITION(IncompressiblePotentialWallCondition);
 
     typedef Node < 3 > NodeType;
 
@@ -105,7 +105,7 @@ public:
     /** Admits an Id as a parameter.
       @param NewId Index for the new condition
       */
-    PotentialWallCondition(IndexType NewId = 0):
+    IncompressiblePotentialWallCondition(IndexType NewId = 0):
         Condition(NewId)
     {
     }
@@ -115,7 +115,7 @@ public:
      @param NewId Index of the new condition
      @param ThisNodes An array containing the nodes of the new condition
      */
-    PotentialWallCondition(IndexType NewId,
+    IncompressiblePotentialWallCondition(IndexType NewId,
                            const NodesArrayType& ThisNodes):
         Condition(NewId,ThisNodes)
     {
@@ -126,7 +126,7 @@ public:
      @param NewId Index of the new condition
      @param pGeometry Pointer to a geometry object
      */
-    PotentialWallCondition(IndexType NewId,
+    IncompressiblePotentialWallCondition(IndexType NewId,
                            GeometryType::Pointer pGeometry):
         Condition(NewId,pGeometry)
     {
@@ -138,7 +138,7 @@ public:
      @param pGeometry Pointer to a geometry object
      @param pProperties Pointer to the element's properties
      */
-    PotentialWallCondition(IndexType NewId,
+    IncompressiblePotentialWallCondition(IndexType NewId,
                            GeometryType::Pointer pGeometry,
                            PropertiesType::Pointer pProperties):
         Condition(NewId,pGeometry,pProperties)
@@ -146,13 +146,13 @@ public:
     }
 
     /// Copy constructor.
-    PotentialWallCondition(PotentialWallCondition const& rOther):
+    IncompressiblePotentialWallCondition(IncompressiblePotentialWallCondition const& rOther):
         Condition(rOther)
     {
     }
 
     /// Destructor.
-    ~PotentialWallCondition() override {}
+    ~IncompressiblePotentialWallCondition() override {}
 
 
     ///@}
@@ -160,7 +160,7 @@ public:
     ///@{
 
     /// Copy constructor
-    PotentialWallCondition & operator=(PotentialWallCondition const& rOther)
+    IncompressiblePotentialWallCondition & operator=(IncompressiblePotentialWallCondition const& rOther)
     {
         Condition::operator=(rOther);
         return *this;
@@ -170,7 +170,7 @@ public:
     ///@name Operations
     ///@{
 
-    /// Create a new PotentialWallCondition object.
+    /// Create a new IncompressiblePotentialWallCondition object.
     /**
       @param NewId Index of the new condition
       @param ThisNodes An array containing the nodes of the new condition
@@ -178,13 +178,13 @@ public:
       */
     Condition::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes, PropertiesType::Pointer pProperties) const override
     {
-        return Condition::Pointer(new PotentialWallCondition(NewId, GetGeometry().Create(ThisNodes), pProperties));
+        return Condition::Pointer(new IncompressiblePotentialWallCondition(NewId, GetGeometry().Create(ThisNodes), pProperties));
     }
 
 
     Condition::Pointer Create(IndexType NewId, Condition::GeometryType::Pointer pGeom, PropertiesType::Pointer pProperties) const override
     {
-        return Condition::Pointer(new PotentialWallCondition(NewId, pGeom, pProperties));
+        return Condition::Pointer(new IncompressiblePotentialWallCondition(NewId, pGeom, pProperties));
     }
 
     /**
@@ -209,13 +209,13 @@ public:
     void Initialize() override
     {
         KRATOS_TRY;
+     
+        // const array_1d<double, 3> &rNormal = this->GetValue(NORMAL);
 
-        const array_1d<double, 3> &rNormal = this->GetValue(NORMAL);
-
-        KRATOS_ERROR_IF(norm_2(rNormal) < std::numeric_limits<double>::epsilon())
-            << "Error on condition -> " << this->Id() << "\n"
-            << "NORMAL must be calculated before using this condition." << std::endl;
-
+        // KRATOS_ERROR_IF(norm_2(rNormal) < std::numeric_limits<double>::epsilon())
+        //     << "Error on condition -> " << this->Id() << "\n"
+        //     << "NORMAL must be calculated before using this condition." << std::endl;
+       
         if (mInitializeWasPerformed)
             return;
 
@@ -256,14 +256,14 @@ public:
         if (rRightHandSideVector.size() != TNumNodes)
             rRightHandSideVector.resize(TNumNodes, false);
         rLeftHandSideMatrix.clear();
-
+        
         array_1d<double, 3> An;
         if (TDim == 2)
             CalculateNormal2D(An);
         else
             CalculateNormal3D(An);
 
-        const PotentialWallCondition &r_this = *this;
+        const IncompressiblePotentialWallCondition &r_this = *this;
         const array_1d<double, 3> &v = r_this.GetValue(VELOCITY_INFINITY);
         const double value = -inner_prod(v, An) / static_cast<double>(TNumNodes);
 
@@ -285,10 +285,10 @@ public:
         else
         {
             // Check that all required variables have been registered
-            if(POSITIVE_FACE_PRESSURE.Key() == 0)
-                KRATOS_ERROR << "POSITIVE_FACE_PRESSURE Key is 0. Check if the application was correctly registered.";
-            if(NEGATIVE_FACE_PRESSURE.Key() == 0)
-                KRATOS_ERROR << "NEGATIVE_FACE_PRESSURE Key is 0. Check if the application was correctly registered.";
+            if(POSITIVE_POTENTIAL.Key() == 0)
+                KRATOS_ERROR << "POSITIVE_POTENTIAL Key is 0. Check if the application was correctly registered.";
+            if(NEGATIVE_POTENTIAL.Key() == 0)
+                KRATOS_ERROR << "NEGATIVE_POTENTIAL Key is 0. Check if the application was correctly registered.";
 
             // Checks on nodes
 
@@ -296,10 +296,10 @@ public:
             for(unsigned int i=0; i<this->GetGeometry().size(); ++i)
             {
 
-                if(this->GetGeometry()[i].SolutionStepsDataHas(POSITIVE_FACE_PRESSURE) == false)
-                    KRATOS_ERROR << "missing POSITIVE_FACE_PRESSURE variable on solution step data for node " << this->GetGeometry()[i].Id();
-                if(this->GetGeometry()[i].SolutionStepsDataHas(NEGATIVE_FACE_PRESSURE) == false)
-                    KRATOS_ERROR << "missing NEGATIVE_FACE_PRESSURE variable on solution step data for node " << this->GetGeometry()[i].Id();
+                if(this->GetGeometry()[i].SolutionStepsDataHas(POSITIVE_POTENTIAL) == false)
+                    KRATOS_ERROR << "missing POSITIVE_POTENTIAL variable on solution step data for node " << this->GetGeometry()[i].Id();
+                if(this->GetGeometry()[i].SolutionStepsDataHas(NEGATIVE_POTENTIAL) == false)
+                    KRATOS_ERROR << "missing NEGATIVE_POTENTIAL variable on solution step data for node " << this->GetGeometry()[i].Id();
 
 
                 return Check;
@@ -322,7 +322,7 @@ public:
                 rResult.resize(TNumNodes, false);
 
             for (unsigned int i = 0; i < TNumNodes; i++)
-                rResult[i] = GetGeometry()[i].GetDof(POSITIVE_FACE_PRESSURE).EquationId();
+                rResult[i] = GetGeometry()[i].GetDof(POSITIVE_POTENTIAL).EquationId();
         }
 
 
@@ -338,7 +338,7 @@ public:
                 ConditionDofList.resize(TNumNodes);
 
             for (unsigned int i = 0; i < TNumNodes; i++)
-                ConditionDofList[i] = GetGeometry()[i].pGetDof(POSITIVE_FACE_PRESSURE);
+                ConditionDofList[i] = GetGeometry()[i].pGetDof(POSITIVE_POTENTIAL);
 
         }
 
@@ -379,7 +379,7 @@ public:
         /// Print information about this object.
         void PrintInfo(std::ostream& rOStream) const override
         {
-            rOStream << "PotentialWallCondition" << TDim << "D #" << this->Id();
+            rOStream << "IncompressiblePotentialWallCondition" << TDim << "D #" << this->Id();
         }
 
         /// Print object's data.
@@ -426,9 +426,12 @@ protected:
         {
             for (SizeType i = 0; i < TDim; i++)
             {
-                WeakPointerVector<Element> &rNodeElementCandidates = rGeom[i].GetValue(NEIGHBOUR_ELEMENTS);
-                for (SizeType j = 0; j < rNodeElementCandidates.size(); j++)
-                    ElementCandidates.push_back(rNodeElementCandidates(j));
+                if (rGeom[i].Has(NEIGHBOUR_ELEMENTS)) {
+                    WeakPointerVector<Element> &rNodeElementCandidates = rGeom[i].GetValue(NEIGHBOUR_ELEMENTS);
+                    for (SizeType j = 0; j < rNodeElementCandidates.size(); j++)
+                        ElementCandidates.push_back(rNodeElementCandidates(j));
+                } else
+                    std::cout << "fuck" << std::endl; 
             }
         }
 
@@ -447,7 +450,9 @@ protected:
         {
             for (SizeType i = 0; i < ElementCandidates.size(); i++)
             {
+                
                 GeometryType &rElemGeom = ElementCandidates[i].GetGeometry();
+                
                 GetSortedIds(ElementNodeIds, rElemGeom);
 
                 if (std::includes(ElementNodeIds.begin(), ElementNodeIds.end(), NodeIds.begin(), NodeIds.end()))
@@ -557,7 +562,7 @@ private:
 
         ///@}
 
-    }; // Class PotentialWallCondition
+    }; // Class IncompressiblePotentialWallCondition
 
 
     ///@}
@@ -574,7 +579,7 @@ private:
     /// input stream function
     template< unsigned int TDim, unsigned int TNumNodes >
     inline std::istream& operator >> (std::istream& rIStream,
-                                      PotentialWallCondition<TDim,TNumNodes>& rThis)
+                                      IncompressiblePotentialWallCondition<TDim,TNumNodes>& rThis)
     {
         return rIStream;
     }
@@ -582,7 +587,7 @@ private:
     /// output stream function
     template< unsigned int TDim, unsigned int TNumNodes >
     inline std::ostream& operator << (std::ostream& rOStream,
-                                      const PotentialWallCondition<TDim,TNumNodes>& rThis)
+                                      const IncompressiblePotentialWallCondition<TDim,TNumNodes>& rThis)
     {
         rThis.PrintInfo(rOStream);
         rOStream << std::endl;
