@@ -124,8 +124,8 @@ public:
     unsigned int GetPlasticRegion() override;
 
     void ComputeElastoPlasticTangentMatrix(const RadialReturnVariables& rReturnMappingVariables, const Matrix& rNewElasticLeftCauchyGreen, const double& alfa, Matrix& rConsistMatrix) override;
-    
-    void CalculatePrincipalStressTrial(const RadialReturnVariables& rReturnMappingVariables, Matrix& rNewElasticLeftCauchyGreen, Matrix& rStressMatrix) override;
+
+    void CalculatePrincipalStressTrial(const RadialReturnVariables& rReturnMappingVariables, const Matrix& rNewElasticLeftCauchyGreen, Matrix& rStressMatrix) override;
 
     ///@}
     ///@name Operators
@@ -226,13 +226,13 @@ protected:
 
     void CalculateTransformationMatrix(const Matrix& rMainDirections, Matrix& rA);
 
-    
+
     bool CalculateConsistencyCondition(RadialReturnVariables& rReturnMappingVariables, const Vector& rPrincipalStress, const Vector& rPrincipalStrain, unsigned int& region, Vector& rPrincipalStressUpdated);
- 
+
     void CalculatePlasticMultiplier(const Vector& rDirectionN, const Vector& rDirectionM, const double& rHardening, const Matrix& rElasticMatrix, const Vector rPrincipalStrain, double& rPlasticStrainMultiplier);
 
     void CalculateImagePointStress(const Vector& rCenterOfHomologyStress, const Vector& rCurrentStress, Vector& rImagePointStress, double& rConstantB, const bool& rBIsKnown = false);
-    
+
     void CalculateCenterOfHomologyStress(const Vector& rRearrangedStress, Vector& rCenterOfHomologyStress);
 
     void CheckOrderOfStress(Vector& rUpdatedStress, Matrix& rMainDirections);
@@ -246,7 +246,7 @@ protected:
 
     void CalculateModificationMatrix(Matrix& rModMatrixT);
 
-    
+
     void CalculateLoadingDirection(const Vector& rPrincipalStressVector, Vector& rLoadingDirection);
 
     void CalculatePlasticFlowDirection(const Vector& rPrincipalStressVector, const Vector& rImagePointStressVector, Vector& rPlasticFlowDirection);
@@ -265,7 +265,7 @@ protected:
     double ComputePlasticHardeningParameter(const double& rConstantB);
 
     double CalculateCriticalStateLineSlope(const double& rLodeAngle);
-    
+
     double GetScalingHardeningParameter();
 
     double GetStateParameter();
@@ -277,7 +277,7 @@ protected:
     double GetDirectionAngle(const Vector& rPrincipalStressVector);
 
     double GetPI();
-  
+
     //virtual void GetPrincipalStressAndStrain(Vector& PrincipalStresses, Vector& PrincipalStrains);
     ///@}
     ///@name Protected  Access
@@ -386,4 +386,4 @@ private:
 
 }  // namespace Kratos.
 
-#endif // KRATOS_BOUNDING_SURFACE_PLASTIC_FLOW_RULE_H_INCLUDED  defined 
+#endif // KRATOS_BOUNDING_SURFACE_PLASTIC_FLOW_RULE_H_INCLUDED  defined

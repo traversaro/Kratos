@@ -480,7 +480,7 @@ void BoundingSurfacePlasticFlowRule::ComputePlasticMatrix(const Vector& rDirecti
 }
 
 // Compute Trial elastic principal stress matrix from Trial elastic principal strain matrix
-void BoundingSurfacePlasticFlowRule::CalculatePrincipalStressTrial(const RadialReturnVariables& rReturnMappingVariables, Matrix& rNewElasticLeftCauchyGreen, Matrix& rStressMatrix)
+void BoundingSurfacePlasticFlowRule::CalculatePrincipalStressTrial(const RadialReturnVariables& rReturnMappingVariables, const Matrix& rNewElasticLeftCauchyGreen, Matrix& rStressMatrix)
 {
     Vector main_strain      = ZeroVector(3);
     Vector principal_stress = ZeroVector(3);
