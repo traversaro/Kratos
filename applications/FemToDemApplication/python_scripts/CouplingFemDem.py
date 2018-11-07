@@ -18,11 +18,11 @@ def Wait():
 # Main script of the coupled FEM-DEM Application 2D
 class FEMDEM_Solution:
 #============================================================================================================================
-    def __init__(self):
+    def __init__(self, Model):
 
         # Initialize solutions
-        self.FEM_Solution = FEM.FEM_for_coupling_Solution()
-        self.DEM_Solution = DEM.DEM_for_coupling_Solution()
+        self.FEM_Solution = FEM.FEM_for_coupling_Solution(Model)
+        self.DEM_Solution = DEM.DEM_for_coupling_Solution(Model)
 
         # Initialize Remeshing files
         self.DoRemeshing = self.FEM_Solution.ProjectParameters["AMR_data"]["activate_AMR"].GetBool()

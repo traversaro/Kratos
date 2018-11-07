@@ -3,8 +3,6 @@ from __future__ import print_function, absolute_import, division #makes KratosMu
 import KratosMultiphysics.DEMApplication
 import main_script as MainDEM
 
-
-
 class DEM_for_coupling_Solution(MainDEM.Solution):
 
     def Info(self):

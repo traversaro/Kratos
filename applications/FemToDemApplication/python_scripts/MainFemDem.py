@@ -21,7 +21,7 @@ class FEM_Solution(MainSolidFEM.Solution):
 		print("FEM part of the FEMDEM application")
 
 #============================================================================================================================					
-	def __init__(self):
+	def __init__(self, Model):
 
 		#### TIME MONITORING START ####
 		# Time control starts		
@@ -55,7 +55,9 @@ class FEM_Solution(MainSolidFEM.Solution):
 		#### Model_part settings start ####
 
 		# Defining the model_part
-		self.main_model_part = KratosMultiphysics.ModelPart(self.ProjectParameters["problem_data"]["model_part_name"].GetString())
+		self.model = Model
+		self.model.CreateModelPart(self.ProjectParameters["problem_data"]["model_part_name"].GetString())
+		self.main_model_part = self.model.GetModelPart(self.ProjectParameters["problem_data"]["model_part_name"].GetString())
 
 		if (self.ProjectParameters["solver_settings"]["solution_type"].GetString() == "Dynamic"):
 			self.main_model_part.ProcessInfo.SetValue(KratosFemDem.IS_DYNAMIC, 1)
