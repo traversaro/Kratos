@@ -21,6 +21,8 @@
 #include "includes/node.h"
 #include "geometries/geometry.h"
 
+#include "pfem_application_variables.h"
+
 #include "custom_solvers/solution_schemes/dynamic_scheme.hpp"
 #include "custom_utilities/slip_coordinate_transformation.hpp"
 
@@ -145,7 +147,7 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
       if( (*it)->GetPrimaryVariableName() == "VELOCITY" )
       {
         (this->mTimeVectorIntegrationMethods).push_back( (*it)->Clone() );
-        (this->mTimeVectorIntegrationMethods).back().SetVariables(MESH_DISPLACEMENT,MESH_VELOCITY,MESH_ACCELERATION,MESH_VELOCITY);
+        (this->mTimeVectorIntegrationMethods).back()->SetVariables(MESH_DISPLACEMENT,MESH_VELOCITY,MESH_ACCELERATION,MESH_VELOCITY);
         break;
       }
     }
@@ -202,12 +204,12 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
     OpenMPUtils::DivideInPartitions(rModelPart.Nodes().size(), NumThreads, NodePartition);
 
     const int nnodes = static_cast<int>(rModelPart.Nodes().size());
-    NodesContainerType::iterator NodeBegin = rModelPart.Nodes().begin();
+    typename NodesContainerType::iterator NodeBegin = rModelPart.Nodes().begin();
 
 #pragma omp parallel for firstprivate(NodeBegin)
     for(int i = 0;  i < nnodes; i++)
     {
-      NodesContainerType::iterator itNode = NodeBegin + i;
+      typename NodesContainerType::iterator itNode = NodeBegin + i;
 
       if(itNode->IsNot(SLIP))
       {
@@ -300,15 +302,15 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
       (pCurrentElement) -> CalculateSecondDerivativesContributions(this->mMatrix.M[thread],this->mVector.a[thread],rCurrentProcessInfo);
       (pCurrentElement) -> CalculateFirstDerivativesContributions(this->mMatrix.D[thread],this->mVector.v[thread],rCurrentProcessInfo);
 
-      AddDynamicTangentsToLHS(rLHS_Contribution,this->mMatrix.D[thread],this->mMatrix.M[thread],rCurrentProcessInfo);
-      AddDynamicForcesToRHS(rRHS_Contribution,this->mVector.v[thread],this->mVector.a[thread],rCurrentProcessInfo);
+      this->AddDynamicTangentsToLHS(rLHS_Contribution,this->mMatrix.D[thread],this->mMatrix.M[thread],rCurrentProcessInfo);
+      this->AddDynamicForcesToRHS(rRHS_Contribution,this->mVector.v[thread],this->mVector.a[thread],rCurrentProcessInfo);
     }
     else{
-      (pCurrentElement) -> CalculateMassMatrix(mMatrix.M[thread], rCurrentProcessInfo);
-      (pCurrentElement)->CalculateLocalVelocityContribution(mMatrix.D[thread], rRHS_Contribution, rCurrentProcessInfo);
+      (pCurrentElement) -> CalculateMassMatrix(this->mMatrix.M[thread], rCurrentProcessInfo);
+      (pCurrentElement)->CalculateLocalVelocityContribution(this->mMatrix.D[thread], rRHS_Contribution, rCurrentProcessInfo);
 
-      AddDynamicsToLHS (rLHS_Contribution, mMatrix.D[thread], mMatrix.M[thread], rCurrentProcessInfo);
-      AddDynamicsToRHS (pCurrentElement, rRHS_Contribution, mMatrix.D[thread], mMatrix.M[thread], rCurrentProcessInfo);
+      this->AddDynamicsToLHS (rLHS_Contribution, this->mMatrix.D[thread], this->mMatrix.M[thread], rCurrentProcessInfo);
+      this->AddDynamicsToRHS (pCurrentElement, rRHS_Contribution, this->mMatrix.D[thread], this->mMatrix.M[thread], rCurrentProcessInfo);
     }
 
     // If there is a slip condition, apply it on a rotated system of coordinates
@@ -340,15 +342,15 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
       (pCurrentElement) -> CalculateSecondDerivativesRHS(this->mVector.a[thread],rCurrentProcessInfo);
       (pCurrentElement) -> CalculateFirstDerivativesRHS(this->mVector.v[thread],rCurrentProcessInfo);
 
-      AddDynamicForcesToRHS(rRHS_Contribution,this->mVector.v[thread],this->mVector.a[thread],rCurrentProcessInfo);
+      this->AddDynamicForcesToRHS(rRHS_Contribution,this->mVector.v[thread],this->mVector.a[thread],rCurrentProcessInfo);
 
     }
     else{
 
-      (pCurrentElement) -> CalculateMassMatrix(mMatrix.M[thread], rCurrentProcessInfo);
-      (pCurrentElement)->CalculateLocalVelocityContribution(mMatrix.D[thread], rRHS_Contribution, rCurrentProcessInfo);
+      (pCurrentElement) -> CalculateMassMatrix(this->mMatrix.M[thread], rCurrentProcessInfo);
+      (pCurrentElement)->CalculateLocalVelocityContribution(this->mMatrix.D[thread], rRHS_Contribution, rCurrentProcessInfo);
 
-      AddDynamicsToRHS (pCurrentElement, rRHS_Contribution, mMatrix.D[thread], mMatrix.M[thread], rCurrentProcessInfo);
+      this->AddDynamicsToRHS (pCurrentElement, rRHS_Contribution, this->mMatrix.D[thread], this->mMatrix.M[thread], rCurrentProcessInfo);
     }
 
     // If there is a slip condition, apply it on a rotated system of coordinates
@@ -380,15 +382,15 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
       (pCurrentCondition) -> CalculateSecondDerivativesContributions(this->mMatrix.M[thread],this->mVector.a[thread],rCurrentProcessInfo);
       (pCurrentCondition) -> CalculateFirstDerivativesContributions(this->mMatrix.D[thread],this->mVector.v[thread],rCurrentProcessInfo);
 
-      AddDynamicTangentsToLHS(rLHS_Contribution,this->mMatrix.D[thread],this->mMatrix.M[thread],rCurrentProcessInfo);
-      AddDynamicForcesToRHS(rRHS_Contribution,this->mVector.v[thread],this->mVector.a[thread],rCurrentProcessInfo);
+      this->AddDynamicTangentsToLHS(rLHS_Contribution,this->mMatrix.D[thread],this->mMatrix.M[thread],rCurrentProcessInfo);
+      this->AddDynamicForcesToRHS(rRHS_Contribution,this->mVector.v[thread],this->mVector.a[thread],rCurrentProcessInfo);
     }
     else{
-      (pCurrentCondition) -> CalculateMassMatrix(mMatrix.M[thread], rCurrentProcessInfo);
-      (pCurrentCondition)->CalculateLocalVelocityContribution(mMatrix.D[thread], rRHS_Contribution, rCurrentProcessInfo);
+      (pCurrentCondition) -> CalculateMassMatrix(this->mMatrix.M[thread], rCurrentProcessInfo);
+      (pCurrentCondition)->CalculateLocalVelocityContribution(this->mMatrix.D[thread], rRHS_Contribution, rCurrentProcessInfo);
 
-      AddDynamicsToLHS  (rLHS_Contribution, mMatrix.D[thread], mMatrix.M[thread], rCurrentProcessInfo);
-      AddDynamicsToRHS  (pCurrentCondition, rRHS_Contribution, mMatrix.D[thread], mMatrix.M[thread], rCurrentProcessInfo);
+      this->AddDynamicsToLHS  (rLHS_Contribution, this->mMatrix.D[thread], this->mMatrix.M[thread], rCurrentProcessInfo);
+      this->AddDynamicsToRHS  (pCurrentCondition, rRHS_Contribution, this->mMatrix.D[thread], this->mMatrix.M[thread], rCurrentProcessInfo);
     }
 
     // Rotate contributions (to match coordinates for slip conditions)
@@ -416,13 +418,13 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
       (pCurrentCondition) -> CalculateSecondDerivativesRHS(this->mVector.a[thread],rCurrentProcessInfo);
       (pCurrentCondition) -> CalculateFirstDerivativesRHS(this->mVector.v[thread],rCurrentProcessInfo);
 
-      AddDynamicForcesToRHS(rRHS_Contribution,this->mVector.v[thread],this->mVector.a[thread],rCurrentProcessInfo);
+      this->AddDynamicForcesToRHS(rRHS_Contribution,this->mVector.v[thread],this->mVector.a[thread],rCurrentProcessInfo);
     }
     else{
-      (pCurrentCondition) -> CalculateMassMatrix(mMatrix.M[thread], rCurrentProcessInfo);
-      (pCurrentCondition)->CalculateLocalVelocityContribution(mMatrix.D[thread], rRHS_Contribution,rCurrentProcessInfo);
+      (pCurrentCondition) -> CalculateMassMatrix(this->mMatrix.M[thread], rCurrentProcessInfo);
+      (pCurrentCondition)->CalculateLocalVelocityContribution(this->mMatrix.D[thread], rRHS_Contribution,rCurrentProcessInfo);
 
-      AddDynamicsToRHS  (pCurrentCondition, rRHS_Contribution, mMatrix.D[thread], mMatrix.M[thread], rCurrentProcessInfo);
+      this->AddDynamicsToRHS  (pCurrentCondition, rRHS_Contribution, this->mMatrix.D[thread], this->mMatrix.M[thread], rCurrentProcessInfo);
     }
 
     // Rotate contributions (to match coordinates for slip conditions)

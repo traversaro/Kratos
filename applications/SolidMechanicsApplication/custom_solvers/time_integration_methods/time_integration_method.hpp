@@ -142,6 +142,13 @@ namespace Kratos
       ,mpSecondDerivative(rOther.mpSecondDerivative)
       ,mpPrimaryVariable(rOther.mpPrimaryVariable)
       ,mpInputVariable(rOther.mpInputVariable)
+      ,mpAssign(rOther.mpAssign)
+      ,mpPredict(rOther.mpPredict)
+      ,mpUpdate(rOther.mpUpdate)
+      ,mpFirstDerivativeKineticFactor(rOther.mpFirstDerivativeKineticFactor)
+      ,mpSecondDerivativeKineticFactor(rOther.mpSecondDerivativeKineticFactor)
+      ,mpFirstDerivativeInertialFactor(rOther.mpFirstDerivativeInertialFactor)
+      ,mpSecondDerivativeInertialFactor(rOther.mpSecondDerivativeInertialFactor)
     {
     }
 

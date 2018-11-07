@@ -105,7 +105,8 @@ class AssignMaterialsProcess(KratosMultiphysics.Process):
 
         #pybind11 not working anymore
         #self.model_part.Properties[self.settings["properties_id"].GetInt())] = self.properties
-        self.model_part.SetProperties(self.main_model_part.GetProperties())
+        #self.model_part.SetProperties(self.main_model_part.GetProperties())
+        self.model_part.AddProperties(self.properties)
 
         splitted_law_name = (self.settings["constitutive_law"]["name"].GetString()).split(".")
 

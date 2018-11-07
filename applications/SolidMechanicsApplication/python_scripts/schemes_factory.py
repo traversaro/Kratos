@@ -388,6 +388,17 @@ class SolutionScheme:
             self.dof_variables = self.dof_variables + ['JACOBIAN']
             self.dof_reactions = self.dof_reactions + ['REACTION_JACOBIAN']
 
+        # Add ale mesh variables
+        if self._check_input_variable("MESH_VELOCITY"):
+            self.nodal_variables = self.nodal_variables + ['MESH_DISPLACEMENT', 'MESH_VELOCITY', 'MESH_ACCELERATION']
+
+    def _check_input_variable(self, variable):
+
+        for i in self.integration_variables:
+            if i == variable:
+                return True
+
+        return False
 
     def _check_input_dof(self, variable):
 

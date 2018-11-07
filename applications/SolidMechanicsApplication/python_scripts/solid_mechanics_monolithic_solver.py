@@ -236,6 +236,9 @@ class MonolithicSolver(object):
                 mechanical_solver.SetInitializePerformedFlag(True)
             else:
                 mechanical_solver.Set(KratosSolid.SolverLocalFlags.INITIALIZED, True)
+        else:
+            mechanical_solver = self._get_mechanical_solver()
+            mechanical_solver.Initialize()
 
     def _is_not_restarted(self):
         if self.process_info.Has(KratosMultiphysics.IS_RESTARTED):
