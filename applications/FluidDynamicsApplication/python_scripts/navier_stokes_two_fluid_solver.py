@@ -219,7 +219,7 @@ class NavierStokesTwoFluidMonolithicSolver(FluidSolver):
             (self.bdf_process).Execute()
             self.levelset_convector.Execute()
             self.redistance_process.Execute()
-            self._set_physical_properties
+            self._set_physical_properties()
             (self.solver).InitializeSolutionStep()
 
 
