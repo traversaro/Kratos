@@ -9,7 +9,7 @@
             "properties_id"    : 1,
             "material_name"    : "Water",
             "constitutive_law" : {
-                "name" : "KratosMultiphysics.ConstitutiveModelsApplication.NewtonianFluidPlaneStrain2DLaw"
+                "name" : "KratosMultiphysics.FluidDynamicsApplication.Newtonian2DLaw"
             },
             "variables"        : {
                 "DENSITY"           : 1000.0,

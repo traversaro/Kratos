@@ -20,7 +20,7 @@
         }],
         "domain_parts_list"    : ["Parts_water_group","Parts_wall_group"],
         "processes_parts_list" : ["VELOCITY_Velocity_Auto1"],
-	"variables" : ["BODY_FORCE","MESH_DISPLACEMENT","MESH_ACCELERATION"]
+	"variables" : ["BODY_FORCE"]
     },
     "time_settings"            : {
         "time_step" : 0.001,
@@ -173,7 +173,7 @@
             "output_control_type" : "step",
             "output_frequency"    : 1,
             "node_output"         : true,
-            "nodal_results"       : ["DISPLACEMENT","VELOCITY","ACCELERATION","PRESSURE","MESH_VELOCITY"],
+            "nodal_results"       : ["DISPLACEMENT","VELOCITY","ACCELERATION","PRESSURE"],
             "gauss_point_results" : []
         }
     }
