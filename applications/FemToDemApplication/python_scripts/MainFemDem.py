@@ -203,14 +203,14 @@ class FEM_Solution(MainSolidFEM.Solution):
 
 #============================================================================================================================
 	def RunMainTemporalLoop(self):
-		
+
 		# Solving the problem (time integration)
 		while(self.time < self.end_time):
 			
 			self.InitializeSolutionStep()
 			self.SolveSolutionStep()
 			self.FinalizeSolutionStep()
-	  
+
 #============================================================================================================================
 	def InitializeSolutionStep(self):
 
@@ -218,7 +218,7 @@ class FEM_Solution(MainSolidFEM.Solution):
 		neighbour_elemental_finder.ClearNeighbours()
 		neighbour_elemental_finder.Execute()
 
-		print("")
+		#print("")
 		print(" [STEP:",self.step," TIME:", self.time,"]")
 
 		# processes to be executed at the begining of the solution step
