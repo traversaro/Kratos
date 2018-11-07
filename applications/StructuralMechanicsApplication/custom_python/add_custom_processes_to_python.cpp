@@ -48,6 +48,10 @@ void  AddCustomProcessesToPython(pybind11::module& m)
         .def(py::init<ModelPart&>())
         ;
 
+    py::class_<ComputeCenterOfGravityProcess, ComputeCenterOfGravityProcess::Pointer, Process>(m,"ComputeCenterOfGravityProcess")
+        .def(py::init<ModelPart&>())
+        ;
+
     py::class_<PrismNeighboursProcess, PrismNeighboursProcess::Pointer, Process>(m, "PrismNeighboursProcess")
         .def(py::init<ModelPart&>())
         .def(py::init<ModelPart&, const bool >())
