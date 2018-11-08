@@ -110,12 +110,12 @@ class NavierStokesTwoFluidsSolver(FluidSolver):
     def PrepareModelPart(self):
         super(NavierStokesTwoFluidsSolver, self).PrepareModelPart()
         if not self.main_model_part.ProcessInfo[KratosMultiphysics.IS_RESTARTED]:
-            ## Sets DENSITY, DYNAMIC_VISCOSITY and SOUND_VELOCITY
-            self._set_physical_properties()
             ## Sets the constitutive law
             self._set_constitutive_law()
             ## Setting the nodal distance
             self._set_distance_function()
+            ## Sets DENSITY and DYNAMIC_VISCOSITY
+            self._set_physical_properties()
 
     def Initialize(self):
         self.computing_model_part = self.GetComputingModelPart()
@@ -192,7 +192,7 @@ class NavierStokesTwoFluidsSolver(FluidSolver):
 
         # Transfer density and (dynamic) viscostity to the nodes
         for node in self.main_model_part.Nodes:
-            if node.GetSolutionStepValue(KratosMultiphysics.DISTANCE) < 0.0:
+            if node.GetSolutionStepValue(KratosMultiphysics.DISTANCE) <= 0.0:
                 node.SetSolutionStepValue(KratosMultiphysics.DENSITY, rho_1)
                 node.SetSolutionStepValue(KratosMultiphysics.DYNAMIC_VISCOSITY, mu_1)
             else:
