@@ -24,9 +24,10 @@ class ComputeLiftProcess(KratosMultiphysics.Process):
             }  """)
 
         settings.ValidateAndAssignDefaults(default_parameters)
-        self.problem_name=settings["problem_name"].GetString()
+        self.problem_name=settings["problem_name"].GetString()       
         self.upper_surface_model_part =Model.GetModelPart(settings["upper_surface_model_part_name"].GetString()) 
         self.lower_surface_model_part =Model.GetModelPart(settings["lower_surface_model_part_name"].GetString())
+        self.main_model_part =self.upper_surface_model_part.GetRootModelPart()
         self.velocity_infinity = [0,0,0]
         self.velocity_infinity[0] = settings["velocity_infinity"][0].GetDouble()
         self.velocity_infinity[1] = settings["velocity_infinity"][1].GetDouble()
@@ -94,4 +95,5 @@ class ComputeLiftProcess(KratosMultiphysics.Process):
 
         print('Cl = ', Cl)
         print('Cd = ', Cd)
+        self.main_model_part.SetValue(KratosMultiphysics.FRICTION_COEFFICIENT,Cl)
         print('Mach = ', self.velocity_infinity[0]/340)
