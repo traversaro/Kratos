@@ -79,6 +79,8 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions(
 	if (LocalId == 0) {
 		// Set the flag
 		(*it)->GetGeometry().GetPoint(0).SetValue(PRESSURE_ID, PressureId);
+		const int id = (*it)->GetGeometry().GetPoint(0).Id();
+		mr_model_part.GetSubModelPart(sub_model_name).AddNode(mr_model_part.pGetNode(id));
 		condition1_nodes_id.push_back((*it)->GetGeometry().GetPoint(0).Id());
 		condition1_nodes_id.push_back((*it)->GetGeometry().GetPoint(1).Id());
 		ModelPart::ConditionType::Pointer condition1 = mr_model_part.CreateNewCondition(
@@ -96,9 +98,13 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions(
 																	  p_properties);
 		mr_model_part.GetSubModelPart(sub_model_name).AddCondition(condition1);
 		mr_model_part.GetSubModelPart(sub_model_name).AddCondition(condition2);
+		mr_model_part.AddCondition(condition1);
+		mr_model_part.AddCondition(condition2);
 	} else if (LocalId == 1) {
 		// Set the flag
 		(*it)->GetGeometry().GetPoint(1).SetValue(PRESSURE_ID, PressureId);
+		const int id = (*it)->GetGeometry().GetPoint(1).Id();
+		mr_model_part.GetSubModelPart(sub_model_name).AddNode(mr_model_part.pGetNode(id));
 		condition1_nodes_id.push_back((*it)->GetGeometry().GetPoint(0).Id());
 		condition1_nodes_id.push_back((*it)->GetGeometry().GetPoint(1).Id());
 		ModelPart::ConditionType::Pointer condition1 = mr_model_part.CreateNewCondition(
@@ -116,9 +122,13 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions(
 																	  p_properties);
 		mr_model_part.GetSubModelPart(sub_model_name).AddCondition(condition1);
 		mr_model_part.GetSubModelPart(sub_model_name).AddCondition(condition2);
+		mr_model_part.AddCondition(condition1);
+		mr_model_part.AddCondition(condition2);
 	} else if (LocalId == 2) {
 		// Set the flag
 		(*it)->GetGeometry().GetPoint(2).SetValue(PRESSURE_ID, PressureId);
+		const int id = (*it)->GetGeometry().GetPoint(2).Id();
+		mr_model_part.GetSubModelPart(sub_model_name).AddNode(mr_model_part.pGetNode(id));
 		condition1_nodes_id.push_back((*it)->GetGeometry().GetPoint(0).Id());
 		condition1_nodes_id.push_back((*it)->GetGeometry().GetPoint(2).Id());
 		ModelPart::ConditionType::Pointer condition1 = mr_model_part.CreateNewCondition(
@@ -136,6 +146,8 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions(
 																	  p_properties);
 		mr_model_part.GetSubModelPart(sub_model_name).AddCondition(condition1);
 		mr_model_part.GetSubModelPart(sub_model_name).AddCondition(condition2);
+		mr_model_part.AddCondition(condition1);
+		mr_model_part.AddCondition(condition2);
 	}
 }
 /***********************************************************************************/
@@ -149,9 +161,15 @@ void ExtendPressureConditionProcess<2>::GetMaximumConditionIdOnSubmodelPart(
 {
 	MaximumConditionId = 0;
 	SubModelName = "Normal_Load-auto-" + std::to_string(PressureId);
-	for (ModelPart::ConditionIterator itCond = mr_model_part.GetSubModelPart(SubModelName).ConditionsBegin();
-		itCond != mr_model_part.GetSubModelPart(SubModelName).ConditionsEnd();
-			itCond++) {
+	// for (ModelPart::ConditionIterator itCond = mr_model_part.GetSubModelPart(SubModelName).ConditionsBegin();
+	// 	itCond != mr_model_part.GetSubModelPart(SubModelName).ConditionsEnd();
+	// 		itCond++) {
+
+	// 	if (((*itCond)).Id() > MaximumConditionId) MaximumConditionId = ((*itCond)).Id();
+	// }
+	for (ModelPart::ConditionIterator itCond = mr_model_part.ConditionsBegin();
+		 itCond != mr_model_part.ConditionsEnd();
+		 itCond++) {
 
 		if (((*itCond)).Id() > MaximumConditionId) MaximumConditionId = ((*itCond)).Id();
 	}
