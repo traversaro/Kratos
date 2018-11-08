@@ -11,8 +11,8 @@
 //  Main authors:    Alejandro Cornejo Velázquez
 //
 
-#if !defined(KRATOS_EXTEND_PRESSURE_PROCESS)
-#define KRATOS_EXTEND_PRESSURE_PROCESS
+#if !defined(KRATOS_ASSIGN_PRESSURE_ID_PROCESS)
+#define KRATOS_ASSIGN_PRESSURE_ID_PROCESS
 
 
 #include "includes/model_part.h"
@@ -29,25 +29,25 @@ namespace Kratos {
 typedef std::size_t SizeType;
 
 
-
-template <SizeType TDim = 2>
-class ExtendPressureConditionProcess : public Process 
+class AssignPressureIdProcess : public Process 
 {
  public:
   /// Pointer definition of ApplyMultipointConstraintsProcess
-  KRATOS_CLASS_POINTER_DEFINITION(ExtendPressureConditionProcess);
+  KRATOS_CLASS_POINTER_DEFINITION(AssignPressureIdProcess);
 
-
+  typedef std::size_t IndexType;
   // Constructor
-  ExtendPressureConditionProcess(ModelPart &r_model_part);
+  AssignPressureIdProcess(ModelPart &r_model_part);
 
 
   // Destructor
-  ~ExtendPressureConditionProcess() override = default;
+  ~AssignPressureIdProcess() override = default;
 
   void operator()() { Execute(); }
 
   void Execute() override;
+
+  void AssignPressureIdToNodes(std::string rSubModelPartName, const int PressureId);
 
 protected:
 

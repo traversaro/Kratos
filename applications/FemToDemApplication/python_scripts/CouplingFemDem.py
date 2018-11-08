@@ -65,6 +65,17 @@ class FEMDEM_Solution:
             self.InitializeMMGvariables()
             self.RemeshingProcessMMG.ExecuteInitialize()
 
+        self.pressure_load = True #hard coded
+        if self.pressure_load:
+            KratosFemDem.AssignPressureIdProcess(self.FEM_Solution.main_model_part).Execute()
+
+
+        for node in self.FEM_Solution.main_model_part.Nodes:
+            print(node.GetValue(KratosFemDem.PRESSURE_ID))
+
+        Wait()
+
+
 
 #============================================================================================================================
     def RunMainTemporalLoop(self):
@@ -99,7 +110,6 @@ class FEMDEM_Solution:
                 # Extrapolate the VonMises normalized stress to nodes (remeshing)
                 KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
             # Perform remeshing
-
             self.RemeshingProcessMMG.ExecuteInitializeSolutionStep()
 
             if is_remeshing:
@@ -109,6 +119,10 @@ class FEMDEM_Solution:
                 KratosMultiphysics.VariableUtils().SetNonHistoricalVariable(KratosFemDem.NODAL_FORCE_APPLIED, False, self.FEM_Solution.main_model_part.Nodes)
                 # Initialize the "flag" RADIUS in all the nodes
                 KratosMultiphysics.VariableUtils().SetNonHistoricalVariable(KratosMultiphysics.RADIUS, False, self.FEM_Solution.main_model_part.Nodes)
+
+                self.pressure_load = True #hard coded
+                if self.pressure_load:
+                    KratosFemDem.AssignPressureIdProcess(self.FEM_Solution.main_model_part).Execute()
 
                 # Remove DEMS from previous mesh
                 self.SpheresModelPart.Elements.clear()
@@ -897,3 +911,5 @@ class FEMDEM_Solution:
             Coordinates = self.GetNodeCoordinates(node)
             self.ParticleCreatorDestructor.FEMDEM_CreateSphericParticle(Coordinates, R, Id)
             node.SetValue(KratosFemDem.IS_DEM, True)
+
+#============================================================================================================================

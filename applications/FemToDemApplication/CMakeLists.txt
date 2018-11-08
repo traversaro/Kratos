@@ -26,6 +26,8 @@ set( KRATOS_FEM_TO_DEM_APPLICATION_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/romfemdem3d_element.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/femdem3d_large_displacement_element.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/femdem3d_hexahedron_element.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_processes/extend_pressure_condition_process.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_processes/assign_pressure_id_process.cpp
 )
 
 # define library Kratos which defines the basic python interface
