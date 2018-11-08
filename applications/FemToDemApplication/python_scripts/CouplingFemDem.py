@@ -129,15 +129,16 @@ class FEMDEM_Solution:
                 self.FEM_Solution.model_processes.ExecuteInitializeSolutionStep()
 
 		# Search the skin nodes for the remeshing
-        skin_detection_process_param = KratosMultiphysics.Parameters("""
-        {
-            "name_auxiliar_model_part" : "SkinDEMModelPart",
-            "name_auxiliar_condition"  : "Condition",
-            "echo_level"               : 0
-        }""")
-        skin_detection_process = KratosMultiphysics.SkinDetectionProcess2D(self.FEM_Solution.main_model_part,
-                                                                            skin_detection_process_param)
-        skin_detection_process.Execute()
+        if self.DoRemeshing:
+            skin_detection_process_param = KratosMultiphysics.Parameters("""
+            {
+                "name_auxiliar_model_part" : "SkinDEMModelPart",
+                "name_auxiliar_condition"  : "Condition",
+                "echo_level"               : 0
+            }""")
+            skin_detection_process = KratosMultiphysics.SkinDetectionProcess2D(self.FEM_Solution.main_model_part,
+                                                                                skin_detection_process_param)
+            skin_detection_process.Execute()
 
         self.FEM_Solution.InitializeSolutionStep()
 
@@ -167,9 +168,10 @@ class FEMDEM_Solution:
 
 
         if self.pressure_load:
-            elem = self.FEM_Solution.main_model_part.GetElement(25)
-            elem.Set(KratosMultiphysics.ACTIVE, False)
-            # we recosntruct the pressure load
+            if self.FEM_Solution.step == 1:
+                elem = self.FEM_Solution.main_model_part.GetElement(25)
+                elem.Set(KratosMultiphysics.ACTIVE, False)
+            # we reconstruct the pressure load
             KratosFemDem.ExtendPressureConditionProcess2D(self.FEM_Solution.main_model_part).Execute()
             Wait()
 

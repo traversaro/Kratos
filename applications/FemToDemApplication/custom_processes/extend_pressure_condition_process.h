@@ -44,13 +44,13 @@ public:
     void Execute() override;
 
     void CreateAndAddPressureConditions(
-        ModelPart::ElementsContainerType::ptr_iterator it, unsigned int LocalId,
-        int PressureId);
+        ModelPart::ElementsContainerType::ptr_iterator itElem,
+        const unsigned int LocalId,
+        const int PressureId,
+        int& MaximumConditionId);
 
     void GetMaximumConditionIdOnSubmodelPart(
-        const int PressureId,
-        int& MaximumConditionId,
-        std::string& SubModelName);
+        int& MaximumConditionId);
 
 protected:
     // Member Variables
