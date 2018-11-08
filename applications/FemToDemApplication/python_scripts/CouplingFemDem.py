@@ -173,7 +173,11 @@ class FEMDEM_Solution:
                 elem.Set(KratosMultiphysics.ACTIVE, False)
             # we reconstruct the pressure load
             KratosFemDem.ExtendPressureConditionProcess2D(self.FEM_Solution.main_model_part).Execute()
-            Wait()
+
+        # for cond in self.FEM_Solution.main_model_part.GetSubModelPart("Normal_Load-auto-1").Conditions:
+        #     print(cond)
+        # print(self.FEM_Solution.main_model_part)
+        Wait()
 
         # we create the new DEM of this time step
         self.GenerateDEM()
