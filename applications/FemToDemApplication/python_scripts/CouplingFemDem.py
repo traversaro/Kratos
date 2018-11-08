@@ -70,12 +70,6 @@ class FEMDEM_Solution:
             KratosFemDem.AssignPressureIdProcess(self.FEM_Solution.main_model_part).Execute()
 
 
-        for node in self.FEM_Solution.main_model_part.Nodes:
-            print(node.GetValue(KratosFemDem.PRESSURE_ID))
-
-        Wait()
-
-
 
 #============================================================================================================================
     def RunMainTemporalLoop(self):
@@ -170,6 +164,14 @@ class FEMDEM_Solution:
         #### SOLVE FEM #########################################
         self.FEM_Solution.solver.Solve()
         ########################################################
+
+
+        if self.pressure_load:
+            elem = self.FEM_Solution.main_model_part.GetElement(25)
+            elem.Set(KratosMultiphysics.ACTIVE, False)
+            # we recosntruct the pressure load
+            KratosFemDem.ExtendPressureConditionProcess2D(self.FEM_Solution.main_model_part).Execute()
+            Wait()
 
         # we create the new DEM of this time step
         self.GenerateDEM()

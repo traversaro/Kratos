@@ -6,14 +6,13 @@
 //
 //  License:		 BSD License
 //					 Kratos default license:
-//kratos/license.txt
+// kratos/license.txt
 //
 //  Main authors:    Alejandro Cornejo Velázquez
 //
 
 #if !defined(KRATOS_EXTEND_PRESSURE_PROCESS)
 #define KRATOS_EXTEND_PRESSURE_PROCESS
-
 
 #include "includes/model_part.h"
 #include "processes/process.h"
@@ -22,37 +21,40 @@
 #include "includes/define.h"
 #include "includes/kratos_flags.h"
 
-
-
 namespace Kratos {
 
 typedef std::size_t SizeType;
 
-
-
 template <SizeType TDim = 2>
 class ExtendPressureConditionProcess : public Process 
 {
- public:
-  /// Pointer definition of ApplyMultipointConstraintsProcess
-  KRATOS_CLASS_POINTER_DEFINITION(ExtendPressureConditionProcess);
 
+public:
+    /// Pointer definition of ApplyMultipointConstraintsProcess
+    KRATOS_CLASS_POINTER_DEFINITION(ExtendPressureConditionProcess);
 
-  // Constructor
-  ExtendPressureConditionProcess(ModelPart &r_model_part);
+    // Constructor
+    ExtendPressureConditionProcess(ModelPart &r_model_part);
 
+    // Destructor
+    ~ExtendPressureConditionProcess() override = default;
 
-  // Destructor
-  ~ExtendPressureConditionProcess() override = default;
+    void operator()() { Execute(); }
 
-  void operator()() { Execute(); }
+    void Execute() override;
 
-  void Execute() override;
+    void CreateAndAddPressureConditions(
+        ModelPart::ElementsContainerType::ptr_iterator it, unsigned int LocalId,
+        int PressureId);
+
+    void GetMaximumConditionIdOnSubmodelPart(
+        const int PressureId,
+        int& MaximumConditionId,
+        std::string& SubModelName);
 
 protected:
-
-  // Member Variables
-  ModelPart &mr_model_part;
+    // Member Variables
+    ModelPart &mr_model_part;
 
 };  // Class
 
