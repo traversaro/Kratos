@@ -365,13 +365,13 @@ namespace Kratos {
         const double other_gamma = neighbor->GetProperties()[DAMPING_GAMMA];
         const double equiv_gamma = 0.5 * (my_gamma + other_gamma);
 
+        double aux = (element->GetRadius() + neighbor->GetRadius()) / distance; // This is necessary because if spheres are not tangent the DeltaRotatedAngle and the DeltaAngularVelocity have to be interpolated
+
         //Viscous parameter taken from Olmedo et al., 'Discrete element model of the dynamic response of fresh wood stems to impact'
         array_1d<double, 3> visc_param;
-        visc_param[0] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * Inertia_I / distance); // OLMEDO
-        visc_param[1] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * Inertia_I / distance); // OLMEDO
-        visc_param[2] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_shear * Inertia_J / distance); // OLMEDO
-
-        double aux = (element->GetRadius() + neighbor->GetRadius()) / distance; // This is necessary because if spheres are not tangent the DeltaAngularVelocity has to be interpolated
+        visc_param[0] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * Inertia_I / aux); // OLMEDO
+        visc_param[1] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * Inertia_I / aux); // OLMEDO
+        visc_param[2] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_shear * Inertia_J / aux); // OLMEDO
 
         array_1d<double, 3> LocalEffDeltaRotatedAngle;
         LocalEffDeltaRotatedAngle[0] = LocalDeltaRotatedAngle[0] * aux;
