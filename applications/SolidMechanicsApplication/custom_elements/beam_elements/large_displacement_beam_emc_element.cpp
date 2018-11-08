@@ -380,15 +380,17 @@ namespace Kratos
     //noalias(rDeltaPosition) = ZeroMatrix(number_of_nodes,dimension);
 
     for ( unsigned int i = 0; i < number_of_nodes; i++ )
+    {
+      //array_1d<double, 3 > & CurrentStepDisplacement = GetGeometry()[i].FastGetSolutionStepValue(STEP_DISPLACEMENT,1);
+      array_1d<double, 3 > & PreviousDisplacement = GetGeometry()[i].FastGetSolutionStepValue(DISPLACEMENT,2);
+      array_1d<double, 3 > & CurrentDisplacement = GetGeometry()[i].FastGetSolutionStepValue(DISPLACEMENT,1);
+      
+      for ( unsigned int j = 0; j < dimension; j++ )
       {
-        array_1d<double, 3 > & CurrentStepDisplacement = GetGeometry()[i].FastGetSolutionStepValue(STEP_DISPLACEMENT,1);
-
-       for ( unsigned int j = 0; j < dimension; j++ )
-	  {
-	    rDeltaPosition(i,j) = CurrentStepDisplacement[j];
-	  }
-
+        rDeltaPosition(i,j) = CurrentDisplacement[j]-PreviousDisplacement[j];
       }
+
+    }
 
     return rDeltaPosition;
 

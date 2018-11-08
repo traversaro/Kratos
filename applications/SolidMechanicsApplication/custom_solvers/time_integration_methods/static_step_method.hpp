@@ -260,11 +260,10 @@ namespace Kratos
     {
       KRATOS_TRY
 
-      const TValueType& CurrentVariable          = rNode.FastGetSolutionStepValue(*this->mpVariable,         0);
-      TValueType& PreviousVariable               = rNode.FastGetSolutionStepValue(*this->mpVariable,         1);
+      const TValueType& CurrentVariable      = rNode.FastGetSolutionStepValue(*this->mpVariable,         0);
+      TValueType& PreviousStepVariable       = rNode.FastGetSolutionStepValue(*this->mpStepVariable,     1);
 
-      // update variable previous iteration instead of previous step
-      PreviousVariable = CurrentVariable;
+      PreviousStepVariable = CurrentVariable;
 
       KRATOS_CATCH( "" )
     }
@@ -293,9 +292,9 @@ namespace Kratos
       TValueType& CurrentStepVariable            = rNode.FastGetSolutionStepValue(*this->mpStepVariable,     0);
 
       const TValueType& CurrentVariable          = rNode.FastGetSolutionStepValue(*this->mpVariable,         0);
-      const TValueType& PreviousVariable         = rNode.FastGetSolutionStepValue(*this->mpVariable,         1);
+      const TValueType& PreviousStepVariable     = rNode.FastGetSolutionStepValue(*this->mpStepVariable,     1);
 
-      CurrentStepVariable += CurrentVariable-PreviousVariable;
+      CurrentStepVariable += CurrentVariable-PreviousStepVariable;
 
       KRATOS_CATCH( "" )
     }
@@ -304,11 +303,10 @@ namespace Kratos
     {
       KRATOS_TRY
 
-      const TValueType& CurrentVariable          = rNode.FastGetSolutionStepValue(*this->mpVariable,         0);
-      TValueType& PreviousVariable               = rNode.FastGetSolutionStepValue(*this->mpVariable,         1);
+      const TValueType& CurrentVariable    = rNode.FastGetSolutionStepValue(*this->mpVariable,         0);
+      TValueType& PreviousStepVariable     = rNode.FastGetSolutionStepValue(*this->mpStepVariable,     1);
 
-      // update variable previous iteration instead of previous step
-      PreviousVariable = CurrentVariable;
+      PreviousStepVariable = CurrentVariable;
 
       KRATOS_CATCH( "" )
     }

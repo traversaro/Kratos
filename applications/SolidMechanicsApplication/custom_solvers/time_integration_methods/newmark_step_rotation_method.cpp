@@ -39,11 +39,11 @@ namespace Kratos
       array_1d<double,3>& CurrentStepVariable      = rNode.FastGetSolutionStepValue(*this->mpStepVariable,    0);
 
       array_1d<double,3>& CurrentVariable          = rNode.FastGetSolutionStepValue(*this->mpVariable,        0);
-      array_1d<double,3>& PreviousVariable         = rNode.FastGetSolutionStepValue(*this->mpVariable,        1);
+      array_1d<double,3>& PreviousStepVariable     = rNode.FastGetSolutionStepValue(*this->mpStepVariable,    1);
 
       // update delta variable
       array_1d<double,3> DeltaVariable;
-      noalias(DeltaVariable) = CurrentVariable - PreviousVariable;
+      noalias(DeltaVariable) = CurrentVariable - PreviousStepVariable;
 
       Quaternion<double> DeltaVariableQuaternion = Quaternion<double>::FromRotationVector(DeltaVariable);
 
@@ -55,14 +55,14 @@ namespace Kratos
       StepVariableQuaternion.ToRotationVector(CurrentStepVariable);
 
       // update variable:
-      Quaternion<double> VariableQuaternion = Quaternion<double>::FromRotationVector(PreviousVariable);
+      Quaternion<double> VariableQuaternion = Quaternion<double>::FromRotationVector(PreviousStepVariable);
 
       VariableQuaternion = DeltaVariableQuaternion * VariableQuaternion;
 
       VariableQuaternion.ToRotationVector( CurrentVariable );
 
       // update variable previous iteration instead of previous step
-      PreviousVariable = CurrentVariable;
+      PreviousStepVariable = CurrentVariable;
 
       // update first derivative
       array_1d<double,3>& CurrentFirstDerivative = rNode.FastGetSolutionStepValue(*this->mpFirstDerivative,  0);
