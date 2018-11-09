@@ -165,19 +165,30 @@ class FEMDEM_Solution:
         #### SOLVE FEM #########################################
         self.FEM_Solution.solver.Solve()
         ########################################################
-        Wait()
+
         if self.pressure_load:
             if self.FEM_Solution.step == 1:
-                elem = self.FEM_Solution.main_model_part.GetElement(25)
+                elem = self.FEM_Solution.main_model_part.GetElement(5)
                 elem.Set(KratosMultiphysics.ACTIVE, False)
             # we reconstruct the pressure load
-            KratosFemDem.ExtendPressureConditionProcess2D(self.FEM_Solution.main_model_part).Execute()
-
-        for i in range(0, 26):
-            self.FEM_Solution.main_model_part.RemoveCondition(i)
-        for cond in self.FEM_Solution.main_model_part.Conditions:
-            print(cond.Id)
+            self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER] = 1
+            while self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER] > 0: 
+                KratosFemDem.ExtendPressureConditionProcess2D(self.FEM_Solution.main_model_part,).Execute()
+                print(self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER])
+            # print(self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER])
+            
         Wait()
+        for i in range(0, 27):
+            self.FEM_Solution.main_model_part.RemoveCondition(i)
+
+        # for i in range(0, 5):
+        #     self.FEM_Solution.main_model_part.RemoveCondition(i)
+        # for i in range(6, 27):
+        #     self.FEM_Solution.main_model_part.RemoveCondition(i)
+
+        # for cond in self.FEM_Solution.main_model_part.Conditions:
+        #     print(cond.Id)
+
 
         # we create the new DEM of this time step
         self.GenerateDEM()

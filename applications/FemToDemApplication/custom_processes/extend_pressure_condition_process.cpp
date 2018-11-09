@@ -21,7 +21,7 @@ namespace Kratos {
 template <SizeType TDim>
 ExtendPressureConditionProcess<TDim>::ExtendPressureConditionProcess(
     ModelPart &r_model_part)
-    : mr_model_part(r_model_part) 
+    : mr_model_part(r_model_part)
 {
 }
 
@@ -31,7 +31,7 @@ ExtendPressureConditionProcess<TDim>::ExtendPressureConditionProcess(
 template <>
 void ExtendPressureConditionProcess<2>::Execute() 
 {
-	int maximum_condition_id;
+	int maximum_condition_id, counter_of_affected_nodes = 0;
     this->GetMaximumConditionIdOnSubmodelPart(maximum_condition_id);
 
     for (ModelPart::ElementsContainerType::ptr_iterator it = mr_model_part.Elements().ptr_begin(); it != mr_model_part.Elements().ptr_end(); ++it) {
@@ -53,9 +53,12 @@ void ExtendPressureConditionProcess<2>::Execute()
             }
             if (counter == 2) {
                 this->CreateAndAddPressureConditions(it, local_id, pressure_id, maximum_condition_id);
+                counter_of_affected_nodes++;
             }
         }
     }
+    auto& process_info = mr_model_part.GetProcessInfo();
+    process_info[ITER] = counter_of_affected_nodes;
 }
 
 /***********************************************************************************/
@@ -86,23 +89,32 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions(
     const IndexType id_2 = LocalId == 0 ? 1 : LocalId == 1 ? 2 : 0;
     const IndexType id_3 = LocalId == 0 ? 2 : LocalId == 1 ? 0 : 1;
 
-    condition_nodes_id[0] = r_geom[id_1].Id();
-    condition_nodes_id[1] = r_geom[id_2].Id();
+    // KRATOS_WATCH(r_geom[0].Id())
+    // KRATOS_WATCH(r_geom[1].Id())
+    // KRATOS_WATCH(r_geom[2].Id())
+
+
+    condition_nodes_id[0] = r_geom[id_2].Id();
+    condition_nodes_id[1] = r_geom[id_1].Id();
 	MaximumConditionId++;
-    r_sub_model_part.CreateNewCondition(
+    auto& line_cond1 = r_sub_model_part.CreateNewCondition(
 					"LineLoadCondition2D2N",
 					MaximumConditionId,
 					condition_nodes_id,
-					p_properties);
+					p_properties, 0);
 
     condition_nodes_id[0] = r_geom[id_1].Id();
     condition_nodes_id[1] = r_geom[id_3].Id();
     MaximumConditionId++;
-    r_sub_model_part.CreateNewCondition(
+    auto& line_cond2 = r_sub_model_part.CreateNewCondition(
 					"LineLoadCondition2D2N",
 					MaximumConditionId,
 					condition_nodes_id,
-					p_properties);
+					p_properties, 0);
+    
+    // adding the conditions to the computing model part
+    mr_model_part.GetSubModelPart("computing_domain").AddCondition(line_cond1);
+    mr_model_part.GetSubModelPart("computing_domain").AddCondition(line_cond2);
 }
 /***********************************************************************************/
 /***********************************************************************************/

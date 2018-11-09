@@ -52,7 +52,7 @@ void AddCustomProcessesToPython(pybind11::module &m)
 		.def("Execute", &ExtendPressureConditionProcess<2>::Execute);
 
 	class_<ExtendPressureConditionProcess<3>, ExtendPressureConditionProcess<3>::Pointer, Process>(m, "ExtendPressureConditionProcess3D")
-		.def(init<ModelPart &>())
+		.def(init<ModelPart&>())
 		.def("Execute", &ExtendPressureConditionProcess<3>::Execute);
 
 	class_<AssignPressureIdProcess, AssignPressureIdProcess::Pointer, Process>(m, "AssignPressureIdProcess")
