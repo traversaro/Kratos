@@ -174,12 +174,12 @@ class FEMDEM_Solution:
             self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER] = 1
             while self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER] > 0: 
                 KratosFemDem.ExtendPressureConditionProcess2D(self.FEM_Solution.main_model_part,).Execute()
-                print(self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER])
+                # print(self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER])
             # print(self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER])
             
-        Wait()
-        for i in range(0, 27):
-            self.FEM_Solution.main_model_part.RemoveCondition(i)
+        
+        # for i in range(0, 27):
+        #     self.FEM_Solution.main_model_part.RemoveCondition(i)
 
         # for i in range(0, 5):
         #     self.FEM_Solution.main_model_part.RemoveCondition(i)
@@ -188,6 +188,7 @@ class FEMDEM_Solution:
 
         # for cond in self.FEM_Solution.main_model_part.Conditions:
         #     print(cond.Id)
+        # Wait()
 
 
         # we create the new DEM of this time step

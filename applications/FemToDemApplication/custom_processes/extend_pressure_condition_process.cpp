@@ -89,11 +89,6 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions(
     const IndexType id_2 = LocalId == 0 ? 1 : LocalId == 1 ? 2 : 0;
     const IndexType id_3 = LocalId == 0 ? 2 : LocalId == 1 ? 0 : 1;
 
-    // KRATOS_WATCH(r_geom[0].Id())
-    // KRATOS_WATCH(r_geom[1].Id())
-    // KRATOS_WATCH(r_geom[2].Id())
-
-
     condition_nodes_id[0] = r_geom[id_2].Id();
     condition_nodes_id[1] = r_geom[id_1].Id();
 	MaximumConditionId++;
@@ -115,6 +110,18 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions(
     // adding the conditions to the computing model part
     mr_model_part.GetSubModelPart("computing_domain").AddCondition(line_cond1);
     mr_model_part.GetSubModelPart("computing_domain").AddCondition(line_cond2);
+
+    // We remove the condition regarding the erased edge...
+    int counter_check = 0;
+    for (ModelPart::ConditionsContainerType::ptr_iterator it = mr_model_part.Conditions().ptr_begin(); it != mr_model_part.Conditions().ptr_end(); ++it) {
+        const IndexType Id1 = (*it)->GetGeometry()[0].Id();
+        const IndexType Id2 = (*it)->GetGeometry()[1].Id();
+        if ((Id1 == r_geom[id_2].Id() && Id2 == r_geom[id_3].Id()) || (Id2 == r_geom[id_2].Id() && Id1 == r_geom[id_3].Id())) {
+            counter_check++;
+			mr_model_part.RemoveCondition((*it)->Id());
+        }
+    }
+    KRATOS_ERROR_IF(counter_check == 0) << "Somethign wrong with the conditions..." << std::endl;
 }
 /***********************************************************************************/
 /***********************************************************************************/
