@@ -37,7 +37,7 @@ void ExtendPressureConditionProcess<2>::Execute()
     for (ModelPart::ElementsContainerType::ptr_iterator it = mr_model_part.Elements().ptr_begin(); it != mr_model_part.Elements().ptr_end(); ++it) {
         bool condition_is_active = true;
         if ((*it)->IsDefined(ACTIVE)) {
-                condition_is_active = (*it)->Is(ACTIVE);
+            condition_is_active = (*it)->Is(ACTIVE);
         }
         // It's going to be removed
         if (condition_is_active == false) {
@@ -52,8 +52,11 @@ void ExtendPressureConditionProcess<2>::Execute()
                 }
             }
             if (counter == 2) {
-                this->CreateAndAddPressureConditions(it, local_id, pressure_id, maximum_condition_id);
+                KRATOS_WATCH((*it)->Id())
+                this->CreateAndAddPressureConditions2(it, local_id, pressure_id, maximum_condition_id);
                 counter_of_affected_nodes++;
+            } else if (counter == 3) {
+                
             }
         }
     }
@@ -65,7 +68,7 @@ void ExtendPressureConditionProcess<2>::Execute()
 /***********************************************************************************/
 
 template <>
-void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions(
+void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions2(
     ModelPart::ElementsContainerType::ptr_iterator itElem,
     const unsigned int LocalId,
     const int PressureId,
@@ -121,7 +124,6 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions(
 			mr_model_part.RemoveCondition((*it)->Id());
         }
     }
-    KRATOS_ERROR_IF(counter_check == 0) << "Somethign wrong with the conditions..." << std::endl;
 }
 /***********************************************************************************/
 /***********************************************************************************/

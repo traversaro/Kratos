@@ -158,18 +158,19 @@ class FEMDEM_Solution:
 
         self.FEM_Solution.clock_time = self.FEM_Solution.StartTimeMeasuring()
 
-
-        # write output results GiD: (frequency writing is controlled internally) remove TODO
-        # self.FEM_Solution.GraphicalOutputPrintOutput()
-
         #### SOLVE FEM #########################################
         self.FEM_Solution.solver.Solve()
         ########################################################
 
+        # write output results GiD: (frequency writing is controlled internally) remove TODO
+        # if self.FEM_Solution.step == 5:
+        #     self.FEM_Solution.GraphicalOutputPrintOutput()
+        #     Wait()
+
         if self.pressure_load:
-            if self.FEM_Solution.step == 1:
-                elem = self.FEM_Solution.main_model_part.GetElement(5)
-                elem.Set(KratosMultiphysics.ACTIVE, False)
+            # if self.FEM_Solution.step == 1:
+            #     elem = self.FEM_Solution.main_model_part.GetElement(5)
+            #     elem.Set(KratosMultiphysics.ACTIVE, False)
             # we reconstruct the pressure load
             self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER] = 1
             while self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER] > 0: 
