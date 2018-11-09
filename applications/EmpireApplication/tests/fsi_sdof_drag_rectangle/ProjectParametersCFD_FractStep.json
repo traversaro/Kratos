@@ -47,6 +47,7 @@
                 "coarse_enough" : 5000
             },
             "time_order" : 2,
+            "time_scheme" : "bossak",
             "reform_dofs_each_step" : false,
             "compute_reactions"     : false
         },
