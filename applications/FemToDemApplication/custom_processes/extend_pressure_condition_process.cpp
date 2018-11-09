@@ -56,7 +56,7 @@ void ExtendPressureConditionProcess<2>::Execute()
                 this->CreateAndAddPressureConditions2(it, local_id, pressure_id, maximum_condition_id);
                 counter_of_affected_nodes++;
             } else if (counter == 3) {
-                
+                // todo
             }
         }
     }
