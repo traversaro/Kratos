@@ -165,8 +165,7 @@ class FEMDEM_Solution:
         #### SOLVE FEM #########################################
         self.FEM_Solution.solver.Solve()
         ########################################################
-
-
+        Wait()
         if self.pressure_load:
             if self.FEM_Solution.step == 1:
                 elem = self.FEM_Solution.main_model_part.GetElement(25)
@@ -174,9 +173,10 @@ class FEMDEM_Solution:
             # we reconstruct the pressure load
             KratosFemDem.ExtendPressureConditionProcess2D(self.FEM_Solution.main_model_part).Execute()
 
-        # for cond in self.FEM_Solution.main_model_part.GetSubModelPart("Normal_Load-auto-1").Conditions:
-        #     print(cond)
-        # print(self.FEM_Solution.main_model_part)
+        for i in range(0, 26):
+            self.FEM_Solution.main_model_part.RemoveCondition(i)
+        for cond in self.FEM_Solution.main_model_part.Conditions:
+            print(cond.Id)
         Wait()
 
         # we create the new DEM of this time step
