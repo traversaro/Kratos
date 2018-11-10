@@ -50,12 +50,19 @@ public:
         const int PressureId,
         int& MaximumConditionId);
 
+    void CreateAndAddPressureConditions3(
+        ModelPart::ElementsContainerType::ptr_iterator itElem,
+        const int PressureId,
+        int& MaximumConditionId);
+
     void GetMaximumConditionIdOnSubmodelPart(
         int& MaximumConditionId);
 
 protected:
     // Member Variables
     ModelPart &mr_model_part;
+    std::vector<IndexType> mNodeIdContainer;
+    std::vector<int> mNodePressureIdContainer;
 
 };  // Class
 

@@ -177,7 +177,7 @@ class FEMDEM_Solution:
                 KratosFemDem.ExtendPressureConditionProcess2D(self.FEM_Solution.main_model_part,).Execute()
                 # print(self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER])
             # print(self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER])
-            
+            Wait()
         
         # for i in range(0, 27):
         #     self.FEM_Solution.main_model_part.RemoveCondition(i)
@@ -674,19 +674,12 @@ class FEMDEM_Solution:
             NumberOfActiveElements = node.GetValue(KratosFemDem.NUMBER_OF_ACTIVE_ELEMENTS)
             if NumberOfActiveElements == 0 and node.GetValue(KratosFemDem.INACTIVE_NODE) == False:
 
-                # to remove TODO
                 Id = node.Id
-                # print("nodo eliminado", Id)
-                # Wait()
-
                 node.SetValue(KratosFemDem.INACTIVE_NODE, True)
                 node.Set(KratosMultiphysics.TO_ERASE, True) # added
                 DEMnode = self.SpheresModelPart.GetNode(Id)
                 DEMnode.SetValue(KratosFemDem.INACTIVE_NODE, True)
                 DEMnode.Set(KratosMultiphysics.TO_ERASE, True)
-
-            # # Reset the value to the next step
-            # node.SetValue(KratosFemDem.NUMBER_OF_ACTIVE_ELEMENTS, 0)
 
         # Remove inactive nodes
         self.SpheresModelPart.RemoveElementsFromAllLevels(KratosMultiphysics.TO_ERASE)
