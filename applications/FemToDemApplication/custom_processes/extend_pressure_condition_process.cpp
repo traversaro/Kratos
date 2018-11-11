@@ -40,7 +40,7 @@ void ExtendPressureConditionProcess<2>::Execute()
             condition_is_active = (*it)->Is(ACTIVE);
         }
         // It's going to be removed
-        if (condition_is_active == false) {
+        if (condition_is_active == false && (*it)->GetValue(SMOOTHING) == false) {
             unsigned int local_id, counter = 0, pressure_id;
             // Loop over nodes in order to check if there's pressure on nodes
             for (IndexType i = 0; i < (*it)->GetGeometry().PointsNumber(); ++i) {
@@ -52,13 +52,17 @@ void ExtendPressureConditionProcess<2>::Execute()
                 }
             }
             if (counter == 2) {
-                // KRATOS_WATCH((*it)->Id())
+                KRATOS_WATCH((*it)->Id())
                 this->CreateAndAddPressureConditions2(it, local_id, pressure_id, maximum_condition_id);
                 counter_of_affected_nodes++;
+                // We use this flag to enter once on each element
+                (*it)->SetValue(SMOOTHING, true);
             } else if (counter == 3) {
-                // KRATOS_WATCH((*it)->Id())
+                KRATOS_WATCH((*it)->Id())
                 this->CreateAndAddPressureConditions3(it, pressure_id, maximum_condition_id);
                 counter_of_affected_nodes++;
+                // We use this flag to enter once on each element
+                (*it)->SetValue(SMOOTHING, true);
             }
         }
     }
@@ -68,7 +72,6 @@ void ExtendPressureConditionProcess<2>::Execute()
     for (IndexType i = 0; i < mNodeIdContainer.size(); ++i) {
         mr_model_part.GetNode(mNodeIdContainer[i]).SetValue(PRESSURE_ID, mNodePressureIdContainer[i]);
     }
-
     mNodeIdContainer.clear();
     mNodePressureIdContainer.clear();
 }
@@ -177,16 +180,23 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions3(
     mr_model_part.GetSubModelPart("computing_domain").AddCondition(line_cond);
 
     // We remove the condition regarding the erased edges...
+    int counter = 0;
     for (ModelPart::ConditionsContainerType::ptr_iterator it = mr_model_part.Conditions().ptr_begin(); it != mr_model_part.Conditions().ptr_end(); ++it) {
         const IndexType Id1 = (*it)->GetGeometry()[0].Id();
         const IndexType Id2 = (*it)->GetGeometry()[1].Id();
-        //KRATOS_WATCH((*it)->Id())
+        KRATOS_WATCH((*it)->Id())
+        KRATOS_WATCH(Id1)
+        KRATOS_WATCH(Id2)
+        
         if ((Id1 == r_geom[id_2].Id() && Id2 == r_geom[id_1].Id()) || (Id2 == r_geom[id_2].Id() && Id1 == r_geom[id_1].Id())) {
 			mr_model_part.RemoveCondition((*it)->Id());
+            counter++;
         } else if ((Id1 == r_geom[id_1].Id() && Id2 == r_geom[id_3].Id()) || (Id2 == r_geom[id_1].Id() && Id1 == r_geom[id_3].Id())) {
 			mr_model_part.RemoveCondition((*it)->Id());
+            counter++;
         }
     }
+    KRATOS_ERROR_IF(counter < 2) << "NO PUEDE SER..." << std::endl;
 }
 
 /***********************************************************************************/
