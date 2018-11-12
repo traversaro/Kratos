@@ -162,30 +162,14 @@ class FEMDEM_Solution:
         self.FEM_Solution.solver.Solve()
         ########################################################
 
-        # write output results GiD: (frequency writing is controlled internally) remove TODO
-        # if self.FEM_Solution.step == 5:
-        #     self.FEM_Solution.GraphicalOutputPrintOutput()
-        #     Wait()
-
         if self.pressure_load:
             # we reconstruct the pressure load
             self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER] = 1
+            itera = 0
             while self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER] > 0: 
+                print("iteracion whilee", itera)
                 KratosFemDem.ExtendPressureConditionProcess2D(self.FEM_Solution.main_model_part,).Execute()
-            Wait()
-        
-        # for i in range(0, 27):
-        #     self.FEM_Solution.main_model_part.RemoveCondition(i)
-
-        # for i in range(0, 5):
-        #     self.FEM_Solution.main_model_part.RemoveCondition(i)
-        # for i in range(6, 27):
-        #     self.FEM_Solution.main_model_part.RemoveCondition(i)
-
-        # for cond in self.FEM_Solution.main_model_part.Conditions:
-        #     print(cond.Id)
-        # Wait()
-
+                itera += 1
 
         # we create the new DEM of this time step
         self.GenerateDEM()
