@@ -58,7 +58,7 @@ public:
     void GetMaximumConditionIdOnSubmodelPart(
         int& MaximumConditionId);
 
-    void ExtendPressureConditionProcess::CalculateNumberOfElementsOnNodes();
+    void CalculateNumberOfElementsOnNodes();
 protected:
     // Member Variables
     ModelPart &mr_model_part;

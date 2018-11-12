@@ -33,15 +33,6 @@ void ExtendPressureConditionProcess<2>::Execute()
 {
 	int maximum_condition_id, counter_of_affected_nodes = 0;
     this->GetMaximumConditionIdOnSubmodelPart(maximum_condition_id);
-    this->CalculateNumberOfElementsOnNodes();
-
-    // for (ModelPart::NodesContainerType::ptr_iterator itNode = mr_model_part.Nodes().ptr_begin();
-    //     itNode != mr_model_part.Nodes().ptr_end(); ++itNode) {
-    //     KRATOS_WATCH((*itNode)->GetValue(NUMBER_OF_ACTIVE_ELEMENTS))
-    // }
-
-
-
 
     for (ModelPart::ElementsContainerType::ptr_iterator it = mr_model_part.Elements().ptr_begin(); it != mr_model_part.Elements().ptr_end(); ++it) {
         bool condition_is_active = true;
@@ -148,8 +139,6 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions2(
         if ((Id1 == r_geom[id_2].Id() && Id2 == r_geom[id_3].Id()) ||
             (Id2 == r_geom[id_2].Id() && Id1 == r_geom[id_3].Id())) {
 			mr_model_part.RemoveCondition((*it)->Id());
-
-            KRATOS_WATCH((*it)->Id())
         }
     }
 }
@@ -180,17 +169,21 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions3(
     //KRATOS_WATCH((*itElem)->Id())
     std::cout << "en 3: " << (*itElem)->Id() << std::endl;
 
+    const auto& process_info = mr_model_part.GetProcessInfo();
+	const int counter_of_affected_nodes = process_info[ITER];
+    if (counter_of_affected_nodes != 1) this->CalculateNumberOfElementsOnNodes();
+
     for (IndexType i = 0; i < (*itElem)->GetGeometry().size(); ++i) {
         if ((*itElem)->GetGeometry()[i].GetValue(NUMBER_OF_ACTIVE_ELEMENTS) == 1) {
             local_id = i;
             aux_counter++;
         } else if ((*itElem)->GetGeometry()[i].GetValue(NUMBER_OF_ACTIVE_ELEMENTS) == 0) {
-            inactive_nodes_id.push_back((*itElem)->Id());
+            inactive_nodes_id.push_back((*itElem)->GetGeometry()[i].Id());
             inactive_nodes_local_id.push_back(i);
         }
     }
 
-    if (aux_counter == 1 && inactive_nodes_id.size() == 0) { // common case
+    if (aux_counter == 1) { // common case
         const IndexType id_1 = local_id == 0 ? 0 : local_id == 1 ? 1 : 2;
         const IndexType id_2 = local_id == 0 ? 1 : local_id == 1 ? 2 : 0;
         const IndexType id_3 = local_id == 0 ? 2 : local_id == 1 ? 0 : 1;
@@ -217,44 +210,36 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions3(
             if ((Id1 == r_geom[id_2].Id() && Id2 == r_geom[id_1].Id()) ||
                 (Id2 == r_geom[id_2].Id() && Id1 == r_geom[id_1].Id())) {
                 mr_model_part.RemoveCondition((*it)->Id());
-                // KRATOS_WATCH((*it)->Id())
             } else if ((Id1 == r_geom[id_1].Id() && Id2 == r_geom[id_3].Id()) ||
                        (Id2 == r_geom[id_1].Id() && Id1 == r_geom[id_3].Id())) {
                 mr_model_part.RemoveCondition((*it)->Id());
-                // KRATOS_WATCH((*it)->Id())
             }
         }
-    } else if (inactive_nodes_id.size() == 3 ||
-               inactive_nodes_id.size() == 2) { // 3 or 2 inactive nodes
+    } else if (inactive_nodes_id.size() == 1) {
+
+        const IndexType id_1 = inactive_nodes_local_id[0] == 0 ? 0 : inactive_nodes_local_id[0] == 1 ? 1 : 2;
+        const IndexType id_2 = inactive_nodes_local_id[0] == 0 ? 1 : inactive_nodes_local_id[0] == 1 ? 2 : 0;
+        const IndexType id_3 = inactive_nodes_local_id[0] == 0 ? 2 : inactive_nodes_local_id[0] == 1 ? 0 : 1;
+
+        condition_nodes_id[0] = r_geom[id_2].Id();
+        condition_nodes_id[1] = r_geom[id_3].Id();
+        MaximumConditionId++;
+
+		// KRATOS_WATCH((*itElem)->Id())
+        // KRATOS_WATCH(condition_nodes_id[0])
+        // KRATOS_WATCH(condition_nodes_id[1])
+        auto& line_cond = r_sub_model_part.CreateNewCondition(
+                                        "LineLoadCondition2D2N",
+                                        MaximumConditionId,
+                                        condition_nodes_id,
+                                        p_properties, 0);
+
+        // adding the conditions to the computing model part
+        mr_model_part.GetSubModelPart("computing_domain").AddCondition(line_cond);
+
         // We remove the condition regarding the erased edges...
         for (ModelPart::ConditionsContainerType::ptr_iterator it = mr_model_part.Conditions().ptr_begin();
             it != mr_model_part.Conditions().ptr_end(); ++it) {
-			KRATOS_WATCH((*it)->Id())
-            const IndexType Id1 = (*it)->GetGeometry()[0].Id();
-            const IndexType Id2 = (*it)->GetGeometry()[1].Id();
-            
-            if ((Id1 == r_geom[0].Id() && Id2 == r_geom[1].Id()) ||
-                (Id2 == r_geom[0].Id() && Id1 == r_geom[1].Id())) {
-                mr_model_part.RemoveCondition((*it)->Id());
-                // KRATOS_WATCH((*it)->Id())
-            } else if ((Id1 == r_geom[0].Id() && Id2 == r_geom[2].Id()) ||
-                       (Id2 == r_geom[0].Id() && Id1 == r_geom[2].Id())) {
-                mr_model_part.RemoveCondition((*it)->Id());
-                // KRATOS_WATCH((*it)->Id())
-            } else if ((Id1 == r_geom[1].Id() && Id2 == r_geom[2].Id()) ||
-                       (Id2 == r_geom[1].Id() && Id1 == r_geom[2].Id())) {
-                mr_model_part.RemoveCondition((*it)->Id());
-                // KRATOS_WATCH((*it)->Id())
-            }
-        }
-    } else if (inactive_nodes_id.size() == 1) { // 1 inactive node
-        // We remove the condition regarding the erased edge...
-        for (ModelPart::ConditionsContainerType::ptr_iterator it = mr_model_part.Conditions().ptr_begin();
-            it != mr_model_part.Conditions().ptr_end(); ++it) {
-
-            const IndexType id_1 = inactive_nodes_local_id[0] == 0 ? 0 : inactive_nodes_local_id[0] == 1 ? 1 : 2;
-            const IndexType id_2 = inactive_nodes_local_id[0] == 0 ? 1 : inactive_nodes_local_id[0] == 1 ? 2 : 0;
-            const IndexType id_3 = inactive_nodes_local_id[0] == 0 ? 2 : inactive_nodes_local_id[0] == 1 ? 0 : 1;
 
             const IndexType Id1 = (*it)->GetGeometry()[0].Id();
             const IndexType Id2 = (*it)->GetGeometry()[1].Id();
@@ -262,11 +247,9 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions3(
             if ((Id1 == r_geom[id_2].Id() && Id2 == r_geom[id_1].Id()) ||
                 (Id2 == r_geom[id_2].Id() && Id1 == r_geom[id_1].Id())) {
                 mr_model_part.RemoveCondition((*it)->Id());
-                // KRATOS_WATCH((*it)->Id())
             } else if ((Id1 == r_geom[id_1].Id() && Id2 == r_geom[id_3].Id()) ||
                        (Id2 == r_geom[id_1].Id() && Id1 == r_geom[id_3].Id())) {
                 mr_model_part.RemoveCondition((*it)->Id());
-                // KRATOS_WATCH((*it)->Id())
             }
         }
     }
@@ -281,9 +264,7 @@ void ExtendPressureConditionProcess<2>::GetMaximumConditionIdOnSubmodelPart(
 {
     MaximumConditionId = 0;
     for (ModelPart::ConditionIterator itCond = mr_model_part.ConditionsBegin();
-        itCond != mr_model_part.ConditionsEnd();
-        itCond++) {
-
+         itCond != mr_model_part.ConditionsEnd(); itCond++) {
         if (((*itCond)).Id() > MaximumConditionId) MaximumConditionId = ((*itCond)).Id();
     }
 }
