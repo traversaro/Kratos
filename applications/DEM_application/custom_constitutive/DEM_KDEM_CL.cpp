@@ -373,18 +373,13 @@ namespace Kratos {
         visc_param[1] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * Inertia_I); // Olmedo et al.
         visc_param[2] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_shear * Inertia_J); // Olmedo et al.
 
-        array_1d<double, 3> LocalEffDeltaRotatedAngle;
-        LocalEffDeltaRotatedAngle[0] = LocalDeltaRotatedAngle[0] * aux;
-        LocalEffDeltaRotatedAngle[1] = LocalDeltaRotatedAngle[1] * aux;
-        LocalEffDeltaRotatedAngle[2] = LocalDeltaRotatedAngle[2] * aux;
+        ElasticLocalRotationalMoment[0] = -equiv_young * Inertia_I * LocalDeltaRotatedAngle[0] * aux / distance;
+        ElasticLocalRotationalMoment[1] = -equiv_young * Inertia_I * LocalDeltaRotatedAngle[1] * aux / distance;
+        ElasticLocalRotationalMoment[2] = -equiv_shear * Inertia_J * LocalDeltaRotatedAngle[2] * aux / distance;
 
-        ElasticLocalRotationalMoment[0] = -equiv_young * Inertia_I * LocalEffDeltaRotatedAngle[0] / distance;
-        ElasticLocalRotationalMoment[1] = -equiv_young * Inertia_I * LocalEffDeltaRotatedAngle[1] / distance;
-        ElasticLocalRotationalMoment[2] = -equiv_shear * Inertia_J * LocalEffDeltaRotatedAngle[2] / distance;
-
-        ViscoLocalRotationalMoment[0] = -visc_param[0] * LocalDeltaAngularVelocity[0];
-        ViscoLocalRotationalMoment[1] = -visc_param[1] * LocalDeltaAngularVelocity[1];
-        ViscoLocalRotationalMoment[2] = -visc_param[2] * LocalDeltaAngularVelocity[2];
+        ViscoLocalRotationalMoment[0] = -visc_param[0] * LocalDeltaAngularVelocity[0] * aux;
+        ViscoLocalRotationalMoment[1] = -visc_param[1] * LocalDeltaAngularVelocity[1] * aux;
+        ViscoLocalRotationalMoment[2] = -visc_param[2] * LocalDeltaAngularVelocity[2] * aux;
 
         // TODO: Judge if the rotation spring is broken or not
         /*
