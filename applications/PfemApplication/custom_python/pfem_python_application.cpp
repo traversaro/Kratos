@@ -25,15 +25,15 @@ namespace Kratos
 namespace Python
 {
 
-using namespace pybind11;
+namespace py = pybind11;
 
 PYBIND11_MODULE(KratosPfemApplication,m)
 {
 
-  class_<KratosPfemApplication,
+  py::class_<KratosPfemApplication,
          KratosPfemApplication::Pointer,
          KratosApplication>(m,"KratosPfemApplication")
-      .def(init<>())
+      .def(py::init<>())
       ;
 
   AddCustomProcessesToPython(m);
