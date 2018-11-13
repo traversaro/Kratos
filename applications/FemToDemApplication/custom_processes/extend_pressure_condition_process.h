@@ -48,17 +48,20 @@ public:
         ModelPart::ElementsContainerType::ptr_iterator itElem,
         const unsigned int LocalId,
         const int PressureId,
-        int& MaximumConditionId);
+        int& MaximumConditionId,
+        std::vector<IndexType>& ToEraseConditionsId);
 
     void CreateAndAddPressureConditions3(
         ModelPart::ElementsContainerType::ptr_iterator itElem,
         const int PressureId,
-        int& MaximumConditionId);
+        int& MaximumConditionId,
+        std::vector<IndexType>& ToEraseConditionsId);
 
     void GetMaximumConditionIdOnSubmodelPart(
         int& MaximumConditionId);
 
     void CalculateNumberOfElementsOnNodes();
+    bool CheckIfHasConditionId(const IndexType Id);
 protected:
     // Member Variables
     ModelPart &mr_model_part;

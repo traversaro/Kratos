@@ -167,7 +167,7 @@ class FEMDEM_Solution:
             self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER] = 1
             itera = 0
             while self.FEM_Solution.main_model_part.ProcessInfo[KratosFemDem.ITER] > 0: 
-                print("iteracion whilee", itera)
+                print("--------------------iteracion while--------------------------", itera)
                 KratosFemDem.ExtendPressureConditionProcess2D(self.FEM_Solution.main_model_part,).Execute()
                 itera += 1
 
