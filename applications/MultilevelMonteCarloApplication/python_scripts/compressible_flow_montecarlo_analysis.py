@@ -1,13 +1,11 @@
 from __future__ import absolute_import, division #makes KratosMultiphysics backward compatible with python 2.6 and 2.7
 import numpy as np
-import matplotlib.pyplot as plt
 
 # Importing the Kratos Library
 import KratosMultiphysics
 
 # Import applications
 import KratosMultiphysics.CompressiblePotentialFlowApplication as KratosCompressFlow
-import KratosMultiphysics.MonteCarloApplication as KratosMC
 
 # Avoid printing of Kratos informations
 KratosMultiphysics.Logger.GetDefaultOutput().SetSeverity(KratosMultiphysics.Logger.Severity.WARNING) # avoid printing of Kratos things
@@ -70,8 +68,7 @@ def GenerateBetaSample():
 
 
 '''
-function evaluating the QoI of the problem: int_{domain} TEMPERATURE(x,y) dx dy
-right now we are using the midpoint rule to evaluate the integral: improve!
+function evaluating the QoI of the problem
 '''
 def EvaluateQuantityOfInterest(simulation):
     """here we evaluate the QoI of the problem: the lift coefficient"""
@@ -154,7 +151,7 @@ if __name__ == '__main__':
     if len(argv) == 2: # ProjectParameters is being passed from outside
         parameter_file_name = argv[1]
     else: # using default name
-        parameter_file_name = "/home/kratos105b/Kratos/applications/MonteCarloApplication/tests/CompressiblePotentialFlow/ProjectParameters.json"
+        parameter_file_name = "/home/kratos105b/DataDisk/MultilevelMonteCarloApplication/Cases/CompressiblePotentialFlow/ProjectParameters.json"
 
     with open(parameter_file_name,'r') as parameter_file:
         parameters = KratosMultiphysics.Parameters(parameter_file.read())
@@ -171,7 +168,7 @@ if __name__ == '__main__':
     MC_second_moment = 0.0
     for i in range (0,number_samples):
         nsam = i+1
-        MC_mean, MC_second_moment, MC_variance = mc.update_onepass_M(Qlist[i], MC_mean, MC_second_moment, nsam)
+        MC_mean, MC_second_moment, MC_variance = mc.update_onepass_M_VAR(Qlist[i], MC_mean, MC_second_moment, nsam)
 
     MC_mean = compss_wait_on(MC_mean)
     print("\nlist of lift coefficients computed = ",Qlist)
