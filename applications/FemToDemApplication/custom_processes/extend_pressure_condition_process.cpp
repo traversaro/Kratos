@@ -25,67 +25,6 @@ ExtendPressureConditionProcess<TDim>::ExtendPressureConditionProcess(
 {
 }
 
-/***********************************************************************************/
-/***********************************************************************************/
-
-template <>
-void ExtendPressureConditionProcess<2>::Execute() 
-{
-	int maximum_condition_id, counter_of_affected_nodes = 0;
-    std::vector<IndexType> ToEraseConditionsId;
-    this->GetMaximumConditionIdOnSubmodelPart(maximum_condition_id);
-
-    for (ModelPart::ElementsContainerType::ptr_iterator itElem = mr_model_part.Elements().ptr_begin(); itElem != mr_model_part.Elements().ptr_end(); ++itElem) {
-        bool condition_is_active = true;
-        if ((*itElem)->IsDefined(ACTIVE)) {
-            condition_is_active = (*itElem)->Is(ACTIVE);
-        }
-        // itElem's going to be removed
-        if (condition_is_active == false && (*itElem)->GetValue(SMOOTHING) == false) {
-            unsigned int local_id, counter = 0, pressure_id;
-            // Loop over nodes in order to check if there's pressure on nodes
-            for (IndexType i = 0; i < (*itElem)->GetGeometry().PointsNumber(); ++i) {
-                if ((*itElem)->GetGeometry().GetPoint(i).GetValue(PRESSURE_ID) != 0) {
-                    pressure_id = (*itElem)->GetGeometry().GetPoint(i).GetValue(PRESSURE_ID);
-                    counter++;
-                } else {
-                    local_id = i;
-                }
-            }
-            if (counter == 2) {
-                KRATOS_WATCH(counter)
-                this->CreateAndAddPressureConditions2(itElem, local_id, pressure_id, maximum_condition_id, ToEraseConditionsId);
-                counter_of_affected_nodes++;
-                // We use this flag to enter once on each element
-                (*itElem)->SetValue(SMOOTHING, true);
-            } else if (counter == 3) {
-                KRATOS_WATCH((*itElem)->Id())
-                KRATOS_WATCH(counter)
-                this->CreateAndAddPressureConditions3(itElem, pressure_id, maximum_condition_id, ToEraseConditionsId);
-                counter_of_affected_nodes++;
-                // We use this flag to enter once on each element
-                (*itElem)->SetValue(SMOOTHING, true);
-            }
-        }
-    }
-    auto& process_info = mr_model_part.GetProcessInfo();
-    process_info[ITER] = counter_of_affected_nodes;
-
-    for (IndexType i = 0; i < mNodeIdContainer.size(); ++i) {
-        mr_model_part.GetNode(mNodeIdContainer[i]).SetValue(PRESSURE_ID, mNodePressureIdContainer[i]);
-    }
-    mNodeIdContainer.clear();
-    mNodePressureIdContainer.clear();
-
-    for (IndexType i = 0; i < ToEraseConditionsId.size(); ++i) {
-        KRATOS_WATCH(ToEraseConditionsId[i])
-        mr_model_part.RemoveConditionFromAllLevels(ToEraseConditionsId[i]);
-    }
-    ToEraseConditionsId.clear();
-}
-
-/***********************************************************************************/
-/***********************************************************************************/
 
 template <>
 void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions2(
@@ -105,7 +44,7 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions2(
 
     auto& r_geom = (*itElem)->GetGeometry();
     r_sub_model_part.AddNode(mr_model_part.pGetNode(r_geom[LocalId].Id()));
-	
+
     // Set the vectors
     mNodeIdContainer.push_back(r_geom[LocalId].Id());
     mNodePressureIdContainer.push_back(PressureId);
@@ -119,7 +58,7 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions2(
     condition_nodes_id[1] = r_geom[id_1].Id();
 	MaximumConditionId++;
     std::cout << "Condicion creada en 2 Id: " << MaximumConditionId << " -- " << condition_nodes_id[0] << "  " << condition_nodes_id[1] << std::endl;
-    auto& line_cond1 = r_sub_model_part.CreateNewCondition(
+    const auto& line_cond1 = r_sub_model_part.CreateNewCondition(
 					                    "LineLoadCondition2D2N",
 					                    MaximumConditionId,
 					                    condition_nodes_id,
@@ -129,12 +68,12 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions2(
     condition_nodes_id[1] = r_geom[id_3].Id();
     MaximumConditionId++;
     std::cout << "Condicion creada en 2 Id: " << MaximumConditionId << " -- " << condition_nodes_id[0] << "  " << condition_nodes_id[1] << std::endl;
-    auto& line_cond2 = r_sub_model_part.CreateNewCondition(
+    const auto& line_cond2 = r_sub_model_part.CreateNewCondition(
 					                    "LineLoadCondition2D2N",
 					                    MaximumConditionId,
 					                    condition_nodes_id,
 					                    p_properties, 0);
-    
+
     // adding the conditions to the computing model part
     mr_model_part.GetSubModelPart("computing_domain").AddCondition(line_cond1);
     mr_model_part.GetSubModelPart("computing_domain").AddCondition(line_cond2);
@@ -204,7 +143,7 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions3(
         condition_nodes_id[1] = r_geom[id_3].Id();
         MaximumConditionId++;
         std::cout << "Condicion creada en 3 common: " << MaximumConditionId << "  " << condition_nodes_id[0] << "  " << condition_nodes_id[1] << std::endl;
-        auto& line_cond = r_sub_model_part.CreateNewCondition(
+        const auto& line_cond = r_sub_model_part.CreateNewCondition(
                                         "LineLoadCondition2D2N",
                                         MaximumConditionId,
                                         condition_nodes_id,
@@ -220,7 +159,7 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions3(
             const IndexType Id1 = (*it)->GetGeometry()[0].Id();
             const IndexType Id2 = (*it)->GetGeometry()[1].Id();
 
-            
+
             // KRATOS_WATCH((*it)->Id())
             // KRATOS_WATCH(Id1)
             // KRATOS_WATCH(Id2)
@@ -254,7 +193,7 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions3(
         condition_nodes_id[1] = r_geom[id_3].Id();
         MaximumConditionId++;
         std::cout << "Condicion creada en 3 no common: " << MaximumConditionId << "  " << condition_nodes_id[0] << "  " << condition_nodes_id[1] << std::endl;
-        auto& line_cond = r_sub_model_part.CreateNewCondition(
+        const auto& line_cond = r_sub_model_part.CreateNewCondition(
                                            "LineLoadCondition2D2N",
                                            MaximumConditionId,
                                            condition_nodes_id,
@@ -269,7 +208,7 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions3(
 
             const IndexType Id1 = (*it)->GetGeometry()[0].Id();
             const IndexType Id2 = (*it)->GetGeometry()[1].Id();
-            
+
             if ((Id1 == r_geom[id_2].Id() && Id2 == r_geom[id_1].Id()) ||
                 (Id2 == r_geom[id_2].Id() && Id1 == r_geom[id_1].Id())) {
                 //std::cout << "Condicion eliminada en 3: " << (*it)->Id() << "  " << Id1 << "  " << Id2 << std::endl;
@@ -284,7 +223,6 @@ void ExtendPressureConditionProcess<2>::CreateAndAddPressureConditions3(
         }
     }
 }
-
 /***********************************************************************************/
 /***********************************************************************************/
 template <>
@@ -301,6 +239,7 @@ void ExtendPressureConditionProcess<2>::GetMaximumConditionIdOnSubmodelPart(
 
 /***********************************************************************************/
 /***********************************************************************************/
+
 template <SizeType TDim>
 void ExtendPressureConditionProcess<TDim>::CalculateNumberOfElementsOnNodes()
 {
@@ -330,12 +269,71 @@ void ExtendPressureConditionProcess<TDim>::CalculateNumberOfElementsOnNodes()
     }
 }
 
+/***********************************************************************************/
+/***********************************************************************************/
+
+template <>
+void ExtendPressureConditionProcess<2>::Execute()
+{
+	int maximum_condition_id, counter_of_affected_nodes = 0;
+    std::vector<IndexType> ToEraseConditionsId;
+    this->GetMaximumConditionIdOnSubmodelPart(maximum_condition_id);
+
+    for (ModelPart::ElementsContainerType::ptr_iterator itElem = mr_model_part.Elements().ptr_begin(); itElem != mr_model_part.Elements().ptr_end(); ++itElem) {
+        bool condition_is_active = true;
+        if ((*itElem)->IsDefined(ACTIVE)) {
+            condition_is_active = (*itElem)->Is(ACTIVE);
+        }
+        // itElem's going to be removed
+        if (condition_is_active == false && (*itElem)->GetValue(SMOOTHING) == false) {
+            unsigned int local_id, counter = 0, pressure_id;
+            // Loop over nodes in order to check if there's pressure on nodes
+            for (IndexType i = 0; i < (*itElem)->GetGeometry().PointsNumber(); ++i) {
+                if ((*itElem)->GetGeometry().GetPoint(i).GetValue(PRESSURE_ID) != 0) {
+                    pressure_id = (*itElem)->GetGeometry().GetPoint(i).GetValue(PRESSURE_ID);
+                    counter++;
+                } else {
+                    local_id = i;
+                }
+            }
+            if (counter == 2) {
+                KRATOS_WATCH(counter)
+                this->CreateAndAddPressureConditions2(itElem, local_id, pressure_id, maximum_condition_id, ToEraseConditionsId);
+                counter_of_affected_nodes++;
+                // We use this flag to enter once on each element
+                (*itElem)->SetValue(SMOOTHING, true);
+            } else if (counter == 3) {
+                KRATOS_WATCH((*itElem)->Id())
+                KRATOS_WATCH(counter)
+                this->CreateAndAddPressureConditions3(itElem, pressure_id, maximum_condition_id, ToEraseConditionsId);
+                counter_of_affected_nodes++;
+                // We use this flag to enter once on each element
+                (*itElem)->SetValue(SMOOTHING, true);
+            }
+        }
+    }
+    auto& process_info = mr_model_part.GetProcessInfo();
+    process_info[ITER] = counter_of_affected_nodes;
+
+    for (IndexType i = 0; i < mNodeIdContainer.size(); ++i) {
+        mr_model_part.GetNode(mNodeIdContainer[i]).SetValue(PRESSURE_ID, mNodePressureIdContainer[i]);
+    }
+    mNodeIdContainer.clear();
+    mNodePressureIdContainer.clear();
+
+    for (IndexType i = 0; i < ToEraseConditionsId.size(); ++i) {
+        KRATOS_WATCH(ToEraseConditionsId[i])
+        mr_model_part.RemoveConditionFromAllLevels(ToEraseConditionsId[i]);
+    }
+    ToEraseConditionsId.clear();
+}
+
 
 /***********************************************************************************/
 /***********************************************************************************/
 
 template <>
-void ExtendPressureConditionProcess<3>::Execute() 
+void ExtendPressureConditionProcess<3>::Execute()
 {
 
 }
@@ -350,7 +348,7 @@ bool ExtendPressureConditionProcess<TDim>::CheckIfHasConditionId(const IndexType
         if ((*itCond).Id() == Id) {
             std::cout <<  (*itCond).Id() << "--->" << (*itCond).GetGeometry()[0].Id() << "  " << (*itCond).GetGeometry()[1].Id() << std::endl;
             return true;
-        } 
+        }
     }
     return false;
 }

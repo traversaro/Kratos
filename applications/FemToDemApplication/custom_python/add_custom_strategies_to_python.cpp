@@ -56,13 +56,13 @@ namespace Python
 
 		// Base types
 		typedef LinearSolver<SparseSpaceType, LocalSpaceType > LinearSolverType;
-		typedef LinearSolverType::Pointer LinearSolverPointer;
+		//typedef LinearSolverType::Pointer LinearSolverPointer;
 		typedef SolvingStrategy< SparseSpaceType, LocalSpaceType, LinearSolverType > BaseSolvingStrategyType;
 		typedef ConvergenceCriteria< SparseSpaceType, LocalSpaceType > ConvergenceCriteriaType;
-		typedef ConvergenceCriteriaType::Pointer ConvergenceCriteriaPointer;
-		typedef BuilderAndSolver< SparseSpaceType, LocalSpaceType, LinearSolverType > BuilderAndSolverType;
-		typedef BuilderAndSolverType::Pointer BuilderAndSolverPointer;
-		typedef ResidualBasedNewtonRaphsonStrategy< SparseSpaceType, LocalSpaceType, LinearSolverType > ResidualBasedNewtonRaphsonStrategyType;
+		//typedef ConvergenceCriteriaType::Pointer ConvergenceCriteriaPointer;
+		//typedef BuilderAndSolver< SparseSpaceType, LocalSpaceType, LinearSolverType > BuilderAndSolverType;
+		//typedef BuilderAndSolverType::Pointer BuilderAndSolverPointer;
+		//typedef ResidualBasedNewtonRaphsonStrategy< SparseSpaceType, LocalSpaceType, LinearSolverType > ResidualBasedNewtonRaphsonStrategyType;
 		typedef HexahedraNewtonRaphsonStrategy< SparseSpaceType, LocalSpaceType, LinearSolverType > HexahedraNewtonRaphsonStrategyType;
 
 		// class_<HexahedraNewtonRaphsonStrategyType, typename HexahedraNewtonRaphsonStrategyType::Pointer, ResidualBasedNewtonRaphsonStrategyType>(m, "HexahedraNewtonRaphsonStrategy")

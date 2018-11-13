@@ -117,47 +117,47 @@ class HexahedraNewtonRaphsonStrategy
     {
         KRATOS_TRY;
 
-        mKeepSystemConstantDuringIterations = false;
+        BaseType::mKeepSystemConstantDuringIterations = false;
 
         // Set flags to default values
-        SetMaxIterationNumber(MaxIterations);
-        mCalculateReactionsFlag = CalculateReactions;
+        BaseType::SetMaxIterationNumber(MaxIterations);
+        BaseType::mCalculateReactionsFlag = CalculateReactions;
 
-        mReformDofSetAtEachStep = ReformDofSetAtEachStep;
+        BaseType::mReformDofSetAtEachStep = ReformDofSetAtEachStep;
 
         // Saving the convergence criteria to be used
-        mpConvergenceCriteria = pNewConvergenceCriteria;
+        BaseType::mpConvergenceCriteria = pNewConvergenceCriteria;
 
         // Saving the scheme
-        mpScheme = pScheme;
+        BaseType::mpScheme = pScheme;
 
         // Saving the linear solver
-        mpLinearSolver = pNewLinearSolver;
+        BaseType::mpLinearSolver = pNewLinearSolver;
 
         // Setting up the default builder and solver
-        mpBuilderAndSolver = typename TBuilderAndSolverType::Pointer(
-            new ResidualBasedBlockBuilderAndSolver<TSparseSpace, TDenseSpace, TLinearSolver>(mpLinearSolver));
+        BaseType::mpBuilderAndSolver = typename TBuilderAndSolverType::Pointer(
+            new ResidualBasedBlockBuilderAndSolver<TSparseSpace, TDenseSpace, TLinearSolver>(BaseType::mpLinearSolver));
 
         // Set flags to start correcty the calculations
-        mSolutionStepIsInitialized = false;
-        mInitializeWasPerformed = false;
+        BaseType::mSolutionStepIsInitialized = false;
+        BaseType::mInitializeWasPerformed = false;
 
         // Tells to the builder and solver if the reactions have to be Calculated or not
-        GetBuilderAndSolver()->SetCalculateReactionsFlag(mCalculateReactionsFlag);
+        BaseType::GetBuilderAndSolver()->SetCalculateReactionsFlag(BaseType::mCalculateReactionsFlag);
 
         // Tells to the Builder And Solver if the system matrix and vectors need to
         // be reshaped at each step or not
-        GetBuilderAndSolver()->SetReshapeMatrixFlag(mReformDofSetAtEachStep);
+        BaseType::GetBuilderAndSolver()->SetReshapeMatrixFlag(BaseType::mReformDofSetAtEachStep);
 
         // Set EchoLevel to the default value (only time is displayed)
-        SetEchoLevel(1);
+        BaseType::SetEchoLevel(1);
 
         // By default the matrices are rebuilt at each iteration
         this->SetRebuildLevel(2);
 
-        mpA = TSparseSpace::CreateEmptyMatrixPointer();
-        mpDx = TSparseSpace::CreateEmptyVectorPointer();
-        mpb = TSparseSpace::CreateEmptyVectorPointer();
+        BaseType::mpA = TSparseSpace::CreateEmptyMatrixPointer();
+        BaseType::mpDx = TSparseSpace::CreateEmptyVectorPointer();
+        BaseType::mpb = TSparseSpace::CreateEmptyVectorPointer();
 
         KRATOS_CATCH("");
     }
@@ -188,46 +188,46 @@ class HexahedraNewtonRaphsonStrategy
     {
         KRATOS_TRY
 
-        mKeepSystemConstantDuringIterations = false;
+        BaseType::mKeepSystemConstantDuringIterations = false;
 
         // Set flags to default values
-        SetMaxIterationNumber(MaxIterations);
-        mCalculateReactionsFlag = CalculateReactions;
+        BaseType::SetMaxIterationNumber(MaxIterations);
+        BaseType::mCalculateReactionsFlag = CalculateReactions;
 
-        mReformDofSetAtEachStep = ReformDofSetAtEachStep;
+        BaseType::mReformDofSetAtEachStep = ReformDofSetAtEachStep;
 
         // Saving the convergence criteria to be used
-        mpConvergenceCriteria = pNewConvergenceCriteria;
+        BaseType::mpConvergenceCriteria = pNewConvergenceCriteria;
 
         // Saving the scheme
-        mpScheme = pScheme;
+        BaseType::mpScheme = pScheme;
 
         // Saving the linear solver
-        mpLinearSolver = pNewLinearSolver;
+        BaseType::mpLinearSolver = pNewLinearSolver;
 
         // Setting up the default builder and solver
-        mpBuilderAndSolver = pNewBuilderAndSolver;
+        BaseType::mpBuilderAndSolver = pNewBuilderAndSolver;
 
         // Set flags to start correcty the calculations
-        mSolutionStepIsInitialized = false;
-        mInitializeWasPerformed = false;
+        BaseType::mSolutionStepIsInitialized = false;
+        BaseType::mInitializeWasPerformed = false;
 
         // Tells to the builder and solver if the reactions have to be Calculated or not
-        GetBuilderAndSolver()->SetCalculateReactionsFlag(mCalculateReactionsFlag);
+        BaseType::GetBuilderAndSolver()->SetCalculateReactionsFlag(BaseType::mCalculateReactionsFlag);
 
         // Tells to the Builder And Solver if the system matrix and vectors need to
         //be reshaped at each step or not
-        GetBuilderAndSolver()->SetReshapeMatrixFlag(mReformDofSetAtEachStep);
+        BaseType::GetBuilderAndSolver()->SetReshapeMatrixFlag(BaseType::mReformDofSetAtEachStep);
 
         // Set EchoLevel to the default value (only time is displayed)
-        SetEchoLevel(1);
+        BaseType::SetEchoLevel(1);
 
         // By default the matrices are rebuilt at each iteration
         this->SetRebuildLevel(2);
 
-        mpA = TSparseSpace::CreateEmptyMatrixPointer();
-        mpDx = TSparseSpace::CreateEmptyVectorPointer();
-        mpb = TSparseSpace::CreateEmptyVectorPointer();
+        BaseType::mpA = TSparseSpace::CreateEmptyMatrixPointer();
+        BaseType::mpDx = TSparseSpace::CreateEmptyVectorPointer();
+        BaseType::mpb = TSparseSpace::CreateEmptyVectorPointer();
 
         KRATOS_CATCH("")
     }
@@ -238,7 +238,7 @@ class HexahedraNewtonRaphsonStrategy
      */
     ~HexahedraNewtonRaphsonStrategy() override
     {
-        Clear();
+        BaseType::Clear();
     }
 
     /**
@@ -247,12 +247,12 @@ class HexahedraNewtonRaphsonStrategy
     bool SolveSolutionStep() override
     {
         // Pointers needed in the solution
-        typename TSchemeType::Pointer p_scheme = GetScheme();
-        typename TBuilderAndSolverType::Pointer p_builder_and_solver = GetBuilderAndSolver();
+        typename TSchemeType::Pointer p_scheme = BaseType::GetScheme();
+        typename TBuilderAndSolverType::Pointer p_builder_and_solver = BaseType::GetBuilderAndSolver();
 
-        TSystemMatrixType& rA  = *mpA;
-        TSystemVectorType& rDx = *mpDx;
-        TSystemVectorType& rb  = *mpb;
+        TSystemMatrixType& rA  = *BaseType::mpA;
+        TSystemVectorType& rDx = *BaseType::mpDx;
+        TSystemVectorType& rb  = *BaseType::mpb;
 
         //initializing the parameters of the Newton-Raphson cycle
         unsigned int iteration_number = 1;
@@ -270,7 +270,7 @@ class HexahedraNewtonRaphsonStrategy
         auto extrapolation_process = IntegrationValuesExtrapolationToNodesProcess(rModelPart, extrapolation_parameters);
         extrapolation_process.Execute();
 
-        is_converged = mpConvergenceCriteria->PreCriteria(BaseType::GetModelPart(), p_builder_and_solver->GetDofSet(), rA, rDx, rb);
+        is_converged = BaseType::mpConvergenceCriteria->PreCriteria(BaseType::GetModelPart(), p_builder_and_solver->GetDofSet(), rA, rDx, rb);
 
         //function to perform the building and the solving phase.
         if (BaseType::mRebuildLevel > 0 || BaseType::mStiffnessMatrixIsBuilt == false) {
@@ -285,37 +285,37 @@ class HexahedraNewtonRaphsonStrategy
         }
 
         // Debugging info
-        EchoInfo(iteration_number);
+        BaseType::EchoInfo(iteration_number);
 
         // Updating the results stored in the database
-        UpdateDatabase(rA, rDx, rb, BaseType::MoveMeshFlag());
+        BaseType::UpdateDatabase(rA, rDx, rb, BaseType::MoveMeshFlag());
 
         p_scheme->FinalizeNonLinIteration(BaseType::GetModelPart(), rA, rDx, rb);
 
         if (is_converged == true) {
             //initialisation of the convergence criteria
-            mpConvergenceCriteria->InitializeSolutionStep(BaseType::GetModelPart(), p_builder_and_solver->GetDofSet(), rA, rDx, rb);
+            BaseType::mpConvergenceCriteria->InitializeSolutionStep(BaseType::GetModelPart(), p_builder_and_solver->GetDofSet(), rA, rDx, rb);
 
-            if (mpConvergenceCriteria->GetActualizeRHSflag() == true) {
+            if (BaseType::mpConvergenceCriteria->GetActualizeRHSflag() == true) {
                 TSparseSpace::SetToZero(rb);
                 p_builder_and_solver->BuildRHS(p_scheme, BaseType::GetModelPart(), rb);
             }
-            is_converged = mpConvergenceCriteria->PostCriteria(BaseType::GetModelPart(), p_builder_and_solver->GetDofSet(), rA, rDx, rb);
+            is_converged = BaseType::mpConvergenceCriteria->PostCriteria(BaseType::GetModelPart(), p_builder_and_solver->GetDofSet(), rA, rDx, rb);
         }
 
         //Iteration Cycle... performed only for NonLinearProblems
-        while (is_converged == false && iteration_number++ < mMaxIterationNumber) {
+        while (is_converged == false && iteration_number++ < BaseType::mMaxIterationNumber) {
             //setting the number of iteration
             BaseType::GetModelPart().GetProcessInfo()[NL_ITERATION_NUMBER] = iteration_number;
             p_scheme->InitializeNonLinIteration(BaseType::GetModelPart(), rA, rDx, rb);
-            is_converged = mpConvergenceCriteria->PreCriteria(BaseType::GetModelPart(), p_builder_and_solver->GetDofSet(), rA, rDx, rb);
+            is_converged = BaseType::mpConvergenceCriteria->PreCriteria(BaseType::GetModelPart(), p_builder_and_solver->GetDofSet(), rA, rDx, rb);
             extrapolation_process.Execute();
 
             //call the linear system solver to find the correction mDx for the
             //it is not called if there is no system to solve
             if (SparseSpaceType::Size(rDx) != 0) {
                 if (BaseType::mRebuildLevel > 1 || BaseType::mStiffnessMatrixIsBuilt == false) {
-                    if (GetKeepSystemConstantDuringIterations() == false) {
+                    if (BaseType::GetKeepSystemConstantDuringIterations() == false) {
                         TSparseSpace::SetToZero(rA);
                         TSparseSpace::SetToZero(rDx);
                         TSparseSpace::SetToZero(rb);
@@ -335,33 +335,33 @@ class HexahedraNewtonRaphsonStrategy
             }
 
             // Debugging info
-            EchoInfo(iteration_number);
+            BaseType::EchoInfo(iteration_number);
 
             // Updating the results stored in the database
-            UpdateDatabase(rA, rDx, rb, BaseType::MoveMeshFlag());
+            BaseType::UpdateDatabase(rA, rDx, rb, BaseType::MoveMeshFlag());
 
             p_scheme->FinalizeNonLinIteration(BaseType::GetModelPart(), rA, rDx, rb);
 
             residual_is_updated = false;
 
             if (is_converged == true) {
-                if (mpConvergenceCriteria->GetActualizeRHSflag() == true) {
+                if (BaseType::mpConvergenceCriteria->GetActualizeRHSflag() == true) {
                     TSparseSpace::SetToZero(rb);
 
                     p_builder_and_solver->BuildRHS(p_scheme, BaseType::GetModelPart(), rb);
                     residual_is_updated = true;
                 }
 
-                is_converged = mpConvergenceCriteria->PostCriteria(BaseType::GetModelPart(), p_builder_and_solver->GetDofSet(), rA, rDx, rb);
+                is_converged = BaseType::mpConvergenceCriteria->PostCriteria(BaseType::GetModelPart(), p_builder_and_solver->GetDofSet(), rA, rDx, rb);
             }
         }
 
         //plots a warning if the maximum number of iterations is exceeded
-        if (iteration_number >= mMaxIterationNumber && BaseType::GetModelPart().GetCommunicator().MyPID() == 0)
-            MaxIterationsExceeded();
+        if (iteration_number >= BaseType::mMaxIterationNumber && BaseType::GetModelPart().GetCommunicator().MyPID() == 0)
+            BaseType::MaxIterationsExceeded();
 
         //calculate reactions if required
-        if (mCalculateReactionsFlag == true)
+        if (BaseType::mCalculateReactionsFlag == true)
             p_builder_and_solver->CalculateReactions(p_scheme, BaseType::GetModelPart(), rA, rDx, rb);
 
         return is_converged;
