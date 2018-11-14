@@ -229,13 +229,16 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
         {
           itNode->FastGetSolutionStepValue(MESH_VELOCITY_Y) = itNode->FastGetSolutionStepValue(VELOCITY_Y);
         }
-        if (itNode->GetDof(VELOCITY_Z).IsFree() )
+        if(rModelPart.GetProcessInfo()[SPACE_DIMENSION]==3)
         {
-          itNode->FastGetSolutionStepValue(MESH_VELOCITY_Z) += TSparseSpace::GetValue(rDx,itNode->GetDof(VELOCITY_Z).EquationId());
-        }
-        else
-        {
-          itNode->FastGetSolutionStepValue(MESH_VELOCITY_Z) = itNode->FastGetSolutionStepValue(VELOCITY_Z);
+          if (itNode->GetDof(VELOCITY_Z).IsFree() )
+          {
+            itNode->FastGetSolutionStepValue(MESH_VELOCITY_Z) += TSparseSpace::GetValue(rDx,itNode->GetDof(VELOCITY_Z).EquationId());
+          }
+          else
+          {
+            itNode->FastGetSolutionStepValue(MESH_VELOCITY_Z) = itNode->FastGetSolutionStepValue(VELOCITY_Z);
+          }
         }
       }
     }
@@ -259,8 +262,6 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
                SystemVectorType& rDx) override
   {
     KRATOS_TRY;
-
-    this->UpdateMeshVelocity(rModelPart,rDx);
 
     this->PredictVariables(rModelPart);
 
