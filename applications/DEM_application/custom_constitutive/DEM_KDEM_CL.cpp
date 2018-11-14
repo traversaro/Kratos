@@ -73,14 +73,21 @@ namespace Kratos {
         const double my_mass    = element1->GetMass();
         const double other_mass = element2->GetMass();
 
-        const double equiv_mass = 1.0 / (1.0/my_mass + 1.0/other_mass);
+        const double equiv_mass = 2.0 * my_mass * other_mass / (my_mass + other_mass);
+
+        array_1d<double, 3> other_to_me_vect;
+        noalias(other_to_me_vect) = element1->GetGeometry()[0].Coordinates() - element2->GetGeometry()[0].Coordinates();
+
+        const double distance = DEM_MODULUS_3(other_to_me_vect);
+
+        const double norm_distance = (element1->GetRadius() + element2->GetRadius()) / distance; // This is necessary because if spheres are not tangent the DeltaAngularVelocity has to be interpolated
 
         const double my_gamma    = element1->GetProperties()[DAMPING_GAMMA];
         const double other_gamma = element2->GetProperties()[DAMPING_GAMMA];
         const double equiv_gamma = 0.5 * (my_gamma + other_gamma);
 
-        equiv_visco_damp_coeff_normal     = 2.0 * equiv_gamma * sqrt(equiv_mass * kn_el);
-        equiv_visco_damp_coeff_tangential = 2.0 * equiv_gamma * sqrt(equiv_mass * kt_el);
+        equiv_visco_damp_coeff_normal     = 2.0 * equiv_gamma * sqrt(equiv_mass * kn_el) * norm_distance;
+        equiv_visco_damp_coeff_tangential = 2.0 * equiv_gamma * sqrt(equiv_mass * kt_el) * norm_distance;
 
         KRATOS_CATCH("")
     }
@@ -353,10 +360,10 @@ namespace Kratos {
         GeometryFunctions::VectorGlobal2Local(LocalCoordSystem, GlobalDeltaAngularVelocity, LocalDeltaAngularVelocity);
         //GeometryFunctions::VectorGlobal2Local(LocalCoordSystem, mContactMoment, LocalRotationalMoment);
 
-        const double equivalent_radius = std::sqrt(calculation_area / Globals::Pi);
+        const double equivalent_radius = sqrt(calculation_area / Globals::Pi);
         const double element_mass  = element->GetMass();
         const double neighbor_mass = neighbor->GetMass();
-        const double equiv_mass    = element_mass * neighbor_mass / (element_mass + neighbor_mass);
+        const double equiv_mass    = 2.0 * element_mass * neighbor_mass / (element_mass + neighbor_mass);
         const double equiv_shear   = equiv_young / (2.0 * (1 + equiv_poisson));
         const double Inertia_I     = 0.25 * Globals::Pi * equivalent_radius * equivalent_radius * equivalent_radius * equivalent_radius;
         const double Inertia_J     = 2.0 * Inertia_I; // This is the polar inertia
@@ -365,21 +372,23 @@ namespace Kratos {
         const double other_gamma = neighbor->GetProperties()[DAMPING_GAMMA];
         const double equiv_gamma = 0.5 * (my_gamma + other_gamma);
 
-        double aux = (element->GetRadius() + neighbor->GetRadius()) / distance; // As the sitiffness depends on the distance it is necessary to interpolated
+        const double k_rot = equiv_young * Inertia_I / distance;
+        const double k_tor = equiv_shear * Inertia_J / distance;
+
+        const double norm_distance = (element->GetRadius() + neighbor->GetRadius()) / distance; // This is necessary because if spheres are not tangent the DeltaAngularVelocity has to be interpolated
 
         //Viscous parameter taken from Olmedo et al., 'Discrete element model of the dynamic response of fresh wood stems to impact'
         array_1d<double, 3> visc_param;
-        visc_param[0] = 2.0 * equiv_gamma * sqrt(equiv_mass * equiv_young * Inertia_I * aux); // Olmedo et al.
-        visc_param[1] = 2.0 * equiv_gamma * sqrt(equiv_mass * equiv_young * Inertia_I * aux); // Olmedo et al.
-        visc_param[2] = 2.0 * equiv_gamma * sqrt(equiv_mass * equiv_shear * Inertia_J * aux); // Olmedo et al.
+        const double visc_param_rot = 2.0 * equiv_gamma * sqrt(equiv_mass * k_rot) * norm_distance;
+        const double visc_param_tor = 2.0 * equiv_gamma * sqrt(equiv_mass * k_tor) * norm_distance;
 
-        ElasticLocalRotationalMoment[0] = -equiv_young * Inertia_I * LocalDeltaRotatedAngle[0] * aux;
-        ElasticLocalRotationalMoment[1] = -equiv_young * Inertia_I * LocalDeltaRotatedAngle[1] * aux;
-        ElasticLocalRotationalMoment[2] = -equiv_shear * Inertia_J * LocalDeltaRotatedAngle[2] * aux;
+        ElasticLocalRotationalMoment[0] = -k_rot * LocalDeltaRotatedAngle[0] * norm_distance;
+        ElasticLocalRotationalMoment[1] = -k_rot * LocalDeltaRotatedAngle[1] * norm_distance;
+        ElasticLocalRotationalMoment[2] = -k_tor * LocalDeltaRotatedAngle[2] * norm_distance;
 
-        ViscoLocalRotationalMoment[0] = -visc_param[0] * LocalDeltaAngularVelocity[0];
-        ViscoLocalRotationalMoment[1] = -visc_param[1] * LocalDeltaAngularVelocity[1];
-        ViscoLocalRotationalMoment[2] = -visc_param[2] * LocalDeltaAngularVelocity[2];
+        ViscoLocalRotationalMoment[0] = -visc_param_rot * LocalDeltaAngularVelocity[0] * norm_distance;
+        ViscoLocalRotationalMoment[1] = -visc_param_rot * LocalDeltaAngularVelocity[1] * norm_distance;
+        ViscoLocalRotationalMoment[2] = -visc_param_tor * LocalDeltaAngularVelocity[2] * norm_distance;
 
         // TODO: Judge if the rotation spring is broken or not
         /*
