@@ -9,8 +9,8 @@
 //  Main authors:    Sergio Jiménez/Alejandro Cornejo/Lucia Barbu
 //
 
-#if !defined(KRATOS_HIGH_CYCLE_FATIGUE_LAW_H_INCLUDED)
-#define KRATOS_HIGH_CYCLE_FATIGUE_LAW_H_INCLUDED
+#if !defined(KRATOS_HIGH_CYCLE_FATIGUE_LAW_INTEGRATOR_H_INCLUDED)
+#define KRATOS_HIGH_CYCLE_FATIGUE_LAW_INTEGRATOR_H_INCLUDED
 
 // System includes
 
