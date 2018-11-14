@@ -136,6 +136,9 @@ public:
      */
     FIC(IndexType NewId, GeometryType::Pointer pGeometry, Properties::Pointer pProperties);
 
+    /// Copy constructor.
+    FIC(FIC const& rOther);
+
     /// Destructor.
     ~FIC() override;
 
@@ -182,12 +185,15 @@ public:
      */
     Element::Pointer Clone( IndexType NewId, NodesArrayType const& rThisNodes ) const override
     {
-        Element::Pointer pNewElement = Create(NewId, this->GetGeometry().Create( rThisNodes ), this->pGetProperties() );
+        FIC NewElement( NewId, this->GetGeometry().Create( rThisNodes ), this->pGetProperties() );
 
-        pNewElement->SetData(this->GetData());
-        pNewElement->SetFlags(this->GetFlags());
+        NewElement.SetData(this->GetData());
+        NewElement.SetFlags(this->GetFlags());
 
-        return pNewElement;
+        if(this->mpConstitutiveLaw != nullptr)
+            NewElement.mpConstitutiveLaw = this->mpConstitutiveLaw->Clone();
+
+        return Kratos::make_shared< FIC >(NewElement);
     }
 
     void Calculate(
@@ -398,9 +404,6 @@ private:
 
     /// Assignment operator.
     FIC& operator=(FIC const& rOther);
-
-    /// Copy constructor.
-    FIC(FIC const& rOther);
 
     ///@}
 

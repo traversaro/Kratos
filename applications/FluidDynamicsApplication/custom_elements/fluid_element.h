@@ -146,6 +146,9 @@ public:
      */
     FluidElement(IndexType NewId, GeometryType::Pointer pGeometry, Properties::Pointer pProperties);
 
+    /// Copy constructor.
+    FluidElement(FluidElement const& rOther);
+
     /// Destructor.
     virtual ~FluidElement();
 
@@ -346,6 +349,8 @@ protected:
     ///@name Protected member Variables
     ///@{
 
+    //// Constitutive relation for the element
+    ConstitutiveLaw::Pointer mpConstitutiveLaw = nullptr;
 
     ///@}
     ///@name Protected Operators
@@ -481,9 +486,6 @@ private:
     ///@name Member Variables
     ///@{
 
-    //// Constitutive relation for the element
-    ConstitutiveLaw::Pointer mpConstitutiveLaw = nullptr;
-
     ///@}
     ///@name Friends
     ///@{
@@ -526,9 +528,6 @@ private:
 
     /// Assignment operator.
     FluidElement& operator=(FluidElement const& rOther);
-
-    /// Copy constructor.
-    FluidElement(FluidElement const& rOther);
 
     ///@}
 

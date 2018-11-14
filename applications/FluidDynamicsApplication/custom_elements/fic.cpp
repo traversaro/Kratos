@@ -49,6 +49,12 @@ FIC<TElementData>::FIC(IndexType NewId, GeometryType::Pointer pGeometry, Propert
     FluidElement<TElementData>(NewId,pGeometry,pProperties)
 {}
 
+// Copy Constructor
+template< class TElementData >
+FIC<TElementData>::FIC(FIC const& rOther)
+    :FluidElement<TElementData>(rOther)
+{}
+
 
 template< class TElementData >
 FIC<TElementData>::~FIC()
