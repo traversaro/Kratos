@@ -80,7 +80,7 @@ namespace Kratos {
 
         const double distance = DEM_MODULUS_3(other_to_me_vect);
 
-        const double norm_distance = (element1->GetRadius() + element2->GetRadius()) / distance; // This is necessary because if spheres are not tangent the DeltaAngularVelocity has to be interpolated
+        const double norm_distance = (element1->GetRadius() + element2->GetRadius()) / distance; // If spheres are not tangent the Damping coefficient has to be normalized
 
         const double my_gamma    = element1->GetProperties()[DAMPING_GAMMA];
         const double other_gamma = element2->GetProperties()[DAMPING_GAMMA];
@@ -375,7 +375,7 @@ namespace Kratos {
         const double k_rot = equiv_young * Inertia_I / distance;
         const double k_tor = equiv_shear * Inertia_J / distance;
 
-        const double norm_distance = (element->GetRadius() + neighbor->GetRadius()) / distance; // This is necessary because if spheres are not tangent the DeltaAngularVelocity has to be interpolated
+        const double norm_distance = (element->GetRadius() + neighbor->GetRadius()) / distance; // If spheres are not tangent the Damping coefficient, DeltaRotatedAngle and DeltaAngularVelocity have to be normalized
 
         //Viscous parameter taken from Olmedo et al., 'Discrete element model of the dynamic response of fresh wood stems to impact'
         array_1d<double, 3> visc_param;
