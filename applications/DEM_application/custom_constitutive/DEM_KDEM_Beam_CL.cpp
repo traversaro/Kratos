@@ -59,7 +59,7 @@ namespace Kratos {
         const double k_rot_y = equiv_young * Inertia_Iy / distance;
         const double k_tor   = equiv_shear * Inertia_J  / distance;
 
-        double norm_distance = (element->GetRadius() + neighbor->GetRadius()) / distance; // This is necessary because if spheres are not tangent the DeltaAngularVelocity has to be interpolated
+        double norm_distance = (element->GetRadius() + neighbor->GetRadius()) / distance; // If spheres are not tangent the Damping coefficient, DeltaRotatedAngle and DeltaAngularVelocity have to be normalized
 
         const double visc_param_rot_x = 2.0 * equiv_gamma * sqrt(equiv_mass * k_rot_x) * norm_distance;
         const double visc_param_rot_y = 2.0 * equiv_gamma * sqrt(equiv_mass * k_rot_y) * norm_distance;

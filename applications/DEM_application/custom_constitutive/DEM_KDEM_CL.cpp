@@ -80,7 +80,7 @@ namespace Kratos {
 
         const double distance = DEM_MODULUS_3(other_to_me_vect);
 
-        const double norm_distance = (element1->GetRadius() + element2->GetRadius()) / distance; //If spheres are not tangent the Damping coefficient has to be normalized
+        const double norm_distance = (element1->GetRadius() + element2->GetRadius()) / distance; // If spheres are not tangent the Damping coefficient has to be normalized
 
         const double my_gamma    = element1->GetProperties()[DAMPING_GAMMA];
         const double other_gamma = element2->GetProperties()[DAMPING_GAMMA];
