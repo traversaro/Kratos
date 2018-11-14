@@ -55,31 +55,23 @@ namespace Kratos {
         const double other_gamma = neighbor->GetProperties()[DAMPING_GAMMA];
         const double equiv_gamma = 0.5 * (my_gamma + other_gamma);
 
-        double aux = (element->GetRadius() + neighbor->GetRadius()) / distance; // This is necessary because if spheres are not tangent the DeltaAngularVelocity has to be interpolated
+        const double k_rot_x = equiv_young * Inertia_Ix / distance;
+        const double k_rot_y = equiv_young * Inertia_Iy / distance;
+        const double k_tor   = equiv_shear * Inertia_J  / distance;
 
-        //Viscous parameter taken from Olmedo et al., 'Discrete element model of the dynamic response of fresh wood stems to impact'
-        array_1d<double, 3> visc_param;
-        visc_param[0] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * Inertia_Ix / aux); // OLMEDO
-        visc_param[1] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_young * Inertia_Iy / aux); // OLMEDO
-        visc_param[2] = 2.0 * equiv_gamma * std::sqrt(equiv_mass * equiv_shear * Inertia_J  / aux); // OLMEDO
+        double norm_distance = (element->GetRadius() + neighbor->GetRadius()) / distance; // This is necessary because if spheres are not tangent the DeltaAngularVelocity has to be interpolated
 
-        array_1d<double, 3> LocalEffDeltaRotatedAngle;
-        LocalEffDeltaRotatedAngle[0] = LocalDeltaRotatedAngle[0] * aux;
-        LocalEffDeltaRotatedAngle[1] = LocalDeltaRotatedAngle[1] * aux;
-        LocalEffDeltaRotatedAngle[2] = LocalDeltaRotatedAngle[2] * aux;
+        const double visc_param_rot_x = 2.0 * equiv_gamma * sqrt(equiv_mass * k_rot_x) * norm_distance;
+        const double visc_param_rot_y = 2.0 * equiv_gamma * sqrt(equiv_mass * k_rot_y) * norm_distance;
+        const double visc_param_tor   = 2.0 * equiv_gamma * sqrt(equiv_mass * k_tor  ) * norm_distance;
 
-        array_1d<double, 3> LocalEffDeltaAngularVelocity;
-        LocalEffDeltaAngularVelocity[0] = LocalDeltaAngularVelocity[0] * aux;
-        LocalEffDeltaAngularVelocity[1] = LocalDeltaAngularVelocity[1] * aux;
-        LocalEffDeltaAngularVelocity[2] = LocalDeltaAngularVelocity[2] * aux;
+        ElasticLocalRotationalMoment[0] = -k_rot_x * LocalDeltaRotatedAngle[0] * norm_distance;
+        ElasticLocalRotationalMoment[1] = -k_rot_y * LocalDeltaRotatedAngle[1] * norm_distance;
+        ElasticLocalRotationalMoment[2] = -k_tor   * LocalDeltaRotatedAngle[2] * norm_distance;
 
-        ElasticLocalRotationalMoment[0] = -equiv_young * Inertia_Ix * LocalEffDeltaRotatedAngle[0] / distance;
-        ElasticLocalRotationalMoment[1] = -equiv_young * Inertia_Iy * LocalEffDeltaRotatedAngle[1] / distance;
-        ElasticLocalRotationalMoment[2] = -equiv_shear * Inertia_J  * LocalEffDeltaRotatedAngle[2] / distance;
-
-        ViscoLocalRotationalMoment[0] = -visc_param[0] * LocalEffDeltaAngularVelocity[0];
-        ViscoLocalRotationalMoment[1] = -visc_param[1] * LocalEffDeltaAngularVelocity[1];
-        ViscoLocalRotationalMoment[2] = -visc_param[2] * LocalEffDeltaAngularVelocity[2];
+        ViscoLocalRotationalMoment[0] = -visc_param_rot_x * LocalDeltaAngularVelocity[0] * norm_distance;
+        ViscoLocalRotationalMoment[1] = -visc_param_rot_y * LocalDeltaAngularVelocity[1] * norm_distance;
+        ViscoLocalRotationalMoment[2] = -visc_param_tor   * LocalDeltaAngularVelocity[2] * norm_distance;
 
         KRATOS_CATCH("")
     }//ComputeParticleRotationalMoments
