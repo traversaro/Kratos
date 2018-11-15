@@ -36,6 +36,7 @@
 #include "custom_constitutive/DEM_KDEM_fabric_CL.h"
 #include "custom_constitutive/DEM_KDEM_Beam_CL.h"
 #include "custom_constitutive/DEM_KDEM_Rankine_CL.h"
+#include "custom_constitutive/DEM_KDEM_CamClay_CL.h"
 #include "custom_constitutive/DEM_ExponentialHC_CL.h"
 #include "custom_constitutive/DEM_D_Hertz_viscous_Coulomb_Nestle_CL.h"
 #include "custom_constitutive/DEM_compound_constitutive_law.h"
@@ -137,6 +138,8 @@ KRATOS_CREATE_VARIABLE(double, PARTICLE_COHESION)
 KRATOS_CREATE_VARIABLE(int, IF_BOUNDARY_ELEMENT)
 KRATOS_CREATE_VARIABLE(Vector, IF_BOUNDARY_FACE)
 KRATOS_CREATE_VARIABLE(DenseVector<int>, PARTICLE_CONTACT_FAILURE_ID)
+KRATOS_CREATE_VARIABLE(double, DEM_PRECONSOLIDATION_PRESSURE)
+KRATOS_CREATE_VARIABLE(double, DEM_M_CAMCLAY_SLOPE)
 KRATOS_CREATE_VARIABLE(double, BEAM_CROSS_SECTION)
 KRATOS_CREATE_VARIABLE(double, BEAM_PLANAR_MOMENT_OF_INERTIA_X)
 KRATOS_CREATE_VARIABLE(double, BEAM_PLANAR_MOMENT_OF_INERTIA_Y)
@@ -444,7 +447,7 @@ KratosDEMApplication::KratosDEMApplication() : KratosApplication("DEMApplication
       mSingleSphereCluster3D(0, Element::GeometryType::Pointer(new Sphere3D1<Node<3> >(Element::GeometryType::PointsArrayType(1)))),
       mMapCon3D3N(0, Element::GeometryType::Pointer(new Triangle3D3<Node<3> >(Element::GeometryType::PointsArrayType(3)))) {}
 
-// Explicit instantiation of composed constituive laws
+// Explicit instantiation of composed constitutive laws
 template class DEM_compound_constitutive_law<DEM_D_Hertz_viscous_Coulomb, DEM_D_JKR_Cohesive_Law>;
 template class DEM_compound_constitutive_law<DEM_D_Hertz_viscous_Coulomb, DEM_D_DMT_Cohesive_Law>;
 template class DEM_compound_constitutive_law<DEM_D_Linear_viscous_Coulomb, DEM_D_JKR_Cohesive_Law>;
@@ -552,6 +555,8 @@ void KratosDEMApplication::Register() {
     KRATOS_REGISTER_VARIABLE(IF_BOUNDARY_FACE)
     KRATOS_REGISTER_VARIABLE(PARTICLE_CONTACT_FAILURE_ID)
     KRATOS_REGISTER_VARIABLE(EXPORT_PARTICLE_FAILURE_ID)
+    KRATOS_REGISTER_VARIABLE(DEM_PRECONSOLIDATION_PRESSURE)
+    KRATOS_REGISTER_VARIABLE(DEM_M_CAMCLAY_SLOPE)
     KRATOS_REGISTER_VARIABLE(BEAM_CROSS_SECTION)
     KRATOS_REGISTER_VARIABLE(BEAM_PLANAR_MOMENT_OF_INERTIA_X)
     KRATOS_REGISTER_VARIABLE(BEAM_PLANAR_MOMENT_OF_INERTIA_Y)
@@ -865,6 +870,7 @@ void KratosDEMApplication::Register() {
     Serializer::Register("DEM_KDEMFabric", DEM_KDEMFabric());
     Serializer::Register("DEM_KDEM_Beam", DEM_KDEM_Beam());
     Serializer::Register("DEM_KDEM_Rankine", DEM_KDEM_Rankine());
+    Serializer::Register("DEM_KDEM_CamClay", DEM_KDEM_CamClay());
     Serializer::Register("DEM_Dempack_torque", DEM_Dempack_torque());
     Serializer::Register("DEM_Dempack_dev", DEM_Dempack_dev());
     Serializer::Register("DEM_KDEM2D", DEM_KDEM2D());
