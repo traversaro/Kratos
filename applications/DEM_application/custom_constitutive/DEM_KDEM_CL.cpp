@@ -111,7 +111,7 @@ namespace Kratos {
 
         Vector& vector_of_contact_areas = element1->GetValue(NEIGHBOURS_CONTACT_AREAS);
         GetContactArea(my_radius, other_radius, vector_of_contact_areas, i, calculation_area);
-        
+
         double radius_sum = my_radius + other_radius;
         double initial_delta = element1->GetInitialDelta(i);
         double initial_dist = radius_sum - initial_delta;
