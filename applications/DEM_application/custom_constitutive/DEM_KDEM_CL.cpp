@@ -72,14 +72,11 @@ namespace Kratos {
 
         const double my_mass    = element1->GetMass();
         const double other_mass = element2->GetMass();
-
-        const double equiv_mass = 2.0 * my_mass * other_mass / (my_mass + other_mass);
+        const double equiv_mass = 1.0 / (1.0/my_mass + 1.0/other_mass);
 
         array_1d<double, 3> other_to_me_vect;
         noalias(other_to_me_vect) = element1->GetGeometry()[0].Coordinates() - element2->GetGeometry()[0].Coordinates();
-
         const double distance = DEM_MODULUS_3(other_to_me_vect);
-
         const double norm_distance = (element1->GetRadius() + element2->GetRadius()) / distance; // If spheres are not tangent the Damping coefficient has to be normalized
 
         const double my_gamma    = element1->GetProperties()[DAMPING_GAMMA];
@@ -361,10 +358,13 @@ namespace Kratos {
         //GeometryFunctions::VectorGlobal2Local(LocalCoordSystem, mContactMoment, LocalRotationalMoment);
 
         const double equivalent_radius = sqrt(calculation_area / Globals::Pi);
+
         const double element_mass  = element->GetMass();
         const double neighbor_mass = neighbor->GetMass();
-        const double equiv_mass    = 2.0 * element_mass * neighbor_mass / (element_mass + neighbor_mass);
+        const double equiv_mass    = element_mass * neighbor_mass / (element_mass + neighbor_mass);
+
         const double equiv_shear   = equiv_young / (2.0 * (1 + equiv_poisson));
+
         const double Inertia_I     = 0.25 * Globals::Pi * equivalent_radius * equivalent_radius * equivalent_radius * equivalent_radius;
         const double Inertia_J     = 2.0 * Inertia_I; // This is the polar inertia
 
