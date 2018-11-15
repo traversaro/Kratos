@@ -59,11 +59,15 @@ class MonteCarloAnalysis(PotentialFlowAnalysis):
 function generating the random sample
 here the sample has a beta distribution with parameters alpha = 2.0 and beta = 6.0
 '''
-def GenerateBetaSample():
-    alpha = 2.0
-    beta = 6.0
-    number_samples = 2
-    sample = np.random.beta(alpha,beta,number_samples)
+def GenerateSample():
+    sample = []
+    mean_Mach = 0.7
+    std_deviation_Mach = 0.1
+    number_samples = 1
+    sample.append(np.random.normal(mean_Mach,std_deviation_Mach,number_samples))
+    mean_angle_attack = 0.0872665 # rad = 5 degrees
+    std_deviation_angle_attack = 0.1
+    sample.append(np.random.normal(mean_angle_attack,std_deviation_angle_attack,number_samples))
     return sample
 
 
@@ -92,7 +96,7 @@ def execution_task(model_part_file_name, parameter_file_name):
     local_parameters = parameters # in case there are more parameters file, we rename them
     model = KratosMultiphysics.Model()
     local_parameters["solver_settings"]["model_import_settings"]["input_filename"].SetString(model_part_file_name[:-5])
-    sample = GenerateBetaSample()
+    sample = GenerateSample()
     simulation = MonteCarloAnalysis(model,local_parameters,sample)
     simulation.Run()
     QoI = EvaluateQuantityOfInterest(simulation)
@@ -151,7 +155,7 @@ if __name__ == '__main__':
     if len(argv) == 2: # ProjectParameters is being passed from outside
         parameter_file_name = argv[1]
     else: # using default name
-        parameter_file_name = "/home/kratos105b/DataDisk/MultilevelMonteCarloApplication/Cases/CompressiblePotentialFlow/ProjectParameters.json"
+        parameter_file_name = "ProjectParameters0.json"
 
     with open(parameter_file_name,'r') as parameter_file:
         parameters = KratosMultiphysics.Parameters(parameter_file.read())
