@@ -524,6 +524,12 @@ void SmallDisplacementBbar::CalculateOnIntegrationPoints(
         // Reading integration points
         const GeometryType::IntegrationPointsArrayType& integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
 
+        // Set constitutive law flags:
+        Flags& ConstitutiveLawOptions=Values.GetOptions();
+        ConstitutiveLawOptions.Set(ConstitutiveLaw::USE_ELEMENT_PROVIDED_STRAIN, UseElementProvidedStrain());
+        ConstitutiveLawOptions.Set(ConstitutiveLaw::COMPUTE_STRESS, false);
+        ConstitutiveLawOptions.Set(ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR, false);
+
         // If strain has to be computed inside of the constitutive law with PK2
         Values.SetStrainVector(this_constitutive_variables.StrainVector); //this is the input  parameter
 

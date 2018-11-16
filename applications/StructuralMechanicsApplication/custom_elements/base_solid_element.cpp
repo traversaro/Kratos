@@ -613,6 +613,12 @@ void BaseSolidElement::CalculateOnIntegrationPoints(
             // Create constitutive law parameters:
             ConstitutiveLaw::Parameters Values(GetGeometry(),GetProperties(),rCurrentProcessInfo);
 
+            // Set constitutive law flags:
+            Flags& ConstitutiveLawOptions=Values.GetOptions();
+            ConstitutiveLawOptions.Set(ConstitutiveLaw::USE_ELEMENT_PROVIDED_STRAIN, UseElementProvidedStrain());
+            ConstitutiveLawOptions.Set(ConstitutiveLaw::COMPUTE_STRESS, false);
+            ConstitutiveLawOptions.Set(ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR, false);
+
             // Reading integration points
             const GeometryType::IntegrationPointsArrayType& integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
 
