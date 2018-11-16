@@ -28,7 +28,6 @@ import cmlmc as mlmc
 class MultilevelMonteCarloAnalysis(PotentialFlowAnalysis):
     '''Main analysis stage for MultilevelMonte Carlo simulations'''
 
-
     def __init__(self,model,parameters,sample):
         self.sample = sample
         super(MultilevelMonteCarloAnalysis,self).__init__(model,parameters)
@@ -37,13 +36,14 @@ class MultilevelMonteCarloAnalysis(PotentialFlowAnalysis):
     def _GetSimulationName(self):
         return "Multilevel Monte Carlo Analysis"
     
-def ModifyInitialProperties(self):
+    def ModifyInitialProperties(self):
         '''Introduce here the stochasticity in the Mach number and the angle of attack'''
-        Mach = 0.1 * self.sample[0]
+        Mach = self.sample[0]
         a_infinity = 340 # [m/s] velocity of sound at infinity
-        alpha =  0.01 * (1.0-self.sample[1])
+        alpha =  self.sample[1]
         v_norm = Mach * a_infinity
         velocity = [v_norm*np.cos(alpha),v_norm*np.sin(alpha),0]
+        print("VELOCITY = ",velocity)
         boundary_processes = self.project_parameters["processes"]["boundary_conditions_process_list"]       
         for i in range(0,boundary_processes.size()):
             python_module = boundary_processes[i]["python_module"].GetString()
@@ -59,11 +59,20 @@ def ModifyInitialProperties(self):
 
 '''
 function generating the random sample
-here the sample has a beta distribution with parameters alpha = 2.0 and beta = 6.0
+here the sample has a normal distribution
 '''
-def GenerateBetaSample(alpha,beta):
-    number_samples = 2
-    sample = np.random.beta(alpha,beta,number_samples)
+def GenerateSample():
+    sample = []
+    mean_Mach = 0.7
+    std_deviation_Mach = 0.01
+    number_samples = 1
+    sample.append(np.random.normal(mean_Mach,std_deviation_Mach,number_samples))
+    mean_angle_attack = 0.0 # [rad] = 0 [degrees] airfoil already has 5 degrees
+    std_deviation_angle_attack = 0.01
+    sample.append(np.random.normal(mean_angle_attack,std_deviation_angle_attack,number_samples))
+    print("MACH NUMBER = ",sample[0],"ANGLE ATTACK = ",sample[1])
+    if sample[0] >= 1.0 or sample[0] <= 0.0 :
+        raise Exception ("Mach randomly computed > 1 or < 0")
     return sample
 
 
@@ -115,10 +124,10 @@ def exact_execution_task(model_part_file_name, parameter_file_name):
     local_parameters = parameters # in case there are more parameters file, we rename them
     model = KratosMultiphysics.Model()      
     local_parameters["solver_settings"]["model_import_settings"]["input_filename"].SetString(model_part_file_name[:-5])
-    sample = [1.0,1.0]
+    sample = [0.7,0.0872665]
     simulation = MultilevelMonteCarloAnalysis(model,local_parameters, sample)
     simulation.Run()
-    ExactExpectedValueQoI = 0.25 * EvaluateQuantityOfInterest(simulation)
+    ExactExpectedValueQoI = EvaluateQuantityOfInterest(simulation)
     return ExactExpectedValueQoI
 
 
@@ -157,26 +166,23 @@ if __name__ == '__main__':
     set the ProjectParameters.json path in the parameter_file_name list
     '''
     parameter_file_name =[]
-    parameter_file_name.append("/home/kratos105b/DataDisk/MultilevelMonteCarloApplication/Cases/CompressiblePotentialFlow/ProjectParameters.json")
+    parameter_file_name.append("/home/kratos105b/DataDisk/MultilevelMonteCarloApplication/CompressiblePotentialFlow/ProjectParameters0.json")
     with open(parameter_file_name[0],'r') as parameter_file:
         parameters = KratosMultiphysics.Parameters(parameter_file.read())
     local_parameters_0 = parameters # in case there are more parameters file, we rename them
-    parameter_file_name.append("/home/kratos105b/DataDisk/MultilevelMonteCarloApplication/Cases/CompressiblePotentialFlow/ProjectParameters.json")
+    parameter_file_name.append("/home/kratos105b/DataDisk/MultilevelMonteCarloApplication/CompressiblePotentialFlow/ProjectParameters1.json")
     with open(parameter_file_name[1],'r') as parameter_file:
         parameters = KratosMultiphysics.Parameters(parameter_file.read())
     local_parameters_1 = parameters # in case there are more parameters file, we rename them
-    parameter_file_name.append("/home/kratos105b/DataDisk/MultilevelMonteCarloApplication/Cases/CompressiblePotentialFlow/ProjectParameters.json")
+    parameter_file_name.append("/home/kratos105b/DataDisk/MultilevelMonteCarloApplication/CompressiblePotentialFlow/ProjectParameters2.json")
     with open(parameter_file_name[2],'r') as parameter_file:
         parameters = KratosMultiphysics.Parameters(parameter_file.read())
     local_parameters_2 = parameters # in case there are more parameters file, we rename them
-    parameter_file_name.append("/home/kratos105b/DataDisk/MultilevelMonteCarloApplication/Cases/CompressiblePotentialFlow/ProjectParameters.json")
+    parameter_file_name.append("/home/kratos105b/DataDisk/MultilevelMonteCarloApplication/CompressiblePotentialFlow/ProjectParameters3.json")
     with open(parameter_file_name[3],'r') as parameter_file:
         parameters = KratosMultiphysics.Parameters(parameter_file.read())
     local_parameters_3 = parameters # in case there are more parameters file, we rename them
-    parameter_file_name.append("/home/kratos105b/DataDisk/MultilevelMonteCarloApplication/Cases/CompressiblePotentialFlow/ProjectParameters.json")
-    with open(parameter_file_name[4],'r') as parameter_file:
-        parameters = KratosMultiphysics.Parameters(parameter_file.read())
-    local_parameters_4 = parameters # in case there are more parameters file, we rename them
+
     L_max = len(parameter_file_name) - 1
     print("Maximum number of levels = ",L_max)
 
@@ -184,10 +190,10 @@ if __name__ == '__main__':
     evaluate the exact expected value of Q (sample = 1.0)
     need to change both local_parameters_LEVEL and parameter_file_name[LEVEL] to compute for level LEVEL
     '''
-    ExactExpectedValueQoI = exact_execution_task(local_parameters_2["solver_settings"]["model_import_settings"]["input_filename"].GetString() + ".mdpa", parameter_file_name[2])
+    # ExactExpectedValueQoI = exact_execution_task(local_parameters_2["solver_settings"]["model_import_settings"]["input_filename"].GetString() + ".mdpa", parameter_file_name[2])
     
     '''define setting parameters of the ML simulation'''
-    settings_ML_simulation = [0.1, 0.1, 1.25, 1.15, 0.25, 0.1, 1.0, 25, 2]
+    settings_ML_simulation = [0.1, 0.1, 1.25, 1.15, 0.25, 0.1, 1.0, 2, 2]
     '''
     k0   = settings_ML_simulation[0] # Certainty Parameter 0 rates
     k1   = settings_ML_simulation[1] # Certainty Parameter 1 rates
@@ -215,9 +221,9 @@ if __name__ == '__main__':
     
     for level in range (0,(L_screening+1)):
         for instance in range (0,number_samples[level]):
-            sample = GenerateBetaSample(2.0,6.0) # generate a random variable with beta pdf, alpha = 2.0 and beta = 6.0
+            sample = GenerateSample() # generate a random variable
             run_results = []
-            start_time_ML = time.time() # I can insert this operation in "GenerateBetaSample", or better to create a new function?
+            start_time_ML = time.time()
 
             if level == 0: # evaluating QoI in the coarsest grid
                 run_results.append(execution_task(parameter_file_name[level], sample)) # append to run_results QoI for the coarsest grid
@@ -256,7 +262,7 @@ if __name__ == '__main__':
         for i in range(0,number_samples[level]):
             nsam = i+1
             mean_difference_QoI[level],second_moment_difference_QoI[level],variance_difference_QoI[level] = mlmc.update_onepass_M_VAR(difference_QoI[level][i],mean_difference_QoI[level],second_moment_difference_QoI[level],nsam)
-    # print("list Y_l",difference_QoI)
+    print("list Y_l",difference_QoI)
     print("mean Y_l",mean_difference_QoI)
     print("sample variance Y_l",variance_difference_QoI)
 
@@ -349,7 +355,7 @@ if __name__ == '__main__':
                 time_ML.append([]) # append a list in time_ML for the new level
         for level in range (0,L_opt+1):
             for instance in range (0,difference_number_samples[level]):
-                sample = GenerateBetaSample(2.0,6.0)
+                sample = GenerateSample()
                 run_results = []
                 start_time_ML = time.time()
                 if level == 0: # evaluating QoI in the coarsest grid

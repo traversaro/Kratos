@@ -37,9 +37,9 @@ class MonteCarloAnalysis(PotentialFlowAnalysis):
 
     def ModifyInitialProperties(self):
         '''Introduce here the stochasticity in the Mach number and the angle of attack'''
-        Mach = 0.1 * self.sample[0]
+        Mach = self.sample[0]
         a_infinity = 340 # [m/s] velocity of sound at infinity
-        alpha =  0.01 * (1.0-self.sample[1])
+        alpha =  self.sample[1]
         v_norm = Mach * a_infinity
         velocity = [v_norm*np.cos(alpha),v_norm*np.sin(alpha),0]
         boundary_processes = self.project_parameters["processes"]["boundary_conditions_process_list"]       
@@ -57,18 +57,22 @@ class MonteCarloAnalysis(PotentialFlowAnalysis):
 
 '''
 function generating the random sample
-here the sample has a beta distribution with parameters alpha = 2.0 and beta = 6.0
+here the sample has a normal distribution
 '''
 def GenerateSample():
     sample = []
     mean_Mach = 0.7
-    std_deviation_Mach = 0.1
+    std_deviation_Mach = 0.01
     number_samples = 1
     sample.append(np.random.normal(mean_Mach,std_deviation_Mach,number_samples))
-    mean_angle_attack = 0.0872665 # rad = 5 degrees
-    std_deviation_angle_attack = 0.1
+    mean_angle_attack = 0.0 # [rad] = 0 [degrees] airfoil already has 5 degrees
+    std_deviation_angle_attack = 0.01
     sample.append(np.random.normal(mean_angle_attack,std_deviation_angle_attack,number_samples))
+    print("MACH NUMBER = ",sample[0],"ANGLE ATTACK = ",sample[1])
+    if sample[0] >= 1.0 or sample[0] <= 0.0 :
+        raise Exception ("Mach randomly computed > 1 or < 0")
     return sample
+
 
 
 '''
@@ -155,13 +159,13 @@ if __name__ == '__main__':
     if len(argv) == 2: # ProjectParameters is being passed from outside
         parameter_file_name = argv[1]
     else: # using default name
-        parameter_file_name = "ProjectParameters0.json"
+        parameter_file_name = "/home/kratos105b/DataDisk/MultilevelMonteCarloApplication/CompressiblePotentialFlow/ProjectParameters2.json"
 
     with open(parameter_file_name,'r') as parameter_file:
         parameters = KratosMultiphysics.Parameters(parameter_file.read())
     local_parameters = parameters # in case there are more parameters file, we rename them
 
-    number_samples = 2
+    number_samples = 10
     Qlist = []
 
     for instance in range (0,number_samples):
