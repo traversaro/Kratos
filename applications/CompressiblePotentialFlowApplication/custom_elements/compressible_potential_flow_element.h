@@ -865,7 +865,7 @@ public:
                     data.phis[i] = GetGeometry()[i].FastGetSolutionStepValue(POSITIVE_POTENTIAL);
                 }
 
-                array_1d<double,Dim> vaux = prod(transdata.DN_DX), data.phis);
+                array_1d<double,Dim> vaux = prod(trans(data.DN_DX), data.phis);
                 
                 for(unsigned int k=0; k<Dim; k++) v[k] = vaux[k];
             }
@@ -888,7 +888,7 @@ public:
                         data.phis[i] = GetGeometry()[i].FastGetSolutionStepValue(NEGATIVE_POTENTIAL);
                 }
 
-                array_1d<double,Dim> vaux = prod(transdata.DN_DX), data.phis);
+                array_1d<double,Dim> vaux = prod(trans(data.DN_DX), data.phis);
                 double vupnorm = inner_prod(vaux,vaux);
 
                 //taking only negative part
@@ -1194,7 +1194,7 @@ protected:
             data.phis[i] = GetGeometry()[i].FastGetSolutionStepValue(POSITIVE_POTENTIAL);
 
         GeometryUtils::CalculateGeometryData(GetGeometry(), data.DN_DX, data.N, data.vol);    
-        noalias(velocity) = prod(transdata.DN_DX), data.phis);
+        noalias(velocity) = prod(trans(data.DN_DX), data.phis);
     }
 
     void ComputeVelocityUpperWakeElement(array_1d<double,Dim>& velocity)
@@ -1214,7 +1214,7 @@ protected:
         }         
         GeometryUtils::CalculateGeometryData(GetGeometry(), data.DN_DX, data.N, data.vol);
 
-        noalias(velocity) = prod(transdata.DN_DX), data.phis);
+        noalias(velocity) = prod(trans(data.DN_DX), data.phis);
     }
 
     void ComputeVelocityLowerWakeElement(array_1d<double,Dim>& velocity)
@@ -1236,7 +1236,7 @@ protected:
         
         GeometryUtils::CalculateGeometryData(GetGeometry(), data.DN_DX, data.N, data.vol);
 
-        noalias(velocity) = prod(transdata.DN_DX), data.phis);
+        noalias(velocity) = prod(trans(data.DN_DX), data.phis);
     }
 
     void CheckWakeCondition()
