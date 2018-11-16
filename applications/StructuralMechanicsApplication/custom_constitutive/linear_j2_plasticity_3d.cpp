@@ -38,9 +38,7 @@ LinearJ2Plasticity3D::LinearJ2Plasticity3D(const LinearJ2Plasticity3D &rOther)
 
 ConstitutiveLaw::Pointer LinearJ2Plasticity3D::Clone() const
 {
-    LinearJ2Plasticity3D::Pointer p_clone(new LinearJ2Plasticity3D(*this));
-    return p_clone;
-    //return Kratos::make_shared<LinearJ2Plasticity3D>(LinearJ2Plasticity3D(*this));
+    return Kratos::make_shared<LinearJ2Plasticity3D>(LinearJ2Plasticity3D(*this));
 }
 
 //********************************DESTRUCTOR******************************************
