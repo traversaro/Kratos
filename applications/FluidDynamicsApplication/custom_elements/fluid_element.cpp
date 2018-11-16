@@ -51,6 +51,13 @@ FluidElement<TElementData>::FluidElement(IndexType NewId, GeometryType::Pointer 
     Element(NewId,pGeometry,pProperties)
 {}
 
+// Copy Constructor
+template< class TElementData >
+FluidElement<TElementData>::FluidElement(FluidElement const& rOther)
+    :Element(rOther)
+    ,mpConstitutiveLaw(rOther.mpConstitutiveLaw)
+{}
+
 
 template< class TElementData >
 FluidElement<TElementData>::~FluidElement()

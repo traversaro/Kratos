@@ -41,8 +41,8 @@ class PfemSolution(MainSolid.Solution):
             #print(" PROBLEM_PROCESSES ", processes_parameters["problem_process_list"].PrettyPrintJsonString())
             extended_problem_processes = self._set_particle_properties_process(problem_processes)
             processes_parameters.AddValue("problem_process_list", extended_problem_processes)
-            extended_problem_processes = self._set_volume_recovery_process(problem_processes)
-            processes_parameters.AddValue("problem_process_list", extended_problem_processes)
+            #extended_problem_processes = self._set_volume_recovery_process(problem_processes)
+            #processes_parameters.AddValue("problem_process_list", extended_problem_processes)
             #print(" EXTENDED_PROBLEM_PROCESSES ", processes_parameters["problem_process_list"].PrettyPrintJsonString())
 
         if(processes_parameters.Has("constraints_process_list")):
@@ -204,7 +204,7 @@ class PfemSolution(MainSolid.Solution):
                             if constraints_processes[i]["Parameters"].Has("variable_name"):
                                 variable_name = constraints_processes[i]["Parameters"]["variable_name"].GetString()
                                 if variable_name == "DISPLACEMENT" or variable_name == "VELOCITY" or variable_name == "ACCELERATION":
-                                    ale_settings = constraints_processes[i]
+                                    ale_settings = constraints_processes[i].Clone()
                                     ale_settings["Parameters"]["variable_name"].SetString("MESH"+"_"+variable_name)
                                     ale_settings["Parameters"].AddEmptyList("flags_list")
                                     ale_settings["Parameters"]["flags_list"].Append("SLIP")
