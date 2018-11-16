@@ -174,9 +174,9 @@ void LinearJ2Plasticity3D::CalculateMaterialResponseKirchhoff(ConstitutiveLaw::P
 void LinearJ2Plasticity3D::CalculateMaterialResponseCauchy(ConstitutiveLaw::Parameters& rValues)
 {
 
-    //Flags &Options = rValues.GetOptions();
-    //if (Options.Is(ConstitutiveLaw::COMPUTE_STRESS)
-    //    && Options.Is(ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR)) {
+    Flags &Options = rValues.GetOptions();
+    if (Options.Is(ConstitutiveLaw::COMPUTE_STRESS)
+        || Options.Is(ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR)) {
     const Properties& rMaterialProperties = rValues.GetMaterialProperties();
     Vector& strain_vector = rValues.GetStrainVector();
     Vector& stress_vector = rValues.GetStressVector();
@@ -266,7 +266,7 @@ void LinearJ2Plasticity3D::CalculateMaterialResponseCauchy(ConstitutiveLaw::Para
         CalculateTangentTensor(dgamma, norm_dev_stress, yield_function_normal_vector,
                                rMaterialProperties, tangent_tensor);
     }
-//    }
+    }
 }
 
 //************************************************************************************

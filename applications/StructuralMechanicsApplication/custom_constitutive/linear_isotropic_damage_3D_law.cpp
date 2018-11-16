@@ -129,10 +129,10 @@ void LinearIsotropicDamage3D::CalculateMaterialResponseKirchhoff(Parameters& rVa
 
 void LinearIsotropicDamage3D::CalculateMaterialResponseCauchy(Parameters& rValues)
 {
-//    Flags &Options = rValues.GetOptions();
-//    if (Options.Is(ConstitutiveLaw::COMPUTE_STRESS)
-//        || Options.Is(ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR)) {
-//    const Properties& rMaterialProperties = rValues.GetMaterialProperties();
+    Flags &Options = rValues.GetOptions();
+    if (Options.Is(ConstitutiveLaw::COMPUTE_STRESS)
+        || Options.Is(ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR)) {
+    const Properties& rMaterialProperties = rValues.GetMaterialProperties();
     Vector& strain_vector = rValues.GetStrainVector();
     Vector& stress_vector = rValues.GetStressVector();
 
@@ -169,7 +169,7 @@ void LinearIsotropicDamage3D::CalculateMaterialResponseCauchy(Parameters& rValue
         constitutive_matrix -= damage_rate * outer_prod(stress_vector, stress_vector);
         stress_vector *= (1. - damage_variable);
     }
-//    }
+    }
 }
 
 //************************************************************************************
