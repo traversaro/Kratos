@@ -43,7 +43,7 @@ class LaplacianSolver(PythonSolver):
                     "coarse_enough" : 5000,
                     "krylov_type": "lgmres",
                     "tolerance": 1e-9,
-                    "verbosity": 3,
+                    "verbosity": 0,
                     "scaling": false
             }
 

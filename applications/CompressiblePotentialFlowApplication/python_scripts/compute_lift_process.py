@@ -50,6 +50,7 @@ class ComputeLiftProcess(KratosMultiphysics.Process):
         for cond in itertools.chain(self.upper_surface_model_part.Conditions, self.lower_surface_model_part.Conditions):
            n = cond.GetValue(NORMAL)
            cp = cond.GetValue(PRESSURE)
+           print(cp)
            rx += n[0]*cp
            ry += n[1]*cp
            rz += n[2]*cp
@@ -89,7 +90,7 @@ class ComputeLiftProcess(KratosMultiphysics.Process):
         title="Cl: %.5f, Cd: %.5f" % (Cl,Cd)
         plt.title(title)
         plt.gca().invert_yaxis()
-        plt.savefig('./Figures/'+self.problem_name+'.png', bbox_inches='tight')
+        plt.savefig(''+self.problem_name+'.png', bbox_inches='tight')
         plt.close('all')
         print('RZ = ', RZ)
 
