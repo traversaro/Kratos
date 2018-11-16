@@ -124,9 +124,9 @@ class AdjointVMSMonolithicMPISolver(AdjointVMSMonolithicSolver):
         domain_size = self.main_model_part.ProcessInfo[KratosMultiphysics.DOMAIN_SIZE]
         if self.settings["response_function_settings"]["response_type"].GetString() == "drag":
             if (domain_size == 2):
-                self.response_function = FluidDynamicsApplication.DragResponseFunction2D(self.settings["response_function_settings"], self.main_model_part)
+                self.response_function = FluidDynamicsApplication.DragResponseFunction2D(self.settings["response_function_settings"]["custom_settings"], self.main_model_part)
             elif (domain_size == 3):
-                self.response_function = FluidDynamicsApplication.DragResponseFunction3D(self.settings["response_function_settings"], self.main_model_part)
+                self.response_function = FluidDynamicsApplication.DragResponseFunction3D(self.settings["response_function_settings"]["custom_settings"], self.main_model_part)
             else:
                 raise Exception("Invalid DOMAIN_SIZE: " + str(domain_size))
         else:
@@ -135,9 +135,9 @@ class AdjointVMSMonolithicMPISolver(AdjointVMSMonolithicSolver):
         self.sensitivity_builder = KratosMultiphysics.SensitivityBuilder(self.settings["sensitivity_settings"], self.main_model_part, self.response_function)
 
         if self.settings["scheme_settings"]["scheme_type"].GetString() == "bossak":
-            self.time_scheme = TrilinosApplication.TrilinosAdjointBossakScheme(self.settings["scheme_settings"], self.response_function)
+            self.time_scheme = TrilinosApplication.TrilinosResidualBasedAdjointBossakScheme(self.settings["scheme_settings"], self.response_function)
         elif self.settings["scheme_settings"]["scheme_type"].GetString() == "steady":
-            self.time_scheme = TrilinosApplication.TrilinosAdjointSteadyScheme(self.settings["scheme_settings"], self.response_function)
+            self.time_scheme = TrilinosApplication.TrilinosResidualBasedAdjointSteadyScheme(self.response_function)
         else:
             raise Exception("invalid scheme_type: " + self.settings["scheme_settings"]["scheme_type"].GetString())
 
@@ -160,6 +160,10 @@ class AdjointVMSMonolithicMPISolver(AdjointVMSMonolithicSolver):
                                                                  False)
 
         (self.solver).SetEchoLevel(self.settings["echo_level"].GetInt())
+
+        (self.solver).Initialize()
+        (self.response_function).Initialize()
+        (self.sensitivity_builder).Initialize()
 
         (self.solver).Check()
 

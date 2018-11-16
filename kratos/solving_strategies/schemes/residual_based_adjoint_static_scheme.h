@@ -7,7 +7,7 @@
 //  License:		 BSD License
 //					 Kratos default license: kratos/license.txt
 //
-//  Main authors:    Michael Andre, https://github.com/msandre
+//  Main authors:    
 //
 
 #if !defined(KRATOS_RESIDUAL_BASED_ADJOINT_STATIC_SCHEME_H_INCLUDED)
@@ -68,7 +68,7 @@ public:
     ///@{
 
     /// Constructor.
-    ResidualBasedAdjointStaticScheme(AdjointResponseFunction::Pointer pResponseFunction)
+    explicit ResidualBasedAdjointStaticScheme(AdjointResponseFunction::Pointer pResponseFunction)
         : Scheme<TSparseSpace, TDenseSpace>()
     {
         mpResponseFunction = pResponseFunction;
@@ -131,37 +131,9 @@ public:
     {
         KRATOS_TRY;
 
-        Communicator& r_comm = rModelPart.GetCommunicator();
-
-        if (r_comm.TotalProcesses() == 1)
-        {
-            int ndofs = static_cast<int>(rDofSet.size());
-#pragma omp parallel for
-            for (int i = 0; i < ndofs; ++i)
-            {
-                typename DofsArrayType::iterator it = rDofSet.begin() + i;
-                if (it->IsFree() == true)
-                    it->GetSolutionStepValue() +=
-                        TSparseSpace::GetValue(rDx, it->EquationId());
-            }
-        }
-        else
-        {
-            int ndofs = static_cast<int>(rDofSet.size());
-            #pragma omp parallel for
-            for (int i = 0; i < ndofs; ++i)
-            {
-                typename DofsArrayType::iterator it = rDofSet.begin() + i;
-                if (it->GetSolutionStepValue(PARTITION_INDEX) == r_comm.MyPID())
-                    if (it->IsFree() == true)
-                        it->GetSolutionStepValue() +=
-                            TSparseSpace::GetValue(rDx, it->EquationId());
-            }
-
-            // todo: add a function Communicator::SynchronizeDofVariables() to
-            // reduce communication here.
-            r_comm.SynchronizeNodalSolutionStepsData();
-        }
+        // Update degrees of freedom: adjoint variables associated to the
+        // residual of the physical problem.
+        this->mpDofUpdater->UpdateDofs(rDofSet, rDx);
 
         KRATOS_CATCH("");
     }
@@ -250,6 +222,11 @@ public:
         KRATOS_CATCH("");
     }
 
+    void Clear() override
+    {
+        this->mpDofUpdater->Clear();
+    }
+
     ///@}
     ///@name Access
     ///@{
@@ -276,14 +253,11 @@ protected:
     std::vector<LocalSystemVectorType> mAdjointValues;
 
     ///@}
-    ///@name Protected Operators
-    ///@{
 
     ///@}
     ///@name Protected Operations
     ///@{
 
-    ///@}
     ///@name Protected  Access
     ///@{
 
@@ -305,12 +279,12 @@ private:
     ///@name Member Variables
     ///@{
 
-    ///@}
-    ///@name Private Operators
+    typename TSparseSpace::DofUpdaterPointerType mpDofUpdater =
+        TSparseSpace::CreateDofUpdater();
+
     ///@{
 
     ///@}
-    ///@name Private Operations
     ///@{
 
     ///@}

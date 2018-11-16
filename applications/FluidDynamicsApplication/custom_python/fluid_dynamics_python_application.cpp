@@ -33,16 +33,16 @@ namespace Kratos
 namespace Python
 {
 
-using namespace pybind11;
 
 
 PYBIND11_MODULE(KratosFluidDynamicsApplication,m)
 {
+    namespace py = pybind11;
 
-    class_<KratosFluidDynamicsApplication,
+    py::class_<KratosFluidDynamicsApplication,
            KratosFluidDynamicsApplication::Pointer,
            KratosApplication >(m,"KratosFluidDynamicsApplication")
-           .def(init<>())
+           .def(py::init<>())
            ;
 
     AddCustomConstitutiveLawsToPython(m);
@@ -50,6 +50,8 @@ PYBIND11_MODULE(KratosFluidDynamicsApplication,m)
     AddCustomResponseFunctionsToPython(m);
     AddCustomStrategiesToPython(m);
     AddCustomUtilitiesToPython(m);
+    AddCustomProcessesToPython(m);
+    AddCustomResponseFunctionsToPython(m);
 
     //registering variables in python
     KRATOS_REGISTER_IN_PYTHON_VARIABLE(m,PATCH_INDEX);
@@ -72,8 +74,17 @@ PYBIND11_MODULE(KratosFluidDynamicsApplication,m)
 
     KRATOS_REGISTER_IN_PYTHON_VARIABLE(m,FIC_BETA);
 
+    // Adjoint variables
+    KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS(m, ADJOINT_FLUID_VECTOR_1 )
+    KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS(m, ADJOINT_FLUID_VECTOR_2 )
+    KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS(m, ADJOINT_FLUID_VECTOR_3 )
+    KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS(m, AUX_ADJOINT_FLUID_VECTOR_1 )
+    KRATOS_REGISTER_IN_PYTHON_VARIABLE(m, ADJOINT_FLUID_SCALAR_1 )
+
     // Embedded fluid variables
     KRATOS_REGISTER_IN_PYTHON_VARIABLE(m,EMBEDDED_IS_ACTIVE);
+    KRATOS_REGISTER_IN_PYTHON_VARIABLE(m,SLIP_LENGTH);
+    KRATOS_REGISTER_IN_PYTHON_VARIABLE(m,PENALTY_COEFFICIENT);
     KRATOS_REGISTER_IN_PYTHON_VARIABLE(m,EMBEDDED_WET_PRESSURE);
     KRATOS_REGISTER_IN_PYTHON_3D_VARIABLE_WITH_COMPONENTS(m,EMBEDDED_WET_VELOCITY);
 

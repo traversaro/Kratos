@@ -7,7 +7,7 @@
 //  License:		 BSD License
 //					 Kratos default license: kratos/license.txt
 //
-//  Main authors:    Michael Andre, https://github.com/msandre
+//  Main authors:    
 //
 
 #if !defined(KRATOS_RESIDUAL_BASED_ADJOINT_STEADY_SCHEME_H_INCLUDED)
@@ -59,7 +59,7 @@ public:
     ///@{
 
     /// Constructor.
-    ResidualBasedAdjointSteadyScheme(AdjointResponseFunction::Pointer pResponseFunction)
+    explicit ResidualBasedAdjointSteadyScheme(AdjointResponseFunction::Pointer pResponseFunction)
         : ResidualBasedAdjointStaticScheme<TSparseSpace, TDenseSpace>(pResponseFunction)
     {
     }

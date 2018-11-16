@@ -5,6 +5,8 @@ import sys
 import KratosMultiphysics
 from python_solver import PythonSolver
 
+import KratosFluidDynamicsApplication as KratosCFD
+
 def CreateSolver(model, custom_settings):
     return AdjointFluidSolver(model, custom_settings)
 
@@ -42,10 +44,10 @@ class AdjointFluidSolver(PythonSolver):
         raise Exception("Trying to call AdjointFluidSolver.AddVariables(). Implement the AddVariables() method in the specific derived solver.")
 
     def AddDofs(self):
-        KratosMultiphysics.VariableUtils().AddDof(KratosMultiphysics.ADJOINT_FLUID_VECTOR_1_X, self.main_model_part)
-        KratosMultiphysics.VariableUtils().AddDof(KratosMultiphysics.ADJOINT_FLUID_VECTOR_1_Y, self.main_model_part)
-        KratosMultiphysics.VariableUtils().AddDof(KratosMultiphysics.ADJOINT_FLUID_VECTOR_1_Z, self.main_model_part)
-        KratosMultiphysics.VariableUtils().AddDof(KratosMultiphysics.ADJOINT_FLUID_SCALAR_1, self.main_model_part)
+        KratosMultiphysics.VariableUtils().AddDof(KratosCFD.ADJOINT_FLUID_VECTOR_1_X, self.main_model_part)
+        KratosMultiphysics.VariableUtils().AddDof(KratosCFD.ADJOINT_FLUID_VECTOR_1_Y, self.main_model_part)
+        KratosMultiphysics.VariableUtils().AddDof(KratosCFD.ADJOINT_FLUID_VECTOR_1_Z, self.main_model_part)
+        KratosMultiphysics.VariableUtils().AddDof(KratosCFD.ADJOINT_FLUID_SCALAR_1, self.main_model_part)
 
         if self._IsPrintingRank():
             KratosMultiphysics.Logger.PrintInfo(self.__class__.__name__, "Adjoint fluid solver DOFs added correctly.")

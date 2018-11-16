@@ -1,9 +1,9 @@
-//  KratosAdjointFluidApplication
+//  KratosFluidDynamicsApplication
 //
 //  License:		 BSD License
 //					 license: FluidDynamicsApplication/license.txt
 //
-//  Main authors:    Michael Andre, https://github.com/msandre
+//  Main authors:    
 //
 
 #if !defined(KRATOS_VMS_ADJOINT_ELEMENT_H_INCLUDED)
@@ -32,7 +32,7 @@
 
 namespace Kratos {
 
-///@addtogroup AdjointFluidApplication
+///@addtogroup FluidDynamicsApplication
 ///@{
 
 ///@name Kratos Classes
@@ -51,7 +51,7 @@ class VMSAdjointElement: public Element {
         Element* mpElement;
 
     public:
-        ThisExtensions(Element* pElement) : mpElement{pElement}
+        explicit ThisExtensions(Element* pElement) : mpElement{pElement}
         {
         }
 
@@ -66,9 +66,10 @@ class VMSAdjointElement: public Element {
             rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_2_Y, Step);
             if (mpElement->GetGeometry().WorkingSpaceDimension() == 3)
             {
-                rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_2_Z, Step);
+                rVector[index++] =
+                    MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_2_Z, Step);
             }
-            rVector[index] = IndirectScalar<double>{};
+            rVector[index] = IndirectScalar<double>{}; // pressure
         }
 
         void GetSecondDerivativesVector(std::size_t NodeId,
@@ -82,9 +83,10 @@ class VMSAdjointElement: public Element {
             rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_3_Y, Step);
             if (mpElement->GetGeometry().WorkingSpaceDimension() == 3)
             {
-                rVector[index++] = MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_3_Z, Step);
+                rVector[index++] =
+                    MakeIndirectScalar(r_node, ADJOINT_FLUID_VECTOR_3_Z, Step);
             }
-            rVector[index] = IndirectScalar<double>{};
+            rVector[index] = IndirectScalar<double>{}; // pressure
         }
 
         void GetAuxiliaryVector(std::size_t NodeId,
@@ -94,13 +96,16 @@ class VMSAdjointElement: public Element {
             auto& r_node = mpElement->GetGeometry()[NodeId];
             rVector.resize(mpElement->GetGeometry().WorkingSpaceDimension() + 1);
             std::size_t index = 0;
-            rVector[index++] = MakeIndirectScalar(r_node, AUX_ADJOINT_FLUID_VECTOR_1_X, Step);
-            rVector[index++] = MakeIndirectScalar(r_node, AUX_ADJOINT_FLUID_VECTOR_1_Y, Step);
+            rVector[index++] =
+                MakeIndirectScalar(r_node, AUX_ADJOINT_FLUID_VECTOR_1_X, Step);
+            rVector[index++] =
+                MakeIndirectScalar(r_node, AUX_ADJOINT_FLUID_VECTOR_1_Y, Step);
             if (mpElement->GetGeometry().WorkingSpaceDimension() == 3)
             {
-                rVector[index++] = MakeIndirectScalar(r_node, AUX_ADJOINT_FLUID_VECTOR_1_Z, Step);
+                rVector[index++] =
+                    MakeIndirectScalar(r_node, AUX_ADJOINT_FLUID_VECTOR_1_Z, Step);
             }
-            rVector[index] = IndirectScalar<double>{};
+            rVector[index] = IndirectScalar<double>{}; // pressure
         }
 
         void GetFirstDerivativesVariables(std::vector<VariableData const*>& rVariables) const override
@@ -163,18 +168,19 @@ public:
     ///@name Life Cycle
     ///@{
 
-    VMSAdjointElement(IndexType NewId = 0) :
-    Element(NewId)
-    {}
+    VMSAdjointElement(IndexType NewId = 0) : Element(NewId)
+    {
+    }
 
-    VMSAdjointElement(IndexType NewId, GeometryType::Pointer pGeometry) :
-    Element(NewId, pGeometry)
-    {}
+    VMSAdjointElement(IndexType NewId, GeometryType::Pointer pGeometry)
+        : Element(NewId, pGeometry)
+    {
+    }
 
-    VMSAdjointElement(IndexType NewId, GeometryType::Pointer pGeometry,
-            PropertiesType::Pointer pProperties) :
-    Element(NewId, pGeometry, pProperties)
-    {}
+    VMSAdjointElement(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
+        : Element(NewId, pGeometry, pProperties)
+    {
+    }
 
     ~VMSAdjointElement() override
     {}
@@ -194,27 +200,24 @@ public:
      * @return pointer to the newly created element
      */
     Element::Pointer Create(IndexType NewId,
-            NodesArrayType const& ThisNodes,
-            PropertiesType::Pointer pProperties) const override
+                            NodesArrayType const& ThisNodes,
+                            PropertiesType::Pointer pProperties) const override
     {
         KRATOS_TRY
 
-        return Element::Pointer(
-                new VMSAdjointElement<TDim>(NewId,
-                        this->GetGeometry().Create(ThisNodes),
-                        pProperties));
+        return Element::Pointer(new VMSAdjointElement<TDim>(
+            NewId, this->GetGeometry().Create(ThisNodes), pProperties));
 
         KRATOS_CATCH("")
     }
 
     Element::Pointer Create(IndexType NewId,
-            GeometryType::Pointer pGeom,
-            PropertiesType::Pointer pProperties) const override
+                            GeometryType::Pointer pGeom,
+                            PropertiesType::Pointer pProperties) const override
     {
         KRATOS_TRY
 
-        return Element::Pointer(
-                new VMSAdjointElement<TDim>(NewId, pGeom, pProperties));
+        return Element::Pointer(new VMSAdjointElement<TDim>(NewId, pGeom, pProperties));
 
         KRATOS_CATCH("")
     }
@@ -320,12 +323,12 @@ public:
         IndexType LocalIndex = 0;
         for (IndexType iNode = 0; iNode < TNumNodes; ++iNode)
         {
-            const array_1d< double, 3 >& rVel =
-                    rGeom[iNode].FastGetSolutionStepValue(ADJOINT_FLUID_VECTOR_1,Step);
-            for (IndexType d=0; d < TDim; d++)
+            const array_1d<double, 3>& rVel =
+                rGeom[iNode].FastGetSolutionStepValue(ADJOINT_FLUID_VECTOR_1, Step);
+            for (IndexType d = 0; d < TDim; d++)
                 rValues[LocalIndex++] = rVel[d];
-            rValues[LocalIndex++] = rGeom[iNode].FastGetSolutionStepValue(
-                    ADJOINT_FLUID_SCALAR_1,Step);
+            rValues[LocalIndex++] =
+                rGeom[iNode].FastGetSolutionStepValue(ADJOINT_FLUID_SCALAR_1, Step);
         }
     }
 
@@ -348,22 +351,22 @@ public:
         IndexType LocalIndex = 0;
         for (IndexType iNode = 0; iNode < TNumNodes; ++iNode)
         {
-            const array_1d< double, 3 >& rAccel =
-                    rGeom[iNode].FastGetSolutionStepValue(ADJOINT_FLUID_VECTOR_3,Step);
-            for (IndexType d=0; d < TDim; d++)
+            const array_1d<double, 3>& rAccel =
+                rGeom[iNode].FastGetSolutionStepValue(ADJOINT_FLUID_VECTOR_3, Step);
+            for (IndexType d = 0; d < TDim; d++)
                 rValues[LocalIndex++] = rAccel[d];
             rValues[LocalIndex++] = 0.0; // pressure dof
         }
     }
 
     void CalculateLocalSystem(MatrixType& rLeftHandSideMatrix,
-            VectorType& rRightHandSideVector,
-            ProcessInfo& rCurrentProcessInfo) override
+                              VectorType& rRightHandSideVector,
+                              ProcessInfo& rCurrentProcessInfo) override
     {
         KRATOS_TRY
 
         KRATOS_THROW_ERROR(std::runtime_error,
-                "this function is not implemented.","")
+                           "this function is not implemented.", "")
 
         KRATOS_CATCH("")
     }
@@ -371,19 +374,20 @@ public:
     void CalculateLeftHandSide(MatrixType& rLeftHandSideMatrix,
                                ProcessInfo& /*rCurrentProcessInfo*/) override
     {
-        if (rLeftHandSideMatrix.size1() != TFluidLocalSize || rLeftHandSideMatrix.size2() != TFluidLocalSize)
-            rLeftHandSideMatrix.resize(TFluidLocalSize,TFluidLocalSize,false);
+        if (rLeftHandSideMatrix.size1() != TFluidLocalSize ||
+            rLeftHandSideMatrix.size2() != TFluidLocalSize)
+            rLeftHandSideMatrix.resize(TFluidLocalSize, TFluidLocalSize, false);
 
         rLeftHandSideMatrix.clear();
     }
 
     void CalculateRightHandSide(VectorType& rRightHandSideVector,
-            ProcessInfo& /*rCurrentProcessInfo*/) override
+                                ProcessInfo& /*rCurrentProcessInfo*/) override
     {
         KRATOS_TRY
 
         KRATOS_THROW_ERROR(std::runtime_error,
-                "this function is not implemented.","")
+                           "this function is not implemented.", "")
 
         KRATOS_CATCH("")
     }
@@ -406,10 +410,11 @@ public:
      * ACCELERATION.
      */
     void CalculateFirstDerivativesLHS(MatrixType& rLeftHandSideMatrix,
-					      ProcessInfo& rCurrentProcessInfo) override
+                                      ProcessInfo& rCurrentProcessInfo) override
     {
-        this->CalculatePrimalGradientOfVMSSteadyTerm(rLeftHandSideMatrix,rCurrentProcessInfo);
-        this->AddPrimalGradientOfVMSMassTerm(rLeftHandSideMatrix,ACCELERATION,-1.0,rCurrentProcessInfo);
+        this->CalculatePrimalGradientOfVMSSteadyTerm(rLeftHandSideMatrix, rCurrentProcessInfo);
+        this->AddPrimalGradientOfVMSMassTerm(rLeftHandSideMatrix, ACCELERATION,
+                                             -1.0, rCurrentProcessInfo);
         rLeftHandSideMatrix = trans(rLeftHandSideMatrix); // transpose
     }
 
@@ -425,30 +430,29 @@ public:
      * \f]
      */
     void CalculateSecondDerivativesLHS(MatrixType& rLeftHandSideMatrix,
-				       ProcessInfo& rCurrentProcessInfo) override
+                                       ProcessInfo& rCurrentProcessInfo) override
     {
-      this->CalculateVMSMassMatrix(rLeftHandSideMatrix,rCurrentProcessInfo);
-      rLeftHandSideMatrix = -trans(rLeftHandSideMatrix); // transpose
+        this->CalculateVMSMassMatrix(rLeftHandSideMatrix, rCurrentProcessInfo);
+        rLeftHandSideMatrix = -trans(rLeftHandSideMatrix); // transpose
     }
 
-    void CalculateMassMatrix(MatrixType& rMassMatrix,
-            ProcessInfo& /*rCurrentProcessInfo*/) override
+    void CalculateMassMatrix(MatrixType& rMassMatrix, ProcessInfo& /*rCurrentProcessInfo*/) override
     {
         KRATOS_TRY
 
         KRATOS_THROW_ERROR(std::runtime_error,
-                "this function is not implemented.","")
+                           "this function is not implemented.", "")
 
         KRATOS_CATCH("")
     }
 
     void CalculateDampingMatrix(MatrixType& rDampingMatrix,
-            ProcessInfo& /*rCurrentProcessInfo*/) override
+                                ProcessInfo& /*rCurrentProcessInfo*/) override
     {
         KRATOS_TRY
 
         KRATOS_THROW_ERROR(std::runtime_error,
-                "this function is not implemented.","")
+                           "this function is not implemented.", "")
 
         KRATOS_CATCH("")
     }
@@ -461,7 +465,7 @@ public:
      *  - \partial_{\mathbf{s}}(\mathbf{M}^n \dot{\mathbf{w}}^{n-\alpha})^T
      * \f]
      */
-    void CalculateSensitivityMatrix(const Variable<array_1d<double,3> >& rSensitivityVariable,
+    void CalculateSensitivityMatrix(const Variable<array_1d<double, 3>>& rSensitivityVariable,
                                     Matrix& rOutput,
                                     const ProcessInfo& rCurrentProcessInfo) override
     {
@@ -469,22 +473,23 @@ public:
 
         if (rSensitivityVariable == SHAPE_SENSITIVITY)
         {
-            this->CalculateShapeGradientOfVMSSteadyTerm(rOutput,rCurrentProcessInfo);
-            this->AddShapeGradientOfVMSMassTerm(rOutput,ACCELERATION,-1.0,rCurrentProcessInfo);
+            this->CalculateShapeGradientOfVMSSteadyTerm(rOutput, rCurrentProcessInfo);
+            this->AddShapeGradientOfVMSMassTerm(rOutput, ACCELERATION, -1.0, rCurrentProcessInfo);
         }
         else
         {
-            KRATOS_ERROR << "Sensitivity variable " << rSensitivityVariable << " not supported." << std::endl;
+            KRATOS_ERROR << "Sensitivity variable " << rSensitivityVariable
+                         << " not supported." << std::endl;
         }
 
         KRATOS_CATCH("")
     }
 
     void GetDofList(DofsVectorType& rElementalDofList,
-            ProcessInfo& /*rCurrentProcessInfo*/) override;
+                    ProcessInfo& /*rCurrentProcessInfo*/) override;
 
     void EquationIdVector(EquationIdVectorType& rResult,
-            ProcessInfo& /*rCurrentProcessInfo*/) override;
+                          ProcessInfo& /*rCurrentProcessInfo*/) override;
 
     ///@}
     ///@name Input and output
@@ -522,9 +527,7 @@ protected:
     ///@{
 
     /// Calculate VMS-stabilized (lumped) mass matrix.
-    void CalculateVMSMassMatrix(
-            MatrixType& rMassMatrix,
-            const ProcessInfo& rCurrentProcessInfo)
+    void CalculateVMSMassMatrix(MatrixType& rMassMatrix, const ProcessInfo& rCurrentProcessInfo)
     {
         KRATOS_TRY
 
@@ -619,11 +622,10 @@ protected:
      * is a constant vector with zeros for pressure dofs. The variable
      * determines the values for velocity dofs.
      */
-    void AddPrimalGradientOfVMSMassTerm(
-            MatrixType& rOutputMatrix,
-            const Variable<array_1d< double, 3 > >& rVariable,
-            double alpha,
-            const ProcessInfo& rCurrentProcessInfo)
+    void AddPrimalGradientOfVMSMassTerm(MatrixType& rOutputMatrix,
+                                        const Variable<array_1d<double, 3>>& rVariable,
+                                        double alpha,
+                                        const ProcessInfo& rCurrentProcessInfo)
     {
         KRATOS_TRY
 
@@ -757,11 +759,10 @@ protected:
      * a constant vector with zeros for pressure dofs. The variable
      * determines the values for velocity dofs.
      */
-    void AddShapeGradientOfVMSMassTerm(
-            MatrixType& rOutputMatrix,
-            const Variable<array_1d< double ,3 > >& rVariable,
-            double alpha,
-            const ProcessInfo& rCurrentProcessInfo)
+    void AddShapeGradientOfVMSMassTerm(MatrixType& rOutputMatrix,
+                                       const Variable<array_1d<double, 3>>& rVariable,
+                                       double alpha,
+                                       const ProcessInfo& rCurrentProcessInfo)
     {
         KRATOS_TRY
 
@@ -938,9 +939,8 @@ protected:
      *
      * where the current adjoint step is the \f$n^{th}\f$ time step.
      */
-    void CalculatePrimalGradientOfVMSSteadyTerm(
-            MatrixType& rAdjointMatrix,
-            const ProcessInfo& rCurrentProcessInfo)
+    void CalculatePrimalGradientOfVMSSteadyTerm(MatrixType& rAdjointMatrix,
+                                                const ProcessInfo& rCurrentProcessInfo)
     {
         KRATOS_TRY
 
@@ -1174,9 +1174,8 @@ protected:
      * This function is only valid when the determinant of the Jacobian is constant
      * over the element.
      */
-    void CalculateShapeGradientOfVMSSteadyTerm(
-            MatrixType& rShapeDerivativesMatrix,
-            const ProcessInfo& rCurrentProcessInfo)
+    void CalculateShapeGradientOfVMSSteadyTerm(MatrixType& rShapeDerivativesMatrix,
+                                               const ProcessInfo& rCurrentProcessInfo)
     {
         KRATOS_TRY
 
@@ -1417,9 +1416,8 @@ protected:
      * @param rGradVel velocity gradient matrix
      * @param rDN_DX shape functions' gradients
      */
-    void CalculateVelocityGradient(
-            BoundedMatrix< double, TDim, TDim >& rGradVel,
-            const ShapeFunctionDerivativesType& rDN_DX)
+    void CalculateVelocityGradient(BoundedMatrix<double, TDim, TDim>& rGradVel,
+                                   const ShapeFunctionDerivativesType& rDN_DX)
     {
         GeometryType& rGeom = this->GetGeometry();
         // node 0
@@ -1443,8 +1441,8 @@ protected:
      * @param rGradP pressure gradient
      * @param rDN_DX shape functions' gradients
      */
-    void CalculatePressureGradient(array_1d<double, TDim >& rGradP,
-            const ShapeFunctionDerivativesType& rDN_DX)
+    void CalculatePressureGradient(array_1d<double, TDim>& rGradP,
+                                   const ShapeFunctionDerivativesType& rDN_DX)
     {
         GeometryType& rGeom = this->GetGeometry();
         // node 0
@@ -1487,14 +1485,13 @@ protected:
      * @param Density density of the fluid
      * @param Viscosity dynamic viscosity of the fluid
      */
-    void CalculateStabilizationParameters(
-            double& rTauOne,
-            double& rTauTwo,
-            double VelNorm,
-            double ElemSize,
-            double Density,
-            double Viscosity,
-            const ProcessInfo& rCurrentProcessInfo)
+    void CalculateStabilizationParameters(double& rTauOne,
+                                          double& rTauTwo,
+                                          double VelNorm,
+                                          double ElemSize,
+                                          double Density,
+                                          double Viscosity,
+                                          const ProcessInfo& rCurrentProcessInfo)
     {
         // assume DELTA_TIME < 0 !!!
         double tmp =-rCurrentProcessInfo[DYNAMIC_TAU] / rCurrentProcessInfo[DELTA_TIME];
@@ -1518,16 +1515,15 @@ protected:
      * @param Viscosity dynamic viscosity of the fluid
      * @param DetJDeriv derivative of the determinant of the Jacobian
      */
-    void CalculateStabilizationParametersDerivative(
-            double& rTauOneDeriv,
-            double& rTauTwoDeriv,
-            double TauOne,
-            double TauTwo,
-            double VelNorm,
-            double ElemSize,
-            double Density,
-            double Viscosity,
-            double DetJDeriv);
+    void CalculateStabilizationParametersDerivative(double& rTauOneDeriv,
+                                                    double& rTauTwoDeriv,
+                                                    double TauOne,
+                                                    double TauTwo,
+                                                    double VelNorm,
+                                                    double ElemSize,
+                                                    double Density,
+                                                    double Viscosity,
+                                                    double DetJDeriv);
 
     /**
      * @brief Returns a scalar variable at this integration point.
@@ -1537,9 +1533,9 @@ protected:
      * @param rShapeFunc array of shape function values at this integration point
      */
     void EvaluateInPoint(double& rResult,
-            const Variable< double >& rVariable,
-            const array_1d< double, TNumNodes >& rShapeFunc,
-            IndexType step = 0)
+                         const Variable<double>& rVariable,
+                         const array_1d<double, TNumNodes>& rShapeFunc,
+                         IndexType step = 0)
     {
         GeometryType& rGeom = this->GetGeometry();
         rResult = rShapeFunc[0] * rGeom[0].FastGetSolutionStepValue(rVariable, step);
@@ -1557,10 +1553,10 @@ protected:
      * @param rVariable the variable to be evaluated
      * @param rShapeFunc array of shape function values at this integration point
      */
-    void EvaluateInPoint(array_1d< double, TDim > & rResult,
-            const Variable< array_1d< double, 3 > >& rVariable,
-            const array_1d< double, TNumNodes >& rN,
-            IndexType step = 0)
+    void EvaluateInPoint(array_1d<double, TDim>& rResult,
+                         const Variable<array_1d<double, 3>>& rVariable,
+                         const array_1d<double, TNumNodes>& rN,
+                         IndexType step = 0)
     {
         GeometryType& rGeom = this->GetGeometry();
         const array_1d< double, 3 >& rNodalValue = rGeom[0].FastGetSolutionStepValue(rVariable, step);
@@ -1582,8 +1578,8 @@ protected:
      * @param Weight integration weight including dynamic viscosity
      */
     void AddViscousTerm(MatrixType& rResult,
-            const ShapeFunctionDerivativesType& rDN_DX,
-            const double Weight);
+                        const ShapeFunctionDerivativesType& rDN_DX,
+                        const double Weight);
 
     /**
      * @brief Adds derivative of viscous term w.r.t a node's coordinate.
@@ -1596,12 +1592,11 @@ protected:
      *
      * @see AddViscousTerm
      */
-    void AddViscousTermDerivative(
-            BoundedMatrix< double, TFluidLocalSize, TFluidLocalSize >& rResult,
-            const ShapeFunctionDerivativesType& rDN_DX,
-            const ShapeFunctionDerivativesType& rDN_DX_Deriv,
-            const double Weight,
-            const double WeightDeriv);
+    void AddViscousTermDerivative(BoundedMatrix<double, TFluidLocalSize, TFluidLocalSize>& rResult,
+                                  const ShapeFunctionDerivativesType& rDN_DX,
+                                  const ShapeFunctionDerivativesType& rDN_DX_Deriv,
+                                  const double Weight,
+                                  const double WeightDeriv);
 
     ///@}
 
@@ -1670,7 +1665,7 @@ inline std::ostream& operator <<(std::ostream& rOStream,
 }
 ///@}
 
-///@} // Adjoint Fluid Application group
+///@} // FluidDynamicsApplication group
 
 }// namespace Kratos
 

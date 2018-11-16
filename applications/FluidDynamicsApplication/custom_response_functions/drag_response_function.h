@@ -7,7 +7,7 @@
 //  License:         BSD License
 //                   Kratos default license: kratos/license.txt
 //
-//  Main authors:    Michael Andre, https://github.com/msandre
+//  Main authors:    
 //
 
 #if !defined(KRATOS_DRAG_RESPONSE_FUNCTION_H_INCLUDED)
@@ -27,7 +27,7 @@
 
 namespace Kratos
 {
-///@addtogroup AdjointFluidApplication
+///@addtogroup FluidDynamicsApplication
 ///@{
 
 ///@name Kratos Classes
@@ -57,7 +57,7 @@ public:
     ///@{
 
     /// Constructor.
-    DragResponseFunction(Parameters& rParameters, ModelPart& rModelPart)
+    DragResponseFunction(Parameters Settings, ModelPart& rModelPart)
     : mrModelPart(rModelPart)
     {
         KRATOS_TRY;
@@ -68,20 +68,19 @@ public:
             "drag_direction": [1.0, 0.0, 0.0]
         })");
 
-        Parameters custom_settings = rParameters["custom_settings"];
-        custom_settings.ValidateAndAssignDefaults(default_settings);
+        Settings.ValidateAndAssignDefaults(default_settings);
 
         mStructureModelPartName =
-            custom_settings["structure_model_part_name"].GetString();
+            Settings["structure_model_part_name"].GetString();
 
-        if (custom_settings["drag_direction"].IsArray() == false ||
-            custom_settings["drag_direction"].size() != 3)
+        if (Settings["drag_direction"].IsArray() == false ||
+            Settings["drag_direction"].size() != 3)
         {
             KRATOS_ERROR << "Invalid \"drag_direction\"." << std::endl;
         }
 
         for (unsigned int d = 0; d < TDim; ++d)
-            mDragDirection[d] = custom_settings["drag_direction"][d].GetDouble();
+            mDragDirection[d] = Settings["drag_direction"][d].GetDouble();
 
         if (std::abs(norm_2(mDragDirection) - 1.0) > 1e-3)
         {
@@ -89,10 +88,10 @@ public:
             if (magnitude == 0.0)
                 KRATOS_ERROR << "\"drag_direction\" is zero." << std::endl;
 
-            std::cout << "WARNING: Non unit magnitude in \"drag_direction\"." << std::endl;
-            std::cout << "WARNING: Normalizing ..." << std::endl;
+            KRATOS_WARNING("DragResponseFunction") << "Non unit magnitude in \"drag_direction\"." << std::endl;
+            KRATOS_WARNING("DragResponseFunction") << "Normalizing ..." << std::endl;
 
-            for (unsigned int d = 0; d < TDim; d++)
+            for (unsigned int d = 0; d < TDim; ++d)
                 mDragDirection[d] /= magnitude;
         }
 
@@ -152,13 +151,11 @@ public:
             rResidualGradient, rAdjointElement.GetGeometry().Points(), rResponseGradient);
     }
 
-    // This is a temporary crutch to upgrade the response function base class
-    // without completely breaking the tests.
-    virtual void CalculatePartialSensitivity(Element& rAdjointElement,
-                                             const Variable<array_1d<double, 3>>& rVariable,
-                                             const Matrix& rSensitivityMatrix,
-                                             Vector& rSensitivityGradient,
-                                             const ProcessInfo& rProcessInfo) override
+    void CalculatePartialSensitivity(Element& rAdjointElement,
+                                     const Variable<array_1d<double, 3>>& rVariable,
+                                     const Matrix& rSensitivityMatrix,
+                                     Vector& rSensitivityGradient,
+                                     const ProcessInfo& rProcessInfo) override
     {
         KRATOS_TRY;
 
@@ -255,7 +252,7 @@ private:
 
 ///@} // Kratos Classes
 
-///@} // Adjoint Fluid Application group
+///@} // FluidDynamicsApplication group
 
 } /* namespace Kratos.*/
 
