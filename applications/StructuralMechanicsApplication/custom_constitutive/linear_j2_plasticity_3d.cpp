@@ -40,6 +40,7 @@ ConstitutiveLaw::Pointer LinearJ2Plasticity3D::Clone() const
 {
     LinearJ2Plasticity3D::Pointer p_clone(new LinearJ2Plasticity3D(*this));
     return p_clone;
+    //return Kratos::make_shared<LinearJ2Plasticity3D>(LinearJ2Plasticity3D(*this));
 }
 
 //********************************DESTRUCTOR******************************************
@@ -175,6 +176,9 @@ void LinearJ2Plasticity3D::CalculateMaterialResponseKirchhoff(ConstitutiveLaw::P
 void LinearJ2Plasticity3D::CalculateMaterialResponseCauchy(ConstitutiveLaw::Parameters& rValues)
 {
 
+    //Flags &Options = rValues.GetOptions();
+    //if (Options.Is(ConstitutiveLaw::COMPUTE_STRESS)
+    //    && Options.Is(ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR)) {
     const Properties& rMaterialProperties = rValues.GetMaterialProperties();
     Vector& strain_vector = rValues.GetStrainVector();
     Vector& stress_vector = rValues.GetStressVector();
@@ -199,13 +203,13 @@ void LinearJ2Plasticity3D::CalculateMaterialResponseCauchy(ConstitutiveLaw::Para
 
     elastic_tensor.resize(6, 6, false);
     CalculateElasticMatrix(elastic_tensor, rMaterialProperties);
-    Vector yield_tensionrial(6);
-    noalias(yield_tensionrial) = prod(elastic_tensor, strain_vector - mPlasticStrainOld);
+    Vector yield_tension(6);
+    noalias(yield_tension) = prod(elastic_tensor, strain_vector - mPlasticStrainOld);
 
     // stress_trial_dev = sigma - 1/3 tr(sigma) * I
-    Vector stress_trial_dev = yield_tensionrial;
+    Vector stress_trial_dev = yield_tension;
 
-    const double trace = 1.0 / 3.0 * (yield_tensionrial(0) + yield_tensionrial(1) + yield_tensionrial(2));
+    const double trace = 1.0 / 3.0 * (yield_tension(0) + yield_tension(1) + yield_tension(2));
     stress_trial_dev(0) -= trace;
     stress_trial_dev(1) -= trace;
     stress_trial_dev(2) -= trace;
@@ -220,7 +224,7 @@ void LinearJ2Plasticity3D::CalculateMaterialResponseCauchy(ConstitutiveLaw::Para
     if (trial_yield_function <= 0.) {
         // ELASTIC
         mInelasticFlag = false;
-        stress_vector = yield_tensionrial;
+        stress_vector = yield_tension;
         tangent_tensor = elastic_tensor;
     } else {
         // INELASTIC
@@ -264,6 +268,7 @@ void LinearJ2Plasticity3D::CalculateMaterialResponseCauchy(ConstitutiveLaw::Para
         CalculateTangentTensor(dgamma, norm_dev_stress, yield_function_normal_vector,
                                rMaterialProperties, tangent_tensor);
     }
+//    }
 }
 
 //************************************************************************************
