@@ -38,23 +38,23 @@ namespace Kratos {
 
             // Preconsolidation pressure
             const double p_c = 0.5 * (element1_props[DEM_PRECONSOLIDATION_PRESSURE] + element2_props[DEM_PRECONSOLIDATION_PRESSURE]);
-            
+
             // p and q computation
             const double p = 0.333333333333333333333 * (principal_stresses[0] + principal_stresses[1] + principal_stresses[2]);
-            
+
             const double q = sqrt(0.5 * ((principal_stresses[0] - principal_stresses[1]) * (principal_stresses[0] - principal_stresses[1])
                                        + (principal_stresses[1] - principal_stresses[2]) * (principal_stresses[1] - principal_stresses[2])
                                        + (principal_stresses[2] - principal_stresses[0]) * (principal_stresses[2] - principal_stresses[0])));
 
             // slope of the straight line function
             const double M = 0.5 * (element1_props[DEM_M_CAMCLAY_SLOPE] + element2_props[DEM_M_CAMCLAY_SLOPE]);;
-            
+
             // straight line function value
             const double straight_line_function_value = M * p;
 
             // ellipsoid function value
             const double ellipsoid_function_value = M * M * p * (p - p_c) + q * q;
-            
+
             // choosing the necessary branch
             const double cam_clay_function_value = straight_line_function_value < ellipsoid_function_value ? straight_line_function_value : ellipsoid_function_value;
 
@@ -78,17 +78,17 @@ namespace Kratos {
         Vector principal_stresses(3);
         noalias(principal_stresses) = AuxiliaryFunctions::EigenValuesDirectMethod(average_stress_tensor);
         const double max_stress = *std::max_element(principal_stresses.begin(), principal_stresses.end());
-        
+
         const double myYoung = element1->GetYoung();
         const double other_young = element2->GetYoung();
         const double equiv_young = 2.0 * myYoung * other_young / (myYoung + other_young);
         const double my_radius = element1->GetRadius();
         const double other_radius = element2->GetRadius();
-        
+
         double calculation_area = 0.0;
         Vector& vector_of_contact_areas = element1->GetValue(NEIGHBOURS_CONTACT_AREAS);
         GetContactArea(my_radius, other_radius, vector_of_contact_areas, i, calculation_area);
-        
+
         const double radius_sum = my_radius + other_radius;
         const double initial_delta = element1->GetInitialDelta(i);
         const double initial_dist = radius_sum - initial_delta;
@@ -97,10 +97,57 @@ namespace Kratos {
         const double max_normal_force = max_stress * calculation_area;
         const double max_local_distance_by_force = max_normal_force / kn_el;
         const double max_local_distance_by_radius = 0.05 * radius_sum;
-        
+
         // avoid error in special cases with too high tensile
         const double max_local_distance = max_local_distance_by_force > max_local_distance_by_radius? max_local_distance_by_radius : max_local_distance_by_force;
-                        
+
         return max_local_distance;
     }
+
+    void DEM_KDEM_CamClay::ComputeParticleRotationalMoments(SphericContinuumParticle* element,
+                                                    SphericContinuumParticle* neighbor,
+                                                    double equiv_young,
+                                                    double distance,
+                                                    double calculation_area,
+                                                    double LocalCoordSystem[3][3],
+                                                    double ElasticLocalRotationalMoment[3],
+                                                    double ViscoLocalRotationalMoment[3],
+                                                    double equiv_poisson,
+                                                    double indentation) {
+
+        KRATOS_TRY
+        //double LocalRotationalMoment[3]     = {0.0};
+        double LocalDeltaRotatedAngle[3]    = {0.0};
+        double LocalDeltaAngularVelocity[3] = {0.0};
+
+        array_1d<double, 3> GlobalDeltaRotatedAngle;
+        noalias(GlobalDeltaRotatedAngle) = element->GetGeometry()[0].FastGetSolutionStepValue(PARTICLE_ROTATION_ANGLE) - neighbor->GetGeometry()[0].FastGetSolutionStepValue(PARTICLE_ROTATION_ANGLE);
+        array_1d<double, 3> GlobalDeltaAngularVelocity;
+        noalias(GlobalDeltaAngularVelocity) = element->GetGeometry()[0].FastGetSolutionStepValue(ANGULAR_VELOCITY) - neighbor->GetGeometry()[0].FastGetSolutionStepValue(ANGULAR_VELOCITY);
+
+        GeometryFunctions::VectorGlobal2Local(LocalCoordSystem, GlobalDeltaRotatedAngle, LocalDeltaRotatedAngle);
+        GeometryFunctions::VectorGlobal2Local(LocalCoordSystem, GlobalDeltaAngularVelocity, LocalDeltaAngularVelocity);
+        //GeometryFunctions::VectorGlobal2Local(LocalCoordSystem, mContactMoment, LocalRotationalMoment);
+
+        const double equivalent_radius = sqrt(calculation_area / Globals::Pi);
+
+        const double equiv_shear   = equiv_young / (2.0 * (1 + equiv_poisson));
+
+        const double Inertia_I     = 0.25 * Globals::Pi * equivalent_radius * equivalent_radius * equivalent_radius * equivalent_radius;
+        const double Inertia_J     = 2.0 * Inertia_I; // This is the polar inertia
+
+        const double k_rot = equiv_young * Inertia_I / distance;
+        const double k_tor = equiv_shear * Inertia_J / distance;
+
+        const double norm_distance = (element->GetRadius() + neighbor->GetRadius()) / distance; // If spheres are not tangent the Damping coefficient, DeltaRotatedAngle and DeltaAngularVelocity have to be normalized
+
+        ElasticLocalRotationalMoment[0] = -k_rot * LocalDeltaRotatedAngle[0] * norm_distance;
+        ElasticLocalRotationalMoment[1] = -k_rot * LocalDeltaRotatedAngle[1] * norm_distance;
+        ElasticLocalRotationalMoment[2] = -k_tor * LocalDeltaRotatedAngle[2] * norm_distance;
+
+        ViscoLocalRotationalMoment[0] = 0.0;
+        ViscoLocalRotationalMoment[1] = 0.0;
+        ViscoLocalRotationalMoment[2] = 0.0;
+        KRATOS_CATCH("")
+    }//ComputeParticleRotationalMoments
 } // namespace Kratos

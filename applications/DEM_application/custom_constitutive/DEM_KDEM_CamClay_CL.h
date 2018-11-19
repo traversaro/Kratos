@@ -9,7 +9,7 @@
 namespace Kratos {
 
     class KRATOS_API(DEM_APPLICATION) DEM_KDEM_CamClay : public DEM_KDEM_Rankine {
-    
+
     public:
 
         KRATOS_CLASS_POINTER_DEFINITION(DEM_KDEM_CamClay);
@@ -17,14 +17,25 @@ namespace Kratos {
         DEM_KDEM_CamClay() {}
 
         ~DEM_KDEM_CamClay() {}
-        
+
         DEMContinuumConstitutiveLaw::Pointer Clone() const override;
-        
+
         void SetConstitutiveLawInProperties(Properties::Pointer pProp, bool verbose = true) const override;
 
         void CheckFailure(const int i_neighbour_count, SphericContinuumParticle* element1, SphericContinuumParticle* element2) override;
 
         double LocalMaxSearchDistance(const int i, SphericContinuumParticle* element1, SphericContinuumParticle* element2) override;
+
+        void ComputeParticleRotationalMoments(SphericContinuumParticle* element,
+                                              SphericContinuumParticle* neighbor,
+                                              double equiv_young,
+                                              double distance,
+                                              double calculation_area,
+                                              double LocalCoordSystem[3][3],
+                                              double ElasticLocalRotationalMoment[3],
+                                              double ViscoLocalRotationalMoment[3],
+                                              double equiv_poisson,
+                                              double indentation) override;
 
     private:
 
