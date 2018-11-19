@@ -20,13 +20,13 @@ import MainSolid
 
 class Solution(MainPfem.PfemSolution):
 
-    def __init__(self, file_parameters = "ProjectParameters.json", file_name = None):
-        self.pp = self.ProblemParameters()
-        super(Solution,self).__init__(file_parameters,file_name)
+    def __init__(self, Model, file_parameters = "ProjectParameters.json", file_name = None):
 
-        super(Solution,self)._get_model()
-        self.model  = self._get_model()
+        self.pp = self.ProblemParameters()
+        super(Solution,self).__init__(Model, file_parameters, file_name)
+
         self.main_model_part = self.model.GetMainModelPart()
+
         self.fluid_model_part = self.main_model_part
         self.fluid_model_part.ProcessInfo.SetValue(KratosMultiphysics.GRAVITY,self.ProjectParameters["problem_data"]["gravity_vector"].GetVector())
 

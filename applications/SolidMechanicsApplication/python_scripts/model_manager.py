@@ -49,7 +49,7 @@ class ModelManager(object):
 
         # Set void model
         self.model = Model
-        self.main_model_part = self._create_main_model_part()
+        self.main_model_part = self._get_main_model_part()
 
         # Process Info
         self.process_info = self.main_model_part.ProcessInfo
@@ -188,9 +188,12 @@ class ModelManager(object):
 
 
     #### Model manager internal methods ####
+    def _get_main_model_part(self):
+        if not hasattr(self, '_main_model_part'):
+            self.main_model_part = self._create_main_model_part()
+        return self.main_model_part
 
     def _create_main_model_part(self):
-        # Defining the model_part
         main_model_part = self.model.CreateModelPart(self.settings["model_name"].GetString())
         return main_model_part
 
