@@ -1,6 +1,6 @@
 
-#if !defined(DEM_KDEM_Beam_CL_H_INCLUDED)
-#define  DEM_KDEM_Beam_CL_H_INCLUDED
+#if !defined(DEM_KDEM_Cable_CL_H_INCLUDED)
+#define  DEM_KDEM_Cable_CL_H_INCLUDED
 
 /* Project includes */
 #include "DEM_continuum_constitutive_law.h"
@@ -8,14 +8,14 @@
 
 namespace Kratos {
 
-    class KRATOS_API(DEM_APPLICATION) DEM_KDEM_Beam : public DEM_KDEM {
+    class KRATOS_API(DEM_APPLICATION) DEM_KDEM_Cable : public DEM_KDEM {
     public:
 
-        KRATOS_CLASS_POINTER_DEFINITION(DEM_KDEM_Beam);
+        KRATOS_CLASS_POINTER_DEFINITION(DEM_KDEM_Cable);
 
-        DEM_KDEM_Beam() {}
+        DEM_KDEM_Cable() {}
 
-        ~DEM_KDEM_Beam() {}
+        ~DEM_KDEM_Cable() {}
 
         DEMContinuumConstitutiveLaw::Pointer Clone() const override;
 
@@ -42,4 +42,4 @@ namespace Kratos {
     };
 
 } /* namespace Kratos.*/
-#endif /* DEM_KDEM_Beam_H_INCLUDED  defined */
+#endif /* DEM_KDEM_Cable_H_INCLUDED  defined */
