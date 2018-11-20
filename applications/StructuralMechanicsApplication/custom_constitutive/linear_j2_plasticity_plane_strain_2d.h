@@ -226,9 +226,9 @@ protected:
         const double NormStressTrial,
         const Vector& YieldFunctionNormalVector,
         const Properties& rMaterialProperties,
-        Matrix& rElasticityTensor
-        ) override;
-
+        Matrix& rElasticityTensor,
+        const double AccumulatedPlasticStrain
+    ) override;
     /**
      * @brief This method computes the elastic tensor
      * @param rElasticityTensor The elastic tensor/matrix to be computed
@@ -260,7 +260,10 @@ private:
     ///@}
     ///@name Member Variables
     ///@{
+    Vector mPlasticStrain; /// The previous plastic strain (one for each of the strain components)
+    double mAccumulatedPlasticStrain; /// The previous accumulated plastic strain
 
+    ///@}
     ///@name Private Operators
     ///@{
 

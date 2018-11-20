@@ -138,7 +138,7 @@ void LinearJ2PlasticityPlaneStrain2D::CalculateMaterialResponseCauchy(Constituti
             Vector yield_function_normal_vector = stress_trial_dev / norm_dev_stress;
             if (delta_k != 0.0 && hardening_exponent != 0.0) {
                 // Exponential softening
-                dgamma = GetDeltaGamma(norm_dev_stress, rMaterialProperties);
+                dgamma = GetDeltaGamma(norm_dev_stress, rMaterialProperties, mAccumulatedPlasticStrain);
             }
             else {
                 // Linear softening
@@ -167,7 +167,7 @@ void LinearJ2PlasticityPlaneStrain2D::CalculateMaterialResponseCauchy(Constituti
             // Update derivative of the hardening-softening modulus
 
             CalculateTangentTensor(dgamma, norm_dev_stress, yield_function_normal_vector,
-                                   rMaterialProperties, tangent_tensor);
+                                   rMaterialProperties, tangent_tensor, mAccumulatedPlasticStrain);
         }
     }
 }
@@ -246,7 +246,8 @@ void LinearJ2PlasticityPlaneStrain2D::CalculateTangentTensor(
     const double NormStressTrial,
     const Vector& YieldFunctionNormalVector,
     const Properties& rMaterialProperties,
-    Matrix& rElasticityTensor
+    Matrix& rElasticityTensor,
+    const double mAccumulatePlasticStrain
     )
 {
     const double hardening_modulus = rMaterialProperties[ISOTROPIC_HARDENING_MODULUS];

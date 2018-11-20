@@ -314,9 +314,7 @@ protected:
     ///@{
 
     bool mInelasticFlag; /// This flags tells if we are in a elastic or ineslastic regime
-    Vector mPlasticStrain; /// The current plastic strain (one for each of the strain components)
     Vector mPlasticStrainOld; /// The previous plastic strain (one for each of the strain components)
-    double mAccumulatedPlasticStrain; /// The current accumulated plastic strain
     double mAccumulatedPlasticStrainOld; /// The previous accumulated plastic strain
 
     ///@}
@@ -330,12 +328,12 @@ protected:
     /**
      * @brief This method computes the stress and constitutive tensor
      * @param rValues The norm of the deviation stress
-     * @param PlasticStrain
-     * @param AccumulatedPlasticStrain
+     * @param plastic_strain
+     * @param accumulated_plastic_strain
      */
     void CalculateStressResponse(ConstitutiveLaw::Parameters& rValues,
-                                 Vector PlasticStrain,
-                                 double AccumulatedPlasticStrain );
+                                 Vector plastic_strain,
+                                 double accumulated_plastic_strain );
 
     /**
      * @brief This method computes the yield function
@@ -356,7 +354,8 @@ protected:
      */
     double GetDeltaGamma(
         const double NormStressTrial,
-        const Properties& rMaterialProperties
+        const Properties& rMaterialProperties,
+        double& accumulated_plastic_strain
         );
 
     /**
@@ -364,14 +363,16 @@ protected:
      * @param rMaterialProperties The properties of the material
      * @return The saturation hardening parameter
      */
-    double GetSaturationHardening(const Properties& rMaterialProperties);
+    double GetSaturationHardening(const Properties& rMaterialProperties,
+            const double accumulated_plastic_strain);
 
     /**
      * @brief This method computes the plastic potential
      * @param rMaterialProperties The properties of the material
      * @return The plastic potential
      */
-    double GetPlasticPotential(const Properties& rMaterialProperties);
+    double GetPlasticPotential(const Properties& rMaterialProperties,
+            const double accumulated_plastic_strain);
 
     /**
      * @brief This method computes the plastic potential
@@ -386,7 +387,8 @@ protected:
         const double NormStressTrial,
         const Vector& YieldFunctionNormalVector,
         const Properties& rMaterialProperties,
-        Matrix& rElasticityTensor
+        Matrix& rElasticityTensor,
+        const double accumulated_plastic_strain
         );
 
     /**

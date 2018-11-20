@@ -88,7 +88,7 @@ void LinearJ2Plasticity3D::SetValue(
     )
 {
     if(rThisVariable == PLASTIC_STRAIN){
-        mAccumulatedPlasticStrain = rValue;
+        mAccumulatedPlasticStrainOld = rValue;
     }
 }
 
@@ -116,7 +116,7 @@ double& LinearJ2Plasticity3D::GetValue(
     )
 {
     if(rThisVariable == PLASTIC_STRAIN){
-        rValue = mAccumulatedPlasticStrain;
+        rValue = mAccumulatedPlasticStrainOld;
     }
 
     return rValue;
@@ -132,9 +132,7 @@ void LinearJ2Plasticity3D::InitializeMaterial(
     )
 {
     mPlasticStrainOld = ZeroVector(this->GetStrainSize());
-    mPlasticStrain = ZeroVector(this->GetStrainSize());
     mAccumulatedPlasticStrainOld = 0.0;
-    mAccumulatedPlasticStrain = 0.0;
 }
 
 //************************************************************************************
@@ -190,8 +188,8 @@ void LinearJ2Plasticity3D::CalculateMaterialResponseCauchy(ConstitutiveLaw::Para
 
 void LinearJ2Plasticity3D::CalculateStressResponse(
     ConstitutiveLaw::Parameters& rValues,
-    Vector PlasticStrain,
-    double AccumulatedPlasticStrain)
+    Vector plastic_strain,
+    double accumulated_plastic_strain)
 {
     // The Properties of the material
     const Properties& r_material_properties = rValues.GetMaterialProperties();
@@ -203,12 +201,12 @@ void LinearJ2Plasticity3D::CalculateStressResponse(
     Vector& r_strain_vector = rValues.GetStrainVector();
 
     //NOTE: SINCE THE ELEMENT IS IN SMALL STRAINS WE CAN USE ANY STRAIN MEASURE. HERE EMPLOYING THE CAUCHY_GREEN
-    if( r_constitutive_law_options.IsNot( ConstitutiveLaw::USE_ELEMENT_PROVIDED_STRAIN )) {
+    if( r_constitutive_law_options.IsNot(ConstitutiveLaw::USE_ELEMENT_PROVIDED_STRAIN)) {
         this->CalculateValue(rValues, STRAIN, r_strain_vector);
 
     // If we compute the tangent moduli or the stress
-    if( r_constitutive_law_options.Is( ConstitutiveLaw::COMPUTE_STRESS ) ||
-        r_constitutive_law_options.Is( ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR )) {
+    if( r_constitutive_law_options.Is(ConstitutiveLaw::COMPUTE_STRESS) ||
+        r_constitutive_law_options.Is(ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR)) {
         Vector& r_stress_vector = rValues.GetStressVector();
 
         if (rValues.GetProcessInfo().Has(INITIAL_STRAIN)) {
@@ -227,8 +225,8 @@ void LinearJ2Plasticity3D::CalculateStressResponse(
         const double sqrt_two_thirds = std::sqrt(2.0 / 3.0); // =0.8164965809277260
         double trial_yield_function;
 
-        mPlasticStrain = mPlasticStrainOld;
-        mAccumulatedPlasticStrain = mAccumulatedPlasticStrainOld;
+        plastic_strain = mPlasticStrainOld;
+        accumulated_plastic_strain = mAccumulatedPlasticStrainOld;
 
         elastic_tensor.resize(6, 6, false);
         CalculateElasticMatrix(elastic_tensor, r_material_properties);
@@ -268,7 +266,7 @@ void LinearJ2Plasticity3D::CalculateStressResponse(
             Vector yield_function_normal_vector = stress_trial_dev / norm_dev_stress;
             if (delta_k != 0.0 && hardening_exponent != 0.0) {
                 // Exponential softening
-                dgamma = GetDeltaGamma(norm_dev_stress, r_material_properties);
+                dgamma = GetDeltaGamma(norm_dev_stress, r_material_properties, accumulated_plastic_strain);
             }
             else {
                 // Linear softening
@@ -295,18 +293,18 @@ void LinearJ2Plasticity3D::CalculateStressResponse(
                     stress_trial_dev(5) - 2. * mu * dgamma * yield_function_normal_vector(5);
             }
 
-            mPlasticStrain(0) = mPlasticStrainOld(0) + dgamma * yield_function_normal_vector(0);
-            mPlasticStrain(1) = mPlasticStrainOld(1) + dgamma * yield_function_normal_vector(1);
-            mPlasticStrain(2) = mPlasticStrainOld(2) + dgamma * yield_function_normal_vector(2);
-            mPlasticStrain(3) = mPlasticStrainOld(3) + dgamma * yield_function_normal_vector(3) * 2;
-            mPlasticStrain(4) = mPlasticStrainOld(4) + dgamma * yield_function_normal_vector(4) * 2;
-            mPlasticStrain(5) = mPlasticStrainOld(5) + dgamma * yield_function_normal_vector(5) * 2;
-            mAccumulatedPlasticStrain = mAccumulatedPlasticStrainOld + sqrt_two_thirds * dgamma;
+            plastic_strain(0) = mPlasticStrainOld(0) + dgamma * yield_function_normal_vector(0);
+            plastic_strain(1) = mPlasticStrainOld(1) + dgamma * yield_function_normal_vector(1);
+            plastic_strain(2) = mPlasticStrainOld(2) + dgamma * yield_function_normal_vector(2);
+            plastic_strain(3) = mPlasticStrainOld(3) + dgamma * yield_function_normal_vector(3) * 2;
+            plastic_strain(4) = mPlasticStrainOld(4) + dgamma * yield_function_normal_vector(4) * 2;
+            plastic_strain(5) = mPlasticStrainOld(5) + dgamma * yield_function_normal_vector(5) * 2;
+            accumulated_plastic_strain = mAccumulatedPlasticStrainOld + sqrt_two_thirds * dgamma;
 
             // We update the tangent tensor
             if( r_constitutive_law_options.Is( ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR ) ) {
                 CalculateTangentTensor(dgamma, norm_dev_stress, yield_function_normal_vector,
-                                    r_material_properties, tangent_tensor);
+                                    r_material_properties, tangent_tensor, accumulated_plastic_strain);
             }
         }
     }
@@ -331,10 +329,10 @@ double& LinearJ2Plasticity3D::CalculateValue(
         Matrix elastic_tensor(6, 6);
         CalculateElasticMatrix(elastic_tensor, r_material_properties);
 
-        rValue = 0.5 * inner_prod(strain_vector - mPlasticStrain, prod(elastic_tensor, strain_vector - mPlasticStrain))
-                 + GetPlasticPotential(r_material_properties);
+        rValue = 0.5 * inner_prod(strain_vector - mPlasticStrainOld, prod(elastic_tensor, strain_vector - mPlasticStrainOld))
+                 + GetPlasticPotential(r_material_properties, mAccumulatedPlasticStrainOld);
     } else if(rThisVariable == PLASTIC_STRAIN){
-        rValue = mAccumulatedPlasticStrain;
+        rValue = mAccumulatedPlasticStrainOld;
     }
 
     return(rValue);
@@ -399,7 +397,8 @@ void LinearJ2Plasticity3D::FinalizeMaterialResponseCauchy(ConstitutiveLaw::Param
 //************************************************************************************
 //************************************************************************************
 
-double LinearJ2Plasticity3D::GetSaturationHardening(const Properties& rMaterialProperties)
+double LinearJ2Plasticity3D::GetSaturationHardening(const Properties& rMaterialProperties,
+    const double accumulated_plastic_strain)
 {
     const double yield_stress = rMaterialProperties[YIELD_STRESS];
     const double theta = rMaterialProperties[REFERENCE_HARDENING_MODULUS];
@@ -407,24 +406,25 @@ double LinearJ2Plasticity3D::GetSaturationHardening(const Properties& rMaterialP
     const double delta_k = rMaterialProperties[INFINITY_HARDENING_MODULUS];
     const double hardening_exponent = rMaterialProperties[HARDENING_EXPONENT];
 
-    const double k_new = yield_stress + (theta * hardening_modulus * mAccumulatedPlasticStrain) +
-                delta_k * (1. - std::exp(-hardening_exponent * mAccumulatedPlasticStrain));
+    const double k_new = yield_stress + (theta * hardening_modulus * accumulated_plastic_strain) +
+                delta_k * (1. - std::exp(-hardening_exponent * accumulated_plastic_strain));
     return k_new;
 }
 
 //************************************************************************************
 //************************************************************************************
 
-double LinearJ2Plasticity3D::GetPlasticPotential(const Properties& rMaterialProperties)
+double LinearJ2Plasticity3D::GetPlasticPotential(const Properties& rMaterialProperties,
+    const double accumulated_plastic_strain)
 {
     const double theta = rMaterialProperties[REFERENCE_HARDENING_MODULUS];
     const double hardening_modulus = rMaterialProperties[ISOTROPIC_HARDENING_MODULUS];
     const double delta_k = rMaterialProperties[INFINITY_HARDENING_MODULUS];
     const double hardening_exponent = rMaterialProperties[HARDENING_EXPONENT];
 
-    const double wp_new = 0.5*(theta * hardening_modulus * std::pow(mAccumulatedPlasticStrain, 2.0)) +
-                    delta_k * (mAccumulatedPlasticStrain -
-                    (1/hardening_exponent) * (1- std::exp(-hardening_exponent * mAccumulatedPlasticStrain)));
+    const double wp_new = 0.5*(theta * hardening_modulus * std::pow(accumulated_plastic_strain, 2.0)) +
+                    delta_k * (accumulated_plastic_strain -
+                    (1/hardening_exponent) * (1- std::exp(-hardening_exponent * accumulated_plastic_strain)));
     return wp_new;
 }
 
@@ -433,7 +433,8 @@ double LinearJ2Plasticity3D::GetPlasticPotential(const Properties& rMaterialProp
 
 double LinearJ2Plasticity3D::GetDeltaGamma(
     const double NormStressTrial,
-    const Properties& rMaterialProperties
+    const Properties& rMaterialProperties,
+    double& accumulated_plastic_strain
     )
 {
     const double E = rMaterialProperties[YOUNG_MODULUS];
@@ -451,12 +452,12 @@ double LinearJ2Plasticity3D::GetDeltaGamma(
 
     while (norm_yieldfunction > tolerance)
     {
-        const double k_new = GetSaturationHardening(rMaterialProperties);
-        const double kp_new = theta * hardening_modulus + delta_k * (hardening_exponent * std::exp(-hardening_exponent * mAccumulatedPlasticStrain));
+        const double k_new = GetSaturationHardening(rMaterialProperties, accumulated_plastic_strain);
+        const double kp_new = theta * hardening_modulus + delta_k * (hardening_exponent * std::exp(-hardening_exponent * accumulated_plastic_strain));
         const double yieldfunction = - sqrt_two_thirds * k_new + NormStressTrial - 2. * mu * dgamma;
         const double derivative_yieldfunction = -2. * mu * (1. + kp_new / (3. * mu));
         dgamma -= yieldfunction / derivative_yieldfunction;
-        mAccumulatedPlasticStrain = mAccumulatedPlasticStrainOld + sqrt_two_thirds * dgamma;
+        accumulated_plastic_strain = mAccumulatedPlasticStrainOld + sqrt_two_thirds * dgamma;
         norm_yieldfunction = std::abs(yieldfunction);
     }
     // TODO (marcelo): handle the case when no convergence is achieved.
@@ -523,7 +524,8 @@ void LinearJ2Plasticity3D::CalculateTangentTensor(
     const double NormStressTrial,
     const Vector& YieldFunctionNormalVector,
     const Properties& rMaterialProperties,
-    Matrix& rElasticityTensor
+    Matrix& rElasticityTensor,
+    const double accumulated_plastic_strain
     )
 {
     const double hardening_modulus = rMaterialProperties[ISOTROPIC_HARDENING_MODULUS];
@@ -535,7 +537,7 @@ void LinearJ2Plasticity3D::CalculateTangentTensor(
     const double mu = E / (2. + 2. * poisson_ratio);
     const double volumetric_modulus = E / (3. * (1. - 2. * poisson_ratio));
 
-    const double kp_new = (theta * hardening_modulus) +  delta_k * (hardening_exponent * std::exp(-hardening_exponent * mAccumulatedPlasticStrain));
+    const double kp_new = (theta * hardening_modulus) +  delta_k * (hardening_exponent * std::exp(-hardening_exponent * accumulated_plastic_strain));
 
     const double theta_new = 1 - (2. * mu * DeltaGamma) / NormStressTrial;
     const double theta_new_b = 1. / (1. + kp_new / (3. * mu)) - (1. - theta_new);
@@ -632,9 +634,7 @@ void LinearJ2Plasticity3D::save(Serializer& rSerializer) const
 {
     KRATOS_SERIALIZE_SAVE_BASE_CLASS(rSerializer, ConstitutiveLaw);
     rSerializer.save("mInelasticFlag", mInelasticFlag);
-    rSerializer.save("mPlasticStrain", mPlasticStrain);
     rSerializer.save("mPlasticStrainOld", mPlasticStrainOld);
-    rSerializer.save("mAccumulatedPlasticStrain", mAccumulatedPlasticStrain);
     rSerializer.save("mAccumulatedPlasticStrainOld", mAccumulatedPlasticStrainOld);
 }
 
@@ -645,9 +645,7 @@ void LinearJ2Plasticity3D::load(Serializer& rSerializer)
 {
     KRATOS_SERIALIZE_LOAD_BASE_CLASS(rSerializer, ConstitutiveLaw);
     rSerializer.load("mInelasticFlag", mInelasticFlag);
-    rSerializer.load("mPlasticStrain", mPlasticStrain);
     rSerializer.load("mPlasticStrainOld", mPlasticStrainOld);
-    rSerializer.load("mAccumulatedPlasticStrain", mAccumulatedPlasticStrain);
     rSerializer.load("mAccumulatedPlasticStrainOld", mAccumulatedPlasticStrainOld);
 }
 
