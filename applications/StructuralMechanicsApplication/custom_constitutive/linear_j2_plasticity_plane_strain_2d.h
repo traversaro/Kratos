@@ -113,7 +113,7 @@ public:
     void GetLawFeatures(Features& rFeatures) override;
 
     /**
-     * @brief Dimension of the law:
+     * @brief dimension of the constitutive law
      */
     SizeType WorkingSpaceDimension() override
     {

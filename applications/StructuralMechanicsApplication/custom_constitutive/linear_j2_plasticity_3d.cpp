@@ -140,14 +140,15 @@ void LinearJ2Plasticity3D::InitializeMaterial(
 //************************************************************************************
 //************************************************************************************
 
-void LinearJ2Plasticity3D::FinalizeSolutionStep(
-    const Properties& rMaterialProperties,
-    const GeometryType& rElementGeometry,
-    const Vector& rShapeFunctionsValues,
-    const ProcessInfo& rCurrentProcessInfo)
+void LinearJ2Plasticity3D::FinalizeMaterialResponse (
+    Parameters& rValues,
+    const StressMeasure& rStressMeasure)
 {
-    mPlasticStrainOld = mPlasticStrain;
-    mAccumulatedPlasticStrainOld = mAccumulatedPlasticStrain;
+    Vector plastic_strain;
+    double accumulated_plastic_strain;
+    this->CalculateStressResponse(rValues, plastic_strain, accumulated_plastic_strain);
+    mPlasticStrainOld = plastic_strain;
+    mAccumulatedPlasticStrainOld = accumulated_plastic_strain;
 }
 
 //************************************************************************************
@@ -178,6 +179,19 @@ void LinearJ2Plasticity3D::CalculateMaterialResponseKirchhoff(ConstitutiveLaw::P
 //************************************************************************************
 
 void LinearJ2Plasticity3D::CalculateMaterialResponseCauchy(ConstitutiveLaw::Parameters& rValues)
+{
+    Vector plastic_strain;
+    double accumulated_plastic_strain;
+    this->CalculateStressResponse(rValues, plastic_strain, accumulated_plastic_strain);
+}
+
+//************************************************************************************
+//************************************************************************************
+
+void LinearJ2Plasticity3D::CalculateStressResponse(
+    ConstitutiveLaw::Parameters& rValues,
+    Vector PlasticStrain,
+    double AccumulatedPlasticStrain)
 {
     // The Properties of the material
     const Properties& r_material_properties = rValues.GetMaterialProperties();
@@ -218,13 +232,13 @@ void LinearJ2Plasticity3D::CalculateMaterialResponseCauchy(ConstitutiveLaw::Para
 
         elastic_tensor.resize(6, 6, false);
         CalculateElasticMatrix(elastic_tensor, r_material_properties);
-        Vector yield_tensionrial(6);
-        noalias(yield_tensionrial) = prod(elastic_tensor, r_strain_vector - mPlasticStrainOld);
+        Vector yield_tension(6);
+        noalias(yield_tension) = prod(elastic_tensor, r_strain_vector - mPlasticStrainOld);
 
         // stress_trial_dev = sigma - 1/3 tr(sigma) * I
-        Vector stress_trial_dev = yield_tensionrial;
+        Vector stress_trial_dev = yield_tension;
 
-        const double trace = 1.0 / 3.0 * (yield_tensionrial(0) + yield_tensionrial(1) + yield_tensionrial(2));
+        const double trace = 1.0 / 3.0 * (yield_tension(0) + yield_tension(1) + yield_tension(2));
         stress_trial_dev(0) -= trace;
         stress_trial_dev(1) -= trace;
         stress_trial_dev(2) -= trace;
@@ -241,7 +255,7 @@ void LinearJ2Plasticity3D::CalculateMaterialResponseCauchy(ConstitutiveLaw::Para
             mInelasticFlag = false;
             // We update the stress
             if( r_constitutive_law_options.Is( ConstitutiveLaw::COMPUTE_STRESS ) ) {
-                r_stress_vector = yield_tensionrial;
+                r_stress_vector = yield_tension;
             }
             // We update the tangent tensor
             if( r_constitutive_law_options.Is( ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR ) ) {
@@ -341,9 +355,11 @@ Vector& LinearJ2Plasticity3D::CalculateValue(
 
         const SizeType space_dimension = this->WorkingSpaceDimension();
 
-        //1.-Compute total deformation gradient
+        // Compute total deformation gradient
         const Matrix& F = rParameterValues.GetDeformationGradientF();
-        KRATOS_DEBUG_ERROR_IF(F.size1()!= space_dimension || F.size2() != space_dimension) << "expected size of F " << space_dimension << "x" << space_dimension << ", got " << F.size1() << "x" << F.size2() << std::endl;
+        KRATOS_DEBUG_ERROR_IF(F.size1()!= space_dimension || F.size2() != space_dimension)
+            << "expected size of F " << space_dimension << "x" << space_dimension
+            << ", got " << F.size1() << "x" << F.size2() << std::endl;
 
         const Matrix C_tensor = prod(trans(F),F);
         ConstitutiveLawUtilities<6>::CalculateGreenLagrangianStrain(C_tensor, rValue);

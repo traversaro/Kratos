@@ -116,7 +116,7 @@ public:
     void GetLawFeatures(Features& rFeatures) override;
 
     /**
-     * @brief Dimension of the law:
+     * @brief dimension of the constitutive law
      */
     SizeType WorkingSpaceDimension() override
     {
@@ -191,16 +191,14 @@ public:
                             const Vector& rShapeFunctionsValues) override;
 
     /**
-     * @brief To be called at the end of each solution step  (e.g. from Element::FinalizeSolutionStep)
-     * @param rMaterialProperties the Properties instance of the current element
-     * @param rElementGeometry the geometry of the current element
-     * @param rShapeFunctionsValues the shape functions values in the current integration point
-     * @param rCurrentProcessInfo the current ProcessInfo instance
+     * Finalize the material response,  called by the element in FinalizeSolutionStep.
+     * @see Parameters
+     * @see StressMeasures
      */
-    void FinalizeSolutionStep(const Properties& rMaterialProperties,
-                            const GeometryType& rElementGeometry,
-                            const Vector& rShapeFunctionsValues,
-                            const ProcessInfo& rCurrentProcessInfo) override;
+    void FinalizeMaterialResponse(
+            Parameters& rValues,
+            const StressMeasure& rStressMeasure
+            ) override;
 
     /**
      * @brief Computes the material response in terms of 1st Piola-Kirchhoff stresses and constitutive tensor
@@ -328,6 +326,16 @@ protected:
     ///@}
     ///@name Protected Operations
     ///@{
+
+    /**
+     * @brief This method computes the stress and constitutive tensor
+     * @param rValues The norm of the deviation stress
+     * @param PlasticStrain
+     * @param AccumulatedPlasticStrain
+     */
+    void CalculateStressResponse(ConstitutiveLaw::Parameters& rValues,
+                                 Vector PlasticStrain,
+                                 double AccumulatedPlasticStrain );
 
     /**
      * @brief This method computes the yield function
