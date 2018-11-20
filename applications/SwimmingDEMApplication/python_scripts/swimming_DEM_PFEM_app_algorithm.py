@@ -105,7 +105,6 @@ class Algorithm(BaseAlgorithm):
 
     def FluidSolve(self, time = 'None', solve_system = True):
 
-        self.fluid_solution.InitializeSolutionLoop()
         self.fluid_solution.InitializeSolutionStep()
         self.fluid_solution.SolveSolutionStep()
         self.fluid_solution.FinalizeSolutionStep()
