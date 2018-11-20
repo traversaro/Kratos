@@ -364,13 +364,13 @@ protected:
     ///@name Protected Operators
     ///@{
 
-    double& GetThreshold() { return mThreshold; }
-    double& GetPlasticDissipation() { return mPlasticDissipation; }
-    Vector& GetPlasticStrain() { return mPlasticStrain; }
+    double GetThreshold() { return mThreshold; }
+    double GetPlasticDissipation() { return mPlasticDissipation; }
+    Vector GetPlasticStrain() { return mPlasticStrain; }
 
-    double& GetNonConvThreshold() { return mNonConvThreshold; }
-    double& GetNonConvPlasticDissipation() { return mNonConvPlasticDissipation; }
-    Vector& GetNonConvPlasticStrain() { return mNonConvPlasticStrain; }
+    double GetNonConvThreshold() { return mNonConvThreshold; }
+    double GetNonConvPlasticDissipation() { return mNonConvPlasticDissipation; }
+    Vector GetNonConvPlasticStrain() { return mNonConvPlasticStrain; }
 
     void SetThreshold(const double Threshold) { mThreshold = Threshold; }
     void SetPlasticDissipation(const double PlasticDissipation) { mPlasticDissipation = PlasticDissipation; }
