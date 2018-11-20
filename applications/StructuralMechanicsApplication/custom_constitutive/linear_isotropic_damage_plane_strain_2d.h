@@ -97,6 +97,14 @@ public:
     void GetLawFeatures(Features& rFeatures) override;
 
     /**
+     * @brief dimension of the constitutive law
+     */
+    SizeType WorkingSpaceDimension() override
+    {
+        return 2;
+    };
+
+    /**
      * @brief Voigt tensor size:
      */
     SizeType GetStrainSize() override
