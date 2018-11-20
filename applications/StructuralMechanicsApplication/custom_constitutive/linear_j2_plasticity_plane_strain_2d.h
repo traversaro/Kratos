@@ -113,14 +113,6 @@ public:
     void GetLawFeatures(Features& rFeatures) override;
 
     /**
-     * @brief Dimension of the law:
-     */
-    SizeType WorkingSpaceDimension() override
-    {
-        return 2;
-    };
-
-    /**
      * @brief Voigt tensor size:
      */
     SizeType GetStrainSize() override
