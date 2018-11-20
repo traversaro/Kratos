@@ -284,6 +284,45 @@ Matrix SmallDisplacement::ComputeEquivalentF(const Vector& rStrainTensor)
 /***********************************************************************************/
 /***********************************************************************************/
 
+void SmallDisplacement::FinalizeSolutionStep( ProcessInfo& rCurrentProcessInfo )
+{
+    const SizeType number_of_nodes = GetGeometry().size();
+    const SizeType dimension = GetGeometry().WorkingSpaceDimension();
+    const SizeType strain_size = mConstitutiveLawVector[0]->GetStrainSize();
+    ConstitutiveVariables this_constitutive_variables(strain_size);
+
+    // Create constitutive law parameters:
+    ConstitutiveLaw::Parameters Values(GetGeometry(),GetProperties(),rCurrentProcessInfo);
+    KinematicVariables this_kinematic_variables(strain_size, dimension, number_of_nodes);
+
+    // Set constitutive law flags:
+    Flags& ConstitutiveLawOptions=Values.GetOptions();
+    ConstitutiveLawOptions.Set(ConstitutiveLaw::USE_ELEMENT_PROVIDED_STRAIN, UseElementProvidedStrain());
+    ConstitutiveLawOptions.Set(ConstitutiveLaw::COMPUTE_STRESS, true);
+    ConstitutiveLawOptions.Set(ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR, false);
+
+    Values.SetStrainVector(this_constitutive_variables.StrainVector);
+    Values.SetStressVector(this_constitutive_variables.StressVector);
+    Values.SetConstitutiveMatrix(this_constitutive_variables.D);
+
+    // Reading integration points
+    for ( IndexType point_number = 0; point_number < mConstitutiveLawVector.size(); ++point_number ) {
+        // Compute element kinematics B, F, DN_DX ...
+        CalculateKinematicVariables(this_kinematic_variables, point_number, this->GetIntegrationMethod());
+        // Displacements vector
+        Vector displacements;
+        GetValuesVector(displacements);
+
+        // Compute strain
+        noalias(this_constitutive_variables.StrainVector) = prod(this_kinematic_variables.B, displacements);
+        // Call the constitutive law to update material variables
+        mConstitutiveLawVector[point_number]->FinalizeMaterialResponse(Values, GetStressMeasure());
+    }
+}
+
+/***********************************************************************************/
+/***********************************************************************************/
+
 int  SmallDisplacement::Check( const ProcessInfo& rCurrentProcessInfo )
 {
     KRATOS_TRY

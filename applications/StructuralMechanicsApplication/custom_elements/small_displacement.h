@@ -247,6 +247,13 @@ protected:
      */
     virtual Matrix ComputeEquivalentF(const Vector& StrainVector);
 
+    /**
+     * @brief Called at the end of eahc solution step
+     * @param rCurrentProcessInfo the current process info instance
+     */
+    void FinalizeSolutionStep(ProcessInfo& rCurrentProcessInfo) override;
+
+
     ///@}
     ///@name Protected Operations
     ///@{

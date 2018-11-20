@@ -233,9 +233,6 @@ void GenericSmallStrainIsotropicPlasticity<TConstLawIntegratorType>::FinalizeMat
             // S0 = r_constitutive_matrix:(E-Ep)
             predictive_stress_vector = prod(r_constitutive_matrix, r_strain_vector - plastic_strain);
         }
-        KRATOS_WATCH(predictive_stress_vector)
-        KRATOS_WATCH(r_strain_vector)
-        KRATOS_WATCH(r_constitutive_matrix)
 
         // Initialize Plastic Parameters
         double uniaxial_stress = 0.0, plastic_denominator = 0.0;
@@ -251,10 +248,6 @@ void GenericSmallStrainIsotropicPlasticity<TConstLawIntegratorType>::FinalizeMat
             plastic_strain);
 
         const double F = uniaxial_stress - threshold;
-        KRATOS_WATCH(predictive_stress_vector)
-		KRATOS_WATCH(F)
-        KRATOS_WATCH(uniaxial_stress)
-        KRATOS_WATCH(threshold)
 
         if (F <= std::abs(1.0e-4 * threshold)) { // converged case
             noalias(integrated_stress_vector) = predictive_stress_vector;
@@ -263,7 +256,19 @@ void GenericSmallStrainIsotropicPlasticity<TConstLawIntegratorType>::FinalizeMat
 			this->SetThreshold(threshold);
             this->SetValue(UNIAXIAL_STRESS, uniaxial_stress, rValues.GetProcessInfo());
         } else {
-            KRATOS_ERROR << "Converged values are inconsistent..." << std::endl;
+            // while loop backward euler
+            /* Inside "IntegrateStressVector" the predictive_stress_vector is updated to verify the yield criterion */
+            TConstLawIntegratorType::IntegrateStressVector(
+                predictive_stress_vector, r_strain_vector, uniaxial_stress,
+                threshold, plastic_denominator, f_flux, g_flux,
+                plastic_dissipation, plastic_strain_increment,
+                r_constitutive_matrix, plastic_strain, rValues,
+                characteristic_length);
+            noalias(integrated_stress_vector) = predictive_stress_vector;
+            this->SetPlasticStrain(plastic_strain);
+            this->SetPlasticDissipation(plastic_dissipation);
+			this->SetThreshold(threshold);
+            this->SetValue(UNIAXIAL_STRESS, uniaxial_stress, rValues.GetProcessInfo());
         }
     }
 } // End CalculateMaterialResponseCauchy
