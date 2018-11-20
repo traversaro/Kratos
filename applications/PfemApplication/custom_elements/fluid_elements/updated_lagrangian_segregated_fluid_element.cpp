@@ -743,6 +743,82 @@ void UpdatedLagrangianSegregatedFluidElement::CalculateAndAddRHS(LocalSystemComp
   KRATOS_CATCH( "" )
 }
 
+
+
+//************************************************************************************
+//************************************************************************************
+
+void UpdatedLagrangianSegregatedFluidElement::CalculateAndAddDynamicLHS(MatrixType& rLeftHandSideMatrix, ElementDataType& rVariables)
+{
+  KRATOS_TRY
+
+
+  switch(mStepVariable)
+  {
+    case VELOCITY_STEP:
+      {
+        FluidElement::CalculateAndAddDynamicLHS(rLeftHandSideMatrix, rVariables);
+
+        //KRATOS_WARNING("")<<" DynamicLHS "<<rLeftHandSideMatrix<<std::endl;
+
+        break;
+      }
+    case PRESSURE_STEP:
+      {
+
+        const unsigned int MatSize = this->GetDofsSize();
+
+        if(rLeftHandSideMatrix.size1() != MatSize)
+          rLeftHandSideMatrix.resize (MatSize, MatSize, false);
+
+        noalias(rLeftHandSideMatrix) = ZeroMatrix( MatSize, MatSize ); //resetting LHS
+
+        break;
+      }
+    default:
+      KRATOS_ERROR << "Unexpected value for SEGREGATED_STEP index: " << mStepVariable << std::endl;
+  }
+
+  KRATOS_CATCH( "" )
+}
+
+
+//************************************************************************************
+//************************************************************************************
+
+void UpdatedLagrangianSegregatedFluidElement::CalculateAndAddDynamicRHS(VectorType& rRightHandSideVector, ElementDataType& rVariables)
+{
+  KRATOS_TRY
+
+  switch(mStepVariable)
+  {
+    case VELOCITY_STEP:
+      {
+        FluidElement::CalculateAndAddDynamicRHS(rRightHandSideVector, rVariables);
+
+        //KRATOS_WARNING("")<<" DynamicRHS "<<rRightHandSideVector<<std::endl;
+
+        break;
+      }
+    case PRESSURE_STEP:
+      {
+        const unsigned int MatSize = this->GetDofsSize();
+
+        if ( rRightHandSideVector.size() != MatSize )
+          rRightHandSideVector.resize( MatSize, false );
+
+        noalias(rRightHandSideVector) = ZeroVector( MatSize ); //resetting RHS
+
+        break;
+      }
+    default:
+      KRATOS_ERROR << "Unexpected value for SEGREGATED_STEP index: " << mStepVariable << std::endl;
+  }
+
+  KRATOS_CATCH( "" )
+}
+
+
 //************************************************************************************
 //************************************************************************************
 
@@ -1372,24 +1448,22 @@ void UpdatedLagrangianSegregatedFluidElement::CalculateStabilizationTau(ElementD
   double mean_velocity = norm_2(MeanVelocity)/double(number_of_nodes);
 
   // Calculate FIC stabilization coefficient
+  rVariables.Tau = 0;
 
-  // Get element properties
-  const double& Density   = GetProperties()[DENSITY];
-  const double& Viscosity = GetProperties()[DYNAMIC_VISCOSITY];
-  const double& TimeStep  = rVariables.GetProcessInfo()[DELTA_TIME];
+  if( mean_velocity != 0 ){
 
-  // Get element size
-  double element_size = rGeometry.AverageEdgeLength();
+    // Get element properties
+    const double& Density   = GetProperties()[DENSITY];
+    const double& Viscosity = GetProperties()[DYNAMIC_VISCOSITY];
+    const double& TimeStep  = rVariables.GetProcessInfo()[DELTA_TIME];
 
-  rVariables.Tau = (element_size * element_size * TimeStep) / ( Density * mean_velocity * TimeStep * element_size + Density * element_size * element_size +  8.0 * Viscosity * TimeStep );
+    // Get element size
+    double element_size = rGeometry.AverageEdgeLength();
 
-  if( mean_velocity == 0.0 ){
-
-    rVariables.Tau = 0;
-
+    rVariables.Tau = (element_size * element_size * TimeStep) / ( Density * mean_velocity * TimeStep * element_size + Density * element_size * element_size +  8.0 * Viscosity * TimeStep );
   }
 
-  KRATOS_CATCH( "" )
+  KRATOS_CATCH("")
 }
 
 //************************************************************************************
@@ -1616,7 +1690,7 @@ double& UpdatedLagrangianSegregatedFluidElement::CalculateVolumeChange( double& 
 //************************************************************************************
 //************************************************************************************
 
-int  UpdatedLagrangianSegregatedFluidElement::Check( const ProcessInfo& rCurrentProcessInfo )
+int UpdatedLagrangianSegregatedFluidElement::Check(const ProcessInfo& rCurrentProcessInfo)
 {
   KRATOS_TRY
 
