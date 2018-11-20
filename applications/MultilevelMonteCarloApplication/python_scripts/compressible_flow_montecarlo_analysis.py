@@ -22,12 +22,40 @@ from pycompss.api.api import compss_wait_on
 from pycompss.api.parameter import *
 
 # Import Monte Carlo library
-import mc as mc
+import mc_utilities as mc
+
+# Import cpickle to pickle the serializer
+try:
+    import cpickle as pickle  # Use cPickle on Python 2.7
+except ImportError:
+    import pickle
 
 class MonteCarloAnalysis(PotentialFlowAnalysis):
     """Main script for Monte Carlo simulations"""
     
-    def __init__(self,model,parameters,sample):
+    def __init__(self,serialized_model,serialized_parameters,sample):
+        if (type(serialized_model) == KratosMultiphysics.StreamSerializer):
+            #pickle dataserialized_data
+            pickled_data = pickle.dumps(serialized_model, 2) #second argument is the protocol and is NECESSARY (according to pybind11 docs)
+            #overwrite the old serializer with the unpickled one
+            serialized_model = pickle.loads(pickled_data)
+            model = KratosMultiphysics.Model()
+            serialized_model.Load("ModelSerialization",model)
+        else:
+            model = serialized_model
+            del(serialized_model)
+
+        if (type(serialized_parameters) == KratosMultiphysics.StreamSerializer):
+            #pickle dataserialized_data
+            pickled_data = pickle.dumps(serialized_parameters, 2) #second argument is the protocol and is NECESSARY (according to pybind11 docs)
+            #overwrite the old serializer with the unpickled one
+            serialized_parameters = pickle.loads(pickled_data)
+            parameters = KratosMultiphysics.Parameters()
+            serialized_parameters.Load("ParametersSerialization",parameters)
+        else:
+            parameters = serialized_parameters
+            del(serialized_parameters)
+        
         self.sample = sample
         super(MonteCarloAnalysis,self).__init__(model,parameters)
         # self._GetSolver().main_model_part.AddNodalSolutionStepVariable(KratosMultiphysics.NODAL_AREA)
@@ -87,21 +115,15 @@ def EvaluateQuantityOfInterest(simulation):
 '''
 function executing the problem
 input:
-        model_part_file_name : path of the model part file (still to implement how to import in efficient way in a loop where I have different model part files and different ProjectParameters files, thus for now read model part name from the ProjectParameters.json file)
-        parameter_file_name  : path of the Project Parameters file
-        sample               : stochastic random variable
+        model       : serialization of the model
+        parameters  : serialization of the Project Parameters
 output:
-        QoI                  : Quantity of Interest
+        QoI         : Quantity of Interest
 '''
-@task(model_part_file_name=FILE_IN, parameter_file_name=FILE_IN, returns=1)
-def execution_task(model_part_file_name, parameter_file_name):
-    with open(parameter_file_name,'r') as parameter_file:
-        parameters = KratosMultiphysics.Parameters(parameter_file.read())
-    local_parameters = parameters # in case there are more parameters file, we rename them
-    model = KratosMultiphysics.Model()
-    local_parameters["solver_settings"]["model_import_settings"]["input_filename"].SetString(model_part_file_name[:-5])
+@task(returns=1)
+def execution_task(model, parameters):
     sample = GenerateSample()
-    simulation = MonteCarloAnalysis(model,local_parameters,sample)
+    simulation = MonteCarloAnalysis(model,parameters,sample)
     simulation.Run()
     QoI = EvaluateQuantityOfInterest(simulation)
     return QoI
@@ -110,30 +132,54 @@ def execution_task(model_part_file_name, parameter_file_name):
 '''
 function executing the problem for sample = 1.0
 input:
-        model_part_file_name  : path of the model part file
-        parameter_file_name   : path of the Project Parameters file
+        model       : serialization of the model
+        parameters  : serialization of the Project Parameters
 output:
         ExactExpectedValueQoI : Quantity of Interest for sample = 1.0
 '''
-@task(model_part_file_name=FILE_IN, parameter_file_name=FILE_IN,returns=1)
+@task(returns=1)
 def exact_execution_task(model_part_file_name, parameter_file_name):
-    with open(parameter_file_name,'r') as parameter_file:
-        parameters = KratosMultiphysics.Parameters(parameter_file.read())
-    local_parameters = parameters # in case there are more parameters file, we rename them
-    model = KratosMultiphysics.Model()      
-    local_parameters["solver_settings"]["model_import_settings"]["input_filename"].SetString(model_part_file_name[:-5])
-    sample = [1.0,1.0]
-    simulation = MonteCarloAnalysis(model,local_parameters, sample)
+    sample = [0.7,0.0]
+    simulation = MonteCarloAnalysis(model,parameters,sample)
     simulation.Run() 
     ExactExpectedValueQoI = EvaluateQuantityOfInterest(simulation)
     return ExactExpectedValueQoI
 
 
+'''
+function serializing the model and the parameters of the problem
+input:
+        model_part_file_name  : path of the model part file
+        parameter_file_name   : path of the Project Parameters file
+output:
+        serialized_model      : model serialized
+        serialized_parameters : project parameters serialized
+'''
+@task(model_part_file_name=FILE_IN, parameter_file_name=FILE_IN,returns=2)
+def serialize_model_projectparameters(model_part_file_name, parameter_file_name):
+# @task(parameter_file_name=FILE_IN,returns=2)
+# def serialize_model_projectparameters(parameter_file_name):
+    with open(parameter_file_name,'r') as parameter_file:
+        parameters = KratosMultiphysics.Parameters(parameter_file.read())
+    local_parameters = parameters
+    model = KratosMultiphysics.Model()      
+    local_parameters["solver_settings"]["model_import_settings"]["input_filename"].SetString(model_part_file_name[:-5])
+    fake_sample = [0.7,0.0]
+
+    simulation = MonteCarloAnalysis(model,local_parameters,fake_sample)
+    simulation.Initialize()
+
+    serialized_model = KratosMultiphysics.StreamSerializer()
+    serialized_model.Save("ModelSerialization",simulation.model)
+    serialized_parameters = KratosMultiphysics.StreamSerializer()
+    serialized_parameters.Save("ParametersSerialization",simulation.project_parameters)
+    return serialized_model, serialized_parameters
+
 
 '''
 function computing the relative error between the Multilevel Monte Carlo expected value and the exact expected value
 input :
-        AveragedMeanQoI       : Multilevel Monte Carlo expected value
+        AveragedMeanQoI       : Monte Carlo expected value
         ExactExpectedValueQoI : exact expected value
 output :
         relative_error        : relative error
@@ -165,11 +211,15 @@ if __name__ == '__main__':
         parameters = KratosMultiphysics.Parameters(parameter_file.read())
     local_parameters = parameters # in case there are more parameters file, we rename them
 
+    '''create a serialization of the model and of the project parameters'''
+    serialized_model,serialized_parameters = serialize_model_projectparameters(local_parameters["solver_settings"]["model_import_settings"]["input_filename"].GetString() + ".mdpa", parameter_file_name)
+    # serialized_model,serialized_parameters = serialize_model_projectparameters(parameter_file_name)
+
     number_samples = 10
     Qlist = []
 
     for instance in range (0,number_samples):
-        Qlist.append(execution_task(local_parameters["solver_settings"]["model_import_settings"]["input_filename"].GetString() + ".mdpa", parameter_file_name))
+        Qlist.append(execution_task(serialized_model,serialized_parameters))
 
     '''Compute mean, second moment and sample variance'''
     MC_mean = 0.0
@@ -179,6 +229,7 @@ if __name__ == '__main__':
         MC_mean, MC_second_moment, MC_variance = mc.update_onepass_M_VAR(Qlist[i], MC_mean, MC_second_moment, nsam)
 
     MC_mean = compss_wait_on(MC_mean)
+    Qlist = compss_wait_on(Qlist)
     print("\nlist of lift coefficients computed = ",Qlist)
     print("\nMC mean = ",MC_mean)
     

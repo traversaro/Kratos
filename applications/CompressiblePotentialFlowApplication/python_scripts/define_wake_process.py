@@ -47,7 +47,21 @@ class DefineWakeProcess(KratosMultiphysics.Process):
         self.fluid_model_part = Model.GetModelPart(settings["fluid_part_name"].GetString()).GetRootModelPart()
         self.model=Model
         self.wake_model_part_name=settings["model_part_name"].GetString()
-        self.wake_line_model_part=Model.CreateModelPart("wake")
+        
+        if self.wake_model_part_name == "":
+            raise Exception('Please provide the model part name as the "model_part_name" (string) parameter!')
+        
+        if self.model.HasModelPart(self.wake_model_part_name):
+            print("A")
+            self.wake_line_model_part = self.model.GetModelPart(self.wake_model_part_name)
+            self.solver_imports_model_part = False
+        else:
+            print("B")
+            self.wake_line_model_part = self.model.CreateModelPart(self.wake_model_part_name)
+            self.solver_imports_model_part = True
+
+        # self.wake_line_model_part=Model.CreateModelPart("wake")
+        
         angle=math.radians(-self.geometry_parameter)
         for node in self.wake_line_model_part.Nodes:
             node.X = ox+math.cos(angle)*(node.X - ox)-math.sin(angle)*(node.Y - oy)
