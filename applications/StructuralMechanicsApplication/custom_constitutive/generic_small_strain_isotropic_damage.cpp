@@ -98,6 +98,9 @@ void GenericSmallStrainIsotropicDamage<TConstLawIntegratorType>::CalculateMateri
         double threshold = this->GetThreshold();
         double damage = this->GetDamage();
 
+        //KRATOS_WATCH(damage)
+        //KRATOS_WATCH(threshold)
+
         // S0 = C:E
         array_1d<double, VoigtSize> predictive_stress_vector = prod(r_constitutive_matrix, r_strain_vector);
 
@@ -108,40 +111,40 @@ void GenericSmallStrainIsotropicDamage<TConstLawIntegratorType>::CalculateMateri
         const double F = uniaxial_stress - threshold;
 
         if (F <= 0.0) { // Elastic case
-            this->SetNonConvDamage(damage);
-            this->SetNonConvThreshold(threshold);
-            noalias(auxiliar_integrated_stress_vector) = (1.0 - damage) * predictive_stress_vector;
-			noalias(integrated_stress_vector) = auxiliar_integrated_stress_vector;
-
-            TConstLawIntegratorType::YieldSurfaceType::CalculateEquivalentStress(auxiliar_integrated_stress_vector, r_strain_vector, uniaxial_stress, rValues);
-            this->SetValue(UNIAXIAL_STRESS, uniaxial_stress, rValues.GetProcessInfo());
-
+            noalias(integrated_stress_vector) = (1.0 - damage) * predictive_stress_vector;
             if (r_constitutive_law_options.Is(ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR)) {
                 noalias(r_tangent_tensor) = (1.0 - damage) * r_constitutive_matrix;
+                this->SetNonConvDamage(damage);
+                this->SetNonConvThreshold(threshold);
+                TConstLawIntegratorType::YieldSurfaceType::CalculateEquivalentStress(auxiliar_integrated_stress_vector, r_strain_vector, uniaxial_stress, rValues);
+                this->SetValue(UNIAXIAL_STRESS, uniaxial_stress, rValues.GetProcessInfo());
             }
-
         } else { // Damage case
             const double characteristic_length = rValues.GetElementGeometry().Length();
             // This routine updates the PredictiveStress to verify the yield surf
-            TConstLawIntegratorType::IntegrateStressVector(predictive_stress_vector, uniaxial_stress, damage, threshold, rValues, characteristic_length);
+            TConstLawIntegratorType::IntegrateStressVector(
+                predictive_stress_vector, 
+                uniaxial_stress, 
+                damage, threshold, 
+                rValues, 
+                characteristic_length);
 
             // Updated Values
-            noalias(auxiliar_integrated_stress_vector) = predictive_stress_vector;
-            this->SetNonConvDamage(damage);
-            this->SetNonConvThreshold(uniaxial_stress);
-             TConstLawIntegratorType::YieldSurfaceType::CalculateEquivalentStress(auxiliar_integrated_stress_vector, r_strain_vector, uniaxial_stress, rValues);
-            this->SetValue(UNIAXIAL_STRESS, uniaxial_stress, rValues.GetProcessInfo());
-
-            TConstLawIntegratorType::YieldSurfaceType::CalculateEquivalentStress(auxiliar_integrated_stress_vector, r_strain_vector, uniaxial_stress, rValues);
-            this->SetValue(UNIAXIAL_STRESS, uniaxial_stress, rValues.GetProcessInfo());
+            noalias(integrated_stress_vector) = predictive_stress_vector;
+			KRATOS_WATCH(predictive_stress_vector)
 
             if (r_constitutive_law_options.Is(ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR)) {
                 this->CalculateTangentTensor(rValues);
                 noalias(r_tangent_tensor) = rValues.GetConstitutiveMatrix();
+                KRATOS_WATCH(r_tangent_tensor)
+			
+                TConstLawIntegratorType::YieldSurfaceType::CalculateEquivalentStress(predictive_stress_vector, r_strain_vector, uniaxial_stress, rValues);
+                this->SetValue(UNIAXIAL_STRESS, uniaxial_stress, rValues.GetProcessInfo());
+                this->SetNonConvDamage(damage);
+                this->SetNonConvThreshold(uniaxial_stress);
             }
-            
-            noalias(integrated_stress_vector) = auxiliar_integrated_stress_vector;
         }
+        //noalias(integrated_stress_vector) = auxiliar_integrated_stress_vector;
     }
 } // End CalculateMaterialResponseCauchy
 
