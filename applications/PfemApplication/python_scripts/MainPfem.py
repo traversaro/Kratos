@@ -8,9 +8,9 @@ import MainSolid
 
 class PfemSolution(MainSolid.Solution):
 
-    def __init__(self, file_parameters = "ProjectParameters.json", file_name = None):
+    def __init__(self, Model, file_parameters = "ProjectParameters.json", file_name = None):
 
-        super(PfemSolution, self).__init__(file_parameters,file_name)
+        super(PfemSolution, self).__init__(Model, file_parameters, file_name)
 
     #### Main internal methods ####
 
@@ -146,11 +146,10 @@ class PfemSolution(MainSolid.Solution):
                         default_settings["Parameters"]["direction"][counter].SetDouble(i)
                         counter+=1
 
+                model_part_name = self.model.GetMainModelPart().Name
+                default_settings["Parameters"].AddEmptyValue("model_part_name").SetString(model_part_name)
 
-        model_part_name = self.model.GetMainModelPart().Name
-        default_settings["Parameters"].AddEmptyValue("model_part_name").SetString(model_part_name)
-
-        loads_processes.Append(default_settings)
+                loads_processes.Append(default_settings)
 
         return loads_processes
 
