@@ -332,8 +332,8 @@ protected:
      * @param accumulated_plastic_strain
      */
     void CalculateStressResponse(ConstitutiveLaw::Parameters& rValues,
-                                 Vector plastic_strain,
-                                 double accumulated_plastic_strain );
+                                 Vector& plastic_strain,
+                                 double& accumulated_plastic_strain );
 
     /**
      * @brief This method computes the yield function

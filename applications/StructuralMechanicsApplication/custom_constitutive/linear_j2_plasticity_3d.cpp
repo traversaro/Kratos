@@ -188,8 +188,8 @@ void LinearJ2Plasticity3D::CalculateMaterialResponseCauchy(ConstitutiveLaw::Para
 
 void LinearJ2Plasticity3D::CalculateStressResponse(
     ConstitutiveLaw::Parameters& rValues,
-    Vector plastic_strain,
-    double accumulated_plastic_strain)
+    Vector& plastic_strain,
+    double& accumulated_plastic_strain)
 {
     // The Properties of the material
     const Properties& r_material_properties = rValues.GetMaterialProperties();
