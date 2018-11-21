@@ -223,7 +223,7 @@ protected:
 
     void CalculateModificationMatrix(const RadialReturnVariables& rReturnMappingVariables, BoundedMatrix<double,3,3>& rAuxT, BoundedMatrix<double,3,3>& rInvAuxT);
 
-    void CalculateTransformationMatrix(const BoundedMatrix<double,3,3>& rMainDirection, BoundedMatrix<double,6,6>& rA);
+    void CalculateTransformationMatrix(const BoundedMatrix<double,3,3>& rMainDirections, BoundedMatrix<double,6,6>& rA);
 
 
     double GetPI();

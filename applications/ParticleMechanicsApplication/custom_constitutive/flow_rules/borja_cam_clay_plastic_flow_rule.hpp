@@ -228,7 +228,7 @@ protected:
 
     void ReturnStressFromPrincipalAxis(const Matrix& rEigenVectors, const BoundedVector<double,3>& rPrincipalStress, Matrix& rStressMatrix);
 
-    void CalculateTransformationMatrix(const BoundedMatrix<double,3,3>& rMainDirection, BoundedMatrix<double,6,6>& rA);
+    void CalculateTransformationMatrix(const BoundedMatrix<double,3,3>& rMainDirections, BoundedMatrix<double,6,6>& rA);
 
     void UpdateStateVariables(const BoundedVector<double,3> rPrincipalStress, const double rAlpha = 0.0, const double rConsistencyParameter = 0.0);
 

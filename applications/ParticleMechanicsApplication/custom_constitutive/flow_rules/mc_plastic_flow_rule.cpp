@@ -514,7 +514,7 @@ void MCPlasticFlowRule::CalculateDepLine(BoundedMatrix<double,3,3>& rInvD, Bound
 
 }
 
-void MCPlasticFlowRule::CalculateTransformationMatrix(const BoundedMatrix<double,3,3>& rMainDirection, BoundedMatrix<double,6,6>& rA)
+void MCPlasticFlowRule::CalculateTransformationMatrix(const BoundedMatrix<double,3,3>& rMainDirections, BoundedMatrix<double,6,6>& rA)
 {
     BoundedMatrix<double,3,3> A1 = ZeroMatrix(3);
     BoundedMatrix<double,3,3> A2 = ZeroMatrix(3);
