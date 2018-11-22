@@ -8,4 +8,4 @@ import KratosMultiphysics.FluidDynamicsApplication
 
 import MainPfem
 
-MainPfem.PfemSolution().Run()
+MainPfem.PfemSolution(KratosMultiphysics.Model()).Run()

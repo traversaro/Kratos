@@ -1,7 +1,8 @@
 {
     "problem_data"             : {
         "problem_name" : "pfem_ale_cavity",
-        "echo_level"   : 0
+        "echo_level"   : 1,
+	"threads" : 1
     },
     "model_settings"           : {
         "model_name"           : "pfem_ale_cavity",
@@ -13,14 +14,10 @@
             "body_type"  : "Fluid",
             "body_name"  : "Body_Fluid",
             "parts_list" : ["Parts_Fluid"]
-        },{
-            "body_type"  : "Rigid",
-            "body_name"  : "Body_Walls",
-            "parts_list" : ["Parts_Walls"]
         }],
-        "domain_parts_list"    : ["Parts_Fluid","Parts_Walls"],
+        "domain_parts_list"    : ["Parts_Fluid"],
         "processes_parts_list" : ["VELOCITY_No_Slip","VELOCITY_Velocity_Top_Wall","PRESSURE_Outlet"],
-        "variables" : ["BODY_FORCE"]
+	"variables" : ["BODY_FORCE"]
     },
     "time_settings"            : {
         "time_step" : 0.1,
@@ -33,33 +30,25 @@
   	        "analysis_type": "ALE",
                 "integration_variables":["MESH_VELOCITY"]
             },
-            "convergence_criterion_settings" : {
-                "convergence_criterion"       : "And_criterion",
-                "variable_relative_tolerance" : 0.001,
-                "variable_absolute_tolerance" : 1e-5,
-                "residual_relative_tolerance" : 0.001,
-                "residual_absolute_tolerance" : 1e-5,
+            "convergence_criterion_settings":{
+                "convergence_criterion": "And_criterion",
+                "variable_relative_tolerance": 0.001,
+                "variable_absolute_tolerance": 1.0e-5,
+                "residual_relative_tolerance": 0.001,
+                "residual_absolute_tolerance": 1.0e-5,
                 "separate_dofs": true
             },
-            "solving_strategy_settings"      : {
+            "solving_strategy_settings":{
                 "builder_type": "block_builder",
-                "max_iteration"            : 10,
                 "compute_reactions": false,
-                "reform_dofs_at_each_step": true,
+                "reform_dofs_at_each_step": false,
+                "max_iteration": 15,
                 "move_mesh_flag": false
             },
-            "linear_solver_settings"         : {
-                "solver_type"         : "AMGCL",
-                "max_iteration"       : 400,
-                "tolerance"           : 1e-6,
-                "provide_coordinates" : false,
-                "smoother_type"       : "ilu0",
-                "krylov_type"         : "gmres",
-                "coarsening_type"     : "aggregation",
-                "scaling"             : false,
-                "verbosity"           : 1
+            "linear_solver_settings":{
+                "solver_type": "SuperLUSolver"
             },
-	    "dofs"               : ["VELOCITY","PRESSURE"]
+            "dofs"               : ["VELOCITY","PRESSURE"]
         }
     },
     "problem_process_list"     : [{
@@ -72,72 +61,7 @@
             "meshing_control_type"  : "step",
             "meshing_frequency"     : 1.0,
             "meshing_before_output" : true,
-	    "echo_level"   : 1,
-            "meshing_domains"       : [{
-                "model_part_name"                 : "Body_Fluid",
-                "python_module"                   : "meshing_domain",
-                "alpha_shape"                     : 1.25,
-                "offset_factor"                   : 0.0,
-                "meshing_strategy"                : {
-                    "python_module"                 : "fluid_meshing_strategy",
-                    "meshing_frequency"             : 0,
-                    "remesh"                        : false,
-                    "refine"                        : false,
-                    "reconnect"                     : false,
-                    "transfer"                      : false,
-                    "constrained"                   : false,
-                    "mesh_smoothing"                : false,
-                    "variables_smoothing"           : false,
-                    "elemental_variables_to_smooth" : ["DETERMINANT_F"],
-                    "reference_element_type"        : "FIC2D3N",
-                    "reference_condition_type"      : "CompositeCondition2D2N"
-                },
-                "spatial_bounding_box"            : {
-                    "upper_point" : [0.0,0.0,0.0],
-                    "lower_point" : [0.0,0.0,0.0],
-                    "velocity"    : [0.0,0.0,0.0]
-                },
-                "refining_parameters"             : {
-                    "critical_size"       : 0.0,
-                    "threshold_variable"  : "PLASTIC_STRAIN",
-                    "reference_threshold" : 0.0,
-                    "error_variable"      : "NORM_ISOCHORIC_STRESS",
-                    "reference_error"     : 0.0,
-                    "add_nodes"           : false,
-                    "insert_nodes"        : true,
-                    "remove_nodes"        : {
-                        "apply_removal" : true,
-                        "on_distance"   : true,
-                        "on_threshold"  : false,
-                        "on_error"      : false
-                    },
-                    "remove_boundary"     : {
-                        "apply_removal" : false,
-                        "on_distance"   : false,
-                        "on_threshold"  : false,
-                        "on_error"      : false
-                    },
-                    "refine_elements"     : {
-                        "apply_refinement" : true,
-                        "on_distance"      : true,
-                        "on_threshold"     : false,
-                        "on_error"         : false
-                    },
-                    "refine_boundary"     : {
-                        "apply_refinement" : false,
-                        "on_distance"      : false,
-                        "on_threshold"     : false,
-                        "on_error"         : false
-                    },
-                    "refining_box"        : {
-                        "refine_in_box_only" : false,
-                        "upper_point"        : [0.0,0.0,0.0],
-                        "lower_point"        : [0.0,0.0,0.0],
-                        "velocity"           : [0.0,0.0,0.0]
-                    }
-                },
-                "elemental_variables_to_transfer" : ["CAUCHY_STRESS_VECTOR","DEFORMATION_GRADIENT"]
-            }]
+            "meshing_domains"       : []
         }
     }],
     "constraints_process_list" : [{
@@ -160,7 +84,7 @@
         "Parameters"    : {
             "model_part_name"     : "VELOCITY_Velocity_Top_Wall",
             "variable_name"       : "VELOCITY",
-            "value"               : [1.0,null,0.0],
+            "value"               : [1.0,0.0,0.0],
             "compound_assignment" : "direct",
             "interval"            : [0.0,"End"]
         }
@@ -214,6 +138,7 @@
             "output_control_type" : "step",
             "output_frequency"    : 1,
             "node_output"         : true,
+            "nodal_flags_results" : ["FREE_SURFACE","INLET"],
             "nodal_results"       : ["VELOCITY","PRESSURE","NORMAL","BODY_FORCE","MESH_VELOCITY"],
             "gauss_point_results" : []
         }
