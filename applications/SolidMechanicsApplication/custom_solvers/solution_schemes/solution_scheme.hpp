@@ -502,28 +502,28 @@ class SolutionScheme : public Flags
 
     if( this->mOptions.Is(LocalFlagType::MOVE_MESH) ){
 
-      if (rModelPart.NodesBegin()->SolutionStepsDataHas(DISPLACEMENT_X) == false)
+      Variable<array_1d<double,3>> MoveMeshVariable = KratosComponents< Variable<array_1d<double,3> > >::Get(MoveMeshVariableName);
+
+      if (rModelPart.NodesBegin()->SolutionStepsDataHas(MoveMeshVariable) == false)
       {
-        KRATOS_ERROR << "It is impossible to move the mesh since the DISPLACEMENT variable is not in the Model Part. Add DISPLACEMENT to the list of variables" << std::endl;
+        KRATOS_ERROR << "It is impossible to move the mesh since the "<<MoveMeshVariableName<<" variable is not in the Model Part. Add DISPLACEMENT to the list of variables" << std::endl;
       }
 
-      bool DisplacementIntegration = false;
+      bool VariableIntegration = false;
       for(typename IntegrationMethodsVectorType::iterator it=mTimeVectorIntegrationMethods.begin();
           it!=mTimeVectorIntegrationMethods.end(); ++it)
       {
         if( MoveMeshVariableName == (*it)->GetVariableName() ){
-          DisplacementIntegration = true;
+          VariableIntegration = true;
           break;
         }
       }
 
-      if(DisplacementIntegration == true){
+      if(VariableIntegration == true){
 
         // Update mesh positions : node coordinates
         const int nnodes = rModelPart.NumberOfNodes();
         ModelPart::NodesContainerType::iterator it_begin = rModelPart.NodesBegin();
-
-        Variable<array_1d<double,3>> MoveMeshVariable = KratosComponents< Variable<array_1d<double,3> > >::Get(MoveMeshVariableName);
 
 #pragma omp parallel for
         for(int i = 0; i<nnodes; i++)

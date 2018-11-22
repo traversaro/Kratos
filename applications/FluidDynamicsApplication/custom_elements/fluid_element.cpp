@@ -249,6 +249,9 @@ void FluidElement<TElementData>::CalculateLocalVelocityContribution(
             this->AddVelocitySystem(data, rDampMatrix, rRightHandSideVector);
         }
     }
+    Vector Values;
+    this->GetFirstDerivativesVector(Values);
+    //std::cout<<" Element["<<this->Id()<<"] "<<Values<<std::endl;
 }
 
 template <class TElementData>
@@ -282,6 +285,7 @@ void FluidElement<TElementData>::CalculateMassMatrix(MatrixType& rMassMatrix,
 
             this->AddMassLHS(data, rMassMatrix);
         }
+
     }
 }
 
