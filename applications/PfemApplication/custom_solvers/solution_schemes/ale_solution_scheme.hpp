@@ -106,6 +106,15 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
     {
     }
 
+    /// Constructor.
+    AleSolutionScheme(IntegrationMethodsVectorType& rTimeVectorIntegrationMethods,
+                  IntegrationMethodsScalarType& rTimeScalarIntegrationMethods,
+                  Flags& rOptions)
+        :DerivedType(rTimeVectorIntegrationMethods, rTimeScalarIntegrationMethods, rOptions)
+        , mRotationTool()
+    {
+    }
+
   // Class SolutionScheme
   ~AleSolutionScheme() override {}
 
@@ -176,7 +185,8 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
 
     this->UpdateDofs(rModelPart,rDofSet,rDx);
 
-    this->UpdateMeshVelocity(rModelPart,rDx);
+    //TODO: test as eulerian
+    //this->UpdateMeshVelocity(rModelPart,rDx);
 
     mRotationTool.RecoverVelocities(rModelPart);
 

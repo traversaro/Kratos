@@ -25,7 +25,6 @@ namespace Kratos
 
 namespace Python
 {
-using namespace pybind11;
 
 //base types
 typedef UblasSpace<double, CompressedMatrix, Vector>                                          SparseSpaceType;
@@ -35,6 +34,8 @@ typedef UblasSpace<double, Matrix, Vector>                                      
 
 void  AddCustomStrategiesToPython(pybind11::module& m)
 {
+
+  namespace py = pybind11;
 
   // Solution scheme types
   typedef DynamicScheme<SparseSpaceType, LocalSpaceType>                                    DynamicSchemeType;
@@ -56,8 +57,9 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
   //*************************SHCHEME CLASSES****************************
 
   // Dynamic Scheme Type
-  class_<AleSolutionSchemeType, typename AleSolutionSchemeType::Pointer, DynamicSchemeType>(m,"AleDynamicScheme")
-      .def(init<TimeVectorIntegrationMethods&, TimeScalarIntegrationMethods&>())
+  py::class_<AleSolutionSchemeType, typename AleSolutionSchemeType::Pointer, DynamicSchemeType>(m,"AleDynamicScheme")
+      .def(py::init<TimeVectorIntegrationMethods&, TimeScalarIntegrationMethods&>())
+      .def(py::init<TimeVectorIntegrationMethods&, TimeScalarIntegrationMethods&, Flags&>())
       ;
 
 }

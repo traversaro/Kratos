@@ -134,7 +134,11 @@ class SolutionScheme:
                 if(self.settings["analysis_type"].GetString() == "ALE"):
                     if(len(vector_integration_methods) and len(scalar_integration_methods)):
                         import KratosMultiphysics.PfemApplication as KratosPfem
-                        solution_scheme = KratosPfem.AleDynamicScheme(vector_integration_methods,scalar_integration_methods)
+                        # TODO: test as eulerian
+                        #solution_scheme = KratosPfem.AleDynamicScheme(vector_integration_methods,scalar_integration_methods)
+                        options = KratosMultiphysics.Flags()
+                        options.Set(KratosSolid.SolverLocalFlags.MOVE_MESH, False)
+                        solution_scheme = KratosPfem.AleDynamicScheme(vector_integration_methods,scalar_integration_methods,options)
                     else:
                         raise Exception("ALE scheme needs vector and scalar integration methods.")
                 else:
@@ -276,8 +280,14 @@ class SolutionScheme:
 
         integration_method_name = self.settings["integration_method"].GetString()
 
-        if(dof == 'ROTATION' and integration_method_name.find("Step") != -1):
-            integration_method_name  = integration_method_name+'Rotation'
+        if integration_method_name.find("Step") != -1:
+            if dof == 'ROTATION':
+                integration_method_name  = integration_method_name+'Rotation'
+            elif dof != 'DISPLACEMENT':
+                start = 0
+                end   = integration_method_name.find("Step")
+                integration_method_name = integration_method_name[start:end]
+                #print("::[---Scheme Factory--]:: Step Method Changed ("+integration_method_name+":"+dof+")")
 
         return integration_method_name
 
@@ -325,6 +335,9 @@ class SolutionScheme:
             if(self.settings["solution_type"].GetString() == "Dynamic"):
                 self.dof_derivatives = self.dof_derivatives + ['VELOCITY','ACCELERATION']
 
+            if self.settings["integration_method"].GetString().find("Step") != -1:
+                self.nodal_variables = self.nodal_variables + ['STEP_DISPLACEMENT']
+
         if self._check_input_dof("VELOCITY"):
             # Add specific variables for the problem (velocity dofs)
             self.dof_variables = self.dof_variables + ['VELOCITY']
@@ -343,7 +356,8 @@ class SolutionScheme:
             if(self.settings["solution_type"].GetString() == "Dynamic"):
                 self.dof_derivatives = self.dof_derivatives + ['ANGULAR_VELOCITY','ANGULAR_ACCELERATION']
             # Add large rotation variables
-            self.nodal_variables = self.nodal_variables + ['STEP_DISPLACEMENT','STEP_ROTATION','DELTA_ROTATION']
+            if self.settings["integration_method"].GetString().find("Step") != -1:
+                self.nodal_variables = self.nodal_variables + ['STEP_ROTATION']
 
         # Add pressure variables
         if self._check_input_dof("PRESSURE"):

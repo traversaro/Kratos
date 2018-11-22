@@ -8,9 +8,9 @@ import MainSolid
 
 class PfemSolution(MainSolid.Solution):
 
-    def __init__(self, file_parameters = "ProjectParameters.json", file_name = None):
+    def __init__(self, Model, file_parameters = "ProjectParameters.json", file_name = None):
 
-        super(PfemSolution, self).__init__(file_parameters,file_name)
+        super(PfemSolution, self).__init__(Model, file_parameters, file_name)
 
     #### Main internal methods ####
 
@@ -53,7 +53,8 @@ class PfemSolution(MainSolid.Solution):
             processes_parameters.AddValue("constraints_process_list", extended_constraints_processes)
             extended_constraints_processes = self._set_selected_elements_management_process(constraints_processes)
             processes_parameters.AddValue("constraints_process_list", extended_constraints_processes)
-            extended_constraints_processes = self._set_ale_mesh_movement_constraints(constraints_processes)
+            # TODO: test as eulerian
+            # extended_constraints_processes = self._set_ale_mesh_movement_constraints(constraints_processes)
             processes_parameters.AddValue("constraints_process_list", extended_constraints_processes)
             if(self.echo_level>1):
                 print(" EXTENDED_CONSTRAINTS_PROCESSES ", processes_parameters["constraints_process_list"].PrettyPrintJsonString())
@@ -146,11 +147,10 @@ class PfemSolution(MainSolid.Solution):
                         default_settings["Parameters"]["direction"][counter].SetDouble(i)
                         counter+=1
 
+                model_part_name = self.model.GetMainModelPart().Name
+                default_settings["Parameters"].AddEmptyValue("model_part_name").SetString(model_part_name)
 
-        model_part_name = self.model.GetMainModelPart().Name
-        default_settings["Parameters"].AddEmptyValue("model_part_name").SetString(model_part_name)
-
-        loads_processes.Append(default_settings)
+                loads_processes.Append(default_settings)
 
         return loads_processes
 
