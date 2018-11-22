@@ -28,10 +28,11 @@
         "Parameters"  : {
             "time_integration_settings":{
   	        "analysis_type": "ALE",
+		"integration_method" : "Bossak",
                 "integration_variables":["MESH_VELOCITY"]
             },
             "convergence_criterion_settings":{
-                "convergence_criterion": "And_criterion",
+                "convergence_criterion": "Variable_criterion",
                 "variable_relative_tolerance": 0.001,
                 "variable_absolute_tolerance": 1.0e-5,
                 "residual_relative_tolerance": 0.001,
@@ -86,7 +87,7 @@
             "variable_name"       : "VELOCITY",
             "value"               : [1.0,0.0,0.0],
             "compound_assignment" : "direct",
-            "interval"            : [0.0,"End"]
+            "interval"            : [-0.1,"End"]
         }
     },{
         "python_module" : "assign_scalar_to_nodes_process",
