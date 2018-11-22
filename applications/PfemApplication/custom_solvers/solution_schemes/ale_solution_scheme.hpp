@@ -318,10 +318,11 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
     }
     else{
       (pCurrentElement) -> CalculateMassMatrix(this->mMatrix.M[thread], rCurrentProcessInfo);
-      (pCurrentElement)->CalculateLocalVelocityContribution(this->mMatrix.D[thread], rRHS_Contribution, rCurrentProcessInfo);
+      (pCurrentElement) -> CalculateLocalVelocityContribution(rLHS_Contribution, rRHS_Contribution, rCurrentProcessInfo);
 
       this->AddDynamicsToLHS (rLHS_Contribution, this->mMatrix.D[thread], this->mMatrix.M[thread], rCurrentProcessInfo);
       this->AddDynamicsToRHS (pCurrentElement, rRHS_Contribution, this->mMatrix.D[thread], this->mMatrix.M[thread], rCurrentProcessInfo);
+
     }
 
     // If there is a slip condition, apply it on a rotated system of coordinates
@@ -359,7 +360,7 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
     else{
 
       (pCurrentElement) -> CalculateMassMatrix(this->mMatrix.M[thread], rCurrentProcessInfo);
-      (pCurrentElement)->CalculateLocalVelocityContribution(this->mMatrix.D[thread], rRHS_Contribution, rCurrentProcessInfo);
+      (pCurrentElement) -> CalculateLocalVelocityContribution(this->mMatrix.D[thread], rRHS_Contribution, rCurrentProcessInfo);
 
       this->AddDynamicsToRHS (pCurrentElement, rRHS_Contribution, this->mMatrix.D[thread], this->mMatrix.M[thread], rCurrentProcessInfo);
     }
@@ -398,7 +399,7 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
     }
     else{
       (pCurrentCondition) -> CalculateMassMatrix(this->mMatrix.M[thread], rCurrentProcessInfo);
-      (pCurrentCondition)->CalculateLocalVelocityContribution(this->mMatrix.D[thread], rRHS_Contribution, rCurrentProcessInfo);
+      (pCurrentCondition) -> CalculateLocalVelocityContribution(rLHS_Contribution, rRHS_Contribution, rCurrentProcessInfo);
 
       this->AddDynamicsToLHS  (rLHS_Contribution, this->mMatrix.D[thread], this->mMatrix.M[thread], rCurrentProcessInfo);
       this->AddDynamicsToRHS  (pCurrentCondition, rRHS_Contribution, this->mMatrix.D[thread], this->mMatrix.M[thread], rCurrentProcessInfo);
@@ -433,7 +434,7 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
     }
     else{
       (pCurrentCondition) -> CalculateMassMatrix(this->mMatrix.M[thread], rCurrentProcessInfo);
-      (pCurrentCondition)->CalculateLocalVelocityContribution(this->mMatrix.D[thread], rRHS_Contribution,rCurrentProcessInfo);
+      (pCurrentCondition) -> CalculateLocalVelocityContribution(this->mMatrix.D[thread], rRHS_Contribution,rCurrentProcessInfo);
 
       this->AddDynamicsToRHS  (pCurrentCondition, rRHS_Contribution, this->mMatrix.D[thread], this->mMatrix.M[thread], rCurrentProcessInfo);
     }
@@ -558,7 +559,7 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
 
   //         //std::cout << rCurrentElement->Id() << " RHS = " << RHS_Contribution << std::endl;
   //         (*itElem)->CalculateMassMatrix(mMass[thread_id], CurrentProcessInfo);
-  //         (*itElem)->CalculateLocalVelocityContribution(mDamp[thread_id], RHS_Contribution, CurrentProcessInfo);
+  //         (*itElem)->CalculateLocalVelocityContribution(rLHS_Contribution, RHS_Contribution, CurrentProcessInfo);
 
   //         (*itElem)->EquationIdVector(EquationId, CurrentProcessInfo);
 
