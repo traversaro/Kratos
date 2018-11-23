@@ -138,9 +138,8 @@ void LinearJ2Plasticity3D::InitializeMaterial(
 //************************************************************************************
 //************************************************************************************
 
-void LinearJ2Plasticity3D::FinalizeMaterialResponse (
-    Parameters& rValues,
-    const StressMeasure& rStressMeasure)
+void LinearJ2Plasticity3D::FinalizeMaterialResponseCauchy(
+    Kratos::ConstitutiveLaw::Parameters &rValues)
 {
     Vector plastic_strain;
     double accumulated_plastic_strain;
@@ -203,6 +202,7 @@ void LinearJ2Plasticity3D::CalculateStressResponse(
     //NOTE: SINCE THE ELEMENT IS IN SMALL STRAINS WE CAN USE ANY STRAIN MEASURE. HERE EMPLOYING THE CAUCHY_GREEN
     if( r_constitutive_law_options.IsNot(ConstitutiveLaw::USE_ELEMENT_PROVIDED_STRAIN)) {
         this->CalculateValue(rValues, STRAIN, r_strain_vector);
+    }
 
     // If we compute the tangent moduli or the stress
     if( r_constitutive_law_options.Is(ConstitutiveLaw::COMPUTE_STRESS) ||
@@ -308,7 +308,6 @@ void LinearJ2Plasticity3D::CalculateStressResponse(
             }
         }
     }
-    }
 }
 
 //************************************************************************************
@@ -364,34 +363,6 @@ Vector& LinearJ2Plasticity3D::CalculateValue(
     }
 
     return(rValue);
-}
-
-//************************************************************************************
-//************************************************************************************
-
-void LinearJ2Plasticity3D::FinalizeMaterialResponsePK1(ConstitutiveLaw::Parameters& rValues)
-{
-}
-
-//************************************************************************************
-//************************************************************************************
-
-void LinearJ2Plasticity3D::FinalizeMaterialResponsePK2(ConstitutiveLaw::Parameters& rValues)
-{
-}
-
-//************************************************************************************
-//************************************************************************************
-
-void LinearJ2Plasticity3D::FinalizeMaterialResponseKirchhoff(ConstitutiveLaw::Parameters& rValues)
-{
-}
-
-//************************************************************************************
-//************************************************************************************
-
-void LinearJ2Plasticity3D::FinalizeMaterialResponseCauchy(ConstitutiveLaw::Parameters& rValues)
-{
 }
 
 //************************************************************************************
