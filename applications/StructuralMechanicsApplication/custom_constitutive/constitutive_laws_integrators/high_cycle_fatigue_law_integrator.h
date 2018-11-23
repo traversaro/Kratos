@@ -183,11 +183,14 @@ public:
 		KRATOS_WATCH(Sth)
 			KRATOS_WATCH(alphat)
 			KRATOS_WATCH(rReversionFactor)
-        const double square_betaf = std::pow(BETAF, 2);
+        const double square_betaf = std::pow(BETAF, 2.0);
         if (MaxStress > yield_stress) {
             rFatigueReductionFactor = std::exp(-rB0 * std::pow(std::log10(NumbreOfCycles), square_betaf));
         } else if (MaxStress > Sth) {
-            const double N_F = std::pow(10,(-std::log((MaxStress - Sth) / (yield_stress - Sth))) / (alphat * BETAF));
+            const double N_F = std::pow(10,std::pow(-std::log((MaxStress - Sth) / (yield_stress - Sth))/alphat,(1/BETAF)));
+            KRATOS_WATCH(std::pow(-std::log((MaxStress - Sth) / (yield_stress - Sth))/alphat,(1/BETAF)))
+            //KRATOS_WATCH(std::log((MaxStress - Sth) / (yield_stress - Sth))/alphat)
+            //KRATOS_WATCH(1 / BETAF)
 			KRATOS_WATCH(N_F)
             rB0 = -(std::log(MaxStress / yield_stress) / std::pow((std::log10(N_F)), square_betaf));
             KRATOS_WATCH(rB0)
