@@ -76,8 +76,6 @@ bool LinearJ2Plasticity3D::Has(const Variable<double>& rThisVariable)
     return false;
 }
 
-
-
 //************************************************************************************
 //************************************************************************************
 
@@ -133,6 +131,18 @@ void LinearJ2Plasticity3D::InitializeMaterial(
 {
     mPlasticStrainOld = ZeroVector(this->GetStrainSize());
     mAccumulatedPlasticStrainOld = 0.0;
+}
+
+//************************************************************************************
+//************************************************************************************
+
+void LinearJ2Plasticity3D::InitializeMaterialResponseCauchy(
+    Kratos::ConstitutiveLaw::Parameters &rValues)
+{
+    Vector& r_strain_vector = rValues.GetStrainVector();
+    if (rValues.GetProcessInfo().Has(INITIAL_STRAIN)) {
+        noalias(r_strain_vector) += rValues.GetProcessInfo()[INITIAL_STRAIN];
+    }
 }
 
 //************************************************************************************
@@ -208,11 +218,6 @@ void LinearJ2Plasticity3D::CalculateStressResponse(
     if( r_constitutive_law_options.Is(ConstitutiveLaw::COMPUTE_STRESS) ||
         r_constitutive_law_options.Is(ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR)) {
         Vector& r_stress_vector = rValues.GetStressVector();
-
-        if (rValues.GetProcessInfo().Has(INITIAL_STRAIN)) {
-            noalias(r_strain_vector) += rValues.GetProcessInfo()[INITIAL_STRAIN];
-        }
-
         Matrix elastic_tensor;
         Matrix& tangent_tensor = rValues.GetConstitutiveMatrix();
         const double hardening_modulus = r_material_properties[ISOTROPIC_HARDENING_MODULUS];
@@ -321,9 +326,6 @@ double& LinearJ2Plasticity3D::CalculateValue(
 {
     if(rThisVariable == STRAIN_ENERGY){
         Vector& strain_vector = rParameterValues.GetStrainVector();
-        if (rParameterValues.GetProcessInfo().Has(INITIAL_STRAIN)) {
-            noalias(strain_vector) += rParameterValues.GetProcessInfo()[INITIAL_STRAIN];
-        }
         const Properties& r_material_properties = rParameterValues.GetMaterialProperties();
         Matrix elastic_tensor(6, 6);
         CalculateElasticMatrix(elastic_tensor, r_material_properties);
