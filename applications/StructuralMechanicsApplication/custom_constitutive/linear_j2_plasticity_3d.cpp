@@ -211,7 +211,7 @@ void LinearJ2Plasticity3D::CalculateStressResponse(
 
     //NOTE: SINCE THE ELEMENT IS IN SMALL STRAINS WE CAN USE ANY STRAIN MEASURE. HERE EMPLOYING THE CAUCHY_GREEN
     if( r_constitutive_law_options.IsNot(ConstitutiveLaw::USE_ELEMENT_PROVIDED_STRAIN)) {
-        this->CalculateValue(rValues, STRAIN, r_strain_vector);
+        this->CalculateValue(rValues, GREEN_LAGRANGE_STRAIN_VECTOR, r_strain_vector);
     }
 
     // If we compute the tangent moduli or the stress
@@ -348,8 +348,12 @@ Vector& LinearJ2Plasticity3D::CalculateValue(
     Vector& rValue
     )
 {
-    if (rThisVariable == STRAIN ||
-        rThisVariable == GREEN_LAGRANGE_STRAIN_VECTOR ||
+    if (rThisVariable == STRAIN )
+    {
+        rValue = rParameterValues.GetStrainVector();
+    }
+
+    if (rThisVariable == GREEN_LAGRANGE_STRAIN_VECTOR ||
         rThisVariable == ALMANSI_STRAIN_VECTOR) {
 
         const SizeType space_dimension = this->WorkingSpaceDimension();
