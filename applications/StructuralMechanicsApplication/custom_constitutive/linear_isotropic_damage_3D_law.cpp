@@ -104,12 +104,64 @@ void LinearIsotropicDamage3D::InitializeMaterialResponseCauchy(
 //************************************************************************************
 //************************************************************************************
 
+void LinearIsotropicDamage3D::InitializeMaterialResponsePK2(
+    Kratos::ConstitutiveLaw::Parameters &rValues)
+{
+    InitializeMaterialResponseCauchy(rValues);
+}
+
+//************************************************************************************
+//************************************************************************************
+
+void LinearIsotropicDamage3D::InitializeMaterialResponsePK1(
+    Kratos::ConstitutiveLaw::Parameters &rValues)
+{
+    InitializeMaterialResponseCauchy(rValues);
+}
+//************************************************************************************
+//************************************************************************************
+
+void LinearIsotropicDamage3D::InitializeMaterialResponseKirchhoff(
+    Kratos::ConstitutiveLaw::Parameters &rValues)
+{
+    InitializeMaterialResponseCauchy(rValues);
+}
+
+//************************************************************************************
+//************************************************************************************
+
 void LinearIsotropicDamage3D::FinalizeMaterialResponseCauchy(
-        Kratos::ConstitutiveLaw::Parameters &rValues)
+    Kratos::ConstitutiveLaw::Parameters &rValues)
 {
     double strain_variable;
     this->CalculateStressResponse(rValues, strain_variable);
     mStrainVariable = strain_variable;
+}
+
+//************************************************************************************
+//************************************************************************************
+
+void LinearIsotropicDamage3D::FinalizeMaterialResponsePK2(
+    Kratos::ConstitutiveLaw::Parameters &rValues)
+{
+    FinalizeMaterialResponseCauchy(rValues);
+}
+
+//************************************************************************************
+//************************************************************************************
+
+void LinearIsotropicDamage3D::FinalizeMaterialResponsePK1(
+    Kratos::ConstitutiveLaw::Parameters &rValues)
+{
+    FinalizeMaterialResponseCauchy(rValues);
+}
+//************************************************************************************
+//************************************************************************************
+
+void LinearIsotropicDamage3D::FinalizeMaterialResponseKirchhoff(
+        Kratos::ConstitutiveLaw::Parameters &rValues)
+{
+    FinalizeMaterialResponseCauchy(rValues);
 }
 
 //************************************************************************************
@@ -141,7 +193,7 @@ void LinearIsotropicDamage3D::CalculateMaterialResponseKirchhoff(Parameters& rVa
 
 void LinearIsotropicDamage3D::CalculateMaterialResponseCauchy(Parameters& rValues)
 {
-    double strain_variable;
+    double strain_variable = 0;
     this->CalculateStressResponse(rValues, strain_variable);
 }
 

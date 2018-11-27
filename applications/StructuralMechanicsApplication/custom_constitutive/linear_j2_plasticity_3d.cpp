@@ -149,6 +149,32 @@ void LinearJ2Plasticity3D::InitializeMaterialResponseCauchy(
 //************************************************************************************
 //************************************************************************************
 
+void LinearJ2Plasticity3D::InitializeMaterialResponsePK2(
+    Kratos::ConstitutiveLaw::Parameters &rValues)
+{
+    InitializeMaterialResponseCauchy(rValues);
+}
+
+//************************************************************************************
+//************************************************************************************
+
+void LinearJ2Plasticity3D::InitializeMaterialResponsePK1(
+    Kratos::ConstitutiveLaw::Parameters &rValues)
+{
+    InitializeMaterialResponseCauchy(rValues);
+}
+//************************************************************************************
+//************************************************************************************
+
+void LinearJ2Plasticity3D::InitializeMaterialResponseKirchhoff(
+    Kratos::ConstitutiveLaw::Parameters &rValues)
+{
+    InitializeMaterialResponseCauchy(rValues);
+}
+
+//************************************************************************************
+//************************************************************************************
+
 void LinearJ2Plasticity3D::FinalizeMaterialResponseCauchy(
     Kratos::ConstitutiveLaw::Parameters &rValues)
 {
@@ -157,6 +183,32 @@ void LinearJ2Plasticity3D::FinalizeMaterialResponseCauchy(
     this->CalculateStressResponse(rValues, plastic_strain, accumulated_plastic_strain);
     mPlasticStrain = plastic_strain;
     mAccumulatedPlasticStrain = accumulated_plastic_strain;
+}
+
+//************************************************************************************
+//************************************************************************************
+
+void LinearJ2Plasticity3D::FinalizeMaterialResponsePK2(
+    Kratos::ConstitutiveLaw::Parameters &rValues)
+{
+    FinalizeMaterialResponseCauchy(rValues);
+}
+
+//************************************************************************************
+//************************************************************************************
+
+void LinearJ2Plasticity3D::FinalizeMaterialResponsePK1(
+    Kratos::ConstitutiveLaw::Parameters &rValues)
+{
+    FinalizeMaterialResponseCauchy(rValues);
+}
+//************************************************************************************
+//************************************************************************************
+
+void LinearJ2Plasticity3D::FinalizeMaterialResponseKirchhoff(
+    Kratos::ConstitutiveLaw::Parameters &rValues)
+{
+    FinalizeMaterialResponseCauchy(rValues);
 }
 
 //************************************************************************************

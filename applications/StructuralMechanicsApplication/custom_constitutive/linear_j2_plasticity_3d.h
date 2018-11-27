@@ -223,6 +223,9 @@ public:
      * @see Parameters
      */
     void InitializeMaterialResponseCauchy(ConstitutiveLaw::Parameters& rValues) override;
+    void InitializeMaterialResponsePK2(ConstitutiveLaw::Parameters& rValues) override;
+    void InitializeMaterialResponsePK1(ConstitutiveLaw::Parameters& rValues) override;
+    void InitializeMaterialResponseKirchhoff(ConstitutiveLaw::Parameters& rValues) override;
 
     /**
      * @brief Finalize the material response in terms of Cauchy stresses
@@ -230,6 +233,9 @@ public:
      * @see Parameters
      */
     void FinalizeMaterialResponseCauchy(ConstitutiveLaw::Parameters& rValues) override;
+    void FinalizeMaterialResponsePK2(Parameters& rValues) override;
+    void FinalizeMaterialResponsePK1(Parameters& rValues) override;
+    void FinalizeMaterialResponseKirchhoff(Parameters& rValues) override;
 
     /**
      * @brief It calculates the value of a specified variable (double)
