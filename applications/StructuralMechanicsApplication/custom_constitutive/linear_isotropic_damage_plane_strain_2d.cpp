@@ -45,10 +45,10 @@ LinearIsotropicDamagePlaneStrain2D::~LinearIsotropicDamagePlaneStrain2D() = defa
 //************************************************************************************
 //************************************************************************************
 
-void LinearIsotropicDamagePlaneStrain2D::CalculateConstitutiveMatrix(
-    Matrix &rConstitTensor,
-    const Properties &rMaterialProperties
-    )
+void LinearIsotropicDamagePlaneStrain2D::CalculateConstitutiveTensor(
+        Matrix &rConstitTensor,
+        const Properties &rMaterialProperties
+)
 {
     const double E = rMaterialProperties[YOUNG_MODULUS];
     const double nu = rMaterialProperties[POISSON_RATIO];
