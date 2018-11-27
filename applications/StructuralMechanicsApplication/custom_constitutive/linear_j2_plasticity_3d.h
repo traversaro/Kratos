@@ -19,7 +19,6 @@
 // External includes
 
 // Project includes
-#include "includes/checks.h"
 #include "includes/constitutive_law.h"
 
 namespace Kratos
@@ -290,8 +289,8 @@ protected:
     ///@{
 
     bool mInelasticFlag; /// This flags tells if we are in a elastic or ineslastic regime
-    Vector mPlasticStrainOld; /// The previous plastic strain (one for each of the strain components)
-    double mAccumulatedPlasticStrainOld; /// The previous accumulated plastic strain
+    Vector mPlasticStrain; /// The previous plastic strain (one for each of the strain components)
+    double mAccumulatedPlasticStrain; /// The previous accumulated plastic strain
 
     ///@}
     ///@name Protected Operators
@@ -304,12 +303,12 @@ protected:
     /**
      * @brief This method computes the stress and constitutive tensor
      * @param rValues The norm of the deviation stress
-     * @param plastic_strain
-     * @param accumulated_plastic_strain
+     * @param rPlasticStrain
+     * @param rAccumulatedPlasticStrain
      */
     void CalculateStressResponse(ConstitutiveLaw::Parameters& rValues,
-                                 Vector& plastic_strain,
-                                 double& accumulated_plastic_strain );
+                                 Vector& rPlasticStrain,
+                                 double& rAccumulatedPlasticStrain );
 
     /**
      * @brief This method computes the yield function
@@ -331,7 +330,7 @@ protected:
     double GetDeltaGamma(
         const double NormStressTrial,
         const Properties& rMaterialProperties,
-        double& accumulated_plastic_strain
+        double& rAccumulatedPlasticStrain
         );
 
     /**
@@ -354,17 +353,17 @@ protected:
      * @brief This method computes the plastic potential
      * @param DeltaGamma The increment on the Gamma parameter
      * @param NormStressTrial The norm of the stress trial
-     * @param YieldFunctionNormalVector The yield function normal vector
+     * @param rYieldFunctionNormalVector The yield function normal vector
      * @param rMaterialProperties The properties of the material
      * @param rElasticityTensor The elastic tensor/matrix to be computed
      */
     virtual void CalculateTangentTensor(
         const double DeltaGamma,
         const double NormStressTrial,
-        const Vector& YieldFunctionNormalVector,
+        const Vector& rYieldFunctionNormalVector,
         const Properties& rMaterialProperties,
         Matrix& rElasticityTensor,
-        const double accumulated_plastic_strain
+        const double AccumulatedPlasticStrain
         );
 
     /**

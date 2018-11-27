@@ -105,13 +105,13 @@ void LinearJ2PlasticityPlaneStrain2D::CalculateMaterialResponseCauchy(Constituti
         const double sqrt_two_thirds = std::sqrt(2.0 / 3.0); // =0.8164965809277260
         double trial_yield_function;
 
-        mPlasticStrain = mPlasticStrainOld;
-        mAccumulatedPlasticStrain = mAccumulatedPlasticStrainOld;
+        mPlasticStrain = mPlasticStrain;
+        mAccumulatedPlasticStrain = mAccumulatedPlasticStrain;
 
         elastic_tensor.resize(4, 4, false);
         CalculateElasticMatrix(elastic_tensor, rMaterialProperties);
         Vector yield_tensionrial(4);
-        noalias(yield_tensionrial) = prod(elastic_tensor, strain_vector - mPlasticStrainOld);
+        noalias(yield_tensionrial) = prod(elastic_tensor, strain_vector - mPlasticStrain);
 
         // stress_trial_dev = sigma - 1/3 tr(sigma) * I
         Vector stress_trial_dev = yield_tensionrial;
@@ -158,11 +158,11 @@ void LinearJ2PlasticityPlaneStrain2D::CalculateMaterialResponseCauchy(Constituti
             stress_vector(3) =
                 stress_trial_dev(3) - 2. * mu * dgamma * yield_function_normal_vector(3);
 
-            mPlasticStrain(0) = mPlasticStrainOld(0) + dgamma * yield_function_normal_vector(0);
-            mPlasticStrain(1) = mPlasticStrainOld(1) + dgamma * yield_function_normal_vector(1);
-            mPlasticStrain(2) = mPlasticStrainOld(2) + dgamma * yield_function_normal_vector(2);
-            mPlasticStrain(3) = mPlasticStrainOld(3) + dgamma * yield_function_normal_vector(3) * 2;
-            mAccumulatedPlasticStrain = mAccumulatedPlasticStrainOld + sqrt_two_thirds * dgamma;
+            mPlasticStrain(0) = mPlasticStrain(0) + dgamma * yield_function_normal_vector(0);
+            mPlasticStrain(1) = mPlasticStrain(1) + dgamma * yield_function_normal_vector(1);
+            mPlasticStrain(2) = mPlasticStrain(2) + dgamma * yield_function_normal_vector(2);
+            mPlasticStrain(3) = mPlasticStrain(3) + dgamma * yield_function_normal_vector(3) * 2;
+            mAccumulatedPlasticStrain = mAccumulatedPlasticStrain + sqrt_two_thirds * dgamma;
 
             // Update derivative of the hardening-softening modulus
 
