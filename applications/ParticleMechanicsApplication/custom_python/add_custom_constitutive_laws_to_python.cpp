@@ -169,6 +169,20 @@ namespace Python{
         .def(py::init<>() )
         .def(py::init<MPMFlowRulePointer, MPMYieldCriterionPointer, MPMHardeningLawPointer>() )
         ;
+
+        // Hencky Bounding Surface Plasticity
+        py::class_< HenckyBoundingSurfacePlastic3DLaw, typename HenckyBoundingSurfacePlastic3DLaw::Pointer, ConstitutiveLaw >
+        (m, "HenckyBoundingSurfacePlastic3DLaw")
+        .def(py::init<>() )
+        .def(py::init<MPMFlowRulePointer, MPMYieldCriterionPointer, MPMHardeningLawPointer>() )
+        ;
+
+        py::class_< HenckyBoundingSurfacePlasticPlaneStrain2DLaw, typename HenckyBoundingSurfacePlasticPlaneStrain2DLaw::Pointer, ConstitutiveLaw >
+        (m, "HenckyBoundingSurfacePlasticPlaneStrain2DLaw")
+        .def(py::init<>() )
+        .def(py::init<MPMFlowRulePointer, MPMYieldCriterionPointer, MPMHardeningLawPointer>() )
+        ;
+
     }
 
 
