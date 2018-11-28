@@ -436,8 +436,6 @@ namespace Kratos {
             mRotationTool.Rotate(LHS_Contribution,RHS_Contribution,rCurrentElement->GetGeometry());
             mRotationTool.ApplySlipCondition(LHS_Contribution,RHS_Contribution,rCurrentElement->GetGeometry());
 
-            //std::cout<<" Element["<<(rCurrentElement)->Id()<<" RotRHS "<<RHS_Contribution<<std::endl;
-
             KRATOS_CATCH("")
         }
 
@@ -940,7 +938,6 @@ namespace Kratos {
                 (macc[k]) *= (1.00 - mAlphaBossak);
                 rCurrentElement->GetSecondDerivativesVector(maccold[k], 1);
                 noalias(macc[k]) += mAlphaBossak * maccold[k];
-                std::cout<<" macc "<<macc[k]<<std::endl;
                 noalias(RHS_Contribution) -= prod(M, macc[k]);
             }
         }

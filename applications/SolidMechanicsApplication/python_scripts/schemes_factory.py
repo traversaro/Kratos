@@ -134,10 +134,8 @@ class SolutionScheme:
                 if(self.settings["analysis_type"].GetString() == "ALE"):
                     if(len(vector_integration_methods) and len(scalar_integration_methods)):
                         import KratosMultiphysics.PfemApplication as KratosPfem
-                        # TODO: test as eulerian
-                        #solution_scheme = KratosPfem.AleDynamicScheme(vector_integration_methods,scalar_integration_methods)
                         options = KratosMultiphysics.Flags()
-                        options.Set(KratosSolid.SolverLocalFlags.MOVE_MESH, False)
+                        options.Set(KratosSolid.SolverLocalFlags.MOVE_MESH, True)
                         solution_scheme = KratosPfem.AleDynamicScheme(vector_integration_methods,scalar_integration_methods,options)
                     else:
                         raise Exception("ALE scheme needs vector and scalar integration methods.")
