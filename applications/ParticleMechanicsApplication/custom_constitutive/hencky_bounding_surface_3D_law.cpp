@@ -79,6 +79,7 @@ int HenckyBoundingSurfacePlastic3DLaw::Check(const Properties& rProperties, cons
 {
     HenckyElasticPlastic3DLaw::Check(rProperties, rGeometry, rCurrentProcessInfo);
 
+    // TODO: To be decided
     // KRATOS_ERROR_IF(PRE_CONSOLIDATION_STRESS.Key() == 0 || rProperties[PRE_CONSOLIDATION_STRESS] >= 0.00) << "PRE_CONSOLIDATION_STRESS has Key zero or invalid value (Expected negative value) " << std::endl;
     // KRATOS_ERROR_IF(OVER_CONSOLIDATION_RATIO.Key() == 0 || rProperties[OVER_CONSOLIDATION_RATIO] <= 0.00) << "OVER_CONSOLIDATION_RATIO has Key zero invalid value " << std::endl;
 

@@ -84,6 +84,13 @@ public:
     ///@name Operations
     ///@{
 
+    /*
+    * @brief This function return the hardening parameters with the following inputs:
+    * @param[in/out] rHardening Total Hardening Parameter
+    * @param[in] rAlpha parameters that cause hardening
+    * @param[in] rThisVariable Identifier variable: XXX
+    * @return Total Hardening Parameter
+    */
     double& CalculateHardening(double &rHardening, const double &rAlpha, const Variable<double>& rThisVariable) override;
 
     ///@}

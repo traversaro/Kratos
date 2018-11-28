@@ -89,8 +89,22 @@ class BoundingSurfaceYieldCriterion
         ///@name Operations
         ///@{
 
+        /*
+        * @brief This function calculate either Bounding Surface or Loading Surface depends on the
+        *        given input rStressVector and rPreconsolidationPressure
+        * @param[in/out] rStateFunction Bounding surface or loading surface
+        * @param[in] rStressVector Principal stresses
+        * @param[in] rPreconsolidationPressure The value of Preconsolidation Stress
+        * @return Bounding surface or loading surface
+        */
         double& CalculateYieldCondition(double & rStateFunction, const Vector& rStressVector, const double& rPreconsolidationPressure) override;
 
+
+        /*
+        * @brief This function return the first derivative of bounding/loading surface at the given principal stress condition
+        * @param[in] rStressVector Principal stresses
+        * @param[in/out] rFirstDerivative First stress derivative value of yield function
+        */
         void CalculateYieldFunctionDerivative(const Vector& rStressVector, Vector& rFirstDerivative) override;
 
         ///@}

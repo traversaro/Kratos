@@ -76,8 +76,6 @@ BoundingSurfaceYieldCriterion::~BoundingSurfaceYieldCriterion()
 
 //************************* CALCULATE YIELD FUNCTION  ******************
 //**********************************************************************
-
-// This function calculate either Bounding Surface or Loading Surface depends on the given input rStressVector and rPreconsolidationPressure
 double& BoundingSurfaceYieldCriterion::CalculateYieldCondition(double& rStateFunction, const Vector& rStressVector, const double& rPreconsolidationPressure)
 {
     // Compute three invariants
