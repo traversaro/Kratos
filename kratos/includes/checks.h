@@ -11,7 +11,12 @@
 //
 //
 
+// System includes
 #include <cstring>
+
+// External includes
+
+// Project includes
 #include "includes/exception.h"
 
 #if !defined(KRATOS_CHECKS_H_INCLUDED )
