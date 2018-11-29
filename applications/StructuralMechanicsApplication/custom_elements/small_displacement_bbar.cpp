@@ -912,6 +912,8 @@ void SmallDisplacementBbar::FinalizeSolutionStep( ProcessInfo& rCurrentProcessIn
     ConstitutiveLawOptions.Set(ConstitutiveLaw::COMPUTE_CONSTITUTIVE_TENSOR, false);
 
     Values.SetStrainVector(this_constitutive_variables.StrainVector);
+    Values.SetStressVector(this_constitutive_variables.StressVector);
+    Values.SetConstitutiveMatrix(this_constitutive_variables.D);
 
     // Read integration points
     const GeometryType::IntegrationPointsArrayType& integration_points = GetGeometry().IntegrationPoints(this->GetIntegrationMethod());
@@ -927,6 +929,7 @@ void SmallDisplacementBbar::FinalizeSolutionStep( ProcessInfo& rCurrentProcessIn
         // Call the constitutive law to update material variables
         mConstitutiveLawVector[point_number]->FinalizeMaterialResponse(Values, GetStressMeasure());
 
+        // TODO: To be deprecated
         mConstitutiveLawVector[point_number]->FinalizeSolutionStep(
                 GetProperties(),
                 GetGeometry(),
