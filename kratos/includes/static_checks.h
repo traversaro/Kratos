@@ -33,12 +33,12 @@ namespace Kratos
 
 static inline void KRATOS_STATIC_CHECK(const bool Check)
 {
-    KRATOS_CHECK(Check);
+    KRATOS_ERROR_IF_NOT(Check) << "Check failed because " << Check << " is not true" << std::endl;
 }
 
 static inline void KRATOS_STATIC_CHECK_IS_FALSE(const bool Check)
 {
-    KRATOS_CHECK_IS_FALSE(Check);
+    KRATOS_ERROR_IF(Check) << "Check failed because " << Check << " is not false" << std::endl;
 }
 
 template<class TTypea, class TTypeb>
@@ -55,22 +55,22 @@ static inline void KRATOS_STATIC_CHECK_NOT_EQUAL(const TTypea& a, const TTypeb& 
 
 static inline void KRATOS_STATIC_CHECK_LESS(const double a, const double b)
 {
-    KRATOS_CHECK_LESS(a, b);
+    KRATOS_ERROR_IF_NOT(a < b) << "Check failed because " << a << " is greater than or equal to " << b << std::endl;
 }
 
 static inline void KRATOS_STATIC_CHECK_LESS_EQUAL(const double a, const double b)
 {
-    KRATOS_CHECK_LESS_EQUAL(a, b);
+    KRATOS_ERROR_IF(a > b) << "Check failed because " << a << " is greater than " << b << std::endl;
 }
 
 static inline void KRATOS_STATIC_CHECK_GREATER(const double a, const double b)
 {
-    KRATOS_CHECK_GREATER(a, b);
+    KRATOS_ERROR_IF_NOT(a > b) << "Check failed because " << a << " is less than or equal to " << b << std::endl;
 }
 
 static inline void KRATOS_STATIC_CHECK_GREATER_EQUAL(const double a, const double b)
 {
-    KRATOS_CHECK_GREATER_EQUAL(a, b);
+    KRATOS_ERROR_IF(a < b) << "Check failed because " << a << " is less than " << b << std::endl;
 }
 
 static inline void KRATOS_STATIC_CHECK_STRING_CONTAIN_SUB_STRING(const std::string& a, const std::string& b)
@@ -80,12 +80,12 @@ static inline void KRATOS_STATIC_CHECK_STRING_CONTAIN_SUB_STRING(const std::stri
 
 static inline void KRATOS_STATIC_CHECK_NEAR(const double a, const double b, const double tolerance)
 {
-    KRATOS_CHECK_NEAR(a, b, tolerance);
+    KRATOS_ERROR_IF(std::abs(a - b) > tolerance) << "Check failed because " << a << " = " << a << " is not near to " << b << " = " << b << " within the tolerance " << tolerance << std::endl;
 }
 
 static inline void KRATOS_STATIC_CHECK_DOUBLE_EQUAL(const double a, const double b)
 {
-    KRATOS_CHECK_DOUBLE_EQUAL(a, b);
+    KRATOS_STATIC_CHECK_NEAR(a, b, std::numeric_limits<double>::epsilon());
 }
 } /// Namespace Kratos
 
