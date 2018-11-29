@@ -29,22 +29,22 @@ namespace Kratos {
 
             KRATOS_CHECK_C_STRING_EQUAL(message.GetLabel().c_str(), "label");
             KRATOS_CHECK_C_STRING_EQUAL(message.GetMessage().c_str(), "Test message with number 12e00");
-            KRATOS_CHECK_EQUAL(message.GetSeverity(), LoggerMessage::Severity::INFO);
-            KRATOS_CHECK_EQUAL(message.GetCategory(), LoggerMessage::Category::STATUS);
-            KRATOS_CHECK_EQUAL(message.GetLocation().GetFileName(), "Unknown");
-            KRATOS_CHECK_EQUAL(message.GetLocation().GetFunctionName(), "Unknown");
-            KRATOS_CHECK_EQUAL(message.GetLocation().GetLineNumber(), -1);
+            KRATOS_STATIC_CHECK_EQUAL(message.GetSeverity(), LoggerMessage::Severity::INFO);
+            KRATOS_STATIC_CHECK_EQUAL(message.GetCategory(), LoggerMessage::Category::STATUS);
+            KRATOS_STATIC_CHECK_EQUAL(message.GetLocation().GetFileName(), "Unknown");
+            KRATOS_STATIC_CHECK_EQUAL(message.GetLocation().GetFunctionName(), "Unknown");
+            KRATOS_STATIC_CHECK_EQUAL(message.GetLocation().GetLineNumber(), -1);
 
             message << LoggerMessage::Severity::DETAIL 
                 << LoggerMessage::Category::CRITICAL 
                 << KRATOS_CODE_LOCATION << std::endl;
 
             KRATOS_CHECK_C_STRING_EQUAL(message.GetMessage().c_str(), "Test message with number 12e00\n");
-            KRATOS_CHECK_EQUAL(message.GetSeverity(), LoggerMessage::Severity::DETAIL);
-            KRATOS_CHECK_EQUAL(message.GetCategory(), LoggerMessage::Category::CRITICAL);
-            KRATOS_CHECK_NOT_EQUAL(message.GetLocation().GetFileName().find("test_logger.cpp"), std::string::npos);
-            KRATOS_CHECK_EQUAL(message.GetLocation().GetFunctionName(), KRATOS_CURRENT_FUNCTION);
-            KRATOS_CHECK_EQUAL(message.GetLocation().GetLineNumber(), 40);
+            KRATOS_STATIC_CHECK_EQUAL(message.GetSeverity(), LoggerMessage::Severity::DETAIL);
+            KRATOS_STATIC_CHECK_EQUAL(message.GetCategory(), LoggerMessage::Category::CRITICAL);
+            KRATOS_STATIC_CHECK_NOT_EQUAL(message.GetLocation().GetFileName().find("test_logger.cpp"), std::string::npos);
+            KRATOS_STATIC_CHECK_EQUAL(message.GetLocation().GetFunctionName(), KRATOS_CURRENT_FUNCTION);
+            KRATOS_STATIC_CHECK_EQUAL(message.GetLocation().GetLineNumber(), 40);
         }
 
         KRATOS_TEST_CASE_IN_SUITE(LoggerOutput, KratosCoreFastSuite)

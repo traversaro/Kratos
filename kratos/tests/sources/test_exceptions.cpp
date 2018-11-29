@@ -31,9 +31,9 @@ namespace Kratos {
 			}
 			catch (Exception& e) {
 				KRATOS_CHECK_C_STRING_EQUAL(e.what(), "Unknown Error\nin Unknown Location");
-				KRATOS_CHECK_EQUAL(e.where().CleanFileName(), "Unknown File");
-				KRATOS_CHECK_EQUAL(e.where().CleanFunctionName(), "Unknown Location");
-				KRATOS_CHECK_EQUAL(e.where().GetLineNumber(), 0);
+				KRATOS_STATIC_CHECK_EQUAL(e.where().CleanFileName(), "Unknown File");
+				KRATOS_STATIC_CHECK_EQUAL(e.where().CleanFunctionName(), "Unknown Location");
+				KRATOS_STATIC_CHECK_EQUAL(e.where().GetLineNumber(), 0);
 			}
 		}
 

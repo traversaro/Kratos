@@ -29,7 +29,7 @@ namespace Kratos {
 		KRATOS_TEST_CASE_IN_SUITE(AMatrixSum, KratosCoreFastSuite)
 		{
 			DenseVector<double> a{ 1.0, 2.0, 3.1 };
-			KRATOS_CHECK_EQUAL(sum(a), 6.1);
+			KRATOS_STATIC_CHECK_EQUAL(sum(a), 6.1);
 		}
 
     }

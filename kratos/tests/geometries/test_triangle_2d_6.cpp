@@ -59,17 +59,17 @@ namespace {
 
   KRATOS_TEST_CASE_IN_SUITE(Triangle2D6EdgesNumber, KratosCoreGeometriesFastSuite) {
     auto geom = GenerateReferenceTriangle2D6();
-    KRATOS_CHECK_EQUAL(geom->EdgesNumber(), 3);
+    KRATOS_STATIC_CHECK_EQUAL(geom->EdgesNumber(), 3);
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Triangle2D6FacesNumber, KratosCoreGeometriesFastSuite) {
     auto geom = GenerateReferenceTriangle2D6();
-    KRATOS_CHECK_EQUAL(geom->FacesNumber(), 3);
+    KRATOS_STATIC_CHECK_EQUAL(geom->FacesNumber(), 3);
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Triangle2D6Area, KratosCoreGeometriesFastSuite) {
     auto geom = GenerateReferenceTriangle2D6();
-    KRATOS_CHECK_NEAR(geom->Area(), 0.5, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->Area(), 0.5, TOLERANCE);
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Triangle2D6Volume, KratosCoreGeometriesFastSuite) {
@@ -109,10 +109,10 @@ namespace {
     Point PointInVertex(0.0, 0.0);
     Point PointInEdge(0.5, 0.1);
     Point LocalCoords;
-    KRATOS_CHECK(geom->IsInside(PointInside, LocalCoords, EPSILON));
-    KRATOS_CHECK_IS_FALSE(geom->IsInside(PointOutside, LocalCoords, EPSILON));
-    KRATOS_CHECK(geom->IsInside(PointInVertex, LocalCoords, EPSILON));
-    KRATOS_CHECK(geom->IsInside(PointInEdge, LocalCoords, EPSILON));
+    KRATOS_STATIC_CHECK(geom->IsInside(PointInside, LocalCoords, EPSILON));
+    KRATOS_STATIC_CHECK_IS_FALSE(geom->IsInside(PointOutside, LocalCoords, EPSILON));
+    KRATOS_STATIC_CHECK(geom->IsInside(PointInVertex, LocalCoords, EPSILON));
+    KRATOS_STATIC_CHECK(geom->IsInside(PointInEdge, LocalCoords, EPSILON));
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Triangle2D6DeterminantOfJacobianArray1, KratosCoreGeometriesFastSuite) {
@@ -120,18 +120,18 @@ namespace {
     Vector JacobianDeterminants;
     geom->DeterminantOfJacobian(JacobianDeterminants, GeometryData::GI_GAUSS_2);
     for (unsigned int i=0; i<JacobianDeterminants.size(); ++i)
-        KRATOS_CHECK_NEAR(JacobianDeterminants[i], 1.0, TOLERANCE);
+        KRATOS_STATIC_CHECK_NEAR(JacobianDeterminants[i], 1.0, TOLERANCE);
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Triangle2D6IntegrationPointsNumber, KratosCoreGeometriesFastSuite) {
     auto geom = GenerateReferenceTriangle2D6();
-    KRATOS_CHECK_EQUAL(geom->IntegrationPointsNumber(), 3);
+    KRATOS_STATIC_CHECK_EQUAL(geom->IntegrationPointsNumber(), 3);
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Triangle2D6DeterminantOfJacobianIndex1, KratosCoreGeometriesFastSuite) {
     auto geom = GenerateReferenceTriangle2D6();
     for (unsigned g = 0; g < geom->IntegrationPointsNumber(); ++g)
-      KRATOS_CHECK_NEAR(geom->DeterminantOfJacobian(g), 1.0, TOLERANCE);
+      KRATOS_STATIC_CHECK_NEAR(geom->DeterminantOfJacobian(g), 1.0, TOLERANCE);
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Triangle2D6ShapeFunctionsValues, KratosCoreGeometriesFastSuite) {
@@ -140,12 +140,12 @@ namespace {
     coord[0] = 1.0 / 2.0;
     coord[1] = 1.0 / 8.0;
     coord[2] = 0.0;
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(0, coord), -0.09375, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(1, coord), 0.0, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(2, coord), -0.09375, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(3, coord), 0.75, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(4, coord), 0.25, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(5, coord), 0.1875, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(0, coord), -0.09375, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(1, coord), 0.0, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(2, coord), -0.09375, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(3, coord), 0.75, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(4, coord), 0.25, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(5, coord), 0.1875, TOLERANCE);
     CrossCheckShapeFunctionsValues(*geom);
   }
 

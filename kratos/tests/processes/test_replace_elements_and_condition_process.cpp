@@ -98,7 +98,7 @@ namespace Kratos
             std::string component_name;
             for (auto& r_element : this_model_part.Elements()) {
                 CompareElementsAndConditionsUtility::GetRegisteredName(r_element, component_name);
-                KRATOS_CHECK_EQUAL(component_name, "Element2D3N");
+                KRATOS_STATIC_CHECK_EQUAL(component_name, "Element2D3N");
             }
         }
         
@@ -252,7 +252,7 @@ namespace Kratos
             std::string component_name;
             for (auto& r_element : this_model_part.Elements()) {
                 CompareElementsAndConditionsUtility::GetRegisteredName(r_element, component_name);
-                KRATOS_CHECK_EQUAL(component_name, "Element3D4N");
+                KRATOS_STATIC_CHECK_EQUAL(component_name, "Element3D4N");
             }
         }
     } // namespace Testing

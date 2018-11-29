@@ -41,26 +41,16 @@ static inline void KRATOS_STATIC_CHECK_IS_FALSE(const bool Check)
     KRATOS_CHECK_IS_FALSE(Check);
 }
 
-template<class TType>
-static inline void KRATOS_STATIC_CHECK_EQUAL(TType a, TType b)
+template<class TTypea, class TTypeb>
+static inline void KRATOS_STATIC_CHECK_EQUAL(const TTypea& a, const TTypeb& b)
 {
     KRATOS_CHECK_EQUAL(a, b);
 }
 
-template<class TType>
-static inline void KRATOS_STATIC_CHECK_NOT_EQUAL(TType a, TType b)
+template<class TTypea, class TTypeb>
+static inline void KRATOS_STATIC_CHECK_NOT_EQUAL(const TTypea& a, const TTypeb& b)
 {
     KRATOS_CHECK_NOT_EQUAL(a, b);
-}
-
-static inline void KRATOS_STATIC_CHECK_C_STRING_EQUAL(char* a, char* b)
-{
-    KRATOS_CHECK_C_STRING_EQUAL(a, b);
-}
-
-static inline void KRATOS_STATIC_CHECK_C_STRING_NOT_EQUAL(char* a, char* b)
-{
-    KRATOS_CHECK_C_STRING_NOT_EQUAL(a, b);
 }
 
 static inline void KRATOS_STATIC_CHECK_LESS(const double a, const double b)

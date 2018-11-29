@@ -52,12 +52,12 @@ namespace Kratos {
 
             Condition::Pointer p_clone_of_cond = p_cond->Clone(2, PointerVector<NodeType>{list_nodes});
 
-            KRATOS_CHECK_EQUAL(p_clone_of_cond->Id(), 2);
-            KRATOS_CHECK_DOUBLE_EQUAL(p_clone_of_cond->GetValue(DISTANCE), 12.1);
-            KRATOS_CHECK_DOUBLE_EQUAL(p_clone_of_cond->GetValue(VELOCITY_X), 32.4);
-            KRATOS_CHECK_DOUBLE_EQUAL(p_clone_of_cond->GetValue(VELOCITY_Y), 0.00);
-            KRATOS_CHECK_DOUBLE_EQUAL(p_clone_of_cond->GetValue(VELOCITY_Z), 0.00);
-            KRATOS_CHECK(p_clone_of_cond->Is(ACTIVE));
+            KRATOS_STATIC_CHECK_EQUAL(p_clone_of_cond->Id(), 2);
+            KRATOS_STATIC_CHECK_DOUBLE_EQUAL(p_clone_of_cond->GetValue(DISTANCE), 12.1);
+            KRATOS_STATIC_CHECK_DOUBLE_EQUAL(p_clone_of_cond->GetValue(VELOCITY_X), 32.4);
+            KRATOS_STATIC_CHECK_DOUBLE_EQUAL(p_clone_of_cond->GetValue(VELOCITY_Y), 0.00);
+            KRATOS_STATIC_CHECK_DOUBLE_EQUAL(p_clone_of_cond->GetValue(VELOCITY_Z), 0.00);
+            KRATOS_STATIC_CHECK(p_clone_of_cond->Is(ACTIVE));
         }
     }  // namespace Testing.
 }  // namespace Kratos.

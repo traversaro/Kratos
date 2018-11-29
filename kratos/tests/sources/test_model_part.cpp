@@ -100,9 +100,9 @@ namespace Kratos {
             i_SubModelPart->CreateNewNode(id++, 0.00,0.00,0.00);
         }
 
-        KRATOS_CHECK_EQUAL(r_model_part.NumberOfNodes(), 4);
-        KRATOS_CHECK_EQUAL(r_model_part.GetSubModelPart("Inlet1").NumberOfNodes(), 1);
-        KRATOS_CHECK_EQUAL(r_model_part.GetSubModelPart("Outlet").NumberOfNodes(), 1);
+        KRATOS_STATIC_CHECK_EQUAL(r_model_part.NumberOfNodes(), 4);
+        KRATOS_STATIC_CHECK_EQUAL(r_model_part.GetSubModelPart("Inlet1").NumberOfNodes(), 1);
+        KRATOS_STATIC_CHECK_EQUAL(r_model_part.GetSubModelPart("Outlet").NumberOfNodes(), 1);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(ModelPartAddNodalSolutionStepVariable, KratosCoreFastSuite)
@@ -129,8 +129,8 @@ namespace Kratos {
 
         r_model_part.AddNodalSolutionStepVariable(VELOCITY);
 
-        KRATOS_CHECK(r_model_part.HasNodalSolutionStepVariable(VELOCITY));
-        KRATOS_CHECK_IS_FALSE(r_model_part.HasNodalSolutionStepVariable(PRESSURE));
+        KRATOS_STATIC_CHECK(r_model_part.HasNodalSolutionStepVariable(VELOCITY));
+        KRATOS_STATIC_CHECK_IS_FALSE(r_model_part.HasNodalSolutionStepVariable(PRESSURE));
     }
 
 
@@ -177,9 +177,9 @@ namespace Kratos {
         r_model_part.RemoveElements(TO_ERASE);
 
         // Check results
-        KRATOS_CHECK(r_model_part.NumberOfNodes() == 6);
-        KRATOS_CHECK(r_model_part.NumberOfElements() == 2);
-        KRATOS_CHECK(r_model_part.NumberOfConditions() == 4);
+        KRATOS_STATIC_CHECK(r_model_part.NumberOfNodes() == 6);
+        KRATOS_STATIC_CHECK(r_model_part.NumberOfElements() == 2);
+        KRATOS_STATIC_CHECK(r_model_part.NumberOfConditions() == 4);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(ModelPartRemoveElementsAndBelongings, KratosCoreFastSuite)
@@ -200,9 +200,9 @@ namespace Kratos {
         aux_util.RemoveElementsAndBelongings(TO_ERASE);
 
         // Check results
-        KRATOS_CHECK(r_model_part.NumberOfNodes() == 4);
-        KRATOS_CHECK(r_model_part.NumberOfElements() == 2);
-        KRATOS_CHECK(r_model_part.NumberOfConditions() == 2);
+        KRATOS_STATIC_CHECK(r_model_part.NumberOfNodes() == 4);
+        KRATOS_STATIC_CHECK(r_model_part.NumberOfElements() == 2);
+        KRATOS_STATIC_CHECK(r_model_part.NumberOfConditions() == 2);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(ModelPartRemoveConditions, KratosCoreFastSuite)
@@ -222,9 +222,9 @@ namespace Kratos {
         r_model_part.RemoveConditions(TO_ERASE);
 
         // Check results
-        KRATOS_CHECK(r_model_part.NumberOfNodes() == 6);
-        KRATOS_CHECK(r_model_part.NumberOfConditions() == 2);
-        KRATOS_CHECK(r_model_part.NumberOfElements() == 4);
+        KRATOS_STATIC_CHECK(r_model_part.NumberOfNodes() == 6);
+        KRATOS_STATIC_CHECK(r_model_part.NumberOfConditions() == 2);
+        KRATOS_STATIC_CHECK(r_model_part.NumberOfElements() == 4);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(ModelPartRemoveConditionsAndBelongings, KratosCoreFastSuite)
@@ -245,9 +245,9 @@ namespace Kratos {
         aux_util.RemoveConditionsAndBelongings(TO_ERASE);
 
         // Check results
-        KRATOS_CHECK(r_model_part.NumberOfNodes() == 3);
-        KRATOS_CHECK(r_model_part.NumberOfConditions() == 2);
-        KRATOS_CHECK(r_model_part.NumberOfElements() == 2);
+        KRATOS_STATIC_CHECK(r_model_part.NumberOfNodes() == 3);
+        KRATOS_STATIC_CHECK(r_model_part.NumberOfConditions() == 2);
+        KRATOS_STATIC_CHECK(r_model_part.NumberOfElements() == 2);
     }
   }  // namespace Testing.
 }  // namespace Kratos.

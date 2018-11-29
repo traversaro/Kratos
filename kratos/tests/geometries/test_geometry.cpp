@@ -380,7 +380,7 @@ namespace Testing {
                 }
             }
 
-            KRATOS_CHECK(succesful);
+            KRATOS_STATIC_CHECK(succesful);
         }
     }
 

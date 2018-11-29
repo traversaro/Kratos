@@ -59,7 +59,7 @@ namespace Kratos {
 			StructuredMeshGeneratorProcess(geometry, model_part, mesher_parameters).Execute();
 			std::size_t number_of_nodes = (number_of_divisions + 1) * (number_of_divisions + 1) * (number_of_divisions + 1);
 			std::size_t number_of_elements = number_of_divisions * number_of_divisions * number_of_divisions * 6;
-			KRATOS_CHECK_EQUAL(model_part.NumberOfNodes(), number_of_nodes);
+			KRATOS_STATIC_CHECK_EQUAL(model_part.NumberOfNodes(), number_of_nodes);
 			KRATOS_CHECK_EQUAL(model_part.NumberOfElements(), number_of_elements) << " Number of elements = " << model_part.NumberOfElements() ;
 
 			double total_volume = 0.00;
@@ -74,10 +74,10 @@ namespace Kratos {
 			}
 			KRATOS_CHECK_NEAR(total_volume, 1000., 1.E-6) << "with total_volume = " << total_volume;
 
-            KRATOS_CHECK(model_part.HasSubModelPart("Skin"));
+            KRATOS_STATIC_CHECK(model_part.HasSubModelPart("Skin"));
 
-            KRATOS_CHECK_EQUAL(model_part.GetSubModelPart("Skin").NumberOfNodes(), 602);
-            KRATOS_CHECK_EQUAL(model_part.GetSubModelPart("Skin").NumberOfElements(), 0);
+            KRATOS_STATIC_CHECK_EQUAL(model_part.GetSubModelPart("Skin").NumberOfNodes(), 602);
+            KRATOS_STATIC_CHECK_EQUAL(model_part.GetSubModelPart("Skin").NumberOfElements(), 0);
 		}
 
 		KRATOS_TEST_CASE_IN_SUITE(StructuredMeshGeneratorProcessQuadrilateral, KratosCoreFastSuite)
@@ -106,8 +106,8 @@ namespace Kratos {
 
 			StructuredMeshGeneratorProcess(geometry, model_part, mesher_parameters).Execute();
 			std::size_t number_of_nodes = (number_of_divisions + 1) * (number_of_divisions + 1);
-			KRATOS_CHECK_EQUAL(model_part.NumberOfNodes(), number_of_nodes);
-			KRATOS_CHECK_EQUAL(model_part.NumberOfElements(), number_of_divisions * number_of_divisions * 2);
+			KRATOS_STATIC_CHECK_EQUAL(model_part.NumberOfNodes(), number_of_nodes);
+			KRATOS_STATIC_CHECK_EQUAL(model_part.NumberOfElements(), number_of_divisions * number_of_divisions * 2);
 
 			double total_area = 0.00;
 			for (auto i_element = model_part.ElementsBegin(); i_element != model_part.ElementsEnd(); i_element++) {
@@ -120,7 +120,7 @@ namespace Kratos {
 			}
 			KRATOS_CHECK_NEAR(total_area, 100., 1.E-6) << "with total_area = " << total_area;
 
-            KRATOS_CHECK_IS_FALSE(model_part.HasSubModelPart("Skin"));
+            KRATOS_STATIC_CHECK_IS_FALSE(model_part.HasSubModelPart("Skin"));
 		}
 	}
 }  // namespace Kratos.

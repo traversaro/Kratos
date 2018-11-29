@@ -33,7 +33,7 @@ namespace Testing {
         
         const double dist = GeometryUtils::PointDistanceToTriangle3D(triangle_point_1, triangle_point_2, triangle_point_3, distance_point);
 
-        KRATOS_CHECK_NEAR(dist, 0.123718, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(dist, 0.123718, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(GeometryUtilsPointDistanceToTriangleInPlane, KratosCoreFastSuite)
@@ -48,7 +48,7 @@ namespace Testing {
         
         const double dist = GeometryUtils::PointDistanceToTriangle3D(triangle_point_1, triangle_point_2, triangle_point_3, distance_point);
 
-        KRATOS_CHECK_NEAR(dist, distance_point.Z(), 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(dist, distance_point.Z(), 1e-6);
     }
 
 }  // namespace Testing.

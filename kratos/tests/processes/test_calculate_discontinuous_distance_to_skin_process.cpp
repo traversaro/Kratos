@@ -50,9 +50,9 @@ namespace Testing {
 
         // Check values
         const auto &r_elem_dist = (fluid_part.ElementsBegin())->GetValue(ELEMENTAL_DISTANCES);
-        KRATOS_CHECK_NEAR(r_elem_dist[0], -0.5, 1e-12);
-        KRATOS_CHECK_NEAR(r_elem_dist[1], -0.5, 1e-12);
-        KRATOS_CHECK_NEAR(r_elem_dist[2],  0.5, 1e-12);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[0], -0.5, 1e-12);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[1], -0.5, 1e-12);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[2],  0.5, 1e-12);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(DiscontinuousDistanceProcessPlaneApproximation2D, KratosCoreFastSuite)
@@ -84,9 +84,9 @@ namespace Testing {
 
         // Check values
         const auto &r_elem_dist = (fluid_part.ElementsBegin())->GetValue(ELEMENTAL_DISTANCES);
-        KRATOS_CHECK_NEAR(r_elem_dist[0], -0.483157, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[1], 0.0216888, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[2], 0.380052, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[0], -0.483157, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[1], 0.0216888, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[2], 0.380052, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(DiscontinuousDistanceProcessCubeInCube3D, KratosCoreFastSuite)
@@ -149,14 +149,14 @@ namespace Testing {
         // Check values
         const auto &r_dist_elem_1 = (volume_part.ElementsBegin() + 7)->GetValue(ELEMENTAL_DISTANCES);
         const auto &r_dist_elem_2 = (volume_part.ElementsEnd() - 7)->GetValue(ELEMENTAL_DISTANCES);
-        KRATOS_CHECK_NEAR(r_dist_elem_1[0], -0.15, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_elem_1[1], 0.05, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_elem_1[2], 0.05, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_elem_1[3], -0.15, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_elem_2[0], -0.05, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_elem_2[1], 0.15, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_elem_2[2], 0.15, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_elem_2[3], -0.05, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_elem_1[0], -0.15, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_elem_1[1], 0.05, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_elem_1[2], 0.05, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_elem_1[3], -0.15, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_elem_2[0], -0.05, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_elem_2[1], 0.15, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_elem_2[2], 0.15, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_elem_2[3], -0.05, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(DiscontinuousDistanceProcessSharpCornerInCube3D, KratosCoreFastSuite)
@@ -207,14 +207,14 @@ namespace Testing {
         // Check values
         const auto &r_dist_begin = (volume_part.ElementsBegin())->GetValue(ELEMENTAL_DISTANCES);
         const auto &r_dist_end = (volume_part.ElementsEnd() - 1)->GetValue(ELEMENTAL_DISTANCES);
-        KRATOS_CHECK_NEAR(r_dist_begin[0], 1.0, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_begin[1], 1.0, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_begin[2], 1.0, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_begin[3], 1.0, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_end[0], -0.406059, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_end[1], -0.489839, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_end[2], 0.388306, 1e-6);
-        KRATOS_CHECK_NEAR(r_dist_end[3], 0.0649427, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_begin[0], 1.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_begin[1], 1.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_begin[2], 1.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_begin[3], 1.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_end[0], -0.406059, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_end[1], -0.489839, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_end[2], 0.388306, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_dist_end[3], 0.0649427, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(DiscontinuousDistanceProcessHorizontalPlane3D, KratosCoreFastSuite)
@@ -248,10 +248,10 @@ namespace Testing {
 
         // Check values
         const auto &r_elem_dist = (volume_part.ElementsBegin())->GetValue(ELEMENTAL_DISTANCES);
-        KRATOS_CHECK_NEAR(r_elem_dist[0], 0.0714286, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[1], 0.0714286, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[2], 0.0714286, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[3], -0.0714286, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[0], 0.0714286, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[1], 0.0714286, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[2], 0.0714286, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[3], -0.0714286, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(DiscontinuousDistanceProcessPlaneApproximationSkewed3D, KratosCoreFastSuite)
@@ -286,10 +286,10 @@ namespace Testing {
 
         // Check values
         const auto &r_elem_dist = (volume_part.ElementsBegin())->GetValue(ELEMENTAL_DISTANCES);
-        KRATOS_CHECK_NEAR(r_elem_dist[0], -0.569400, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[1], 0.1044875, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[2], -0.266495, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[3], 0.104487, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[0], -0.569400, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[1], 0.1044875, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[2], -0.266495, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[3], 0.104487, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(DiscontinuousDistanceProcessPlaneApproximationVertical3D, KratosCoreFastSuite)
@@ -327,10 +327,10 @@ namespace Testing {
 
         // Check values
         const Vector elem_dist = (volume_part.ElementsBegin())->GetValue(ELEMENTAL_DISTANCES);
-        KRATOS_CHECK_NEAR(elem_dist[0], -0.5, 1e-10);
-        KRATOS_CHECK_NEAR(elem_dist[1],  0.5, 1e-10);
-        KRATOS_CHECK_NEAR(elem_dist[2], -0.5, 1e-10);
-        KRATOS_CHECK_NEAR(elem_dist[3], -0.5, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(elem_dist[0], -0.5, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(elem_dist[1],  0.5, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(elem_dist[2], -0.5, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(elem_dist[3], -0.5, 1e-10);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(DiscontinuousDistanceProcessOneEdgeIntersection3D, KratosCoreFastSuite)
@@ -363,10 +363,10 @@ namespace Testing {
 
         // Check elemental distance values
         const auto &r_elem_dist = volume_part.ElementsBegin()->GetValue(ELEMENTAL_DISTANCES);
-        KRATOS_CHECK_NEAR(r_elem_dist[0], 1.0, 1e-10);
-        KRATOS_CHECK_NEAR(r_elem_dist[1], 1.0, 1e-10);
-        KRATOS_CHECK_NEAR(r_elem_dist[2], 1.0, 1e-10);
-        KRATOS_CHECK_NEAR(r_elem_dist[3], 1.0, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[0], 1.0, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[1], 1.0, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[2], 1.0, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[3], 1.0, 1e-10);
 
 
     }
@@ -415,10 +415,10 @@ namespace Testing {
 
         // Check elemental distance values
         const auto &r_elem_dist = volume_part.ElementsBegin()->GetValue(ELEMENTAL_DISTANCES);
-        KRATOS_CHECK_NEAR(r_elem_dist[0], -0.0636738, 1e-7);
-        KRATOS_CHECK_NEAR(r_elem_dist[1],  0.0342287, 1e-7);
-        KRATOS_CHECK_NEAR(r_elem_dist[2], -0.0709816, 1e-7);
-        KRATOS_CHECK_NEAR(r_elem_dist[3], -0.0159295, 1e-7);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[0], -0.0636738, 1e-7);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[1],  0.0342287, 1e-7);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[2], -0.0709816, 1e-7);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[3], -0.0159295, 1e-7);
 
     }
 
@@ -499,10 +499,10 @@ namespace Testing {
 
         // Check values
         const auto &r_elem_dist = volume_part.ElementsBegin()->GetValue(ELEMENTAL_DISTANCES);
-        KRATOS_CHECK_NEAR(r_elem_dist[0], -0.108523, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[1], 0.0485713, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[2], 0.0764035, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[3], 0.0222594, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[0], -0.108523, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[1], 0.0485713, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[2], 0.0764035, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[3], 0.0222594, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(DiscontinuousDistanceProcessBoundaryIntersection3D, KratosCoreFastSuite)
@@ -558,10 +558,10 @@ namespace Testing {
 
         // Check values
         const auto &r_elem_dist = volume_part.ElementsBegin()->GetValue(ELEMENTAL_DISTANCES);
-        KRATOS_CHECK_NEAR(r_elem_dist[0], -0.0984855, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[1], -0.00883326, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[2], 0.0352186, 1e-6);
-        KRATOS_CHECK_NEAR(r_elem_dist[3], -0.103167, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[0], -0.0984855, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[1], -0.00883326, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[2], 0.0352186, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(r_elem_dist[3], -0.103167, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(DiscontinuousDistanceProcessDoubleEmbeddedVariableComplex, KratosCoreFastSuite)
@@ -602,7 +602,7 @@ namespace Testing {
         disc_dist_proc.CalculateEmbeddedVariableFromSkin(TEMPERATURE, TEMPERATURE);
 
         // Check values
-        KRATOS_CHECK_NEAR(volume_part.GetElement(1).GetValue(TEMPERATURE), 0.2, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(1).GetValue(TEMPERATURE), 0.2, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(DiscontinuousDistanceProcessArrayEmbeddedVariableComplex, KratosCoreFastSuite)
@@ -644,8 +644,8 @@ namespace Testing {
         disc_dist_proc.CalculateEmbeddedVariableFromSkin(VELOCITY, EMBEDDED_VELOCITY);
 
         // Check values
-        KRATOS_CHECK_NEAR(volume_part.GetElement(1).GetValue(EMBEDDED_VELOCITY_X), 0.05, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(1).GetValue(EMBEDDED_VELOCITY_Y), 0.2, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(1).GetValue(EMBEDDED_VELOCITY_X), 0.05, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(1).GetValue(EMBEDDED_VELOCITY_Y), 0.2, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(DiscontinuousDistanceProcessDoubleEmbeddedVariable, KratosCoreFastSuite)
@@ -696,10 +696,10 @@ namespace Testing {
         disc_dist_proc.CalculateEmbeddedVariableFromSkin(TEMPERATURE, TEMPERATURE);
 
         // Check values
-        KRATOS_CHECK_NEAR(volume_part.GetElement(16).GetValue(TEMPERATURE), 0.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(17).GetValue(TEMPERATURE), 1.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(68).GetValue(TEMPERATURE), 1.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(69).GetValue(TEMPERATURE), 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(16).GetValue(TEMPERATURE), 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(17).GetValue(TEMPERATURE), 1.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(68).GetValue(TEMPERATURE), 1.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(69).GetValue(TEMPERATURE), 0.0, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(DiscontinuousDistanceProcessArrayEmbeddedVariable, KratosCoreFastSuite)
@@ -752,18 +752,18 @@ namespace Testing {
         disc_dist_proc.CalculateEmbeddedVariableFromSkin(VELOCITY, EMBEDDED_VELOCITY);
 
         // Check values
-        KRATOS_CHECK_NEAR(volume_part.GetElement(16).GetValue(EMBEDDED_VELOCITY)[0], 0.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(16).GetValue(EMBEDDED_VELOCITY)[1], 0.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(16).GetValue(EMBEDDED_VELOCITY)[2], 0.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(17).GetValue(EMBEDDED_VELOCITY)[0], 1.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(17).GetValue(EMBEDDED_VELOCITY)[1], 1.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(17).GetValue(EMBEDDED_VELOCITY)[2], 0.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(68).GetValue(EMBEDDED_VELOCITY)[0], 1.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(68).GetValue(EMBEDDED_VELOCITY)[1], 1.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(68).GetValue(EMBEDDED_VELOCITY)[2], 0.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(69).GetValue(EMBEDDED_VELOCITY)[0], 0.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(69).GetValue(EMBEDDED_VELOCITY)[1], 0.0, 1e-6);
-        KRATOS_CHECK_NEAR(volume_part.GetElement(69).GetValue(EMBEDDED_VELOCITY)[2], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(16).GetValue(EMBEDDED_VELOCITY)[0], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(16).GetValue(EMBEDDED_VELOCITY)[1], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(16).GetValue(EMBEDDED_VELOCITY)[2], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(17).GetValue(EMBEDDED_VELOCITY)[0], 1.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(17).GetValue(EMBEDDED_VELOCITY)[1], 1.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(17).GetValue(EMBEDDED_VELOCITY)[2], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(68).GetValue(EMBEDDED_VELOCITY)[0], 1.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(68).GetValue(EMBEDDED_VELOCITY)[1], 1.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(68).GetValue(EMBEDDED_VELOCITY)[2], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(69).GetValue(EMBEDDED_VELOCITY)[0], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(69).GetValue(EMBEDDED_VELOCITY)[1], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(volume_part.GetElement(69).GetValue(EMBEDDED_VELOCITY)[2], 0.0, 1e-6);
     }
 
 }  // namespace Testing.

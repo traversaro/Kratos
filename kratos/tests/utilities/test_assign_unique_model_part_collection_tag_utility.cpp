@@ -149,18 +149,18 @@ namespace Kratos
             for (auto& sub_model_part_name : sub_model_parts_names) {
                 ModelPart& r_first_sub_model_part = first_model_part.GetSubModelPart(sub_model_part_name);
                 ModelPart& r_second_sub_model_part = second_model_part.GetSubModelPart(sub_model_part_name);
-                KRATOS_CHECK_EQUAL(r_first_sub_model_part.NumberOfNodes(), r_second_sub_model_part.NumberOfNodes());
-                KRATOS_CHECK_EQUAL(r_first_sub_model_part.NumberOfElements(), r_second_sub_model_part.NumberOfElements());
+                KRATOS_STATIC_CHECK_EQUAL(r_first_sub_model_part.NumberOfNodes(), r_second_sub_model_part.NumberOfNodes());
+                KRATOS_STATIC_CHECK_EQUAL(r_first_sub_model_part.NumberOfElements(), r_second_sub_model_part.NumberOfElements());
 
                 for (IndexType i = 0; i < r_first_sub_model_part.NumberOfNodes(); i++) {
                     auto it_first_node = r_first_sub_model_part.Nodes().begin() + i;
                     auto it_found_second_node = r_second_sub_model_part.Nodes().find(it_first_node->Id());
-                    KRATOS_CHECK_NOT_EQUAL(it_found_second_node, r_second_sub_model_part.NodesEnd());
+                    KRATOS_STATIC_CHECK_NOT_EQUAL(it_found_second_node, r_second_sub_model_part.NodesEnd());
                 }
                 for (IndexType i = 0; i < r_first_sub_model_part.NumberOfElements(); i++) {
                     auto it_first_elem = r_first_sub_model_part.Elements().begin() + i;
                     auto it_found_second_elem = r_second_sub_model_part.Elements().find(it_first_elem->Id());
-                    KRATOS_CHECK_NOT_EQUAL(it_found_second_elem, r_second_sub_model_part.ElementsEnd());
+                    KRATOS_STATIC_CHECK_NOT_EQUAL(it_found_second_elem, r_second_sub_model_part.ElementsEnd());
                 }
             }
         }
@@ -288,18 +288,18 @@ namespace Kratos
                 {
                     ModelPart& r_first_sub_model_part = AssignUniqueModelPartCollectionTagUtility::GetRecursiveSubModelPart(first_model_part, sub_model_part_name);
                     ModelPart& r_second_sub_model_part = AssignUniqueModelPartCollectionTagUtility::GetRecursiveSubModelPart(second_model_part, sub_model_part_name);
-                    KRATOS_CHECK_EQUAL(r_first_sub_model_part.NumberOfNodes(), r_second_sub_model_part.NumberOfNodes());
-                    KRATOS_CHECK_EQUAL(r_first_sub_model_part.NumberOfElements(), r_second_sub_model_part.NumberOfElements());
+                    KRATOS_STATIC_CHECK_EQUAL(r_first_sub_model_part.NumberOfNodes(), r_second_sub_model_part.NumberOfNodes());
+                    KRATOS_STATIC_CHECK_EQUAL(r_first_sub_model_part.NumberOfElements(), r_second_sub_model_part.NumberOfElements());
 
                     for (IndexType i = 0; i < r_first_sub_model_part.NumberOfNodes(); i++) {
                         auto it_first_node = r_first_sub_model_part.Nodes().begin() + i;
                         auto it_found_second_node = r_second_sub_model_part.Nodes().find(it_first_node->Id());
-                        KRATOS_CHECK_NOT_EQUAL(it_found_second_node, r_second_sub_model_part.NodesEnd());
+                        KRATOS_STATIC_CHECK_NOT_EQUAL(it_found_second_node, r_second_sub_model_part.NodesEnd());
                     }
                     for (IndexType i = 0; i < r_first_sub_model_part.NumberOfElements(); i++) {
                         auto it_first_elem = r_first_sub_model_part.Elements().begin() + i;
                         auto it_found_second_elem = r_second_sub_model_part.Elements().find(it_first_elem->Id());
-                        KRATOS_CHECK_NOT_EQUAL(it_found_second_elem, r_second_sub_model_part.ElementsEnd());
+                        KRATOS_STATIC_CHECK_NOT_EQUAL(it_found_second_elem, r_second_sub_model_part.ElementsEnd());
                     }
                 }
             }
@@ -325,13 +325,13 @@ namespace Kratos
             // for(auto name : names)
             //     KRATOS_WATCH(name);
 
-            KRATOS_CHECK_EQUAL("Main",
+            KRATOS_STATIC_CHECK_EQUAL("Main",
                 AssignUniqueModelPartCollectionTagUtility::GetRecursiveSubModelPart(model_part, "Main").Name());
-            KRATOS_CHECK_EQUAL("BSubModelPart1",
+            KRATOS_STATIC_CHECK_EQUAL("BSubModelPart1",
                 AssignUniqueModelPartCollectionTagUtility::GetRecursiveSubModelPart(model_part, "BSubModelPart1").Name());
-            KRATOS_CHECK_EQUAL("BSubModelPart1",
+            KRATOS_STATIC_CHECK_EQUAL("BSubModelPart1",
                 AssignUniqueModelPartCollectionTagUtility::GetRecursiveSubModelPart(model_part, "Main.BSubModelPart1").Name());
-            KRATOS_CHECK_EQUAL("SubModelPart1b",
+            KRATOS_STATIC_CHECK_EQUAL("SubModelPart1b",
                 AssignUniqueModelPartCollectionTagUtility::GetRecursiveSubModelPart(model_part, "BSubModelPart1.SubModelPart1b").Name());
         }
 

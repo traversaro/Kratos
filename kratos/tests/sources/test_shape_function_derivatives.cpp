@@ -100,8 +100,8 @@ void TestShapeFunctionsLocalGradient(Geometry<Node<3>> const& rGeom,
                                      Matrix const& rLocalGradient)
 {
     KRATOS_TRY;
-    KRATOS_CHECK(rLocalGradient.size1() == rGeom.PointsNumber());
-    KRATOS_CHECK(rLocalGradient.size2() == rGeom.LocalSpaceDimension());
+    KRATOS_STATIC_CHECK(rLocalGradient.size1() == rGeom.PointsNumber());
+    KRATOS_STATIC_CHECK(rLocalGradient.size2() == rGeom.LocalSpaceDimension());
     for (unsigned i = 0; i < rGeom.PointsNumber(); ++i)
         for (unsigned j = 0; j < rGeom.LocalSpaceDimension(); ++j)
         {
@@ -110,7 +110,7 @@ void TestShapeFunctionsLocalGradient(Geometry<Node<3>> const& rGeom,
                 point[j] += delta;
                 return rGeom.ShapeFunctionValue(i, point);
             };
-            KRATOS_CHECK_NEAR(FiniteDifference4(f), rLocalGradient(i, j), TOLERANCE);
+            KRATOS_STATIC_CHECK_NEAR(FiniteDifference4(f), rLocalGradient(i, j), TOLERANCE);
         }
     KRATOS_CATCH("");
 }

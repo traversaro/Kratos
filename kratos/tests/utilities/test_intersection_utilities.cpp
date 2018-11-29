@@ -73,10 +73,10 @@ namespace Testing {
 
         // Compute and check the obtained intersection point coordinates
         const array_1d<double,3> int_pt_coords = int_pt.Coordinates();
-        KRATOS_CHECK_EQUAL(int_id, 1);
-        KRATOS_CHECK_NEAR(int_pt_coords(0), 0.0, 1e-10);
-        KRATOS_CHECK_NEAR(int_pt_coords(1), 0.5, 1e-10);
-        KRATOS_CHECK_NEAR(int_pt_coords(2), 0.0, 1e-10);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 1);
+        KRATOS_STATIC_CHECK_NEAR(int_pt_coords(0), 0.0, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(int_pt_coords(1), 0.5, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(int_pt_coords(2), 0.0, 1e-10);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesLineLineIntersection, KratosCoreFastSuite)
@@ -100,10 +100,10 @@ namespace Testing {
 
         // Compute and check the obtained intersection point coordinates
         const array_1d<double,3> int_pt_coords = int_pt.Coordinates();
-        KRATOS_CHECK_EQUAL(int_id, 1);
-        KRATOS_CHECK_NEAR(int_pt_coords(0), 0.4, 1e-10);
-        KRATOS_CHECK_NEAR(int_pt_coords(1), 0.6, 1e-10);
-        KRATOS_CHECK_NEAR(int_pt_coords(2), 0.0, 1e-10);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 1);
+        KRATOS_STATIC_CHECK_NEAR(int_pt_coords(0), 0.4, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(int_pt_coords(1), 0.6, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(int_pt_coords(2), 0.0, 1e-10);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesLineLineParallel, KratosCoreFastSuite)
@@ -127,7 +127,7 @@ namespace Testing {
 
         // Compute and check the obtained intersection point coordinates
         const array_1d<double,3> int_pt_coords = int_pt.Coordinates();
-        KRATOS_CHECK_EQUAL(int_id, 0);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 0);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesLineLineCollinear, KratosCoreFastSuite)
@@ -151,7 +151,7 @@ namespace Testing {
 
         // Compute and check the obtained intersection point coordinates
         const array_1d<double,3> int_pt_coords = int_pt.Coordinates();
-        KRATOS_CHECK_EQUAL(int_id, 2);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 2);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesLineLineNonParallelNoIntersection, KratosCoreFastSuite)
@@ -175,7 +175,7 @@ namespace Testing {
 
         // Compute and check the obtained intersection point coordinates
         const array_1d<double,3> int_pt_coords = int_pt.Coordinates();
-        KRATOS_CHECK_EQUAL(int_id, 0);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 0);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesLineLineThroughPoint, KratosCoreFastSuite)
@@ -199,10 +199,10 @@ namespace Testing {
 
         // Compute and check the obtained intersection point coordinates
         const array_1d<double,3> int_pt_coords = int_pt.Coordinates();
-        KRATOS_CHECK_EQUAL(int_id, 3);
-        KRATOS_CHECK_NEAR(int_pt.Coordinates()[0], 0.0, 1e-6);
-        KRATOS_CHECK_NEAR(int_pt.Coordinates()[1], 0.0, 1e-6);
-        KRATOS_CHECK_NEAR(int_pt.Coordinates()[2], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 3);
+        KRATOS_STATIC_CHECK_NEAR(int_pt.Coordinates()[0], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(int_pt.Coordinates()[1], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(int_pt.Coordinates()[2], 0.0, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesTriangleLineCenteredIntersection, KratosCoreFastSuite)
@@ -226,10 +226,10 @@ namespace Testing {
 
         // Compute and check the obtained intersection point coordinates
         const array_1d<double,3> int_pt_coords = int_pt.Coordinates();
-        KRATOS_CHECK_EQUAL(int_id, 1);
-        KRATOS_CHECK_NEAR(int_pt_coords(0), 0.0, 1e-10);
-        KRATOS_CHECK_NEAR(int_pt_coords(1), 0.25, 1e-10);
-        KRATOS_CHECK_NEAR(int_pt_coords(2), 0.25, 1e-10);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 1);
+        KRATOS_STATIC_CHECK_NEAR(int_pt_coords(0), 0.0, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(int_pt_coords(1), 0.25, 1e-10);
+        KRATOS_STATIC_CHECK_NEAR(int_pt_coords(2), 0.25, 1e-10);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesTriangleLineSkewedIntersection, KratosCoreFastSuite)
@@ -253,10 +253,10 @@ namespace Testing {
 
         // Compute and check the obtained intersection point coordinates
         const array_1d<double,3> int_pt_coords = int_pt.Coordinates();
-        KRATOS_CHECK_EQUAL(int_id, 1);
-        KRATOS_CHECK_NEAR(int_pt_coords(0), 0.857143, 1e-6);
-        KRATOS_CHECK_NEAR(int_pt_coords(1), 0.0952381, 1e-6);
-        KRATOS_CHECK_NEAR(int_pt_coords(2), 0.0952381, 1e-6);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 1);
+        KRATOS_STATIC_CHECK_NEAR(int_pt_coords(0), 0.857143, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(int_pt_coords(1), 0.0952381, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(int_pt_coords(2), 0.0952381, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesTriangleLineNoIntersection, KratosCoreFastSuite)
@@ -279,7 +279,7 @@ namespace Testing {
             int_pt.Coordinates());
 
         // Check that there is no intersection
-        KRATOS_CHECK_EQUAL(int_id, 0);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 0);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesTriangleLineThroughPoint, KratosCoreFastSuite)
@@ -302,10 +302,10 @@ namespace Testing {
             int_pt.Coordinates());
 
         // Compute and check the obtained intersection point passes through the node
-        KRATOS_CHECK_EQUAL(int_id, 1);
-        KRATOS_CHECK_NEAR(int_pt.Coordinates()[0], 0.0, 1e-6);
-        KRATOS_CHECK_NEAR(int_pt.Coordinates()[1], 0.0, 1e-6);
-        KRATOS_CHECK_NEAR(int_pt.Coordinates()[2], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 1);
+        KRATOS_STATIC_CHECK_NEAR(int_pt.Coordinates()[0], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(int_pt.Coordinates()[1], 0.0, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(int_pt.Coordinates()[2], 0.0, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesTriangleLineCoplanar, KratosCoreFastSuite)
@@ -328,7 +328,7 @@ namespace Testing {
             int_pt.Coordinates());
 
         // Check that there is no intersection
-        KRATOS_CHECK_EQUAL(int_id, 2);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 2);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesTriangleLineBoundaryIntersection, KratosCoreFastSuite)
@@ -354,10 +354,10 @@ namespace Testing {
             int_pt.Coordinates());
 
         // The triangle and edge are set such that the intersection occurs close to the triangle boundary
-        KRATOS_CHECK_EQUAL(int_id, 1);
-        KRATOS_CHECK_NEAR(int_pt[0], 0.320052, 1e-6);
-        KRATOS_CHECK_NEAR(int_pt[1], 0.2, 1e-6);
-        KRATOS_CHECK_NEAR(int_pt[2], 0.5, 1e-6);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 1);
+        KRATOS_STATIC_CHECK_NEAR(int_pt[0], 0.320052, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(int_pt[1], 0.2, 1e-6);
+        KRATOS_STATIC_CHECK_NEAR(int_pt[2], 0.5, 1e-6);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesLineBoxIntersectionNoHitpoint, KratosCoreFastSuite)
@@ -377,7 +377,7 @@ namespace Testing {
             line_origin.Coordinates(),
             line_endpoint.Coordinates());
 
-        KRATOS_CHECK_EQUAL(int_id, 0);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 0);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesLineBoxIntersectionSingle, KratosCoreFastSuite)
@@ -397,7 +397,7 @@ namespace Testing {
             line_origin.Coordinates(),
             line_endpoint.Coordinates());
 
-        KRATOS_CHECK_EQUAL(int_id, 1);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 1);
     }
 
     KRATOS_TEST_CASE_IN_SUITE(IntersectionUtilitiesLineBoxIntersectionDouble, KratosCoreFastSuite)
@@ -417,7 +417,7 @@ namespace Testing {
             line_origin.Coordinates(),
             line_endpoint.Coordinates());
 
-        KRATOS_CHECK_EQUAL(int_id, 1);
+        KRATOS_STATIC_CHECK_EQUAL(int_id, 1);
     }
 
 }  // namespace Testing.

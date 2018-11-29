@@ -69,7 +69,7 @@ namespace Kratos {
 			for (auto i_pointer = pointer_set.begin(); i_pointer != pointer_set.end(); i_pointer++) {
 				chunk.Deallocate(*i_pointer);
 			}
-			KRATOS_CHECK_EQUAL(chunk.GetNumberOfAvailableBlocks(), chunk.GetNumberOfBlocks());
+			KRATOS_STATIC_CHECK_EQUAL(chunk.GetNumberOfAvailableBlocks(), chunk.GetNumberOfBlocks());
 		}
 
 		KRATOS_TEST_CASE_IN_SUITE(ChunkParallelAllocate, KratosCoreFastSuite)
@@ -93,7 +93,7 @@ namespace Kratos {
 					{
 						if (chunk.HasAvailableBlock()) {
 							void* p = chunk.Allocate();
-							KRATOS_CHECK_NOT_EQUAL(p, nullptr);
+							KRATOS_STATIC_CHECK_NOT_EQUAL(p, nullptr);
 						}
 					}
 				}

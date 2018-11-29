@@ -66,7 +66,7 @@ KRATOS_TEST_CASE_IN_SUITE(SkinDetectionProcess, KratosCoreFastSuite)
     // We generate in several iterations to see if it crashes
     for (int i = 0; i < 2; i++) {
         skin_process.Execute();
-        KRATOS_CHECK_EQUAL(model_part.GetSubModelPart("SkinModelPart").NumberOfConditions(), 4);
+        KRATOS_STATIC_CHECK_EQUAL(model_part.GetSubModelPart("SkinModelPart").NumberOfConditions(), 4);
     }
 
     // Now we remove one element
@@ -75,7 +75,7 @@ KRATOS_TEST_CASE_IN_SUITE(SkinDetectionProcess, KratosCoreFastSuite)
 
     // We execute again
     skin_process.Execute();
-    KRATOS_CHECK_EQUAL(model_part.GetSubModelPart("SkinModelPart").NumberOfConditions(), 3);
+    KRATOS_STATIC_CHECK_EQUAL(model_part.GetSubModelPart("SkinModelPart").NumberOfConditions(), 3);
 }
 } // namespace Testing
 } // namespace Kratos

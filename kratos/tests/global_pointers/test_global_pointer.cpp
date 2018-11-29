@@ -39,7 +39,7 @@ KRATOS_TEST_CASE_IN_SUITE(GlobalPointerCreateRaw, KratosCoreFastSuite)
 
     auto from_raw = GlobalPointer<int>(&sample_var);
 
-    KRATOS_CHECK_EQUAL(*from_raw, sample_var);
+    KRATOS_STATIC_CHECK_EQUAL(*from_raw, sample_var);
 }
 
 KRATOS_TEST_CASE_IN_SUITE(GlobalPointerCreateConstRaw, KratosCoreFastSuite)
@@ -48,7 +48,7 @@ KRATOS_TEST_CASE_IN_SUITE(GlobalPointerCreateConstRaw, KratosCoreFastSuite)
 
     auto from_raw = GlobalPointer<const int>(&sample_var);
 
-    KRATOS_CHECK_EQUAL(*from_raw, sample_var);
+    KRATOS_STATIC_CHECK_EQUAL(*from_raw, sample_var);
 }
 
 KRATOS_TEST_CASE_IN_SUITE(GlobalPointerModifyRaw, KratosCoreFastSuite)
@@ -59,7 +59,7 @@ KRATOS_TEST_CASE_IN_SUITE(GlobalPointerModifyRaw, KratosCoreFastSuite)
     auto from_raw = GlobalPointer<int>(&sample_var);
     *from_raw = new_value;
 
-    KRATOS_CHECK_EQUAL(*from_raw, new_value);
+    KRATOS_STATIC_CHECK_EQUAL(*from_raw, new_value);
 }
 
 // Class
@@ -69,8 +69,8 @@ KRATOS_TEST_CASE_IN_SUITE(GlobalPointerCreateClass, KratosCoreFastSuite)
 
     auto from_raw = GlobalPointer<TestClass>(&sample_var);
 
-    KRATOS_CHECK_EQUAL(from_raw->getVar(), sample_var.getVar());
-    KRATOS_CHECK_EQUAL((*from_raw).getVar(), sample_var.getVar());
+    KRATOS_STATIC_CHECK_EQUAL(from_raw->getVar(), sample_var.getVar());
+    KRATOS_STATIC_CHECK_EQUAL((*from_raw).getVar(), sample_var.getVar());
 }
 
 KRATOS_TEST_CASE_IN_SUITE(GlobalPointerCreateConstClass, KratosCoreFastSuite)
@@ -79,8 +79,8 @@ KRATOS_TEST_CASE_IN_SUITE(GlobalPointerCreateConstClass, KratosCoreFastSuite)
 
 	auto from_raw = GlobalPointer<const TestClass>(&sample_var);
 
-    KRATOS_CHECK_EQUAL(from_raw->getVar(), sample_var.getVar());
-    KRATOS_CHECK_EQUAL((*from_raw).getVar(), sample_var.getVar());
+    KRATOS_STATIC_CHECK_EQUAL(from_raw->getVar(), sample_var.getVar());
+    KRATOS_STATIC_CHECK_EQUAL((*from_raw).getVar(), sample_var.getVar());
 }
 
 KRATOS_TEST_CASE_IN_SUITE(GlobalPointerModifyClass, KratosCoreFastSuite)
@@ -92,8 +92,8 @@ KRATOS_TEST_CASE_IN_SUITE(GlobalPointerModifyClass, KratosCoreFastSuite)
     from_raw->setVar(42);
     sample_var.setVar(42);
 
-    KRATOS_CHECK_EQUAL(from_raw->getVar(), sample_var.getVar());
-    KRATOS_CHECK_EQUAL((*from_raw).getVar(), sample_var.getVar());
+    KRATOS_STATIC_CHECK_EQUAL(from_raw->getVar(), sample_var.getVar());
+    KRATOS_STATIC_CHECK_EQUAL((*from_raw).getVar(), sample_var.getVar());
 }
 
 // Kratos::shared_ptr
@@ -104,8 +104,8 @@ KRATOS_TEST_CASE_IN_SUITE(GlobalPointerCreateSharedPtr, KratosCoreFastSuite)
     auto sample_var = PtrType(new TestClass(1337));
     auto from_shared_ptr = GlobalPointer<TestClass>(sample_var);
 
-    KRATOS_CHECK_EQUAL(from_shared_ptr->getVar(), sample_var->getVar());
-    KRATOS_CHECK_EQUAL((*from_shared_ptr).getVar(), sample_var->getVar());
+    KRATOS_STATIC_CHECK_EQUAL(from_shared_ptr->getVar(), sample_var->getVar());
+    KRATOS_STATIC_CHECK_EQUAL((*from_shared_ptr).getVar(), sample_var->getVar());
 }
 
 KRATOS_TEST_CASE_IN_SUITE(GlobalPointerCreateConstSharedPtr, KratosCoreFastSuite)
@@ -115,8 +115,8 @@ KRATOS_TEST_CASE_IN_SUITE(GlobalPointerCreateConstSharedPtr, KratosCoreFastSuite
     const auto sample_var = PtrType(new TestClass(1337));
     auto from_shared_ptr = GlobalPointer<TestClass>(sample_var);
 
-    KRATOS_CHECK_EQUAL(from_shared_ptr->getVar(), sample_var->getVar());
-    KRATOS_CHECK_EQUAL((*from_shared_ptr).getVar(), sample_var->getVar());
+    KRATOS_STATIC_CHECK_EQUAL(from_shared_ptr->getVar(), sample_var->getVar());
+    KRATOS_STATIC_CHECK_EQUAL((*from_shared_ptr).getVar(), sample_var->getVar());
 }
 
 KRATOS_TEST_CASE_IN_SUITE(GlobalPointerModifySharedPtr, KratosCoreFastSuite)
@@ -129,8 +129,8 @@ KRATOS_TEST_CASE_IN_SUITE(GlobalPointerModifySharedPtr, KratosCoreFastSuite)
     from_shared_ptr->setVar(42);
     sample_var->setVar(42);
 
-    KRATOS_CHECK_EQUAL(from_shared_ptr->getVar(), sample_var->getVar());
-    KRATOS_CHECK_EQUAL((*from_shared_ptr).getVar(), sample_var->getVar());
+    KRATOS_STATIC_CHECK_EQUAL(from_shared_ptr->getVar(), sample_var->getVar());
+    KRATOS_STATIC_CHECK_EQUAL((*from_shared_ptr).getVar(), sample_var->getVar());
 }
 
 // Kratos::weak_ptr
@@ -145,10 +145,10 @@ KRATOS_TEST_CASE_IN_SUITE(GlobalPointerCreateWeakPtr, KratosCoreFastSuite)
     auto from_shared_ptr = GlobalPointer<TestClass>(sample_var);
 
     if(weak_var.lock()) {
-        KRATOS_CHECK_EQUAL(from_shared_ptr->getVar(), weak_var.lock()->getVar());
-        KRATOS_CHECK_EQUAL((*from_shared_ptr).getVar(), weak_var.lock()->getVar());
+        KRATOS_STATIC_CHECK_EQUAL(from_shared_ptr->getVar(), weak_var.lock()->getVar());
+        KRATOS_STATIC_CHECK_EQUAL((*from_shared_ptr).getVar(), weak_var.lock()->getVar());
     } else {
-        KRATOS_CHECK_EQUAL(strcmp("Error", "Unable to lock Kratos::weakptr"), 0);
+        KRATOS_STATIC_CHECK_EQUAL(strcmp("Error", "Unable to lock Kratos::weakptr"), 0);
     }
 }
 
@@ -163,10 +163,10 @@ KRATOS_TEST_CASE_IN_SUITE(GlobalPointerCreateConstWeakPtr, KratosCoreFastSuite)
     auto from_shared_ptr = GlobalPointer<TestClass>(weak_var);
 
     if(weak_var.lock()) {
-        KRATOS_CHECK_EQUAL(from_shared_ptr->getVar(), weak_var.lock()->getVar());
-        KRATOS_CHECK_EQUAL((*from_shared_ptr).getVar(), weak_var.lock()->getVar());
+        KRATOS_STATIC_CHECK_EQUAL(from_shared_ptr->getVar(), weak_var.lock()->getVar());
+        KRATOS_STATIC_CHECK_EQUAL((*from_shared_ptr).getVar(), weak_var.lock()->getVar());
     } else {
-        KRATOS_CHECK_EQUAL(strcmp("Error", "Unable to lock Kratos::weakptr"), 0);
+        KRATOS_STATIC_CHECK_EQUAL(strcmp("Error", "Unable to lock Kratos::weakptr"), 0);
     }
 }
 
@@ -184,10 +184,10 @@ KRATOS_TEST_CASE_IN_SUITE(GlobalPointerModifyWeakPtr, KratosCoreFastSuite)
         from_shared_ptr->setVar(42);
         weak_var.lock()->setVar(42);
 
-        KRATOS_CHECK_EQUAL(from_shared_ptr->getVar(), weak_var.lock()->getVar());
-        KRATOS_CHECK_EQUAL((*from_shared_ptr).getVar(), weak_var.lock()->getVar());
+        KRATOS_STATIC_CHECK_EQUAL(from_shared_ptr->getVar(), weak_var.lock()->getVar());
+        KRATOS_STATIC_CHECK_EQUAL((*from_shared_ptr).getVar(), weak_var.lock()->getVar());
     } else {
-        KRATOS_CHECK_EQUAL(strcmp("Error", "Unable to lock Kratos::weakptr"), 0);
+        KRATOS_STATIC_CHECK_EQUAL(strcmp("Error", "Unable to lock Kratos::weakptr"), 0);
     }
 }
 

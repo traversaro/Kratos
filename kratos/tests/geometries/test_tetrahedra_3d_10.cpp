@@ -71,17 +71,17 @@ namespace{
 
   KRATOS_TEST_CASE_IN_SUITE(Tetrahedra3D10EdgesNumber, KratosCoreGeometriesFastSuite) {
     auto geom = GenerateReferenceTetrahedra3D10();
-    KRATOS_CHECK_EQUAL(geom->EdgesNumber(), 6);
+    KRATOS_STATIC_CHECK_EQUAL(geom->EdgesNumber(), 6);
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Tetrahedra3D10FacesNumber, KratosCoreGeometriesFastSuite) {
     Geometry<NodeType>::Pointer geom = GenerateReferenceTetrahedra3D10();
-    KRATOS_CHECK_EQUAL(geom->FacesNumber(), 4);
+    KRATOS_STATIC_CHECK_EQUAL(geom->FacesNumber(), 4);
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Tetrahedra3D10Volume, KratosCoreGeometriesFastSuite) {
     auto geom = GenerateReferenceTetrahedra3D10();
-    KRATOS_CHECK_NEAR(geom->Volume(), 1.0 / 6.0, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->Volume(), 1.0 / 6.0, TOLERANCE);
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Tetrahedra3D10MinEdgeLength, KratosCoreGeometriesFastSuite) {
@@ -116,12 +116,12 @@ namespace{
     Point PointInVertex(0.0, 0.0, 0.0);
     Point PointInEdge(0.6, 0.0, 0.0);
     Point LocalCoords;
-    KRATOS_CHECK(geom->IsInside(PointInside, LocalCoords, EPSILON));
-    KRATOS_CHECK_IS_FALSE(geom->IsInside(PointOutside, LocalCoords, EPSILON));
-    KRATOS_CHECK(geom->IsInside(PointInVertex, LocalCoords, EPSILON));
+    KRATOS_STATIC_CHECK(geom->IsInside(PointInside, LocalCoords, EPSILON));
+    KRATOS_STATIC_CHECK_IS_FALSE(geom->IsInside(PointOutside, LocalCoords, EPSILON));
+    KRATOS_STATIC_CHECK(geom->IsInside(PointInVertex, LocalCoords, EPSILON));
     geom->IsInside(PointInEdge, LocalCoords, EPSILON);
     KRATOS_WATCH(LocalCoords);
-    KRATOS_CHECK(geom->IsInside(PointInEdge, LocalCoords, EPSILON));
+    KRATOS_STATIC_CHECK(geom->IsInside(PointInEdge, LocalCoords, EPSILON));
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Tetrahedra3D10DeterminantOfJacobianArray1, KratosCoreGeometriesFastSuite) {
@@ -129,18 +129,18 @@ namespace{
     Vector JacobianDeterminants;
     geom->DeterminantOfJacobian(JacobianDeterminants, GeometryData::GI_GAUSS_2);
     for (unsigned int i=0; i<JacobianDeterminants.size(); ++i)
-        KRATOS_CHECK_NEAR(JacobianDeterminants[i], 1.0, TOLERANCE);
+        KRATOS_STATIC_CHECK_NEAR(JacobianDeterminants[i], 1.0, TOLERANCE);
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Tetrahedra3D10IntegrationPointsNumber, KratosCoreGeometriesFastSuite) {
     auto geom = GenerateReferenceTetrahedra3D10();
-    KRATOS_CHECK_EQUAL(geom->IntegrationPointsNumber(), 4);
+    KRATOS_STATIC_CHECK_EQUAL(geom->IntegrationPointsNumber(), 4);
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Tetrahedra3D10DeterminantOfJacobianIndex1, KratosCoreGeometriesFastSuite) {
     auto geom = GenerateReferenceTetrahedra3D10();
     for (unsigned g = 0; g < geom->IntegrationPointsNumber(); ++g)
-      KRATOS_CHECK_NEAR(geom->DeterminantOfJacobian(g), 1.0, TOLERANCE);
+      KRATOS_STATIC_CHECK_NEAR(geom->DeterminantOfJacobian(g), 1.0, TOLERANCE);
   }
 
   KRATOS_TEST_CASE_IN_SUITE(Tetrahedra3D10ShapeFunctionsValues, KratosCoreGeometriesFastSuite) {
@@ -149,16 +149,16 @@ namespace{
     coord[0] = 1.0 / 2.0;
     coord[1] = 1.0 / 4.0;
     coord[2] = 1.0 / 16.0;
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(0, coord), -0.1171875, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(1, coord), 0.0, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(2, coord), -0.125, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(3, coord), -0.0546875, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(4, coord), 0.375, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(5, coord), 0.5, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(6, coord), 0.1875, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(7, coord), 0.046875, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(8, coord), 0.125, TOLERANCE);
-    KRATOS_CHECK_NEAR(geom->ShapeFunctionValue(9, coord), 0.0625, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(0, coord), -0.1171875, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(1, coord), 0.0, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(2, coord), -0.125, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(3, coord), -0.0546875, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(4, coord), 0.375, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(5, coord), 0.5, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(6, coord), 0.1875, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(7, coord), 0.046875, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(8, coord), 0.125, TOLERANCE);
+    KRATOS_STATIC_CHECK_NEAR(geom->ShapeFunctionValue(9, coord), 0.0625, TOLERANCE);
     CrossCheckShapeFunctionsValues(*geom);
   }
 

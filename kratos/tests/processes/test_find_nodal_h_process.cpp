@@ -109,10 +109,10 @@ namespace Kratos
 //             GiDIODebugNodalH(this_model_part);
             
             const double tolerance = 1.0e-4;
-            KRATOS_CHECK_LESS_EQUAL(p_node_1->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(p_node_2->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(p_node_5->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(p_node_6->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(p_node_1->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(p_node_2->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(p_node_5->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(p_node_6->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
         }
         
         /** 
@@ -255,14 +255,14 @@ namespace Kratos
 //             GiDIODebugNodalH(this_model_part);
             
             const double tolerance = 1.0e-4;
-            KRATOS_CHECK_LESS_EQUAL(p_node_1->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(p_node_2->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(p_node_3->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(p_node_5->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(p_node_9->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(p_node_10->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(p_node_11->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(p_node_12->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(p_node_1->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(p_node_2->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(p_node_3->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(p_node_5->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(p_node_9->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(p_node_10->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(p_node_11->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(p_node_12->FastGetSolutionStepValue(NODAL_H) - 1.0, tolerance);
         }
     } // namespace Testing
 }  // namespace Kratos.

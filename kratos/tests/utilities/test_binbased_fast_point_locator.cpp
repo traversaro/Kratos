@@ -103,14 +103,14 @@ namespace Kratos
             ref_shape_functions[2] = 0.5;
 
             const double tolerance = 1.0e-16;
-            KRATOS_CHECK(is_found);
-            KRATOS_CHECK_EQUAL(p_element->Id(), p_elem_0->Id());
-            KRATOS_CHECK_LESS_EQUAL(norm_2(shape_functions - ref_shape_functions), tolerance);
+            KRATOS_STATIC_CHECK(is_found);
+            KRATOS_STATIC_CHECK_EQUAL(p_element->Id(), p_elem_0->Id());
+            KRATOS_STATIC_CHECK_LESS_EQUAL(norm_2(shape_functions - ref_shape_functions), tolerance);
 
             coordinates[0] = -0.5;
             coordinates[1] = -0.5;
             is_found = point_locator.FindPointOnMeshSimplified(coordinates, shape_functions, p_element, 1000, 5.0e-2);
-            KRATOS_CHECK_IS_FALSE(is_found);
+            KRATOS_STATIC_CHECK_IS_FALSE(is_found);
         }
         
         /** 
@@ -261,15 +261,15 @@ namespace Kratos
             ref_shape_functions[3] = 0.5;
 
             const double tolerance = 1.0e-16;
-            KRATOS_CHECK(is_found);
-            KRATOS_CHECK_EQUAL(p_element->Id(), p_elem_3->Id());
-            KRATOS_CHECK_LESS_EQUAL(norm_2(shape_functions - ref_shape_functions), tolerance);
+            KRATOS_STATIC_CHECK(is_found);
+            KRATOS_STATIC_CHECK_EQUAL(p_element->Id(), p_elem_3->Id());
+            KRATOS_STATIC_CHECK_LESS_EQUAL(norm_2(shape_functions - ref_shape_functions), tolerance);
 
             coordinates[0] = -0.5;
             coordinates[1] = -0.5;
             coordinates[2] = -0.5;
             is_found = point_locator.FindPointOnMeshSimplified(coordinates, shape_functions, p_element, 1000, 5.0e-2);
-            KRATOS_CHECK_IS_FALSE(is_found);
+            KRATOS_STATIC_CHECK_IS_FALSE(is_found);
         }
         
         /** 
@@ -343,14 +343,14 @@ namespace Kratos
             ref_shape_functions[2] = 0.5;
 
             const double tolerance = 1.0e-16;
-            KRATOS_CHECK(is_found);
-            KRATOS_CHECK_EQUAL(p_condition->Id(), p_cond_0->Id());
-            KRATOS_CHECK_LESS_EQUAL(norm_2(shape_functions - ref_shape_functions), tolerance);
+            KRATOS_STATIC_CHECK(is_found);
+            KRATOS_STATIC_CHECK_EQUAL(p_condition->Id(), p_cond_0->Id());
+            KRATOS_STATIC_CHECK_LESS_EQUAL(norm_2(shape_functions - ref_shape_functions), tolerance);
 
             coordinates[0] = -0.5;
             coordinates[1] = -0.5;
             is_found = point_locator.FindPointOnMeshSimplified(coordinates, shape_functions, p_condition, 1000, 5.0e-2);
-            KRATOS_CHECK_IS_FALSE(is_found);
+            KRATOS_STATIC_CHECK_IS_FALSE(is_found);
         }
     } // namespace Testing
 }  // namespace Kratos.

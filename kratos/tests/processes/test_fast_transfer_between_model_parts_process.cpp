@@ -79,13 +79,13 @@ namespace Kratos
             std::size_t count = 0;
             for (auto& node : origin_model_part.Nodes()) {
                 ++count;
-                KRATOS_CHECK_EQUAL(node.Id(), destination_model_part.GetNode(count).Id());
+                KRATOS_STATIC_CHECK_EQUAL(node.Id(), destination_model_part.GetNode(count).Id());
             }
 
             count = 0;
             for (auto& cond : origin_model_part.Conditions()) {
                 ++count;
-                KRATOS_CHECK_EQUAL(cond.Id(), destination_model_part.GetCondition(count).Id());
+                KRATOS_STATIC_CHECK_EQUAL(cond.Id(), destination_model_part.GetCondition(count).Id());
             }
         }
 
@@ -160,14 +160,14 @@ namespace Kratos
             for (auto& node : origin_model_part.Nodes()) {
                 ++count;
                 if (node.Is(MASTER))
-                    KRATOS_CHECK_EQUAL(node.Id(), destination_model_part.GetNode(count).Id());
+                    KRATOS_STATIC_CHECK_EQUAL(node.Id(), destination_model_part.GetNode(count).Id());
             }
 
             count = 0;
             for (auto& cond : origin_model_part.Conditions()) {
                 ++count;
                 if (cond.Is(MASTER))
-                    KRATOS_CHECK_EQUAL(cond.Id(), destination_model_part.GetCondition(count).Id());
+                    KRATOS_STATIC_CHECK_EQUAL(cond.Id(), destination_model_part.GetCondition(count).Id());
             }
         }
 
@@ -221,13 +221,13 @@ namespace Kratos
             std::size_t count = 0;
             for (auto& node : destination_model_part.Nodes()) {
                 ++count;
-                KRATOS_CHECK_EQUAL(node.Id(), origin_model_part.GetNode(count).Id() + 6);
+                KRATOS_STATIC_CHECK_EQUAL(node.Id(), origin_model_part.GetNode(count).Id() + 6);
             }
 
             count = 0;
             for (auto& cond : destination_model_part.Conditions()) {
                 ++count;
-                KRATOS_CHECK_EQUAL(cond.Id(), origin_model_part.GetCondition(count).Id() + 2);
+                KRATOS_STATIC_CHECK_EQUAL(cond.Id(), origin_model_part.GetCondition(count).Id() + 2);
             }
         }
 
@@ -302,14 +302,14 @@ namespace Kratos
             for (auto& node : origin_model_part.Nodes()) {
                 ++count;
                 if (node.Is(MASTER))
-                    KRATOS_CHECK_EQUAL(node.Id() + 6, destination_model_part.GetNode(count + 6).Id());
+                    KRATOS_STATIC_CHECK_EQUAL(node.Id() + 6, destination_model_part.GetNode(count + 6).Id());
             }
 
             count = 0;
             for (auto& cond : origin_model_part.Conditions()) {
                 ++count;
                 if (cond.Is(MASTER))
-                    KRATOS_CHECK_EQUAL(cond.Id() + 2, destination_model_part.GetCondition(count  + 2).Id());
+                    KRATOS_STATIC_CHECK_EQUAL(cond.Id() + 2, destination_model_part.GetCondition(count  + 2).Id());
             }
         }
 

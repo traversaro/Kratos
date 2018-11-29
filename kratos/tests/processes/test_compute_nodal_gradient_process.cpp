@@ -119,10 +119,10 @@ namespace Kratos
 //             GiDIODebugGradient(this_model_part);
             
             const double tolerance = 1.0e-8;
-            KRATOS_CHECK_LESS_EQUAL(std::abs(p_node_1->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(std::abs(p_node_2->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(std::abs(p_node_5->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(std::abs(p_node_6->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(std::abs(p_node_1->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(std::abs(p_node_2->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(std::abs(p_node_5->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(std::abs(p_node_6->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
         }
         
         /** 
@@ -275,14 +275,14 @@ namespace Kratos
 //             GiDIODebugGradient(this_model_part);
             
             const double tolerance = 1.0e-8;
-            KRATOS_CHECK_LESS_EQUAL(std::abs(p_node_1->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(std::abs(p_node_2->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(std::abs(p_node_3->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(std::abs(p_node_5->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(std::abs(p_node_9->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(std::abs(p_node_10->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(std::abs(p_node_11->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
-            KRATOS_CHECK_LESS_EQUAL(std::abs(p_node_12->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(std::abs(p_node_1->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(std::abs(p_node_2->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(std::abs(p_node_3->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(std::abs(p_node_5->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(std::abs(p_node_9->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(std::abs(p_node_10->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(std::abs(p_node_11->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
+            KRATOS_STATIC_CHECK_LESS_EQUAL(std::abs(p_node_12->FastGetSolutionStepValue(DISTANCE_GRADIENT_X)) - 1.0, tolerance);
         }
     } // namespace Testing
 }  // namespace Kratos.

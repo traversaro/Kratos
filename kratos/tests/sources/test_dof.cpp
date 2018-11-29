@@ -66,18 +66,18 @@ KRATOS_TEST_CASE_IN_SUITE(DofFixing, KratosCoreFastSuite)
     auto p_dof = p_node->pAddDof(VELOCITY_Y, REACTION_Y);
 
     // Checking default fixities
-    KRATOS_CHECK(p_dof->IsFree());
-    KRATOS_CHECK_IS_FALSE(p_dof->IsFixed());
+    KRATOS_STATIC_CHECK(p_dof->IsFree());
+    KRATOS_STATIC_CHECK_IS_FALSE(p_dof->IsFixed());
 
     // Checking after fixing the dof
     p_dof->FixDof();
-    KRATOS_CHECK_IS_FALSE(p_dof->IsFree());
-    KRATOS_CHECK(p_dof->IsFixed());
+    KRATOS_STATIC_CHECK_IS_FALSE(p_dof->IsFree());
+    KRATOS_STATIC_CHECK(p_dof->IsFixed());
 
     // Checking after freeing the dof
     p_dof->FreeDof();
-    KRATOS_CHECK(p_dof->IsFree());
-    KRATOS_CHECK_IS_FALSE(p_dof->IsFixed());
+    KRATOS_STATIC_CHECK(p_dof->IsFree());
+    KRATOS_STATIC_CHECK_IS_FALSE(p_dof->IsFixed());
 }
 
 KRATOS_TEST_CASE_IN_SUITE(DofVariables, KratosCoreFastSuite)
@@ -95,10 +95,10 @@ KRATOS_TEST_CASE_IN_SUITE(DofVariables, KratosCoreFastSuite)
     auto p_dof = p_node->pAddDof(VELOCITY_Y, REACTION_Y);
     auto p_dof_2 = p_node->pAddDof(VELOCITY_Z);
 
-    KRATOS_CHECK_EQUAL(VELOCITY_Y, p_dof->GetVariable());
-    KRATOS_CHECK_EQUAL(REACTION_Y, p_dof->GetReaction());
+    KRATOS_STATIC_CHECK_EQUAL(VELOCITY_Y, p_dof->GetVariable());
+    KRATOS_STATIC_CHECK_EQUAL(REACTION_Y, p_dof->GetReaction());
 
-    KRATOS_CHECK_IS_FALSE(p_dof_2->HasReaction());
+    KRATOS_STATIC_CHECK_IS_FALSE(p_dof_2->HasReaction());
 }
 
 KRATOS_TEST_CASE_IN_SUITE(DofEquationId, KratosCoreFastSuite)
@@ -119,7 +119,7 @@ KRATOS_TEST_CASE_IN_SUITE(DofEquationId, KratosCoreFastSuite)
 
     p_dof->SetEquationId(eq_id);
 
-    KRATOS_CHECK_EQUAL(eq_id, p_dof->EquationId());
+    KRATOS_STATIC_CHECK_EQUAL(eq_id, p_dof->EquationId());
 }
 
 KRATOS_TEST_CASE_IN_SUITE(DofId, KratosCoreFastSuite)
@@ -138,14 +138,14 @@ KRATOS_TEST_CASE_IN_SUITE(DofId, KratosCoreFastSuite)
 
     auto p_dof = p_node->pAddDof(VELOCITY_Y, REACTION_Y);
 
-    KRATOS_CHECK_EQUAL(my_id, p_dof->GetId());
+    KRATOS_STATIC_CHECK_EQUAL(my_id, p_dof->GetId());
 
     const std::size_t my_id_new= 5609;
     p_dof->SetId(my_id_new);
 
-    KRATOS_CHECK_EQUAL(my_id_new, p_dof->Id());
+    KRATOS_STATIC_CHECK_EQUAL(my_id_new, p_dof->Id());
 
-    KRATOS_CHECK_EQUAL(p_dof->GetId(), p_dof->Id());
+    KRATOS_STATIC_CHECK_EQUAL(p_dof->GetId(), p_dof->Id());
 }
 }
 }  // namespace Kratos.

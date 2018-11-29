@@ -67,10 +67,10 @@ KRATOS_TEST_CASE_IN_SUITE(GeometricalProjectionUtilitiesFastProjectDirection, Kr
         normal_vector,
         dir_vector);
 
-    KRATOS_CHECK_DOUBLE_EQUAL(expected_proj_dist, proj_distance);
-    KRATOS_CHECK_DOUBLE_EQUAL(projected_point.X(), x_coord);
-    KRATOS_CHECK_DOUBLE_EQUAL(projected_point.Y(), y_coord);
-    KRATOS_CHECK_DOUBLE_EQUAL(projected_point.Z(), 0.0);
+    KRATOS_STATIC_CHECK_DOUBLE_EQUAL(expected_proj_dist, proj_distance);
+    KRATOS_STATIC_CHECK_DOUBLE_EQUAL(projected_point.X(), x_coord);
+    KRATOS_STATIC_CHECK_DOUBLE_EQUAL(projected_point.Y(), y_coord);
+    KRATOS_STATIC_CHECK_DOUBLE_EQUAL(projected_point.Z(), 0.0);
 }
 
 KRATOS_TEST_CASE_IN_SUITE(GeometricalProjectionUtilitiesFastProject, KratosCoreFastSuite)
@@ -97,10 +97,10 @@ KRATOS_TEST_CASE_IN_SUITE(GeometricalProjectionUtilitiesFastProject, KratosCoreF
         normal_vector,
         proj_distance);
 
-    KRATOS_CHECK_DOUBLE_EQUAL(expected_proj_dist, proj_distance);
-    KRATOS_CHECK_DOUBLE_EQUAL(projected_point.X(), x_coord);
-    KRATOS_CHECK_DOUBLE_EQUAL(projected_point.Y(), y_coord);
-    KRATOS_CHECK_DOUBLE_EQUAL(projected_point.Z(), 0.0);
+    KRATOS_STATIC_CHECK_DOUBLE_EQUAL(expected_proj_dist, proj_distance);
+    KRATOS_STATIC_CHECK_DOUBLE_EQUAL(projected_point.X(), x_coord);
+    KRATOS_STATIC_CHECK_DOUBLE_EQUAL(projected_point.Y(), y_coord);
+    KRATOS_STATIC_CHECK_DOUBLE_EQUAL(projected_point.Z(), 0.0);
 }
 
 } // namespace Testing.

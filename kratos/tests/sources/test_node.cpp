@@ -42,12 +42,12 @@ namespace Kratos {
         NodeType copy_of_node(2,1,0,0);
         copy_of_node = *p_node;
 
-        KRATOS_CHECK_EQUAL(copy_of_node.Id(), 1);
-        KRATOS_CHECK_DOUBLE_EQUAL(copy_of_node.FastGetSolutionStepValue(DISTANCE), 12.1);
-        KRATOS_CHECK_DOUBLE_EQUAL(copy_of_node.FastGetSolutionStepValue(VELOCITY_X), 32.4);
-        KRATOS_CHECK_DOUBLE_EQUAL(copy_of_node.FastGetSolutionStepValue(VELOCITY_Y), 0.00);
-        KRATOS_CHECK_DOUBLE_EQUAL(copy_of_node.FastGetSolutionStepValue(VELOCITY_Z), 0.00);
-        KRATOS_CHECK(copy_of_node.Is(ACTIVE));
+        KRATOS_STATIC_CHECK_EQUAL(copy_of_node.Id(), 1);
+        KRATOS_STATIC_CHECK_DOUBLE_EQUAL(copy_of_node.FastGetSolutionStepValue(DISTANCE), 12.1);
+        KRATOS_STATIC_CHECK_DOUBLE_EQUAL(copy_of_node.FastGetSolutionStepValue(VELOCITY_X), 32.4);
+        KRATOS_STATIC_CHECK_DOUBLE_EQUAL(copy_of_node.FastGetSolutionStepValue(VELOCITY_Y), 0.00);
+        KRATOS_STATIC_CHECK_DOUBLE_EQUAL(copy_of_node.FastGetSolutionStepValue(VELOCITY_Z), 0.00);
+        KRATOS_STATIC_CHECK(copy_of_node.Is(ACTIVE));
     }
 
     /**
@@ -68,12 +68,12 @@ namespace Kratos {
 
         NodeType::Pointer p_clone_of_node = p_node->Clone();
 
-        KRATOS_CHECK_EQUAL(p_clone_of_node->Id(), 1);
-        KRATOS_CHECK_DOUBLE_EQUAL(p_clone_of_node->FastGetSolutionStepValue(DISTANCE), 12.1);
-        KRATOS_CHECK_DOUBLE_EQUAL(p_clone_of_node->FastGetSolutionStepValue(VELOCITY_X), 32.4);
-        KRATOS_CHECK_DOUBLE_EQUAL(p_clone_of_node->FastGetSolutionStepValue(VELOCITY_Y), 0.00);
-        KRATOS_CHECK_DOUBLE_EQUAL(p_clone_of_node->FastGetSolutionStepValue(VELOCITY_Z), 0.00);
-        KRATOS_CHECK(p_clone_of_node->Is(ACTIVE));
+        KRATOS_STATIC_CHECK_EQUAL(p_clone_of_node->Id(), 1);
+        KRATOS_STATIC_CHECK_DOUBLE_EQUAL(p_clone_of_node->FastGetSolutionStepValue(DISTANCE), 12.1);
+        KRATOS_STATIC_CHECK_DOUBLE_EQUAL(p_clone_of_node->FastGetSolutionStepValue(VELOCITY_X), 32.4);
+        KRATOS_STATIC_CHECK_DOUBLE_EQUAL(p_clone_of_node->FastGetSolutionStepValue(VELOCITY_Y), 0.00);
+        KRATOS_STATIC_CHECK_DOUBLE_EQUAL(p_clone_of_node->FastGetSolutionStepValue(VELOCITY_Z), 0.00);
+        KRATOS_STATIC_CHECK(p_clone_of_node->Is(ACTIVE));
     }
 }  // namespace Testing.
 }  // namespace Kratos.

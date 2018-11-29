@@ -44,8 +44,8 @@ namespace Kratos {
 					distance_sum += i_node->FastGetSolutionStepValue(DISTANCE);
 					velocity_x_sum += i_node->FastGetSolutionStepValue(VELOCITY_X) * 2;
 				}
-				KRATOS_CHECK_DOUBLE_EQUAL(distance_sum, i * size);
-				KRATOS_CHECK_DOUBLE_EQUAL(velocity_x_sum, i * size * 2);
+				KRATOS_STATIC_CHECK_DOUBLE_EQUAL(distance_sum, i * size);
+				KRATOS_STATIC_CHECK_DOUBLE_EQUAL(velocity_x_sum, i * size * 2);
 			}
 		}
 
@@ -84,9 +84,9 @@ namespace Kratos {
 					velocity_x_sum += i_node->FastGetSolutionStepValue(VELOCITY_X);
 					velocity_y_sum += i_node->FastGetSolutionStepValue(VELOCITY_Y);
 				}
-				KRATOS_CHECK_DOUBLE_EQUAL(pressure_sum, i * size);
-				KRATOS_CHECK_DOUBLE_EQUAL(velocity_x_sum, 2*i * size);
-				KRATOS_CHECK_DOUBLE_EQUAL(velocity_y_sum, 0.00);
+				KRATOS_STATIC_CHECK_DOUBLE_EQUAL(pressure_sum, i * size);
+				KRATOS_STATIC_CHECK_DOUBLE_EQUAL(velocity_x_sum, 2*i * size);
+				KRATOS_STATIC_CHECK_DOUBLE_EQUAL(velocity_y_sum, 0.00);
 			}
 		}
 

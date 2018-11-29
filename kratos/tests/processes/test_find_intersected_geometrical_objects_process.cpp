@@ -64,24 +64,24 @@ namespace Kratos {
 			// gid_io_skin.InitializeResults(0, skin_part.GetMesh());
 			// gid_io_skin.FinalizeResults();
 
-			KRATOS_CHECK((surface_part.Elements()[3]).Is(SELECTED));
-			KRATOS_CHECK((surface_part.Elements()[4]).Is(SELECTED));
-			KRATOS_CHECK((surface_part.Elements()[9]).Is(SELECTED));
-			KRATOS_CHECK((surface_part.Elements()[10]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[0]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[1]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[2]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[5]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[6]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[7]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[8]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[11]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[12]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[13]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[14]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[15]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[16]).Is(SELECTED));
-			KRATOS_CHECK_IS_FALSE((surface_part.Elements()[17]).Is(SELECTED));
+			KRATOS_STATIC_CHECK((surface_part.Elements()[3]).Is(SELECTED));
+			KRATOS_STATIC_CHECK((surface_part.Elements()[4]).Is(SELECTED));
+			KRATOS_STATIC_CHECK((surface_part.Elements()[9]).Is(SELECTED));
+			KRATOS_STATIC_CHECK((surface_part.Elements()[10]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[0]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[1]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[2]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[5]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[6]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[7]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[8]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[11]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[12]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[13]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[14]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[15]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[16]).Is(SELECTED));
+			KRATOS_STATIC_CHECK_IS_FALSE((surface_part.Elements()[17]).Is(SELECTED));
 		}
 
 		KRATOS_TEST_CASE_IN_SUITE(FindIntersectedElementsProcessNoIntersection2D, KratosCoreFastSuite)
@@ -111,7 +111,7 @@ namespace Kratos {
 			find_intersections.Execute();
 
 			for (auto it_elem = surface_part.ElementsBegin(); it_elem != surface_part.ElementsEnd(); ++it_elem){
-				KRATOS_CHECK_IS_FALSE(it_elem->Is(SELECTED));
+				KRATOS_STATIC_CHECK_IS_FALSE(it_elem->Is(SELECTED));
 			}
 		}
 
@@ -144,12 +144,12 @@ namespace Kratos {
 			skin_part.CreateNewElement("Element3D3N", 1, { 1,2,3 }, p_properties);
 			StructuredMeshGeneratorProcess(geometry, volume_part, mesher_parameters).Execute();
 			FindIntersectedGeometricalObjectsProcess(volume_part, skin_part).Execute();
-			KRATOS_CHECK(volume_part.GetElement(3).IsNot(SELECTED));
-			KRATOS_CHECK(volume_part.GetElement(4).IsNot(SELECTED));
-			KRATOS_CHECK(volume_part.GetElement(5).Is(SELECTED));
-			KRATOS_CHECK(volume_part.GetElement(6).Is(SELECTED));
+			KRATOS_STATIC_CHECK(volume_part.GetElement(3).IsNot(SELECTED));
+			KRATOS_STATIC_CHECK(volume_part.GetElement(4).IsNot(SELECTED));
+			KRATOS_STATIC_CHECK(volume_part.GetElement(5).Is(SELECTED));
+			KRATOS_STATIC_CHECK(volume_part.GetElement(6).Is(SELECTED));
 			for (std::size_t i = 7; i < volume_part.NumberOfElements(); i++)
-				KRATOS_CHECK(volume_part.GetElement(i).IsNot(SELECTED));
+				KRATOS_STATIC_CHECK(volume_part.GetElement(i).IsNot(SELECTED));
 		}
 
 		KRATOS_TEST_CASE_IN_SUITE(FindIntersectedElementsProcessNoIntersection3D, KratosCoreFastSuite)
@@ -190,7 +190,7 @@ namespace Kratos {
 			FindIntersectedGeometricalObjectsProcess(volume_part, skin_part).Execute();
 
 			// Check that there is no intersection
-			KRATOS_CHECK(volume_part.GetElement(139).IsNot(SELECTED));
+			KRATOS_STATIC_CHECK(volume_part.GetElement(139).IsNot(SELECTED));
 		}
 	}
 }  // namespace Kratos.

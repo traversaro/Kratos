@@ -33,7 +33,7 @@ namespace Kratos
             try {
                 throw 1;
             } catch (int e) {
-                KRATOS_CHECK_EQUAL(e, 1);
+                KRATOS_STATIC_CHECK_EQUAL(e, 1);
             } catch (...)  { 
                 KRATOS_ERROR << std::endl;
             } 
@@ -48,7 +48,7 @@ namespace Kratos
             try { 
                 KRATOS_ERROR << std::endl;
             } catch(Kratos::Exception& e){ 
-                KRATOS_CHECK(true);
+                KRATOS_STATIC_CHECK(true);
             } catch (...)  { 
                 KRATOS_ERROR << "Default Exception"<< std::endl; 
             } 
@@ -63,7 +63,7 @@ namespace Kratos
             try { 
                 KRATOS_ERROR_IF(true) << std::endl;
             } catch(Kratos::Exception& e){ 
-                KRATOS_CHECK(true);
+                KRATOS_STATIC_CHECK(true);
             } catch (...)  { 
                 KRATOS_ERROR << "Default Exception"<< std::endl; 
             } 
@@ -78,7 +78,7 @@ namespace Kratos
             try { 
                 KRATOS_ERROR_IF_NOT(false) << std::endl;
             } catch(Kratos::Exception& e){ 
-                KRATOS_CHECK(true);
+                KRATOS_STATIC_CHECK(true);
             } catch (...)  { 
                 KRATOS_ERROR << "Default Exception"<< std::endl; 
             } 
