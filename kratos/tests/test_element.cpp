@@ -16,7 +16,7 @@
 
 // Project includes
 #include "includes/define.h"
-#include "includes/checks.h"
+#include "includes/static_checks.h"
 #include "includes/variables.h"
 #include "tests/test_element.h"
 

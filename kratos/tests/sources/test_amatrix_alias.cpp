@@ -15,7 +15,7 @@
 
 // Project includes
 #include "testing/testing.h"
-#include "includes/checks.h"
+#include "includes/static_checks.h"
 #include "includes/amatrix_interface.h"
 
 namespace Kratos {

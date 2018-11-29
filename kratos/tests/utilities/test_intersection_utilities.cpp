@@ -15,7 +15,7 @@
 #include "geometries/point.h"
 #include "geometries/line_2d_2.h"
 #include "geometries/triangle_3d_3.h"
-#include "includes/checks.h"
+#include "includes/static_checks.h"
 #include "testing/testing.h"
 #include "utilities/intersection_utilities.h"
 

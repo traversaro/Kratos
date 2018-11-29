@@ -14,7 +14,7 @@
 // Project includes
 #include "testing/testing.h"
 #include "includes/properties.h"
-#include "includes/checks.h"
+#include "includes/static_checks.h"
 #include "includes/variables.h"
 
 namespace Kratos {

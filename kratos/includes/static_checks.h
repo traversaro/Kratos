@@ -13,6 +13,7 @@
 //
 
 // System includes
+#include <limits>
 
 // External includes
 
@@ -22,6 +23,8 @@
 #if !defined(KRATOS_STATIC_CHECKS_H_INCLUDED )
 #define  KRATOS_STATIC_CHECKS_H_INCLUDED
 
+namespace Kratos
+{
 ///@addtogroup KratosCore
 ///@{
 
@@ -92,8 +95,9 @@ static inline void KRATOS_STATIC_CHECK_NEAR(const double a, const double b, cons
 
 static inline void KRATOS_STATIC_CHECK_DOUBLE_EQUAL(const double a, const double b)
 {
-    KRATOS_CHECK_DOUBLE_EQUAL(a, b, tolerance);
+    KRATOS_CHECK_DOUBLE_EQUAL(a, b);
 }
+} /// Namespace Kratos
 
 ///@}
 

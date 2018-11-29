@@ -15,7 +15,7 @@
 #include "testing/testing.h"
 // #include "includes/gid_io.h"
 #include "containers/model.h"
-#include "includes/checks.h"
+#include "includes/static_checks.h"
 #include "processes/find_intersected_geometrical_objects_process.h"
 #include "processes/structured_mesh_generator_process.h"
 #include "geometries/hexahedra_3d_8.h"

@@ -14,7 +14,7 @@
 // Project includes
 #include "testing/testing.h"
 #include "containers/model.h"
-#include "includes/checks.h"
+#include "includes/static_checks.h"
 #include "includes/gid_io.h"
 #include "utilities/divide_tetrahedra_3d_4.h"
 

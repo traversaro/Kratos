@@ -13,7 +13,7 @@
 
 // Project includes
 #include "testing/testing.h"
-#include "includes/checks.h"
+#include "includes/static_checks.h"
 #include "includes/gid_io.h"
 #include "utilities/geometry_utilities.h"
 
