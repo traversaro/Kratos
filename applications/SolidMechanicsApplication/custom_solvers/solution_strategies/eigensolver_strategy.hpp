@@ -581,16 +581,20 @@ class EigensolverStrategy
     Matrix eigen_contribution(num_eigen_values, system_size);
     noalias(eigen_contribution)= ZeroMatrix(num_eigen_values, system_size);
 
+    //amatrix fix for prod
+    Matrix Mass(system_size,system_size);
+    noalias(Mass) = ZeroMatrix(system_size,system_size);
     double total_mass= 0.0;
     for (std::size_t i = 0; i < system_size; i++)
     {
       for (std::size_t j = 0; j < system_size; j++)
       {
         total_mass += rMassMatrix(i,j);
+        Mass(i,j) = rMassMatrix(i,j);
       }
     }
 
-    noalias(eigen_contribution) = prod(rEigenVectors,rMassMatrix);
+    noalias(eigen_contribution) = prod(rEigenVectors,Mass);
     noalias(mass) = prod(eigen_contribution,trans(rEigenVectors));
     double total_mass_contribution =0.0;
 

@@ -9,7 +9,7 @@
 #include "custom_utilities/water_pressure_utilities_Jacobian.hpp"
 #include "pfem_solid_mechanics_application_variables.h"
 
-namespace Kratos 
+namespace Kratos
 {
 
    WaterPressureJacobianUtilities::WaterPressureJacobianUtilities()
@@ -22,7 +22,7 @@ namespace Kratos
    {
       KRATOS_TRY
 
-      double ScalingConstant; 
+      double ScalingConstant;
       GetScalingConstant( ScalingConstant, rVariables.GetProperties() );
 
       // 2. Geometric
@@ -43,15 +43,15 @@ namespace Kratos
             // Delta Jacobian
             const double &  rCurrentJacobian = rGeometry[j].FastGetSolutionStepValue( JACOBIAN);
             const double & rPreviousJacobian = rGeometry[j].FastGetSolutionStepValue( JACOBIAN, 1);
-            double DeltaJacobian = rCurrentJacobian - rPreviousJacobian; 
-            
-            rRightHandSideVector(i) -= rN(i) * rN(j) * (DeltaJacobian / Jacobian_GP) * rIntegrationWeight * ScalingConstant / rVariables.detF0; 
+            double DeltaJacobian = rCurrentJacobian - rPreviousJacobian;
+
+            rRightHandSideVector(i) -= rN(i) * rN(j) * (DeltaJacobian / Jacobian_GP) * rIntegrationWeight * ScalingConstant / rVariables.detF0;
 
          }
 
       }
 
-      return rRightHandSideVector; 
+      return rRightHandSideVector;
 
       KRATOS_CATCH("")
    }
@@ -70,7 +70,7 @@ namespace Kratos
       double ScalingConstant;
       GetScalingConstant( ScalingConstant, rVariables.GetProperties() );
 
-      rLocalLHS.resize( number_of_nodes, number_of_nodes);
+      rLocalLHS.resize( number_of_nodes, number_of_nodes, false );
       noalias( rLocalLHS ) = ZeroMatrix( number_of_nodes, number_of_nodes );
 
       const VectorType & rN = rVariables.GetShapeFunctions();
@@ -82,11 +82,11 @@ namespace Kratos
 
       for (unsigned int i = 0; i < number_of_nodes; i++) {
          for (unsigned int j = 0; j < number_of_nodes; j++) {
-            rLocalLHS(i,j) += rN(i) * rN(j) / Jacobian_GP; 
+            rLocalLHS(i,j) += rN(i) * rN(j) / Jacobian_GP;
          }
       }
 
-      // Some LD Term (?). 
+      // Some LD Term (?).
       double DeltaJacobian_GP = 0;
 
       for ( unsigned int j = 0; j < number_of_nodes; j++) {
@@ -94,7 +94,7 @@ namespace Kratos
             const double &  rCurrentJacobian = rGeometry[j].FastGetSolutionStepValue( JACOBIAN);
             const double & rPreviousJacobian = rGeometry[j].FastGetSolutionStepValue( JACOBIAN, 1);
             double DeltaJacobian = rCurrentJacobian - rPreviousJacobian;
-            DeltaJacobian_GP += rN(j) * DeltaJacobian; 
+            DeltaJacobian_GP += rN(j) * DeltaJacobian;
       }
 
       for (unsigned int i = 0; i < number_of_nodes; i++) {
@@ -117,7 +117,7 @@ namespace Kratos
    {
       KRATOS_TRY
 
-      Matrix Previous = rLeftHandSide ; 
+      Matrix Previous = rLeftHandSide ;
       // K wP J
       for (unsigned int i = 0; i < number_of_nodes; i++) {
          for (unsigned int j = 0; j < number_of_nodes; j++) {
@@ -126,7 +126,7 @@ namespace Kratos
       }
 
 
-      return rLeftHandSide; 
+      return rLeftHandSide;
 
       KRATOS_CATCH("")
    }
@@ -139,7 +139,7 @@ namespace Kratos
       for (unsigned int i = 0; i < number_of_nodes; i++)
          VolumeChange += rN(i) * rGeometry[i].FastGetSolutionStepValue( JACOBIAN );
 
-      return VolumeChange; 
+      return VolumeChange;
 
    }
 }

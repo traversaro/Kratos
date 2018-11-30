@@ -419,7 +419,8 @@ namespace Kratos
 
       int size = number_of_nodes * dimension;
 
-      Matrix Kuu = zero_matrix<double>(size,size);
+      Matrix Kuu(size,size);
+      noalias(Kuu) = ZeroMatrix(size,size);
 
       // axisymmetric geometric matrix
 
@@ -751,7 +752,7 @@ namespace Kratos
       const unsigned int number_of_nodes = GetGeometry().PointsNumber();
       const unsigned int dimension       = GetGeometry().WorkingSpaceDimension();
 
-      rF = identity_matrix<double> ( 3 );
+      rF = IdentityMatrix(3);
 
       if( dimension == 2 )
       {
@@ -997,7 +998,7 @@ namespace Kratos
       for ( unsigned int PointNumber = 0; PointNumber < integration_points_number; PointNumber++ )
       {
          mDeterminantF0[PointNumber] = 1;
-         mDeformationGradientF0[PointNumber] = identity_matrix<double> (3);
+         noalias(mDeformationGradientF0[PointNumber]) = IdentityMatrix(3);
       }
 
 
@@ -1075,21 +1076,21 @@ namespace Kratos
 
       rVariables.detH = 1;
 
-      rVariables.B.resize( 4 , number_of_nodes * 2 );
+      rVariables.B.resize( 4 , number_of_nodes * 2, false );
 
-      rVariables.F.resize( 3, 3 );
+      rVariables.F.resize(3,3,false);
 
-      rVariables.F0.resize( 3, 3 );
+      rVariables.F0.resize(3,3,false);
 
-      rVariables.H.resize( 3, 3 );
+      rVariables.H.resize(3,3,false);
 
-      rVariables.ConstitutiveMatrix.resize( 6, 6 );
+      rVariables.ConstitutiveMatrix.resize( 6, 6, false );
 
-      rVariables.StrainVector.resize( 4 );
+      rVariables.StrainVector.resize( 4, false );
 
-      rVariables.StressVector.resize( 6 );
+      rVariables.StressVector.resize( 6, false );
 
-      rVariables.DN_DX.resize( number_of_nodes, 2 );
+      rVariables.DN_DX.resize( number_of_nodes, 2, false );
 
       //set variables including all integration points values
 

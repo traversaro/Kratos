@@ -577,7 +577,8 @@ void UpdatedLagrangianSegregatedVPElement::CalculateAndAddPressureForces(VectorT
       Vector Acceleration (dimension);
       noalias(Acceleration) = ZeroVector(dimension);
 
-      ProjectionVelocityGradient = inner_prod(Normal, prod(D,Normal));
+      Vector DProjection = prod(D,Normal);
+      ProjectionVelocityGradient = inner_prod(Normal, DProjection);
 
       BoundFactor = rVariables.Tau * 2.0 / side_normal_size;
 

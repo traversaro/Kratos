@@ -799,7 +799,7 @@ namespace Kratos
       for ( unsigned int PointNumber = 0; PointNumber < integration_points_number; PointNumber++ )
       {
          mDeterminantF0[PointNumber] = 1;
-         mDeformationGradientF0[PointNumber] = identity_matrix<double> (dimension);
+         noalias(mDeformationGradientF0[PointNumber]) = IdentityMatrix(dimension);
       }
 
       const unsigned int number_of_nodes = GetGeometry().size();
@@ -935,7 +935,7 @@ namespace Kratos
       const unsigned int number_of_nodes = GetGeometry().PointsNumber();
       const unsigned int dimension       = GetGeometry().WorkingSpaceDimension();
 
-      rF = identity_matrix<double> ( dimension );
+      rF = IdentityMatrix(dimension);
 
       if( dimension == 2 )
       {
@@ -1027,7 +1027,7 @@ namespace Kratos
       rVariables.F0    = mDeformationGradientF0[rPointNumber];
 
       //Set Shape Functions Values for this integration point
-      noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+      noalias(rVariables.N) = row( Ncontainer, rPointNumber);
 
       //Compute the deformation matrix B
       //this->CalculateDeformationMatrix(rVariables.B, rVariables.F, rVariables.DN_DX);
@@ -1468,7 +1468,7 @@ namespace Kratos
 
       Matrix ReducedKg = prod( rVariables.DN_DX,  rIntegrationWeight * Matrix( prod( StressTensor, trans( rVariables.DN_DX ) ) ) ); //to be optimized
 
-      Matrix Kuu = zero_matrix<double> (size);
+      Matrix Kuu = ZeroMatrix(size,size);
       MathUtils<double>::ExpandAndAddReducedMatrix( Kuu, ReducedKg, dimension );
 
       // MatrixType Kh=rLeftHandSideMatrix;
@@ -2039,7 +2039,7 @@ namespace Kratos
          std::cout << " SO FINALLY F0 displ theta " << F0 << std::endl;
          std::cout << " and the Inverse is: " << F0Inverse << std::endl;
          std::cout << " UPDATE ?" << Update << std::endl;
-         std::cout << " AND THE LAST ONE " << prod( rFT, Update) << std::endl;
+         std::cout << " AND THE LAST ONE " << Matrix(prod( rFT, Update)) << std::endl;
          std::cout << "   FBar-COmpletely " << rFT << std::endl;
          std::cout << std::endl;
          std::cout << std::endl;

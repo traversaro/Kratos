@@ -186,7 +186,8 @@ class KRATOS_API(SOLID_MECHANICS_APPLICATION) EICR
 
     size_t num_dofs = num_nodes * 6;
 
-    MatrixType P( IdentityMatrix(num_dofs, num_dofs) );
+    MatrixType P(num_dofs,num_dofs);
+    noalias(P) = IdentityMatrix(num_dofs);
 
     for(size_t i = 0; i < num_nodes; i++)
     {
@@ -227,7 +228,8 @@ class KRATOS_API(SOLID_MECHANICS_APPLICATION) EICR
     size_t num_nodes = nodes.size();
     size_t num_dofs = num_nodes * 6;
 
-    MatrixType S(num_dofs, 3, 0.0);
+    MatrixType S(num_dofs, 3);
+    noalias(S) = ZeroMatrix(num_dofs,3);
 
     for(size_t i = 0; i < num_nodes; i++)
     {
@@ -259,7 +261,8 @@ class KRATOS_API(SOLID_MECHANICS_APPLICATION) EICR
     size_t num_dofs = displacements.size();
     size_t num_nodes = num_dofs / 6;
 
-    MatrixType H( IdentityMatrix(num_dofs, num_dofs) );
+    MatrixType H(num_dofs,num_dofs);
+    noalias(H) = IdentityMatrix(num_dofs);
 
     MatrixType Omega(3, 3);
     MatrixType Hi(3, 3);
@@ -312,7 +315,8 @@ class KRATOS_API(SOLID_MECHANICS_APPLICATION) EICR
     size_t num_dofs = displacements.size();
     size_t num_nodes = num_dofs / 6;
 
-    MatrixType L(num_dofs, num_dofs, 0.0);
+    MatrixType L(num_dofs, num_dofs);
+    noalias(L) = ZeroMatrix(num_dofs, num_dofs);
 
     Vector3Type rotationVector;
     Vector3Type momentVector;

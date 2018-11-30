@@ -9,7 +9,7 @@
 #include "custom_utilities/water_pressure_utilities.hpp"
 #include "pfem_solid_mechanics_application_variables.h"
 
-namespace Kratos 
+namespace Kratos
 {
 
    WaterPressureUtilities::WaterPressureUtilities()
@@ -30,9 +30,9 @@ namespace Kratos
       rRightHandSide = AddReshapeBaseClassRHS( rRightHandSide, rBaseClassRHS, rVariables.number_of_variables, number_of_nodes);
 
       // 2a. Compute and Addmechanical forces contribution to internal forces
-      Vector LocalRHS; 
-      LocalRHS = CalculateWaterInternalForcesContribution( rVariables, LocalRHS, rIntegrationWeight); 
-      rRightHandSide = AddReshapeWaterInternalForcesContribution( rRightHandSide, LocalRHS, rVariables.number_of_variables, number_of_nodes, dimension); 
+      Vector LocalRHS;
+      LocalRHS = CalculateWaterInternalForcesContribution( rVariables, LocalRHS, rIntegrationWeight);
+      rRightHandSide = AddReshapeWaterInternalForcesContribution( rRightHandSide, LocalRHS, rVariables.number_of_variables, number_of_nodes, dimension);
 
 
       LocalRHS = CalculateVolumeForcesContribution( rVariables, LocalRHS, rIntegrationWeight);
@@ -44,7 +44,7 @@ namespace Kratos
       rRightHandSide = AddReshapeWaterPressureForces ( rRightHandSide, LocalRHS, rVariables.number_of_variables, number_of_nodes);
 
 
-      return rRightHandSide; 
+      return rRightHandSide;
 
       KRATOS_CATCH("")
    }
@@ -59,13 +59,13 @@ namespace Kratos
       const unsigned int dimension = rVariables.GetGeometry().WorkingSpaceDimension();
 
       // 1. Compute Stabilization LHS
-      MatrixType LocalLHS; 
-      double IntegrationWeight = rIntegrationWeight / rVariables.detF0; 
+      MatrixType LocalLHS;
+      double IntegrationWeight = rIntegrationWeight / rVariables.detF0;
 
       LocalLHS = CalculateStabilizationLHS( rVariables, LocalLHS, IntegrationWeight);
-      rLeftHandSide = AddReshapeKwPwP( rLeftHandSide, LocalLHS, dimension, rVariables.number_of_variables, number_of_nodes);   
+      rLeftHandSide = AddReshapeKwPwP( rLeftHandSide, LocalLHS, dimension, rVariables.number_of_variables, number_of_nodes);
 
-      return rLeftHandSide; 
+      return rLeftHandSide;
       KRATOS_CATCH("")
    }
 
@@ -78,13 +78,13 @@ namespace Kratos
       const unsigned int number_of_nodes = rVariables.GetGeometry().PointsNumber();
 
       // 1. Compute Stabilization RHS
-      Vector LocalRHS; 
-      double IntegrationWeight = rIntegrationWeight / rVariables.detF0; 
+      Vector LocalRHS;
+      double IntegrationWeight = rIntegrationWeight / rVariables.detF0;
       LocalRHS = CalculateStabilizationRHS( rVariables, LocalRHS, IntegrationWeight);
 
-      rRightHandSide = AddReshapeWaterPressureForces( rRightHandSide, LocalRHS, rVariables.number_of_variables, number_of_nodes);   
+      rRightHandSide = AddReshapeWaterPressureForces( rRightHandSide, LocalRHS, rVariables.number_of_variables, number_of_nodes);
 
-      return rRightHandSide; 
+      return rRightHandSide;
       KRATOS_CATCH("")
    }
 
@@ -104,28 +104,28 @@ namespace Kratos
          for (unsigned int iDim = 0; iDim < dimension; iDim++) {
             aux += rDN_DX(i, iDim);
          }
-         ElementSize += fabs( aux); 
+         ElementSize += fabs( aux);
       }
       ElementSize *= sqrt( double(dimension) );
-      ElementSize = 4.0/ ElementSize; 
+      ElementSize = 4.0/ ElementSize;
 
 
-      double Permeability = rVariables.GetProperties().GetValue(PERMEABILITY); 
+      double Permeability = rVariables.GetProperties().GetValue(PERMEABILITY);
       double StabilizationFactor = rVariables.GetProperties().GetValue( STABILIZATION_FACTOR_WP);
 
       mPPP = true;
       if ( mPPP) {
-         rAlphaStabilization = 2.0 / rVariables.ConstrainedModulus - 12.0 * Permeability * rVariables.DeltaTime / pow(ElementSize, 2); 
+         rAlphaStabilization = 2.0 / rVariables.ConstrainedModulus - 12.0 * Permeability * rVariables.DeltaTime / pow(ElementSize, 2);
       }
       else {
          rAlphaStabilization = pow(ElementSize, 2.0) / ( 6.0 * rVariables.ConstrainedModulus) - rVariables.DeltaTime * Permeability/2.0;
       }
 
       if ( rAlphaStabilization < 0)
-         rAlphaStabilization = 0.0; 
+         rAlphaStabilization = 0.0;
       rAlphaStabilization *=  StabilizationFactor;
 
-      return rAlphaStabilization; 
+      return rAlphaStabilization;
 
       KRATOS_CATCH("")
    }
@@ -136,7 +136,7 @@ namespace Kratos
       KRATOS_TRY
 
       // 1. Some Constant
-      double ScalingConstant; 
+      double ScalingConstant;
       GetScalingConstant( ScalingConstant, rVariables.GetProperties() );
 
 
@@ -145,8 +145,8 @@ namespace Kratos
       const unsigned int number_of_nodes = rGeometry.PointsNumber();
       const unsigned int dimension = rGeometry.WorkingSpaceDimension();
 
-      // 3. Compute Stabilization Factor 
-      double AlphaStabilization = CalculateStabilizationFactor( rVariables, AlphaStabilization); 
+      // 3. Compute Stabilization Factor
+      double AlphaStabilization = CalculateStabilizationFactor( rVariables, AlphaStabilization);
 
       rLocalRHS.resize(number_of_nodes, false);
       noalias( rLocalRHS ) = ZeroVector( number_of_nodes);
@@ -156,12 +156,12 @@ namespace Kratos
       }
 
       if( mPPP) {
-         double consistent; 
+         double consistent;
          for (unsigned int i = 0; i < number_of_nodes; i++) {
             for (unsigned int j = 0; j < number_of_nodes; j++) {
                const double & rCurrentWaterPressure = rGeometry[j].FastGetSolutionStepValue( WATER_PRESSURE );
                const double & rPreviousWaterPressure = rGeometry[j].FastGetSolutionStepValue( WATER_PRESSURE, 1 );
-               double DeltaWaterPressure = rCurrentWaterPressure - rPreviousWaterPressure; 
+               double DeltaWaterPressure = rCurrentWaterPressure - rPreviousWaterPressure;
 
                if ( dimension == 2) {
                   consistent = (-1.0) * AlphaStabilization / 18.0;
@@ -174,7 +174,7 @@ namespace Kratos
                      consistent = 3.0 * AlphaStabilization /80.0;
                }
 
-               rLocalRHS(i) += consistent * DeltaWaterPressure * rIntegrationWeight * ScalingConstant; 
+               rLocalRHS(i) += consistent * DeltaWaterPressure * rIntegrationWeight * ScalingConstant;
 
             }
 
@@ -187,7 +187,7 @@ namespace Kratos
                for (unsigned p = 0; p < dimension; p++) {
                   const double & rCurrentWaterPressure = rGeometry[j].FastGetSolutionStepValue( WATER_PRESSURE );
                   const double & rPreviousWaterPressure = rGeometry[j].FastGetSolutionStepValue( WATER_PRESSURE , 1);
-                  double DeltaWaterPressure = rCurrentWaterPressure - rPreviousWaterPressure; 
+                  double DeltaWaterPressure = rCurrentWaterPressure - rPreviousWaterPressure;
 
                   rLocalRHS(i) += rDN_DX(i,p) * rDN_DX(j,p) * AlphaStabilization * DeltaWaterPressure * rIntegrationWeight * ScalingConstant;
                }
@@ -195,7 +195,7 @@ namespace Kratos
          }
       }
 
-      return rLocalRHS; 
+      return rLocalRHS;
 
       KRATOS_CATCH("")
 
@@ -207,7 +207,7 @@ namespace Kratos
       KRATOS_TRY
 
       // 1. Some Constant
-      double ScalingConstant; 
+      double ScalingConstant;
       GetScalingConstant( ScalingConstant, rVariables.GetProperties() );
 
 
@@ -216,8 +216,8 @@ namespace Kratos
       const unsigned int number_of_nodes = rGeometry.PointsNumber();
       const unsigned int dimension = rGeometry.WorkingSpaceDimension();
 
-      // 3. Compute Stabilization Factor 
-      double AlphaStabilization = CalculateStabilizationFactor( rVariables, AlphaStabilization); 
+      // 3. Compute Stabilization Factor
+      double AlphaStabilization = CalculateStabilizationFactor( rVariables, AlphaStabilization);
 
       rLocalLHS.resize(number_of_nodes, number_of_nodes, false);
       noalias( rLocalLHS ) = ZeroMatrix( number_of_nodes, number_of_nodes);
@@ -226,7 +226,7 @@ namespace Kratos
       }
 
       if ( mPPP) {
-         double consistent; 
+         double consistent;
          for (unsigned int i = 0; i < number_of_nodes; i++) {
             for (unsigned int j = 0; j < number_of_nodes; j++) {
                if ( dimension == 2) {
@@ -240,7 +240,7 @@ namespace Kratos
                      consistent = 3.0 * AlphaStabilization / 80.0;
                }
 
-               rLocalLHS(i,j) -= consistent * rIntegrationWeight * ScalingConstant; 
+               rLocalLHS(i,j) -= consistent * rIntegrationWeight * ScalingConstant;
 
             }
 
@@ -258,7 +258,7 @@ namespace Kratos
          }
       }
 
-      return rLocalLHS; 
+      return rLocalLHS;
 
       KRATOS_CATCH("")
 
@@ -279,7 +279,7 @@ namespace Kratos
       rLeftHandSide = AddReshapeBaseClassLHS( rLeftHandSide, rBaseClassLHS, dimension,  rVariables.number_of_variables, number_of_nodes);
 
       // 2. Add water Pressure geometric stiffness matrix
-      Matrix LocalLHS; 
+      Matrix LocalLHS;
 
       LocalLHS = this->ComputeWaterPressureKuug(rVariables, LocalLHS, rIntegrationWeight);
       rLeftHandSide = AddReshapeKUU( rLeftHandSide, LocalLHS, dimension, rVariables.number_of_variables, number_of_nodes);
@@ -297,7 +297,7 @@ namespace Kratos
       LocalLHS = this->ComputeSolidSkeletonDeformationMatrix( rVariables, LocalLHS, IntegrationWeight);
       rLeftHandSide = this->AddReshapeSolidSkeletonDeformationMatrix( rLeftHandSide, LocalLHS, dimension, rVariables.number_of_variables, number_of_nodes);
 
-      
+
       // 6. Add Darcy Geometric Stiffness
       LocalLHS = ComputeDarcyFlowGeometricTerms( rVariables, LocalLHS, IntegrationWeight);
       rLeftHandSide = AddReshapeKwPU( rLeftHandSide, LocalLHS, dimension,  rVariables.number_of_variables, number_of_nodes);
@@ -306,8 +306,8 @@ namespace Kratos
       // 7. Add the term due to the density change
       LocalLHS = this->ComputeDensityChangeTerm( rVariables, LocalLHS, rIntegrationWeight);
       rLeftHandSide = AddReshapeKUU( rLeftHandSide, LocalLHS, dimension, rVariables.number_of_variables, number_of_nodes);
-      
-      return rLeftHandSide; 
+
+      return rLeftHandSide;
 
       KRATOS_CATCH("")
    }
@@ -323,15 +323,16 @@ namespace Kratos
       VectorType VolumeForce = rVariables.GetVolumeForce(); //lets see
       VolumeForce *= rVariables.detF0; // due to the volumechange
 
-      rLocalLHS.resize(dimension*number_of_nodes, dimension*number_of_nodes);
+
+      rLocalLHS.resize(dimension*number_of_nodes, dimension*number_of_nodes, false);
       noalias( rLocalLHS ) = ZeroMatrix( dimension*number_of_nodes, dimension*number_of_nodes);
 
       double density_mixture0 = rVariables.GetProperties().GetValue(DENSITY);
       if ( density_mixture0 > 0) {
-         VolumeForce /= density_mixture0; 
+         VolumeForce /= density_mixture0;
       }
       else {
-         return rLocalLHS; 
+         return rLocalLHS;
       }
 
       double density_water = rVariables.GetProperties().GetValue(DENSITY_WATER);
@@ -349,8 +350,8 @@ namespace Kratos
          }
       }
 
-      rLocalLHS *= (rIntegrationWeight * density_water); 
-      return rLocalLHS; 
+      rLocalLHS *= (rIntegrationWeight * density_water);
+      return rLocalLHS;
 
       KRATOS_CATCH("")
    }
@@ -393,10 +394,10 @@ namespace Kratos
 
       Vector DarcyFlow = prod( K, GradP-b);
 
-      rLocalLHS.resize( number_of_nodes, number_of_nodes * dimension );
+      rLocalLHS.resize( number_of_nodes, number_of_nodes * dimension, false );
       noalias( rLocalLHS ) = ZeroMatrix( number_of_nodes, number_of_nodes * dimension);
 
-      Matrix AllwaysTerm = rLocalLHS; 
+      Matrix AllwaysTerm = rLocalLHS;
 
       for (unsigned int i = 0; i < number_of_nodes; i++)
       {
@@ -427,11 +428,11 @@ namespace Kratos
       }
 
 
-      AllwaysTerm += SpatialTerm; 
+      AllwaysTerm += SpatialTerm;
       AllwaysTerm *= (-rIntegrationWeight * ScalingConstant * rVariables.DeltaTime);
 
-      rLocalLHS = AllwaysTerm; 
-      return rLocalLHS; 
+      rLocalLHS = AllwaysTerm;
+      return rLocalLHS;
 
       KRATOS_CATCH("")
    }
@@ -452,7 +453,7 @@ namespace Kratos
 
       // 2. Calculate Matrix
 
-      rLocalLHS.resize( number_of_nodes, number_of_nodes * dimension);
+      rLocalLHS.resize( number_of_nodes, number_of_nodes * dimension, false);
       noalias( rLocalLHS ) = ZeroMatrix( number_of_nodes, number_of_nodes * dimension);
 
       const MatrixType & rDN_DX = rVariables.GetShapeFunctionsDerivatives();
@@ -464,7 +465,7 @@ namespace Kratos
       {
          const array_1d<double, 3 > &  CurrentDisplacement = rGeometry[k].FastGetSolutionStepValue( DISPLACEMENT );
          const array_1d<double, 3 > & PreviousDisplacement = rGeometry[k].FastGetSolutionStepValue( DISPLACEMENT , 1);
-         array_1d<double, 3 > DeltaDisplacement = CurrentDisplacement - PreviousDisplacement; 
+         array_1d<double, 3 > DeltaDisplacement = CurrentDisplacement - PreviousDisplacement;
          for (unsigned int j = 0; j < dimension; j++)
          {
             for (unsigned int i = 0; i < dimension; i++)
@@ -515,7 +516,7 @@ namespace Kratos
       double VolumeChange = this->CalculateVolumeChange(rVariables.GetGeometry(), rVariables.GetShapeFunctions(), rVariables.GetDeformationGradient() );
       GetPermeabilityTensor( rVariables.GetProperties(), rVariables.GetDeformationGradient(), K, initial_porosity, VolumeChange);
 
-      rLocalLHS.resize( number_of_nodes, number_of_nodes);
+      rLocalLHS.resize( number_of_nodes, number_of_nodes, false);
       noalias( rLocalLHS ) = ZeroMatrix( number_of_nodes, number_of_nodes);
 
       const MatrixType & rDN_DX = rVariables.GetShapeFunctionsDerivatives();
@@ -524,7 +525,7 @@ namespace Kratos
       {
          for (unsigned int j = 0; j < number_of_nodes; j++)
          {
-            rLocalLHS(i,j) -= (1.0/WaterBulk) * rN(i)*rN(j); 
+            rLocalLHS(i,j) -= (1.0/WaterBulk) * rN(i)*rN(j);
             for (unsigned p = 0; p < dimension; p++) {
                for (unsigned q = 0; q < dimension; q++) {
                   rLocalLHS(i,j) -= rVariables.DeltaTime * rDN_DX(i,p) * K(p,q) * rDN_DX(j,q);
@@ -534,7 +535,7 @@ namespace Kratos
       }
       rLocalLHS *= ( rIntegrationWeight * ScalingConstant);
 
-      return rLocalLHS; 
+      return rLocalLHS;
 
       KRATOS_CATCH("")
    }
@@ -546,7 +547,7 @@ namespace Kratos
       const unsigned int number_of_nodes = rVariables.GetGeometry().PointsNumber();
       const unsigned int dimension = rVariables.GetGeometry().WorkingSpaceDimension();
 
-      rLocalLHS.resize( number_of_nodes*dimension, number_of_nodes);
+      rLocalLHS.resize( number_of_nodes*dimension, number_of_nodes, false );
       noalias( rLocalLHS ) = ZeroMatrix( number_of_nodes*dimension, number_of_nodes);
 
       const MatrixType & rDN_DX = rVariables.GetShapeFunctionsDerivatives();
@@ -639,8 +640,8 @@ namespace Kratos
    {
       KRATOS_TRY
 
-      unsigned int dimTo = number_of_variables; 
-      unsigned int dimFrom = number_of_variables - 1; 
+      unsigned int dimTo = number_of_variables;
+      unsigned int dimFrom = number_of_variables - 1;
       for (unsigned int iNode = 0 ; iNode < number_of_nodes; iNode++)
       {
          for (unsigned int iDim = 0; iDim < dimFrom; iDim++)
@@ -655,7 +656,7 @@ namespace Kratos
          }
       }
 
-      return rLeftHandSideMatrix; 
+      return rLeftHandSideMatrix;
 
       KRATOS_CATCH("")
    }
@@ -693,7 +694,7 @@ namespace Kratos
          }
       }
 
-      return rLeftHandSide; 
+      return rLeftHandSide;
       KRATOS_CATCH("")
    }
 
@@ -704,7 +705,7 @@ namespace Kratos
 
       rLeftHandSide = AddReshapeKwPU( rLeftHandSide, rLocalLHS, dimension, number_of_variables, number_of_nodes);
 
-      return rLeftHandSide; 
+      return rLeftHandSide;
    }
 
    // ***************** RESHAPE MATRIX: KwPU LHS *********************************************************
@@ -734,8 +735,8 @@ namespace Kratos
    {
       KRATOS_TRY
 
-      unsigned int dimTo = number_of_variables; 
-      unsigned int dimFrom = dimension; 
+      unsigned int dimTo = number_of_variables;
+      unsigned int dimFrom = dimension;
       for (unsigned int iNode = 0 ; iNode < number_of_nodes; iNode++)
       {
          for (unsigned int iDim = 0; iDim < dimFrom; iDim++)
@@ -758,7 +759,7 @@ namespace Kratos
    // *****************************************************************
    Vector & WaterPressureUtilities::AddReshapeWaterPressureForces( VectorType & rRightHandSideVector, const VectorType & rPartialRHS, const unsigned int number_of_variables, const unsigned int number_of_nodes)
    {
-      //Vector AuxiliarRHS = rRightHandSide; 
+      //Vector AuxiliarRHS = rRightHandSide;
       //rRightHandSide = ZeroVector(number_of_variables*number_of_nodes);
 
       for ( unsigned int i = 0; i < number_of_nodes; i++)
@@ -777,7 +778,7 @@ namespace Kratos
 
       for (unsigned int i = 0; i < number_of_nodes; i++)
       {
-         unsigned int indexfrom = dimension * i; 
+         unsigned int indexfrom = dimension * i;
          unsigned int indexto   = (number_of_variables ) *i;
          for (unsigned int j = 0; j < dimension; j++)
          {
@@ -786,7 +787,7 @@ namespace Kratos
 
       }
 
-      return rRightHandSideVector; 
+      return rRightHandSideVector;
 
       KRATOS_CATCH("")
    }
@@ -801,23 +802,23 @@ namespace Kratos
       unsigned int dimension = rVariables.GetGeometry().WorkingSpaceDimension();
 
       Vector VolumeForce = rVariables.GetVolumeForce();
-      VolumeForce *= rVariables.detF0; 
+      VolumeForce *= rVariables.detF0;
 
       rLocalRHS.resize( number_of_nodes*dimension, false);
       noalias( rLocalRHS ) = ZeroVector( number_of_nodes*dimension);
 
       double density_mixture0 = rVariables.GetProperties().GetValue(DENSITY);
       if ( density_mixture0 > 0) {
-         VolumeForce /= density_mixture0; 
+         VolumeForce /= density_mixture0;
       }
       else {
-         return rLocalRHS; 
+         return rLocalRHS;
       }
 
       double density_water = rVariables.GetProperties().GetValue(DENSITY_WATER);
       double porosity0 = rVariables.GetProperties().GetValue( INITIAL_POROSITY);
 
-      double porosity = 1.0 - (1.0-porosity0) / rVariables.detF0; 
+      double porosity = 1.0 - (1.0-porosity0) / rVariables.detF0;
       double density_solid = (density_mixture0 - porosity0*density_water) / ( 1.0 - porosity0);
       double density_mixture = ( 1.0 - porosity) * density_solid + porosity * density_water;
 
@@ -835,7 +836,7 @@ namespace Kratos
    }
    // ****************** COMPUTE WATER PRESSURE CONTRIBUTION TO THE LINEAR MOMENTUM EQUATION ***********
    // **************************************************************************************************
-   Vector & WaterPressureUtilities::CalculateWaterInternalForcesContribution( HydroMechanicalVariables& rVariables, Vector & rRightHandSideVector, const double & rIntegrationWeight)  
+   Vector & WaterPressureUtilities::CalculateWaterInternalForcesContribution( HydroMechanicalVariables& rVariables, Vector & rRightHandSideVector, const double & rIntegrationWeight)
    {
       KRATOS_TRY
 
@@ -863,7 +864,7 @@ namespace Kratos
       rRightHandSideVector.resize( number_of_nodes*dimension, false);
       noalias(rRightHandSideVector) = -rIntegrationWeight * prod( trans( rB), WaterPressureVector );
 
-      return rRightHandSideVector; 
+      return rRightHandSideVector;
 
 
       KRATOS_CATCH("")
@@ -889,7 +890,7 @@ namespace Kratos
       const unsigned int number_of_nodes = rGeometry.PointsNumber();
       unsigned int dimension = rGeometry.WorkingSpaceDimension();
 
-      bool density_considered  = false; 
+      bool density_considered  = false;
       if ( rGeometry[0].SolutionStepsDataHas( VOLUME_ACCELERATION) ) {
          const array_1d < double, 3 > VolAcc = rGeometry[0].FastGetSolutionStepValue( VOLUME_ACCELERATION) ;
          if (  ( fabs( VolAcc[0] ) + fabs( VolAcc[1]) + fabs(VolAcc[2] ) ) > 1.0e-12) {
@@ -901,7 +902,7 @@ namespace Kratos
       //3. Gravity & Permeability
       Vector b = ZeroVector(dimension);
       double WaterDensity = 0.0;
-      if ( density_considered) 
+      if ( density_considered)
          WaterDensity = rVariables.GetProperties().GetValue(DENSITY_WATER);
       b(dimension-1) = -10.0*WaterDensity;
 
@@ -913,7 +914,7 @@ namespace Kratos
 
 
       rRightHandSideVector.resize( number_of_nodes);
-      noalias( rRightHandSideVector ) = ZeroVector( number_of_nodes); 
+      noalias( rRightHandSideVector ) = ZeroVector( number_of_nodes);
 
 
       for ( unsigned int i = 0; i < number_of_nodes; i++ )
@@ -948,7 +949,7 @@ namespace Kratos
          }
       }
 
-      return rRightHandSideVector; 
+      return rRightHandSideVector;
 
       KRATOS_CATCH("")
 
@@ -960,7 +961,7 @@ namespace Kratos
    {
       KRATOS_TRY
 
-      double ScalingConstant; 
+      double ScalingConstant;
       GetScalingConstant( ScalingConstant, rVariables.GetProperties() );
 
       // 2. Geometric
@@ -993,7 +994,7 @@ namespace Kratos
 
       }
 
-      return rRightHandSideVector; 
+      return rRightHandSideVector;
 
 
       KRATOS_CATCH("")
@@ -1069,11 +1070,11 @@ namespace Kratos
    double WaterPressureUtilities::CalculateVolumeChange(const GeometryType & rGeometry, const Vector & rN, const Matrix & rTotalF)
    {
       double VolumeChange = MathUtils<double>::Det( rTotalF);
-      return VolumeChange; 
+      return VolumeChange;
    }
    void WaterPressureUtilities::GetVoigtSize( const unsigned int & dimension, unsigned int & voigtsize, unsigned int & principal_dimension)
    {
-      voigtsize = 3; 
+      voigtsize = 3;
       principal_dimension = dimension;
       if ( dimension == 3)
          voigtsize = 6;

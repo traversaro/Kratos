@@ -35,7 +35,7 @@ class ShellT3_LocalCoordinateSystem
 
   typedef Matrix MatrixType;
 
-  typedef matrix_row< const MatrixType > ConstMatrixRowType;
+  typedef MatrixRow< const MatrixType > ConstMatrixRowType;
 
  private:
 

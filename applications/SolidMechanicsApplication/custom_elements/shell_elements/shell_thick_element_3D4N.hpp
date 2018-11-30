@@ -78,6 +78,8 @@ class KRATOS_API(SOLID_MECHANICS_APPLICATION) ShellThickElement3D4N : public Ele
 
   typedef Quaternion<double> QuaternionType;
 
+  typedef SolidMechanicsMathUtilities<double> MathUtilsType;
+
   ///@}
 
   ///@name Classes

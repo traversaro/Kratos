@@ -205,7 +205,8 @@ class ShellT3_CorotationalCoordinateTransformation : public ShellT3_CoordinateTr
 
     VectorType localDisplacements(18);
 
-    TransformationMatrixType T, T0;
+    //TransformationMatrixType T, T0;
+    MatrixType T(3,3), T0(3,3);
     Q.ToRotationMatrix( T );
     mQ0.ToRotationMatrix( T0 );
 
@@ -302,7 +303,8 @@ class ShellT3_CorotationalCoordinateTransformation : public ShellT3_CoordinateTr
     // At this point 'LHS' contains also this term of the Geometric stiffness
     // (Ke = (P' * Km * H * P) - (G' * Fn' * P))
 
-    MatrixType Fnm(18, 3, 0.0);
+    MatrixType Fnm(18,3);
+    noalias(Fnm) = ZeroMatrix(18,3);
 
     EICR::Spin_AtRow( projectedLocalForces, Fnm, 0  );
     EICR::Spin_AtRow( projectedLocalForces, Fnm, 6  );
@@ -389,7 +391,8 @@ class ShellT3_CorotationalCoordinateTransformation : public ShellT3_CoordinateTr
 #ifdef COROT_POLAR_DECOMPOSITION
   inline MatrixType RotationGradient(const ShellT3_LocalCoordinateSystem& LCS)
   {
-    Matrix G(3, 18, 0.0);
+    Matrix G(3,18);
+    noalias(G) = ZeroMatrix(3,18);
     //const GeometryType & geom = GetGeometry();
 
     ShellT3_LocalCoordinateSystem a( CreateReferenceCoordinateSystem() ); // REF coordinate system

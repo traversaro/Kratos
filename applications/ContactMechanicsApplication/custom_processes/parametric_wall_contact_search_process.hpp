@@ -617,7 +617,7 @@ namespace Kratos
 
       ModelPart::NodesContainerType& rNodes = mrMainModelPart.Nodes();
 
-      Vector<unsigned int> nodes_partition;
+      DenseVector<unsigned int> nodes_partition;
       OpenMPUtils::CreatePartition(number_of_threads, rNodes.size(), nodes_partition);
 
 

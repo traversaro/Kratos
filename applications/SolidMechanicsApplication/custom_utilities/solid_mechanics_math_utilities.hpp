@@ -1717,7 +1717,7 @@ public:
   {
     unsigned int size = end-start;
     if(size<0)
-      KRATOS_ERROR<<" range out of bounds start:"<<start<<" end:"<<end<<std::endl;
+      KRATOS_ERROR<<" range out of bounds start:"<<start<<" stop:"<<end<<std::endl;
 
     VectorType b(size);
 
@@ -1727,6 +1727,19 @@ public:
     return b;
   }
 
+
+  inline static VectorType slice(const unsigned int start,  const unsigned int stride, const unsigned int size)
+  {
+    if(size==0)
+      KRATOS_ERROR<<" slize out of bounds size:"<<size<<std::endl;
+
+    VectorType b(size);
+
+    for(unsigned int i = 0; i<size; ++i)
+      b[i] = start + stride;
+
+    return b;
+  }
 
   inline static MatrixType project(const MatrixType& rMatrix, VectorType irange, VectorType jrange)
   {

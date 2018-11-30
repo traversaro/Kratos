@@ -207,7 +207,7 @@ namespace Kratos
       for ( unsigned int PointNumber = 0; PointNumber < integration_points_number; PointNumber++ )
       {
          mDeterminantF0[PointNumber] = 1;
-         mDeformationGradientF0[PointNumber] = identity_matrix<double> (3);
+         noalias(mDeformationGradientF0[PointNumber]) = IdentityMatrix(3);
       }
 
       const unsigned int number_of_nodes = GetGeometry().size();
@@ -238,21 +238,21 @@ namespace Kratos
 
       rVariables.detH = 1;
 
-      rVariables.B.resize( 4 , number_of_nodes * 2 );
+      rVariables.B.resize( 4 , number_of_nodes * 2, false );
 
-      rVariables.F.resize( 3, 3 );
+      rVariables.F.resize(3,3,false);
 
-      rVariables.F0.resize( 3, 3 );
+      rVariables.F0.resize(3,3,false);
 
-      rVariables.H.resize( 3, 3 );
+      rVariables.H.resize(3,3,false);
 
-      rVariables.ConstitutiveMatrix.resize( 4, 4 );
+      rVariables.ConstitutiveMatrix.resize( 4, 4, false );
 
-      rVariables.StrainVector.resize( 4 );
+      rVariables.StrainVector.resize( 4, false );
 
-      rVariables.StressVector.resize( 4 );
+      rVariables.StressVector.resize( 4, false );
 
-      rVariables.DN_DX.resize( number_of_nodes, 2 );
+      rVariables.DN_DX.resize( number_of_nodes, 2, false );
 
       //set variables including all integration points values
 
@@ -350,7 +350,7 @@ namespace Kratos
       const unsigned int number_of_nodes = GetGeometry().PointsNumber();
       const unsigned int dimension       = GetGeometry().WorkingSpaceDimension();
 
-      rF = identity_matrix<double> ( 3 );
+      rF = IdentityMatrix( 3 );
 
       if( dimension == 2 )
       {
@@ -510,7 +510,7 @@ void AxisymUpdatedLagrangianUJElement::CalculateAlmansiStrain(const Matrix& rF,
       noalias( rVariables.DN_DX ) = prod( DN_De[rPointNumber], InvJ );
 
       //Set Shape Functions Values for this integration point
-      noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+      noalias(rVariables.N) = row( Ncontainer, rPointNumber);
 
       //Calculate IntegrationPoint radius
       CalculateRadius (rVariables.CurrentRadius, rVariables.ReferenceRadius, rVariables.N);
@@ -889,7 +889,8 @@ void AxisymUpdatedLagrangianUJElement::CalculateAlmansiStrain(const Matrix& rF,
 
       int size = number_of_nodes * dimension;
 
-      Matrix Kuu = zero_matrix<double>(size,size);
+      Matrix Kuu(size,size);
+      noalias(Kuu) = ZeroMatrix(size,size);
 
       // axisymmetric geometric matrix
 
@@ -1275,7 +1276,7 @@ void AxisymUpdatedLagrangianUJElement::CalculateAlmansiStrain(const Matrix& rF,
          std::cout << " SO FINALLY F0 displ theta " << F0 << std::endl;
          std::cout << " and the Inverse is: " << F0Inverse << std::endl;
          std::cout << " UPDATE ?" << Update << std::endl;
-         std::cout << " AND THE LAST ONE " << prod( rFT, Update) << std::endl;
+         std::cout << " AND THE LAST ONE " << Matrix(prod( rFT, Update)) << std::endl;
          std::cout << std::endl;
       }
 

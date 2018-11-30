@@ -225,7 +225,7 @@ namespace Kratos
         int number_of_threads = 1;
         #endif
 
-        vector<unsigned int> node_partition;
+        DenseVector<unsigned int> node_partition;
         OpenMPUtils::CreatePartition(number_of_threads, pNodes.size(), node_partition);
 
         #pragma omp parallel for
@@ -260,7 +260,7 @@ namespace Kratos
         int number_of_threads = 1;
         #endif
 
-        vector<unsigned int> node_partition;
+        DenseVector<unsigned int> node_partition;
         OpenMPUtils::CreatePartition(number_of_threads, pNodes.size(), node_partition);
 
         #pragma omp parallel for
@@ -352,7 +352,7 @@ namespace Kratos
 
 #endif
 
-      vector<unsigned int> element_partition;
+      DenseVector<unsigned int> element_partition;
       OpenMPUtils::CreatePartition(number_of_threads, pElements.size(), element_partition);
 
       double safety_factor = 0.65;  //most autors recommend a value near 0.80 (Belytschko - Nonlinear FE.. 2000. chap 6. pag. 315)
@@ -429,7 +429,7 @@ namespace Kratos
       int number_of_threads = 1;
 #endif
 
-      vector<unsigned int> node_partition;
+      DenseVector<unsigned int> node_partition;
       OpenMPUtils::CreatePartition(number_of_threads, pNodes.size(), node_partition);
 
 #pragma omp parallel for
@@ -523,7 +523,7 @@ namespace Kratos
       int number_of_threads = 1;
       #endif
 
-      vector<unsigned int> node_partition;
+      DenseVector<unsigned int> node_partition;
       OpenMPUtils::CreatePartition(number_of_threads, pNodes.size(), node_partition);
 
       #pragma omp parallel for
@@ -637,7 +637,7 @@ namespace Kratos
       int number_of_threads = 1;
       #endif
 
-      vector<unsigned int> node_partition;
+      DenseVector<unsigned int> node_partition;
       OpenMPUtils::CreatePartition(number_of_threads, pNodes.size(), node_partition);
 
       #pragma omp parallel for
@@ -743,7 +743,7 @@ namespace Kratos
       int number_of_threads = 1;
 #endif
 
-      vector<unsigned int> node_partition;
+      DenseVector<unsigned int> node_partition;
       OpenMPUtils::CreatePartition(number_of_threads, pNodes.size(), node_partition);
 
 #pragma omp parallel for
@@ -1124,4 +1124,3 @@ namespace Kratos
 }  /* namespace Kratos.*/
 
 #endif /* KRATOS_EXPLICIT_HAMILTON_SCHEME_H_INCLUDED  defined */
-

@@ -756,8 +756,8 @@ namespace Kratos
     Vector StrainCouples    = rVariables.CurrentCurvatureVector;
 
     //Reference frame given by the Frame Rotation
-    StrainResultants = prod( trans(rVariables.CurrentRotationMatrix), StrainResultants );
-    StrainCouples    = prod( trans(rVariables.CurrentRotationMatrix), StrainCouples );
+    StrainResultants = prod( trans(rVariables.CurrentRotationMatrix), Vector(StrainResultants) );
+    StrainCouples    = prod( trans(rVariables.CurrentRotationMatrix), Vector(StrainCouples) );
 
     Vector E1(3);
     noalias(E1) = ZeroVector(3);
@@ -793,8 +793,8 @@ namespace Kratos
       }
 
     //Current frame given by the Frame Rotation
-    StressResultants = prod( rVariables.CurrentRotationMatrix, StressResultants );
-    StressCouples    = prod( rVariables.CurrentRotationMatrix, StressCouples );
+    StressResultants = prod( rVariables.CurrentRotationMatrix, Vector(StressResultants) );
+    StressCouples    = prod( rVariables.CurrentRotationMatrix, Vector(StressCouples) );
 
     for ( SizeType i = 0; i < dimension; i++ )
       {
@@ -986,7 +986,7 @@ namespace Kratos
       }
 
     //Current Frame given by the frame rotation
-    FollowerLoad = prod( rVariables.CurrentRotationMatrix, FollowerLoad );
+    FollowerLoad = prod( rVariables.CurrentRotationMatrix, Vector(FollowerLoad) );
 
     BeamMathUtilsType::AddVector(FollowerLoad, ResultantsVector, 3);
 
@@ -1633,7 +1633,7 @@ namespace Kratos
       }
 
     //Current Frame given by the frame rotation
-    FollowerLoad = prod( rVariables.CurrentRotationMatrix, FollowerLoad );
+    FollowerLoad = prod( rVariables.CurrentRotationMatrix, Vector(FollowerLoad) );
 
     Matrix SkewSymResultants(dimension,dimension);
     noalias(SkewSymResultants) = ZeroMatrix(dimension,dimension);
@@ -1809,8 +1809,10 @@ namespace Kratos
     Matrix InertiaDyadic(3,3);
     noalias(InertiaDyadic) = ZeroMatrix(3,3);
     this->CalculateInertiaDyadic( Section, InertiaDyadic );
-    InertiaDyadic = prod(rVariables.CurrentRotationMatrix,InertiaDyadic);
-    InertiaDyadic = prod(InertiaDyadic,trans(rVariables.CurrentRotationMatrix));
+
+    Matrix InertiaTemp(3,3);
+    noalias(InertiaTemp) = prod(rVariables.CurrentRotationMatrix,InertiaDyadic);
+    noalias(InertiaDyadic) = prod(InertiaTemp,trans(rVariables.CurrentRotationMatrix));
 
     //2.- Compute Term 1:
 
@@ -1878,7 +1880,7 @@ namespace Kratos
     }
 
 
-    MassMatrixBlock2 = prod( MassMatrixBlock2, LinearPartRotationTensor );
+    MassMatrixBlock2 = prod( Matrix(MassMatrixBlock2), LinearPartRotationTensor );
 
     unsigned int RowIndex = 0;
     unsigned int ColIndex = 0;
@@ -2018,8 +2020,10 @@ namespace Kratos
     Matrix InertiaDyadic(3,3);
     noalias(InertiaDyadic) = ZeroMatrix(3,3);
     this->CalculateInertiaDyadic( Section, InertiaDyadic );
-    InertiaDyadic = prod(rVariables.CurrentRotationMatrix,InertiaDyadic);
-    InertiaDyadic = prod(InertiaDyadic,trans(rVariables.CurrentRotationMatrix));
+
+    Matrix InertiaTemp(3,3);
+    noalias(InertiaTemp) = prod(rVariables.CurrentRotationMatrix,InertiaDyadic);
+    noalias(InertiaDyadic) = prod(InertiaTemp,trans(rVariables.CurrentRotationMatrix));
 
 
     //Compute Angular Term:
@@ -2098,8 +2102,10 @@ namespace Kratos
     noalias(InertiaDyadic) = ZeroMatrix(3,3);
     this->CalculateInertiaDyadic( Section, InertiaDyadic );
 
-    Matrix CurrentInertiaDyadic = prod(rVariables.CurrentRotationMatrix,InertiaDyadic);
-    CurrentInertiaDyadic = prod(CurrentInertiaDyadic,trans(rVariables.CurrentRotationMatrix));
+    Matrix InertiaTemp(3,3);
+    Matrix CurrentInertiaDyadic(3,3);
+    noalias(InertiaTemp) = prod(rVariables.CurrentRotationMatrix,InertiaDyadic);
+    noalias(CurrentInertiaDyadic) = prod(InertiaTemp,trans(rVariables.CurrentRotationMatrix));
 
     // Kinetic Energy Calculation:
     Vector CurrentNodalVelocities(6);
@@ -2123,7 +2129,8 @@ namespace Kratos
 
     for ( SizeType i = 0; i < number_of_nodes; i++ )
       {
-	rEnergy += 0.5 * rVariables.N[i] * inner_prod( CurrentVelocitiesVector, prod( KineticMatrix, CurrentVelocitiesVector) ) * rIntegrationWeight;
+        Vector Kv = prod( KineticMatrix, CurrentVelocitiesVector);
+	rEnergy += 0.5 * rVariables.N[i] * inner_prod( CurrentVelocitiesVector, Kv ) * rIntegrationWeight;
       }
 
 
@@ -2158,8 +2165,10 @@ namespace Kratos
     this->CalculateInertiaDyadic( Section, InertiaDyadic );
 
     //spatial
-    Matrix CurrentInertiaDyadic = prod(rVariables.CurrentRotationMatrix,InertiaDyadic);
-    CurrentInertiaDyadic = prod(CurrentInertiaDyadic,trans(rVariables.CurrentRotationMatrix));
+    Matrix CurrentInertiaDyadic(3,3);
+    Matrix InertiaTemp(3,3);
+    noalias(InertiaTemp) = prod(rVariables.CurrentRotationMatrix,InertiaDyadic);
+    noalias(CurrentInertiaDyadic) = prod(InertiaTemp,trans(rVariables.CurrentRotationMatrix));
 
     Matrix DiagonalMatrix = IdentityMatrix(3);
 

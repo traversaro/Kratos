@@ -9,7 +9,7 @@
 #include "custom_utilities/axisym_water_pressure_utilities.hpp"
 #include "pfem_solid_mechanics_application_variables.h"
 
-namespace Kratos 
+namespace Kratos
 {
 
    AxisymWaterPressureUtilities::AxisymWaterPressureUtilities()
@@ -30,14 +30,14 @@ namespace Kratos
       Vector VolumeForce = rVariables.GetVolumeForce();
       VolumeForce *= rVariables.detF0; // due to the volumechange
 
-      rLocalLHS.resize( dimension*number_of_nodes, dimension*number_of_nodes);
+      rLocalLHS.resize( dimension*number_of_nodes, dimension*number_of_nodes, false);
       noalias( rLocalLHS ) = ZeroMatrix( dimension*number_of_nodes, dimension*number_of_nodes);
       double density_mixture0 = rVariables.GetProperties().GetValue(DENSITY);
       if ( density_mixture0 > 0) {
-         VolumeForce /= density_mixture0; 
+         VolumeForce /= density_mixture0;
       }
       else {
-         return rLocalLHS; 
+         return rLocalLHS;
       }
 
       double density_water = rVariables.GetProperties().GetValue(DENSITY_WATER);
@@ -57,10 +57,10 @@ namespace Kratos
          }
       }
 
-      rLocalLHS *= (rIntegrationWeight * density_water); 
+      rLocalLHS *= (rIntegrationWeight * density_water);
 
 
-      return rLocalLHS; 
+      return rLocalLHS;
 
       KRATOS_CATCH("")
    }
@@ -118,7 +118,7 @@ namespace Kratos
       {
          const array_1d<double, 3 > &  CurrentDisplacement = rGeometry[k].FastGetSolutionStepValue( DISPLACEMENT );
          const array_1d<double, 3 > & PreviousDisplacement = rGeometry[k].FastGetSolutionStepValue( DISPLACEMENT , 1);
-         array_1d<double, 3 > DeltaDisplacement = CurrentDisplacement - PreviousDisplacement; 
+         array_1d<double, 3 > DeltaDisplacement = CurrentDisplacement - PreviousDisplacement;
          for (unsigned int j = 0; j < dimension; j++)
          {
             for (unsigned int i = 0; i < dimension; i++)
@@ -153,7 +153,7 @@ namespace Kratos
    {
       KRATOS_TRY
 
-      double ScalingConstant; 
+      double ScalingConstant;
       GetScalingConstant( ScalingConstant, rVariables.GetProperties());
 
       // 2. Geometric
@@ -179,7 +179,7 @@ namespace Kratos
                // Solid Skeleton volumetric deformation
                rRightHandSideVector(i) -= rN(i)*DeltaDisplacement[p] * rDN_DX(j,p) * rIntegrationWeight * ScalingConstant / rVariables.detF0;
                if (p == 0)
-                  rRightHandSideVector(i) -= rN(i) * DeltaDisplacement[p] * rN(j) * (1.0 / rVariables.CurrentRadius) * rIntegrationWeight * ScalingConstant / rVariables.detF0; 
+                  rRightHandSideVector(i) -= rN(i) * DeltaDisplacement[p] * rN(j) * (1.0 / rVariables.CurrentRadius) * rIntegrationWeight * ScalingConstant / rVariables.detF0;
 
             }
 
@@ -187,7 +187,7 @@ namespace Kratos
 
       }
 
-      return rRightHandSideVector; 
+      return rRightHandSideVector;
 
 
       KRATOS_CATCH("")
@@ -195,8 +195,8 @@ namespace Kratos
 
    void AxisymWaterPressureUtilities::GetVoigtSize(const unsigned int & dimension, unsigned int & voigtsize, unsigned int & principal_dimension)
    {
-      voigtsize = 4; 
-      principal_dimension = 3; 
+      voigtsize = 4;
+      principal_dimension = 3;
    }
 
 }

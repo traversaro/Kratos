@@ -144,8 +144,8 @@ namespace Kratos
 
       //strain measure C
       noalias(rVariables.Strain.Matrix) = prod(rValues.StrainMatrix,trans(rVariables.Strain.InverseMatrix));
-      rVariables.Strain.Matrix = prod(trans(rTotalDeformationMatrix), rVariables.Strain.Matrix);
 
+      rVariables.Strain.Matrix = prod(trans(rTotalDeformationMatrix), MatrixType(rVariables.Strain.Matrix));
 
       //inverted strain measure
       ConstitutiveModelUtilities::InvertMatrix3( rVariables.Strain.Matrix, rVariables.Strain.InverseMatrix, rVariables.Strain.Invariants.I3 );
@@ -187,12 +187,10 @@ namespace Kratos
 
     //Calculate LameMuBar
     rValues.MaterialParameters.LameMuBar = rValues.MaterialParameters.LameMu * ( rVariables.Strain.Matrix(0,0) + rVariables.Strain.Matrix(1,1) + rVariables.Strain.Matrix(2,2) ) * rVariables.Strain.Invariants.J_13 * rVariables.Strain.Invariants.J_13 * (1.0/3.0) ;
-
     //std::cout<<" LameMuBar "<<rValues.MaterialParameters.LameMuBar<<std::endl;
 
     //Algorithmic moduli factors
     this->CalculateScalingFactors(rVariables);
-
 
     KRATOS_CATCH(" ")
   }

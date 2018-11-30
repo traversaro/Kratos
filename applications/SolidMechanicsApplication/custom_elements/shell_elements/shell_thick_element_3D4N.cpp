@@ -76,7 +76,7 @@ inline void ShapeFuncSerendipity_NaturalDerivatives(double xi, double eta,
 // =====================================================================================
 
 ShellThickElement3D4N::JacobianOperator::JacobianOperator()
-    : mJac(2, 2, 0.0), mInv(2, 2, 0.0), mXYDeriv(4, 2, 0.0), mDet(0.0) {}
+    : mJac(ZeroMatrix(2,2)), mInv(ZeroMatrix(2,2)), mXYDeriv(ZeroMatrix(4,2)), mDet(0.0) {}
 
 void ShellThickElement3D4N::JacobianOperator::Calculate(
     const ShellQ4_LocalCoordinateSystem &CS, const Matrix &dN) {
@@ -108,7 +108,7 @@ void ShellThickElement3D4N::JacobianOperator::Calculate(
 
 ShellThickElement3D4N::MITC4Params::MITC4Params(
     const ShellQ4_LocalCoordinateSystem &LCS)
-    : Transformation(2, 2), ShearStrains(4, 24, 0.0) {
+    : Transformation(2, 2), ShearStrains(ZeroMatrix(4,24)) {
 
   double x21 = LCS.X2() - LCS.X1();
   double y21 = LCS.Y2() - LCS.Y1();
@@ -315,7 +315,8 @@ void ShellThickElement3D4N::EASOperator::GaussPointComputation_Step1(
     double xi, double eta, const JacobianOperator &jac,
     Vector &generalizedStrains, EASOperatorStorage &storage) {
   // construct the interpolation matrix in natural coordinate system
-  Matrix E(3, 5, 0.0);
+  Matrix E(3,5);
+  noalias(E) = ZeroMatrix(3,5);
   E(0, 0) = xi;
   E(1, 1) = eta;
   E(2, 2) = xi;
@@ -342,20 +343,20 @@ void ShellThickElement3D4N::EASOperator::GaussPointComputation_Step2(
     const Matrix &D, const Matrix &B, const Vector &S,
     EASOperatorStorage &storage) {
   Matrix GTC(5, 3);
-  noalias(GTC) = prod(trans(mG), project(D, range(0, 3), range(0, 3)));
+  noalias(GTC) = prod(trans(mG), MathUtilsType::project(D, MathUtilsType::range(0, 3), MathUtilsType::range(0, 3)));
   noalias(storage.Hinv) += prod(GTC, mG);
-  noalias(storage.residual) -= prod(trans(mG), project(S, range(0, 3)));
+  noalias(storage.residual) -= prod(trans(mG), MathUtilsType::project(S, MathUtilsType::range(0, 3)));
 
   // compute L: [G'*Dmm, G'*Dmb, G'*Dms]*[Bm; Bm; Bs]
-  int num_stress =
-      D.size2(); // it can be 6 for thin shells or 8 for thick  shells
-  Matrix GTD(5, num_stress, 0.0);
-  noalias(project(GTD, range::all(), range(0, 3))) = GTC;
-  noalias(project(GTD, range::all(), range(3, 6))) =
-      prod(trans(mG), project(D, range(0, 3), range(3, 6)));
+  int num_stress = D.size2(); // it can be 6 for thin shells or 8 for thick  shells
+  Matrix GTD(5,num_stress);
+  noalias(GTD) = ZeroMatrix(5,num_stress);
+  MathUtilsType::project(GTD, MathUtilsType::range(0, num_stress), MathUtilsType::range(0, 3)) = GTC;
+  MathUtilsType::project(GTD, MathUtilsType::range(0, num_stress), MathUtilsType::range(3, 6)) =
+      prod(trans(mG), MathUtilsType::project(D, MathUtilsType::range(0, 3), MathUtilsType::range(3, 6)));
   if (num_stress == 8)
-    noalias(project(GTD, range::all(), range(6, 8))) =
-        prod(trans(mG), project(D, range(0, 3), range(6, 8)));
+    MathUtilsType::project(GTD, MathUtilsType::range(0, num_stress), MathUtilsType::range(6, 8)) =
+        prod(trans(mG), MathUtilsType::project(D, MathUtilsType::range(0, 3), MathUtilsType::range(6, 8)));
   noalias(storage.L) += prod(GTD, B);
 }
 
@@ -364,10 +365,17 @@ void ShellThickElement3D4N::EASOperator::ComputeModfiedTangentAndResidual(
     EASOperatorStorage &storage) {
   // invert H
   Matrix Hcopy(storage.Hinv);
-  permutation_matrix<Matrix::size_type> pm(5);
-  lu_factorize(Hcopy, pm);
-  noalias(storage.Hinv) = IdentityMatrix(5);
-  lu_substitute(Hcopy, pm, storage.Hinv);
+
+#ifdef KRATOS_USE_AMATRIX   // This macro definition is for the migration period and to be removed afterward please do not use it
+      AMatrix::LUFactorization<MatrixType, DenseVector<std::size_t> > lu_factorization(Hcopy);
+      storage.Hinv = lu_factorization.inverse();
+#else
+      permutation_matrix<Matrix::size_type> pm(5);
+      lu_factorize(Hcopy, pm);
+      noalias(storage.Hinv) = IdentityMatrix(5);
+      lu_substitute(Hcopy, pm, storage.Hinv);
+ #endif // ifdef KRATOS_USE_AMATRIX
+
 
   // compute L' * H^-1
   Matrix LTHinv(24, 5);
@@ -1058,7 +1066,8 @@ void ShellThickElement3D4N::CalculateBMatrix(double xi, double eta,
   // ***************************************************************************************************
 
   // MITC modified shape functions
-  Matrix MITCShapeFunctions(2, 4, 0.0);
+  Matrix MITCShapeFunctions(2,4);
+  noalias(MITCShapeFunctions) = ZeroMatrix(2,4);
   MITCShapeFunctions(1, 0) = 1.0 - xi;
   MITCShapeFunctions(0, 1) = 1.0 - eta;
   MITCShapeFunctions(1, 2) = 1.0 + xi;
@@ -1082,13 +1091,13 @@ void ShellThickElement3D4N::CalculateBMatrix(double xi, double eta,
   Temp2 = Temp2 * Temp2 + Temp3 * Temp3;
   Temp2 = std::sqrt(Temp2) / (8.0 * Jac.Determinant());
 
-  row(BN, 0) *= Temp1;
-  row(BN, 1) *= Temp2;
+  row(BN, 0) = row(BN, 0) * Temp1;
+  row(BN, 1) = row(BN, 1) * Temp2;
 
   // transform the strain-displacement matrix from natural
   // to local coordinate system taking into account the element distorsion
 
-  project(B, slice(7, -1, 2), slice::all()) =
+  MathUtilsType::project(B, MathUtilsType::slice(7, -1, 2), MathUtilsType::slice(0,1,B.size2())) =
       prod(mitc_params.Transformation, BN);
 
   // Explanation of the 'slice':
@@ -1154,12 +1163,15 @@ void ShellThickElement3D4N::CalculateAll(MatrixType &rLeftHandSideMatrix,
 
   // Instantiate all strain-displacement matrices.
 
-  Matrix B(8, 24, 0.0);
-  Vector Bdrilling(24, 0.0);
+  Matrix B(8,24);
+  noalias(B) = ZeroMatrix(8,24);
+  Vector Bdrilling(24);
+  noalias(Bdrilling) = ZeroVector(24);
 
   // Instantiate all section tangent matrices.
 
-  Matrix D(8, 8, 0.0);
+  Matrix D(8,8);
+  noalias(D) = ZeroMatrix(8,8);
   double Ddrilling(0.0);
 
   // Instantiate strain and stress-resultant vectors
@@ -1464,12 +1476,15 @@ bool ShellThickElement3D4N::
 
   // Instantiate all strain-displacement matrices.
 
-  Matrix B(8, 24, 0.0);
-  Vector Bdrilling(24, 0.0);
+  Matrix B(8,24);
+  noalias(B) = ZeroMatrix(8,24);
+  Vector Bdrilling(24);
+  noalias(Bdrilling) = ZeroVector(24);
 
   // Instantiate all section tangent matrices.
 
-  Matrix D(8, 8, 0.0);
+  Matrix D(8,8);
+  noalias(D) = ZeroMatrix(8,8);
 
   // Instantiate strain and stress-resultant vectors
 

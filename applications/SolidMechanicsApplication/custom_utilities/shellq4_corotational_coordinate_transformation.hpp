@@ -207,7 +207,8 @@ class ShellQ4_CorotationalCoordinateTransformation : public ShellQ4_CoordinateTr
 
     VectorType localDisplacements(24);
 
-    TransformationMatrixType T, T0;
+    //TransformationMatrixType T, T0;
+    MatrixType T(3,3), T0(3,3);
     Q.ToRotationMatrix( T );
     mQ0.ToRotationMatrix( T0 );
 
@@ -305,7 +306,8 @@ class ShellQ4_CorotationalCoordinateTransformation : public ShellQ4_CoordinateTr
     // At this point 'LHS' contains also this term of the Geometric stiffness
     // (Ke = (P' * Km * H * P) - (G' * Fn' * P))
 
-    MatrixType Fnm(24, 3, 0.0);
+    MatrixType Fnm(24,3);
+    noalias(Fnm) = ZeroMatrix(24,3);
 
     EICR::Spin_AtRow( projectedLocalForces, Fnm, 0  );
     EICR::Spin_AtRow( projectedLocalForces, Fnm, 6  );
@@ -421,7 +423,8 @@ class ShellQ4_CorotationalCoordinateTransformation : public ShellQ4_CoordinateTr
     // l12 is the length of the side 1-2 projected onto the xy plane.
     RealType l12 = std::sqrt( D12(0)*D12(0) + D12(1)*D12(1) );
 
-    MatrixType G(3, 24, 0.0);
+    MatrixType G(3, 24);
+    noalias(G) = ZeroMatrix(3,24);
 
     // G1
 
@@ -459,7 +462,8 @@ class ShellQ4_CorotationalCoordinateTransformation : public ShellQ4_CoordinateTr
    */
   inline MatrixType RotationGradient()
   {
-    Matrix G(3, 24, 0.0);
+    Matrix G(3,24);
+    noalias(G) = ZeroMatrix(3,24);
 
     ShellQ4_LocalCoordinateSystem a( CreateReferenceCoordinateSystem() ); // current coordinate system
 

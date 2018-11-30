@@ -98,7 +98,7 @@ namespace Kratos
 
         if( mParallel == false ){ number_of_threads = 1; }
 
-        vector<unsigned int> node_partition;
+        DenseVector<unsigned int> node_partition;
         OpenMPUtils::CreatePartition(number_of_threads, pNodes.size(), node_partition);
 
         std::vector<double> KinematicEnergyPartition(number_of_threads);
@@ -158,7 +158,7 @@ namespace Kratos
 
         if( mParallel == false ){ number_of_threads = 1; }
 
-        vector<unsigned int> node_partition;
+        DenseVector<unsigned int> node_partition;
         OpenMPUtils::CreatePartition(number_of_threads, pNodes.size(), node_partition);
 
         std::vector<double> PotentialEnergyPartition(number_of_threads);
@@ -222,7 +222,7 @@ namespace Kratos
 
         if( mParallel == false ){ number_of_threads = 1; }
 
-        vector<unsigned int> element_partition;
+        DenseVector<unsigned int> element_partition;
         OpenMPUtils::CreatePartition(number_of_threads, pElements.size(), element_partition);
         std::vector<double> StrainEnergyPartition(number_of_threads);
         for(int i=0; i<number_of_threads; i++){
@@ -291,10 +291,10 @@ namespace Kratos
               int number_of_threads = 1;
       #endif
 
-      vector<unsigned int> node_partition;
+      DenseVector<unsigned int> node_partition;
       OpenMPUtils::CreatePartition(number_of_threads, pNodes.size(), node_partition);
 
-      vector<unsigned int> element_partition;
+      DenseVector<unsigned int> element_partition;
       OpenMPUtils::CreatePartition(number_of_threads, pElements.size(), element_partition);
 
 
@@ -488,5 +488,3 @@ namespace Kratos
 } // namespace Kratos.
 
 #endif // KRATOS_ENERGY_UTILITIES_H_INCLUDED defined
-
-

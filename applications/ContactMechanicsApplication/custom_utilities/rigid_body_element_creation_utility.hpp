@@ -118,9 +118,12 @@ public:
       PropertiesType::Pointer pProperties = Kratos::make_shared<PropertiesType>(NumberOfProperties);
 
       double Mass = 0;
-      Vector CenterOfGravity   = ZeroVector(3);
-      Matrix InertiaTensor     = ZeroMatrix(3);
-      Matrix LocalAxesMatrix   = IdentityMatrix(3);
+      Vector CenterOfGravity(3);
+      noalias(CenterOfGravity) = ZeroVector(3);
+      Matrix InertiaTensor(3,3);
+      noalias(InertiaTensor) = ZeroMatrix(3,3);
+      Matrix LocalAxesMatrix(3,3);
+      noalias(LocalAxesMatrix) = IdentityMatrix(3);
 
       bool ComputeBodyParameters = CustomParameters["compute_parameters"].GetBool();
 

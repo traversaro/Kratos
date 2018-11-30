@@ -34,7 +34,7 @@ class ShellQ4_LocalCoordinateSystem
 
   typedef Kratos::Matrix MatrixType;
 
-  typedef matrix_row< const MatrixType > ConstMatrixRowType;
+  typedef MatrixRow< const MatrixType > ConstMatrixRowType;
 
  private:
 

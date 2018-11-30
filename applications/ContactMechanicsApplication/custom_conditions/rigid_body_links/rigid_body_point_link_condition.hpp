@@ -86,7 +86,8 @@ class RigidBodyPointLinkCondition
     std::vector<SizeType> RigidNodes;
     std::vector<SizeType> DeformableNodes;
 
-    BoundedMatrix<double,3,3>               SlaveSkewSymDistance;
+    //BoundedMatrix<double,3,3>               SlaveSkewSymDistance;
+    Matrix SlaveSkewSymDistance;
     std::vector<BoundedMatrix<double,3,3>> RigidSkewSymDistances;
 
     Element::Pointer   pSlaveElement;

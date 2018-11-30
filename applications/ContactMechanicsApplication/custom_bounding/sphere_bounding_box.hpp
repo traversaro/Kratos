@@ -613,7 +613,7 @@ protected:
       Properties::Pointer pProperties = Kratos::make_shared<Properties>(number_of_properties);
 
       //Shere numeration matrix:
-      matrix<int> Connectivities(angular_partitions+2,angular_partitions+1);
+      DenseMatrix<int> Connectivities(angular_partitions+2,angular_partitions+1);
       int counter = 1;
       for(unsigned int i=0; i<=angular_partitions; i++)
 	{

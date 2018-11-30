@@ -68,8 +68,8 @@ namespace Kratos
    {
 
       mDeterminantF0                = 1;
-      mInverseDeformationGradientF0 = identity_matrix<double> (3);
-      mElasticLeftCauchyGreen = identity_matrix<double> (3);
+      mInverseDeformationGradientF0 = IdentityMatrix(3);
+      mElasticLeftCauchyGreen = IdentityMatrix(3);
 
       mpFlowRule->InitializeMaterial(mpYieldCriterion, mpHardeningLaw, rProps);
    }
@@ -111,7 +111,7 @@ namespace Kratos
 
       //0.- Initialize parameters
       MaterialResponseVariables ElasticVariables;
-      ElasticVariables.Identity = identity_matrix<double> ( 3 );
+      ElasticVariables.Identity = IdentityMatrix(3);
 
       ElasticVariables.SetElementGeometry(DomainGeometry);
       ElasticVariables.SetShapeFunctionsValues(ShapeFunctions);
@@ -177,7 +177,7 @@ namespace Kratos
             ReturnMappingVariables.Options.Set(FlowRule::IMPLEX_ACTIVE, false);
          }
 
-         ElasticVariables.DeformationGradientF = identity_matrix<double>(3);  // this is the incremental def gradient
+         ElasticVariables.DeformationGradientF = IdentityMatrix(3);  // this is the incremental def gradient
          NewElasticLeftCauchyGreen = mElasticLeftCauchyGreen;
          this->CalculateOnlyDeviatoricPart( ElasticVariables.DeformationGradientF ); // in UP this is FBar
          mpFlowRule->CalculateReturnMapping( ReturnMappingVariables, ElasticVariables.DeformationGradientF, StressMatrix, NewElasticLeftCauchyGreen);

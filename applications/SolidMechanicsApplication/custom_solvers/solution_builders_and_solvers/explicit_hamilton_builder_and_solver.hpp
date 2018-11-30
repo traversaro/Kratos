@@ -138,10 +138,10 @@ public:
                  int number_of_threads = 1;
          #endif
 
-         vector<unsigned int> node_partition;
+         DenseVector<unsigned int> node_partition;
          OpenMPUtils::CreatePartition(number_of_threads, pNodes.size(), node_partition);
 
-         vector<unsigned int> element_partition;
+         DenseVector<unsigned int> element_partition;
          OpenMPUtils::CreatePartition(number_of_threads, pElements.size(), element_partition);
 
 
@@ -265,7 +265,7 @@ public:
                 int number_of_threads = 1;
         #endif
 
-	vector<unsigned int> node_partition;
+	DenseVector<unsigned int> node_partition;
 	OpenMPUtils::CreatePartition(number_of_threads, pNodes.size(), node_partition);
 
         #pragma omp parallel
@@ -324,7 +324,7 @@ public:
 	int number_of_threads = 1;
         #endif
 
-        vector<unsigned int> node_partition;
+        DenseVector<unsigned int> node_partition;
 	OpenMPUtils::CreatePartition(number_of_threads, pNodes.size(), node_partition);
 
 	//initial build to initialize all
@@ -584,7 +584,7 @@ public:
                 int number_of_threads = 1;
         #endif
 
-	vector<unsigned int> node_partition;
+	DenseVector<unsigned int> node_partition;
 	OpenMPUtils::CreatePartition(number_of_threads, pNodes.size(), node_partition);
 
         #pragma omp parallel
@@ -668,7 +668,7 @@ public:
     int number_of_threads = 1;
 #endif
 
-    vector<unsigned int> condition_partition;
+    DenseVector<unsigned int> condition_partition;
     OpenMPUtils::CreatePartition(number_of_threads, pConditions.size(), condition_partition);
 
 
@@ -721,7 +721,7 @@ public:
         int number_of_threads = 1;
 #endif
 
-        vector<unsigned int> element_partition;
+        DenseVector<unsigned int> element_partition;
         OpenMPUtils::CreatePartition(number_of_threads, pElements.size(), element_partition);
 
         #pragma omp parallel for
@@ -914,4 +914,3 @@ private:
 } /* namespace Kratos.*/
 
 #endif /* KRATOS_EXPLICIT_HAMILTON_BUILDER_AND_SOLVER  defined */
-

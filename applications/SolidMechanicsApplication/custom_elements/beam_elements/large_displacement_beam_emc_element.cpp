@@ -464,7 +464,9 @@ namespace Kratos
 
     double DetRotationMatrix = 0;
     MathUtils<double>::InvertMatrix3( rAlphaRotationMatrix, rAlphaRotationMatrixAsterisk, DetRotationMatrix);
-    rAlphaRotationMatrixAsterisk = DetRotationMatrix *  trans(rAlphaRotationMatrixAsterisk);
+    //rAlphaRotationMatrixAsterisk = DetRotationMatrix * trans(rAlphaRotationMatrixAsterisk);
+    noalias(rAlphaRotationMatrixAsterisk) = Matrix(trans(rAlphaRotationMatrixAsterisk));
+    rAlphaRotationMatrixAsterisk *= DetRotationMatrix;
 
     KRATOS_CATCH( "" )
   }
@@ -806,8 +808,8 @@ namespace Kratos
     //----------------
 
     //Current frame given by the Frame Rotation
-    StressResultants = prod(rVariables.AlphaRotationMatrix, StressResultants);
-    StressCouples    = prod(rVariables.AlphaRotationMatrixAsterisk, StressCouples);
+    StressResultants = prod(rVariables.AlphaRotationMatrix, Vector(StressResultants));
+    StressCouples    = prod(rVariables.AlphaRotationMatrixAsterisk, Vector(StressCouples));
 
     for ( unsigned int i = 0; i < dimension; i++ )
       {
@@ -1175,8 +1177,10 @@ namespace Kratos
 
     this->CalculateInertiaDyadic( Section, InertiaDyadic );
 
-    Matrix CurrentInertiaDyadic = prod(rVariables.CurrentRotationMatrix,InertiaDyadic);
-    CurrentInertiaDyadic = prod(CurrentInertiaDyadic,trans(rVariables.CurrentRotationMatrix));
+    Matrix CurrentInertiaDyadic(3,3);
+    Matrix InertiaTemp(3,3);
+    noalias(InertiaTemp) = prod(rVariables.CurrentRotationMatrix,InertiaDyadic);
+    noalias(CurrentInertiaDyadic) = prod(InertiaTemp,trans(rVariables.CurrentRotationMatrix));
 
     //std::cout<<" InertiaDyadic "<<InertiaDyadic<<" TotalMass "<<TotalMass<<std::endl;
 
@@ -1334,12 +1338,15 @@ namespace Kratos
     //std::cout<<" I "<<InertiaDyadic<<std::endl;
 
     //Current Inertia Dyadic
-    Matrix CurrentInertiaDyadic = prod(rVariables.CurrentRotationMatrix,InertiaDyadic);
-    CurrentInertiaDyadic = prod(CurrentInertiaDyadic,trans(rVariables.CurrentRotationMatrix));
+    Matrix CurrentInertiaDyadic(3,3);
+    Matrix InertiaTemp(3,3);
+    noalias(InertiaTemp) = prod(rVariables.CurrentRotationMatrix,InertiaDyadic);
+    noalias(CurrentInertiaDyadic) = prod(InertiaTemp,trans(rVariables.CurrentRotationMatrix));
 
     //Previous Inertia Dyadic
-    Matrix PreviousInertiaDyadic = prod(rVariables.PreviousRotationMatrix,InertiaDyadic);
-    PreviousInertiaDyadic = prod(PreviousInertiaDyadic,trans(rVariables.PreviousRotationMatrix));
+    Matrix PreviousInertiaDyadic(3,3);
+    noalias(InertiaTemp) = prod(rVariables.PreviousRotationMatrix,InertiaDyadic);
+    noalias(PreviousInertiaDyadic) = prod(InertiaTemp,trans(rVariables.PreviousRotationMatrix));
 
 
     Vector AngularInertialForceVector(3);

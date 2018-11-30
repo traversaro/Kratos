@@ -10,6 +10,11 @@
 // System includes
 
 // External includes
+#ifdef KRATOS_USE_AMATRIX   // This macro definition is for the migration period and to be removed afterward please do not use it
+#include "boost/numeric/ublas/matrix.hpp" // for the sparse space dense vector
+#else
+#endif // KRATOS_USE_AMATRIX
+
 
 // Project includes
 #include "custom_python/add_custom_strategies_to_python.h"
@@ -73,7 +78,7 @@ namespace Python
 namespace py = pybind11;
 
 //base types
-typedef UblasSpace<double, CompressedMatrix, Vector>                                               SparseSpaceType;
+typedef UblasSpace<double, CompressedMatrix, boost::numeric::ublas::vector<double>>                SparseSpaceType;
 typedef UblasSpace<double, Matrix, Vector>                                                          LocalSpaceType;
 typedef LinearSolver<SparseSpaceType, LocalSpaceType>                                             LinearSolverType;
 typedef SolutionStrategy<SparseSpaceType, LocalSpaceType, LinearSolverType>                   SolutionStrategyType;

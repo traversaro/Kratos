@@ -21,7 +21,7 @@
 //
 // APPROXIMATED VERSION WITHOUT THE TERM NodalJ/ElemJ
 //
-// (even in plane strain it requeres the constitutive tensor in 3D (6X6) and the stress (1X6) 
+// (even in plane strain it requeres the constitutive tensor in 3D (6X6) and the stress (1X6)
 //
 
 //
@@ -357,7 +357,7 @@ namespace Kratos
       if ( rOutput.size() != integration_points_number )
          rOutput.resize( integration_points_number );
 
-      //if ( rVariable == CAUCHY_STRESS_VECTOR || rVariable == PK2_STRESS_VECTOR ) 
+      //if ( rVariable == CAUCHY_STRESS_VECTOR || rVariable == PK2_STRESS_VECTOR )
       // SINCE IN THIS VARIABLE I PUT THE "CONSTITUTIVE STRESS" It DOESN?T MATTER
 
       UpdatedLagrangianUJElement::CalculateOnIntegrationPoints( rVariable, rOutput, rCurrentProcessInfo);
@@ -368,7 +368,7 @@ namespace Kratos
 
    void UpdatedLagrangianUJPElement::CalculateOnIntegrationPoints(const Variable<Matrix>& rVariable, std::vector<Matrix>& rOutput, const ProcessInfo& rCurrentProcessInfo)
    {
-      
+
       if ( rVariable == CAUCHY_STRESS_TENSOR ) {
          const unsigned int number_of_nodes = GetGeometry().PointsNumber();
 
@@ -395,7 +395,7 @@ namespace Kratos
             //to take in account previous step writing
             if( this->Is(SolidElement::FINALIZED_STEP) ){
                this->GetHistoricalVariables(Variables,PointNumber);
-            }		
+            }
 
             //set general variables to constitutivelaw parameters
             this->SetElementData(Variables,Values,PointNumber);
@@ -484,9 +484,9 @@ namespace Kratos
    {
       UpdatedLagrangianUJElement::InitializeElementData(rVariables,rCurrentProcessInfo);
 
-      rVariables.StressVector.resize(6);
+      rVariables.StressVector.resize(6,false);
 
-      rVariables.ConstitutiveMatrix.resize(6,6);
+      rVariables.ConstitutiveMatrix.resize(6,6,false);
 
 
    }
@@ -548,7 +548,7 @@ namespace Kratos
       MatrixType& rLeftHandSideMatrix = rLocalSystem.GetLeftHandSideMatrix();
 
       // operation performed: add Km to the rLefsHandSideMatrix
-      UJPElementData  ElementVariables; 
+      UJPElementData  ElementVariables;
       CalculateThisElementData( ElementVariables, rVariables);
 
       //respect to the current configuration n+1
@@ -607,9 +607,9 @@ namespace Kratos
       rVariables.detF = 1.0;
 
       //contribution of the internal and external forces
-      VectorType& rRightHandSideVector = rLocalSystem.GetRightHandSideVector(); 
+      VectorType& rRightHandSideVector = rLocalSystem.GetRightHandSideVector();
 
-      UJPElementData  ElementVariables; 
+      UJPElementData  ElementVariables;
       CalculateThisElementData( ElementVariables, rVariables);
 
 
@@ -644,7 +644,7 @@ namespace Kratos
 
    void UpdatedLagrangianUJPElement::CalculateAndAddInternalForcesElemUJP(VectorType& rRightHandSideVector,
          ElementDataType & rVariables,
-         UJPElementData& rElementVariables, 
+         UJPElementData& rElementVariables,
          double& rIntegrationWeight
          )
    {
@@ -670,14 +670,14 @@ namespace Kratos
          }
       }
 
-      KRATOS_CATCH( "" ) 
+      KRATOS_CATCH( "" )
    }
 
    //******************************** PRESSURE FORCES  **********************************
    //************************************************************************************
    void UpdatedLagrangianUJPElement::CalculateAndAddJacobianForcesElemUJP( VectorType& rRightHandSideVector,
          ElementDataType & rVariables,
-         UJPElementData& rElementVariables, 
+         UJPElementData& rElementVariables,
          double& rIntegrationWeight)
 
    {
@@ -721,7 +721,7 @@ namespace Kratos
 
    void UpdatedLagrangianUJPElement::CalculateAndAddPressureForces(VectorType& rRightHandSideVector,
          ElementDataType & rVariables,
-         UJPElementData& rElementVariables, 
+         UJPElementData& rElementVariables,
          double& rIntegrationWeight)
    {
       KRATOS_TRY
@@ -733,7 +733,7 @@ namespace Kratos
 
       VectorType Fh=rRightHandSideVector;
 
-      double ElementalMeanStress = rElementVariables.ElementalMeanStress; 
+      double ElementalMeanStress = rElementVariables.ElementalMeanStress;
       double consistent = 1.0;
 
       for ( unsigned int i = 0; i < number_of_nodes; i++ )
@@ -763,7 +763,7 @@ namespace Kratos
    //************************* defined in the Stab element ************************************
    void UpdatedLagrangianUJPElement::CalculateAndAddStabilizedJacobianElemUJP(VectorType& rRightHandSideVector,
          ElementDataType & rVariables,
-         UJPElementData & rElementVariables, 
+         UJPElementData & rElementVariables,
          double& rIntegrationWeight)
    {
       KRATOS_TRY
@@ -773,9 +773,9 @@ namespace Kratos
 
       //VectorType Fh = rRightHandSideVector;
 
-      double AlphaStabilization  = 4.0; 
+      double AlphaStabilization  = 4.0;
       double StabilizationFactor = GetProperties()[STABILIZATION_FACTOR_J];
-      AlphaStabilization *= StabilizationFactor; 
+      AlphaStabilization *= StabilizationFactor;
 
 
       const double& YoungModulus          = GetProperties()[YOUNG_MODULUS];
@@ -790,7 +790,7 @@ namespace Kratos
       if ( YoungModulus < 0.0001)
       {
          AlphaStabilization = 4.0 * StabilizationFactor / 18.0;
-         AlphaStabilization *= mElementStabilizationNumber; 
+         AlphaStabilization *= mElementStabilizationNumber;
 
       }
 
@@ -819,7 +819,7 @@ namespace Kratos
    // ********************************************************************************
    void UpdatedLagrangianUJPElement::CalculateAndAddStabilizedPressure(VectorType& rRightHandSideVector,
          ElementDataType & rVariables,
-         UJPElementData & rElementVariables, 
+         UJPElementData & rElementVariables,
          double& rIntegrationWeight)
    {
       KRATOS_TRY
@@ -871,7 +871,7 @@ namespace Kratos
 
    void UpdatedLagrangianUJPElement::CalculateAndAddKuumElemUJP(MatrixType& rLeftHandSideMatrix,
          ElementDataType& rVariables,
-         UJPElementData &  rElementVariables, 
+         UJPElementData &  rElementVariables,
          double& rIntegrationWeight)
    {
       KRATOS_TRY
@@ -885,7 +885,7 @@ namespace Kratos
 
       // Definition of Smallt Cons Matrix
       if ( rElementVariables.voigtsize == 6) {
-         ConstMatrixSmall = rVariables.ConstitutiveMatrix; 
+         ConstMatrixSmall = rVariables.ConstitutiveMatrix;
       }
       else {
          for (unsigned int i = 0; i < 3; i++) {
@@ -900,7 +900,7 @@ namespace Kratos
       }
 
       // 2. Definition of Deviatoric Alpha and multiply
-      Matrix DeviatoricAlpha = ZeroMatrix ( rElementVariables.voigtsize);
+      Matrix DeviatoricAlpha = ZeroMatrix(rElementVariables.voigtsize,rElementVariables.voigtsize);
       for (unsigned int i = 0; i < rElementVariables.voigtsize; i++)
          DeviatoricAlpha(i,i) = 1.0;
       for (unsigned int i = 0; i < dimension; i++) {
@@ -925,7 +925,7 @@ namespace Kratos
                for (unsigned int q = 0; q < dimension; q++) {
                   // THIS IS NOT THE WAY TO PERFORM A 4Or mutliplication and compression, but,....
                   unsigned int auxk, auxl;
-                  if ( k < l) { auxk = k; auxl = l;  } 
+                  if ( k < l) { auxk = k; auxl = l;  }
                   else  { auxk = l; auxl = k; }
                   unsigned int indexi;
                   if ( auxk == auxl) {
@@ -977,11 +977,11 @@ namespace Kratos
          std::cout << " MORE TERMS " << MoreTerms << std::endl;
       }
 
-      // 4. Put it in the BIG MATRIX ( add out of plane terms) and add the ExtraTerms ( "geometric-like") 
+      // 4. Put it in the BIG MATRIX ( add out of plane terms) and add the ExtraTerms ( "geometric-like")
       Matrix ConstMatrixBig = ZeroMatrix(6,6);
       if ( rElementVariables.voigtsize == 6) {
-         ConstMatrixBig = ConstMatrixSmall + MoreTerms; 
-      } 
+         ConstMatrixBig = ConstMatrixSmall + MoreTerms;
+      }
       else {
          for (unsigned int i = 0; i < 3; i++) {
             for (unsigned int j = 0; j< 3; j++) {
@@ -993,7 +993,7 @@ namespace Kratos
             }
          }
          if ( this->Id() == 0) {
-            std::cout << " I ADD THE OUT OF PLANE "<< ConstMatrixBig  << std::endl; 
+            std::cout << " I ADD THE OUT OF PLANE "<< ConstMatrixBig  << std::endl;
          }
 
          // AND NOW LETS ADD THE OUT OF PLANE
@@ -1009,7 +1009,7 @@ namespace Kratos
          Aux1 = prod ( Aux1, DeviatoricAlpha);
 
          if (this->Id() == 0) {
-            std::cout << " AUX 1"  << Aux1 << std::endl; 
+            std::cout << " AUX 1"  << Aux1 << std::endl;
          }
          for (unsigned int i = 0; i < 2; i++) {
             unsigned int indexi = i;
@@ -1021,13 +1021,13 @@ namespace Kratos
          std::cout << " AFTER THE OUT OF PLANE (i.e. breve derivative) " << ConstMatrixBig << std::endl;
       }
 
-      //5. Multiply it by the Deviatoric Beta Matrix 
+      //5. Multiply it by the Deviatoric Beta Matrix
       Matrix DeviatoricBeta = ZeroMatrix(6,6);
-      for (unsigned int i = 0; i < 6; i++) 
+      for (unsigned int i = 0; i < 6; i++)
          DeviatoricBeta(i,i) = 1.0;
       for (unsigned int i = 0; i < 3; i++) {
          for (unsigned int j = 0; j < 3 ; j++) {
-            DeviatoricBeta(i,j) -= rElementVariables.Beta; 
+            DeviatoricBeta(i,j) -= rElementVariables.Beta;
          }
       }
       if ( this->Id() == 0 ) {
@@ -1049,7 +1049,7 @@ namespace Kratos
                unsigned int indexj = j;
                if ( i == 2) indexi += 1;
                if ( j == 2) indexj += 1;
-               ConstMatrixSmall(i,j) = ConstMatrixBig(indexi, indexj); 
+               ConstMatrixSmall(i,j) = ConstMatrixBig(indexi, indexj);
             }
          }
       }
@@ -1058,7 +1058,7 @@ namespace Kratos
 
       // 7. Put the matrix in the MATRIX
       //contributions to stiffness matrix calculated on the reference config
-      Matrix Kuu = prod( trans( rVariables.B ),  rIntegrationWeight * Matrix( prod( ConstMatrixSmall, rVariables.B ) ) );  
+      Matrix Kuu = prod( trans( rVariables.B ),  rIntegrationWeight * Matrix( prod( ConstMatrixSmall, rVariables.B ) ) );
 
       if (this->Id() == 0) {
          std::cout << " DISPLACEMENT DEVIATORIC DERIVATIVE " << ConstMatrixSmall << std::endl;
@@ -1104,7 +1104,7 @@ namespace Kratos
 
    void UpdatedLagrangianUJPElement::CalculateAndAddKuugElemUJP(MatrixType& rLeftHandSideMatrix,
          ElementDataType& rVariables,
-         UJPElementData & rElementVariables, 
+         UJPElementData & rElementVariables,
          double& rIntegrationWeight)
 
    {
@@ -1137,7 +1137,7 @@ namespace Kratos
                for (unsigned int q = 0; q < dimension; q++) {
                   // THIS IS NOT THE WAY TO PERFORM A 4Or mutliplication and compression, but,....
                   unsigned int auxk, auxl;
-                  if ( k < l) { 
+                  if ( k < l) {
                      auxk = k; auxl = l;
                   } else  {
                      auxk = l; auxl = k;
@@ -1158,7 +1158,7 @@ namespace Kratos
                      }
                   }
                   unsigned int auxp, auxq;
-                  if ( p < q) { 
+                  if ( p < q) {
                      auxp = p;  auxq = q;
                   } else  {
                      auxp = q; auxq = p;
@@ -1197,11 +1197,11 @@ namespace Kratos
       else {
          for (unsigned int i = 0; i < rElementVariables.voigtsize; i++) {
             for (unsigned int j = 0; j < rElementVariables.voigtsize; j++) {
-               unsigned int indexi = i; 
+               unsigned int indexi = i;
                unsigned int indexj = j;
-               if ( i > 1) indexi += 1; 
-               if ( j > 1) indexj += 1; 
-               ThisMatrixSize(i, j) = ThisMatrix(indexi,indexj); 
+               if ( i > 1) indexi += 1;
+               if ( j > 1) indexj += 1;
+               ThisMatrixSize(i, j) = ThisMatrix(indexi,indexj);
             }
          }
       }
@@ -1244,7 +1244,7 @@ namespace Kratos
 
    void UpdatedLagrangianUJPElement::CalculateAndAddKup (MatrixType& rLeftHandSideMatrix,
          ElementDataType& rVariables,
-         UJPElementData & rElementVariables, 
+         UJPElementData & rElementVariables,
          double& rIntegrationWeight)
    {
       KRATOS_TRY
@@ -1255,7 +1255,7 @@ namespace Kratos
       MatrixType Kh=rLeftHandSideMatrix;
       //contributions to stiffness matrix calculated on the reference configuration
       unsigned int voigtsize = 3;
-      if (dimension == 3) 
+      if (dimension == 3)
          voigtsize = 6;
 
       Vector IdentityVector = ZeroVector(voigtsize);
@@ -1265,7 +1265,7 @@ namespace Kratos
 
       Vector ThisVector = prod( trans( rVariables.B), IdentityVector);
 
-      Matrix Kup = ZeroMatrix( number_of_nodes*dimension, number_of_nodes); 
+      Matrix Kup = ZeroMatrix( number_of_nodes*dimension, number_of_nodes);
       for (unsigned int i = 0; i < number_of_nodes*dimension; i++)
       {
          for (unsigned int j = 0; j < number_of_nodes; j++)
@@ -1273,7 +1273,7 @@ namespace Kratos
             Kup(i,j) = ThisVector(i)*rVariables.N[j];
          }
       }
-      Kup *= rIntegrationWeight; 
+      Kup *= rIntegrationWeight;
 
       unsigned int indexi = 0;
       unsigned int indexj = 0;
@@ -1305,7 +1305,7 @@ namespace Kratos
    // *********************************************************************************
    void UpdatedLagrangianUJPElement::CalculateAndAddKuJElemUJP (MatrixType& rLeftHandSideMatrix,
          ElementDataType& rVariables,
-         UJPElementData & rElementVariables, 
+         UJPElementData & rElementVariables,
          double& rIntegrationWeight)
 
    {
@@ -1320,7 +1320,7 @@ namespace Kratos
          Identity(i, 0) = 1.0;
 
       ConstitutiveMatrix = prod(ConstitutiveMatrix, Identity);
-      ConstitutiveMatrix *= rElementVariables.Alpha; 
+      ConstitutiveMatrix *= rElementVariables.Alpha;
 
       // Add (2alpha - 1) * SV
       for (unsigned int i = 0; i < 6; i++)
@@ -1339,14 +1339,14 @@ namespace Kratos
          std::cout << " IDENTITY " << Identity << std::endl;
       }
 
-      // add the out of plane matrix 
+      // add the out of plane matrix
       if ( rElementVariables.voigtsize < 6) { // ie. Plane Strain
-         ConstitutiveMatrix(2, 0) -= rVariables.StressVector(2); 
+         ConstitutiveMatrix(2, 0) -= rVariables.StressVector(2);
          for (unsigned int i = 0; i < 2; i++)
-            ConstitutiveMatrix(2,0) += rElementVariables.Alpha * rVariables.ConstitutiveMatrix(2, i) * Identity(i,0); 
+            ConstitutiveMatrix(2,0) += rElementVariables.Alpha * rVariables.ConstitutiveMatrix(2, i) * Identity(i,0);
       }
 
-      ConstitutiveMatrix /= rElementVariables.NodalJacobian; 
+      ConstitutiveMatrix /= rElementVariables.NodalJacobian;
 
       if ( this->Id() == 0 ) {
          std::cout << " AFTER OUT OF PLANE " << ConstitutiveMatrix << std::endl;
@@ -1357,7 +1357,7 @@ namespace Kratos
          BetaDeviatoric(i,i) = 1.0;
       for (unsigned int i = 0; i < 3; i++) {
          for (unsigned int j = 0; j < 3; j++) {
-            BetaDeviatoric(i,j) -= rElementVariables.Beta; 
+            BetaDeviatoric(i,j) -= rElementVariables.Beta;
          }
       }
 
@@ -1371,7 +1371,7 @@ namespace Kratos
       Matrix SmallConstMatrix = ZeroMatrix( rElementVariables.voigtsize, 1);
       if ( rElementVariables.voigtsize == 6) {
          SmallConstMatrix = ConstitutiveMatrix;
-      } 
+      }
       else {
          for (unsigned int i = 0; i < rElementVariables.voigtsize; i++) {
             unsigned int indexi = i;
@@ -1433,7 +1433,7 @@ namespace Kratos
    // *************************************************************************************
    void UpdatedLagrangianUJPElement::CalculateAndAddKJuElemUJP (MatrixType& rLeftHandSideMatrix,
          ElementDataType& rVariables,
-         UJPElementData & rElementVariables, 
+         UJPElementData & rElementVariables,
          double& rIntegrationWeight)
 
    {
@@ -1472,7 +1472,7 @@ namespace Kratos
    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    void UpdatedLagrangianUJPElement::CalculateAndAddKJJElemUJP (MatrixType& rLeftHandSideMatrix,
          ElementDataType& rVariables,
-         UJPElementData&  rElementVariables, 
+         UJPElementData&  rElementVariables,
          double& rIntegrationWeight)
 
    {
@@ -1512,7 +1512,7 @@ namespace Kratos
    // ************************************************************************************
    void UpdatedLagrangianUJPElement::CalculateAndAddKJp (MatrixType& rLeftHandSideMatrix,
          ElementDataType& rVariables,
-         UJPElementData & rElementVariables, 
+         UJPElementData & rElementVariables,
          double& rIntegrationWeight)
 
    {
@@ -1530,7 +1530,7 @@ namespace Kratos
    // **********************************************************************************
    void UpdatedLagrangianUJPElement::CalculateAndAddKpJ (MatrixType& rLeftHandSideMatrix,
          ElementDataType& rVariables,
-         UJPElementData & rElementVariables, 
+         UJPElementData & rElementVariables,
          double& rIntegrationWeight)
 
    {
@@ -1545,7 +1545,7 @@ namespace Kratos
 
       double KNumber = 0;
 
-      for (unsigned int i = 0; i < dimension; i++) 
+      for (unsigned int i = 0; i < dimension; i++)
       {
          for (unsigned int j = 0; j< dimension; j++) {
             KNumber += ConstitutiveMatrix(i,j);
@@ -1565,7 +1565,7 @@ namespace Kratos
          }
       }
 
-      KNumber *=  rElementVariables.Beta / rElementVariables.NodalJacobian; 
+      KNumber *=  rElementVariables.Beta / rElementVariables.NodalJacobian;
       KNumber *= rIntegrationWeight / rVariables.detH ;
 
 
@@ -1577,7 +1577,7 @@ namespace Kratos
             consistent = 1.0/12.0;
             if ( i == j )
                consistent *= 2.0;
-            rLeftHandSideMatrix( (dimension+2)*i +3, (dimension+2)*j + 2) -= KNumber * rVariables.N[i] * rVariables.N[j]; 
+            rLeftHandSideMatrix( (dimension+2)*i +3, (dimension+2)*j + 2) -= KNumber * rVariables.N[i] * rVariables.N[j];
          }
       }
 
@@ -1589,7 +1589,7 @@ namespace Kratos
 
    void UpdatedLagrangianUJPElement::CalculateAndAddKpu (MatrixType& rLeftHandSideMatrix,
          ElementDataType& rVariables,
-         UJPElementData & rElementVariables, 
+         UJPElementData & rElementVariables,
          double& rIntegrationWeight)
 
    {
@@ -1602,7 +1602,7 @@ namespace Kratos
       const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
       MatrixType Kh=rLeftHandSideMatrix;
 
-      Matrix ConstitutiveMatrix = rVariables.ConstitutiveMatrix; 
+      Matrix ConstitutiveMatrix = rVariables.ConstitutiveMatrix;
 
 
       // 1. Definition of some tensors
@@ -1614,7 +1614,7 @@ namespace Kratos
          ConstMatrix = ConstitutiveMatrix;
       }
       else {
-         int indexi, indexj; 
+         int indexi, indexj;
          for (unsigned int i = 0; i < 3; i++) {
             for (unsigned int j = 0; j < 3; j++) {
                indexi = i; indexj = j;
@@ -1628,13 +1628,13 @@ namespace Kratos
 
       }
 
-      // 1.b Definition of Identity and deviatoric 
+      // 1.b Definition of Identity and deviatoric
       Matrix Identity = ZeroMatrix( 1, rElementVariables.voigtsize );
       for (unsigned int i = 0; i < dimension; i++) {
          Identity(0, i) = 1.0;
       }
 
-      Matrix AlphaDeviatoricMatrix = ZeroMatrix(rElementVariables.voigtsize);
+      Matrix AlphaDeviatoricMatrix = ZeroMatrix(rElementVariables.voigtsize,rElementVariables.voigtsize);
       for (unsigned int i = 0; i < dimension; i++) {
          for (unsigned int j = 0; j < dimension; j++) {
             AlphaDeviatoricMatrix(i,j) = -rElementVariables.Alpha;
@@ -1684,7 +1684,7 @@ namespace Kratos
       }
 
       ConstMatrix *= rIntegrationWeight / rVariables.detH;
-      ConstMatrix *= rElementVariables.Beta; 
+      ConstMatrix *= rElementVariables.Beta;
       ConstMatrix = prod( ConstMatrix, rVariables.B);
 
       // Multiply and everithing
@@ -1727,7 +1727,7 @@ namespace Kratos
 
    void UpdatedLagrangianUJPElement::CalculateAndAddKpp (MatrixType& rLeftHandSideMatrix,
          ElementDataType& rVariables,
-         UJPElementData & rElementVariables, 
+         UJPElementData & rElementVariables,
          double& rIntegrationWeight)
    {
       KRATOS_TRY
@@ -1765,7 +1765,7 @@ namespace Kratos
    //************************************************************************************
    void UpdatedLagrangianUJPElement::CalculateAndAddKJJStabElemUJP (MatrixType& rLeftHandSideMatrix,
          ElementDataType & rVariables,
-         UJPElementData & rElementVariables, 
+         UJPElementData & rElementVariables,
          double& rIntegrationWeight)
    {
 
@@ -1782,9 +1782,9 @@ namespace Kratos
       unsigned int indexpi = dimension;
       double consistent = 1.0;
 
-      double AlphaStabilization  = 4.0; 
+      double AlphaStabilization  = 4.0;
       double StabilizationFactor = GetProperties()[STABILIZATION_FACTOR_J];
-      AlphaStabilization *= StabilizationFactor; 
+      AlphaStabilization *= StabilizationFactor;
 
       const double& YoungModulus          = GetProperties()[YOUNG_MODULUS];
       const double& PoissonCoefficient    = GetProperties()[POISSON_RATIO];
@@ -1798,7 +1798,7 @@ namespace Kratos
       if ( YoungModulus < 0.0001)
       {
          AlphaStabilization = 4.0 * StabilizationFactor / 18.0;
-         AlphaStabilization *= mElementStabilizationNumber; 
+         AlphaStabilization *= mElementStabilizationNumber;
 
       }
 
@@ -1817,13 +1817,13 @@ namespace Kratos
          }
 
          indexpi += (dimension + 2);
-      } 
+      }
       KRATOS_CATCH( "" )
    }
 
    void UpdatedLagrangianUJPElement::CalculateAndAddKppStab (MatrixType& rLeftHandSideMatrix,
          ElementDataType & rVariables,
-         UJPElementData & rElementVariables, 
+         UJPElementData & rElementVariables,
          double& rIntegrationWeight)
    {
 
@@ -1840,7 +1840,7 @@ namespace Kratos
       unsigned int indexpi = dimension+1;
       double consistent = 1.0;
 
-      double AlphaStabilization  = 4.0; 
+      double AlphaStabilization  = 4.0;
       double StabilizationFactor = GetProperties()[STABILIZATION_FACTOR_P];
       AlphaStabilization *= StabilizationFactor;
 
@@ -1908,15 +1908,15 @@ namespace Kratos
       rElementVariables.ElementalMeanStress /= 3.0;
 
       Vector AuxStress = ZeroVector(6);
-      AuxStress = rVariables.StressVector; 
+      AuxStress = rVariables.StressVector;
       for (unsigned int i = 0; i < 3; i++)
          AuxStress(i) += ( rElementVariables.NodalMeanStress - rElementVariables.ElementalMeanStress);
 
       rElementVariables.StressVector = ZeroVector(rElementVariables.voigtsize);
       rElementVariables.StressVectorEC = ZeroVector( rElementVariables.voigtsize );
       if ( rElementVariables.voigtsize == 6) {
-         rElementVariables.StressVector = AuxStress; 
-         rElementVariables.StressVectorEC = rVariables.StressVector; 
+         rElementVariables.StressVector = AuxStress;
+         rElementVariables.StressVectorEC = rVariables.StressVector;
       }
       else {
          rElementVariables.StressVector(0) = AuxStress(0);
@@ -1950,5 +1950,3 @@ namespace Kratos
 
 
 }
-
-

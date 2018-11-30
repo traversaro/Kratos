@@ -527,7 +527,7 @@ void UpdatedLagrangianSegregatedFluidElement::CalculateKinematics(ElementDataTyp
     const Matrix& Ncontainer = rVariables.GetShapeFunctions();
 
     //Set Shape Functions Values for this integration point
-    noalias(rVariables.N) = matrix_row<const Matrix>( Ncontainer, rPointNumber);
+    noalias(rVariables.N) = row( Ncontainer, rPointNumber);
 
     //Calculating the inverse of the jacobian and the parameters needed [d£/dx_n]
     Matrix InvJ;
@@ -1299,7 +1299,8 @@ void UpdatedLagrangianSegregatedFluidElement::CalculateAndAddPressureForces(Vect
       Vector Acceleration (dimension);
       noalias(Acceleration) = ZeroVector(dimension);
 
-      ProjectionVelocityGradient = inner_prod(Normal, prod(D,Normal));
+      Vector DProjection = prod(D,Normal);
+      ProjectionVelocityGradient = inner_prod(Normal, DProjection);
 
       BoundFactor = rVariables.Tau * 2.0 / side_normal_size;
 

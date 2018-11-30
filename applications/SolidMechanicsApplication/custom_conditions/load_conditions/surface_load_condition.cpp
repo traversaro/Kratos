@@ -295,8 +295,10 @@ namespace Kratos
       else
 	{
 	  BoundedMatrix<double, 3, 3 > Kij;
-	  BoundedMatrix<double, 3, 3 > Cross_ge;
-	  BoundedMatrix<double, 3, 3 > Cross_gn;
+	  //BoundedMatrix<double, 3, 3 > Cross_ge;
+	  //BoundedMatrix<double, 3, 3 > Cross_gn;
+          Matrix Cross_ge(3,3);
+          Matrix Cross_gn(3,3);
 
 	  double coeff;
 	  const SizeType number_of_nodes = GetGeometry().PointsNumber();

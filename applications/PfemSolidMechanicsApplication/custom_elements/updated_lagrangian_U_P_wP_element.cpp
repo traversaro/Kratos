@@ -1180,7 +1180,6 @@ namespace Kratos
          this->FinalizeStepVariables(Variables,PointNumber);
       }
 
-
       this->Set(SolidElement::FINALIZED_STEP,true);
 
       KRATOS_CATCH( "" )

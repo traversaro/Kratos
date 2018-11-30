@@ -285,6 +285,7 @@ void ShellCrossSection::InitializeSolutionStep(const Properties& rMaterialProper
                                                const Vector& rShapeFunctionsValues,
                                                const ProcessInfo& rCurrentProcessInfo)
 {
+  // deprecated 2018
   // for(PlyCollection::iterator ply_it = mStack.begin(); ply_it != mStack.end(); ++ply_it)
   // {
   //   Ply& iPly = *ply_it;
