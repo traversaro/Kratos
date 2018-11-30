@@ -351,12 +351,17 @@ void ShellThickElement3D4N::EASOperator::GaussPointComputation_Step2(
   int num_stress = D.size2(); // it can be 6 for thin shells or 8 for thick  shells
   Matrix GTD(5,num_stress);
   noalias(GTD) = ZeroMatrix(5,num_stress);
-  MathUtilsType::project(GTD, MathUtilsType::range(0, num_stress), MathUtilsType::range(0, 3)) = GTC;
-  MathUtilsType::project(GTD, MathUtilsType::range(0, num_stress), MathUtilsType::range(3, 6)) =
-      prod(trans(mG), MathUtilsType::project(D, MathUtilsType::range(0, 3), MathUtilsType::range(3, 6)));
-  if (num_stress == 8)
-    MathUtilsType::project(GTD, MathUtilsType::range(0, num_stress), MathUtilsType::range(6, 8)) =
-        prod(trans(mG), MathUtilsType::project(D, MathUtilsType::range(0, 3), MathUtilsType::range(6, 8)));
+
+  MathUtilsType::project(GTD, MathUtilsType::range(0, GTD.size1()), MathUtilsType::range(0, 3), GTC);
+
+  Matrix mGD = prod(trans(mG), MathUtilsType::project(D, MathUtilsType::range(0, 3), MathUtilsType::range(3, 6)));
+  MathUtilsType::project(GTD, MathUtilsType::range(0, GTD.size1()), MathUtilsType::range(3, 6), mGD);
+
+  if (num_stress == 8){
+    mGD = prod(trans(mG), MathUtilsType::project(D, MathUtilsType::range(0, 3), MathUtilsType::range(6, 8)));
+    MathUtilsType::project(GTD, MathUtilsType::range(0, GTD.size1()), MathUtilsType::range(6, 8), mGD);
+  }
+
   noalias(storage.L) += prod(GTD, B);
 }
 
@@ -367,7 +372,7 @@ void ShellThickElement3D4N::EASOperator::ComputeModfiedTangentAndResidual(
   Matrix Hcopy(storage.Hinv);
 
 #ifdef KRATOS_USE_AMATRIX   // This macro definition is for the migration period and to be removed afterward please do not use it
-      AMatrix::LUFactorization<MatrixType, DenseVector<std::size_t> > lu_factorization(Hcopy);
+      AMatrix::LUFactorization<Matrix, DenseVector<std::size_t> > lu_factorization(Hcopy);
       storage.Hinv = lu_factorization.inverse();
 #else
       permutation_matrix<Matrix::size_type> pm(5);
@@ -1097,8 +1102,9 @@ void ShellThickElement3D4N::CalculateBMatrix(double xi, double eta,
   // transform the strain-displacement matrix from natural
   // to local coordinate system taking into account the element distorsion
 
-  MathUtilsType::project(B, MathUtilsType::slice(7, -1, 2), MathUtilsType::slice(0,1,B.size2())) =
-      prod(mitc_params.Transformation, BN);
+  //project(B, slice(7, -1, 2), slice::all()) = prod(mitc_params.Transformation, BN);
+  Matrix MitcBN = prod(mitc_params.Transformation, BN);
+  MathUtilsType::project(B, MathUtilsType::slice(7, -1, 2), MathUtilsType::slice(0,1,B.size2()), MitcBN);
 
   // Explanation of the 'slice':
   // The MITC4Params class and the first part of this method were coded
