@@ -1102,7 +1102,6 @@ void ShellThickElement3D4N::CalculateBMatrix(double xi, double eta,
   // transform the strain-displacement matrix from natural
   // to local coordinate system taking into account the element distorsion
 
-  //project(B, slice(7, -1, 2), slice::all()) = prod(mitc_params.Transformation, BN);
   Matrix MitcBN = prod(mitc_params.Transformation, BN);
   MathUtilsType::project(B, MathUtilsType::slice(7, -1, 2), MathUtilsType::slice(0,1,B.size2()), MitcBN);
 
