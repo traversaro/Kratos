@@ -1736,7 +1736,7 @@ public:
     VectorType b(size);
 
     for(unsigned int i = 0; i<size; ++i)
-      b[i] = start + stride;
+      b[i] = start + i*stride;
 
     return b;
   }

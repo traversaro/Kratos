@@ -998,7 +998,7 @@ namespace Kratos
       for ( unsigned int PointNumber = 0; PointNumber < integration_points_number; PointNumber++ )
       {
          mDeterminantF0[PointNumber] = 1;
-         noalias(mDeformationGradientF0[PointNumber]) = IdentityMatrix(3);
+         mDeformationGradientF0[PointNumber] = IdentityMatrix(3);
       }
 
 
