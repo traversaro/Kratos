@@ -302,7 +302,7 @@ void ThermalElement::InitializeGeneralVariables (GeneralVariables & rVariables, 
   rVariables.j = GetGeometry().Jacobian( rVariables.j, mThisIntegrationMethod );
 
   //Calculate Delta Position
-  rVariables.DeltaPosition = CalculateDeltaPosition(rVariables.DeltaPosition);
+  ElementUtilities::CalculateDeltaPosition(rVariables.DeltaPosition,this->GetGeometry());
 
   //set variables including all integration points values
 
@@ -358,22 +358,6 @@ void ThermalElement::CalculateKinematics(GeneralVariables& rVariables,
     KRATOS_CATCH( "" )
 }
 
-
-//*************************COMPUTE DELTA POSITION*************************************
-//************************************************************************************
-
-Matrix& ThermalElement::CalculateDeltaPosition(Matrix & rDeltaPosition)
-{
-    KRATOS_TRY
-
-    const GeometryType& rGeometry = GetGeometry();
-
-    ElementUtilities::CalculateDeltaPosition(rDeltaPosition,rGeometry);
-
-    return rDeltaPosition;
-
-    KRATOS_CATCH( "" )
-}
 
 //************************************************************************************
 //************************************************************************************

@@ -132,6 +132,29 @@ namespace Kratos
   //*******************************************************************************************
   //*******************************************************************************************
 
+  void MesherUtilities::SetFlagsToNodes(ModelPart& rModelPart, const std::vector<Flags> rControlFlags, const std::vector<Flags> rAssignFlags)
+  {
+    const int nnodes = rModelPart.Nodes().size();
+    ModelPart::NodesContainerType::iterator it_begin = rModelPart.NodesBegin();
+
+    #pragma omp parallel for
+    for (int i = 0; i < nnodes; i++)
+    {
+      ModelPart::NodesContainerType::iterator it = it_begin + i;
+
+      for(unsigned int i = 0; i<rControlFlags.size(); i++)
+      {
+        if( it->Is(rControlFlags[i]) ){
+          for(unsigned int i = 0; i<rAssignFlags.size(); i++)
+            it->Set(rAssignFlags[i]);
+        }
+      }
+    }
+  }
+
+  //*******************************************************************************************
+  //*******************************************************************************************
+
   bool MesherUtilities::CheckSubdomain(Geometry<Node<3> >& rGeometry)
   {
 
@@ -192,6 +215,101 @@ namespace Kratos
 
   }
 
+
+  //*******************************************************************************************
+  //*******************************************************************************************
+
+  bool MesherUtilities::CheckRigidOuterCentre(Geometry<Node<3> >& rGeometry)
+  {
+
+    KRATOS_TRY
+
+    bool outer = false;
+
+    unsigned int RigidNodes = 0;
+    const unsigned int size = rGeometry.size();
+
+    for(unsigned int i = 0; i < size; ++i)
+      {
+	if(rGeometry[i].Is(RIGID))
+	  {
+	    RigidNodes += 1;
+	  }
+      }
+
+
+    if(RigidNodes >= size-1)
+    {
+
+      //Baricenter
+      array_1d<double, 3>  Center;
+      Center.clear();
+      array_1d<double, 3>  Normal;
+
+      std::vector<array_1d<double, 3> > Vertices;
+      array_1d<double, 3>  Vertex;
+
+
+      for(unsigned int i = 0; i < size; ++i)
+      {
+        Vertex  = rGeometry[i].Coordinates();
+
+        Vertices.push_back(Vertex);
+
+        Center += Vertex;
+      }
+
+      Center /= (double)size;
+
+      array_1d<double, 3> Corner;
+
+      double tolerance = 0.05;
+      int numouter     = 0;
+
+      int numnodes = 0;
+      for(unsigned int i = 0; i < size; ++i)
+      {
+        if(rGeometry[i].Is(RIGID)){
+
+          Normal = rGeometry[i].FastGetSolutionStepValue(NORMAL);
+
+          double NormNormal = norm_2(Normal);
+          if( NormNormal != 0)
+            Normal /= NormNormal;
+
+          //change position to be the vector from the vertex to the geometry center
+          Corner = Center-Vertices[i];
+
+          double NormCorner = norm_2(Corner);
+          if( NormCorner != 0 )
+            Corner/= NormCorner;
+
+          double projection = inner_prod(Corner,Normal);
+
+          if( projection > tolerance )
+          {
+            ++numouter;
+          }
+          ++numnodes;
+        }
+      }
+
+      if(RigidNodes == size){
+        if(numouter > 0)
+          outer = true;
+      }
+      else if(RigidNodes == size-1){
+        if(numouter = numouter )
+          outer = true;
+      }
+
+    }
+
+    return outer; //if is outside the body
+
+    KRATOS_CATCH( "" )
+  }
+
   //*******************************************************************************************
   //*******************************************************************************************
 
@@ -206,37 +324,36 @@ namespace Kratos
     const unsigned int size = rGeometry.size();
 
     for(unsigned int i = 0; i < size; ++i)
+    {
+      if(rGeometry[i].Is(BOUNDARY))
       {
-	if(rGeometry[i].Is(BOUNDARY))
-	  {
-	    BoundaryNodes += 1;
-	  }
+        BoundaryNodes += 1;
       }
+    }
 
 
     if(BoundaryNodes == size)
+    {
+      //Baricenter
+      array_1d<double, 3>  Center;
+      noalias(Center) = ZeroVector(3);
+      array_1d<double, 3>  Normal;
+
+      std::vector<array_1d<double, 3> > Vertices;
+      array_1d<double, 3>  Vertex;
+
+
+      for(unsigned int i = 0; i < size; ++i)
       {
+        Vertex  = rGeometry[i].Coordinates();
 
-	//Baricenter
-	array_1d<double, 3>  Center;
-	Center.clear();
-	array_1d<double, 3>  Normal;
+        Vertices.push_back(Vertex);
 
-	std::vector<array_1d<double, 3> > Vertices;
-	array_1d<double, 3>  Vertex;
+        Center += Vertex;
+      }
 
 
-	for(unsigned int i = 0; i < size; ++i)
-	  {
-	    Vertex  = rGeometry[i].Coordinates();
-
-	    Vertices.push_back(Vertex);
-
-	    Center += Vertex;
-	  }
-
-
-	Center /= (double)size;
+      Center /= (double)size;
 
 	array_1d<double, 3> Corner;
 
@@ -250,15 +367,15 @@ namespace Kratos
 	    Normal = rGeometry[i].FastGetSolutionStepValue(NORMAL);
 
 	    double NormNormal = norm_2(Normal);
-	    if( NormNormal != 0)
-	      Normal /= NormNormal;
+        if( NormNormal != 0)
+          Normal /= NormNormal;
 
-	    //change position to be the vector from the vertex to the geometry center
-	    Corner = Center-Vertices[i];
+        //change position to be the vector from the vertex to the geometry center
+        Corner = Center-Vertices[i];
 
-	    double NormCorner = norm_2(Corner);
-	    if( NormCorner != 0 )
-	      Corner/= NormCorner;
+        double NormCorner = norm_2(Corner);
+        if( NormCorner != 0 )
+          Corner/= NormCorner;
 
 	    double projection = inner_prod(Corner,Normal);
 
@@ -490,7 +607,7 @@ namespace Kratos
 	{
 
 	  if( rGeometry[i].Is(NEW_ENTITY) )
-	    return Undefined;
+	    return MesherUtilities::Undefined;
 
 	  WeakPointerVector<Node<3> >& rN = rGeometry[i].GetValue(NEIGHBOUR_NODES);
 
