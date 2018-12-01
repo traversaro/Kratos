@@ -114,9 +114,9 @@ public:
         const bool use_element_provided_strain = cl_options.Is(ConstitutiveLaw::USE_ELEMENT_PROVIDED_STRAIN);
 
         if (use_element_provided_strain) {
-            CalculateTangentTensorSmallDeformationProvidedStrain(rValues, pConstitutiveLaw, rStressMeasure);
+            CalculateTangentTensorSmallDeformationProvidedStrain(rValues, pConstitutiveLaw, rStressMeasure, ConsiderPertubationThreshold);
         } else {
-            CalculateTangentTensorSmallDeformationNotProvidedStrain(rValues, pConstitutiveLaw, rStressMeasure);
+            CalculateTangentTensorSmallDeformationNotProvidedStrain(rValues, pConstitutiveLaw, rStressMeasure, ConsiderPertubationThreshold);
         }
     }
 
@@ -235,7 +235,7 @@ public:
                 const Vector& delta_stress = r_perturbed_integrated_stress - unperturbed_stress_vector_gp;
 
                 // Finally we compute the components
-                const IndexType voigt_index = CalculateVoigtIndex(delta_stress, i_component, j_component);
+                const IndexType voigt_index = CalculateVoigtIndex(delta_stress.size(), i_component, j_component);
                 CalculateComponentsToTangentTensor(auxiliar_tensor, delta_stress, pertubation, voigt_index);
 
                 // Reset the values to the initial ones
@@ -260,76 +260,7 @@ public:
         const bool ConsiderPertubationThreshold = true
         )
     {
-        // The stress variable
-        const Variable<Vector> stress_variable = rStressMeasure == ConstitutiveLaw::StressMeasure_PK2 ? PK2_STRESS_VECTOR : CAUCHY_STRESS_VECTOR;
-
-        // Converged values to be storaged
-        const Vector unperturbed_stress_vector_gp = Vector(rValues.GetStressVector());
-
-        // Converged values to be storaged
-        const Matrix unperturbed_deformation_gradient_gp = Matrix(rValues.GetDeformationGradientF());
-        const double det_unperturbed_deformation_gradient_gp = double(rValues.GetDeterminantF());
-
-        // The size of the deformation gradient
-        const SizeType size1 = unperturbed_deformation_gradient_gp.size1();
-        const SizeType size2 = unperturbed_deformation_gradient_gp.size2();
-
-        // The number of components
-        const SizeType num_components = unperturbed_stress_vector_gp.size();
-
-        double aux_det;
-        Matrix inverse_perturbed_deformation_gradient(size1, size2);
-        Matrix deformation_gradient_increment(size1, size2);
-
-        // The tangent tensor
-        Matrix& r_tangent_tensor = rValues.GetConstitutiveMatrix();
-        r_tangent_tensor.clear();
-        Matrix auxiliar_tensor = ZeroMatrix(num_components,num_components);
-      
-        // Calculate the perturbation
-        double pertubation;
-        for (IndexType i_component = 0; i_component < size1; ++i_component) {
-            for (IndexType j_component = i_component; j_component < size2; ++j_component) { // Doing a symmetric perturbation
-                double component_perturbation;
-                CalculatePerturbationFiniteDeformation(unperturbed_deformation_gradient_gp, i_component, j_component, pertubation);
-                pertubation = std::max(component_perturbation, pertubation);
-            }
-        }
-      
-        // We check that the perturbation has a threshold value of PerturbationThreshold
-        if (ConsiderPertubationThreshold && pertubation < PerturbationThreshold) pertubation = PerturbationThreshold;
-      
-        // Loop over components of the strain
-        Vector& r_perturbed_integrated_stress = rValues.GetStressVector();
-        Matrix& r_perturbed_deformation_gradient = const_cast<Matrix&>(rValues.GetDeformationGradientF());
-        double& r_perturbed_det_deformation_gradient = const_cast<double&>(rValues.GetDeterminantF());
-        for (std::size_t i_component = 0; i_component < size1; ++i_component) {
-            for (std::size_t j_component = i_component; j_component < size2; ++j_component) {
-                // Apply the perturbation
-                PerturbateDeformationGradient(r_perturbed_deformation_gradient, unperturbed_deformation_gradient_gp, pertubation, i_component, j_component);
-
-                // We continue with the calculations
-                IntegratePerturbedStrain(rValues, pConstitutiveLaw, rStressMeasure);
-
-                // We compute the new predictive stress vector // TODO: I need to check this, maybe I am overcomplicating everything
-                MathUtils<double>::InvertMatrix(r_perturbed_deformation_gradient,inverse_perturbed_deformation_gradient, aux_det);
-                deformation_gradient_increment = prod(inverse_perturbed_deformation_gradient, unperturbed_deformation_gradient_gp);
-                rValues.SetDeterminantF(MathUtils<double>::DetMat(deformation_gradient_increment));
-                rValues.SetDeformationGradientF(deformation_gradient_increment);
-                Vector delta_stress;
-                pConstitutiveLaw->CalculateValue(rValues, stress_variable, delta_stress);
-
-                // Finally we compute the components
-                const IndexType voigt_index = CalculateVoigtIndex(delta_stress, i_component, j_component);
-                CalculateComponentsToTangentTensor(auxiliar_tensor, delta_stress, pertubation, voigt_index);
-
-                // Reset the values to the initial ones
-                noalias(r_perturbed_integrated_stress) = unperturbed_stress_vector_gp;
-                noalias(r_perturbed_deformation_gradient) = unperturbed_deformation_gradient_gp;
-                r_perturbed_det_deformation_gradient = det_unperturbed_deformation_gradient_gp;
-            }
-        }
-        noalias(r_tangent_tensor) = auxiliar_tensor;
+        CalculateTangentTensorSmallDeformationNotProvidedStrain(rValues, pConstitutiveLaw, rStressMeasure, ConsiderPertubationThreshold);
     }
 
 protected:
@@ -465,35 +396,14 @@ private:
         const IndexType ComponentJ
         )
     {
-        noalias(rPerturbedDeformationGradient) = rDeformationGradientGP;
-        rPerturbedDeformationGradient(ComponentI, ComponentJ) += Perturbation;
-    }
-
-    /**
-     * @brief This method computes the equivalent deformation gradient for the elements which provide the deformation gradient as input
-     * @param rValues The properties of the CL
-     */
-    static Matrix ComputeEquivalentDeformationGradient(ConstitutiveLaw::Parameters& rValues)
-    {
-        // We update the deformation gradient
-        const Vector& r_strain_vector = rValues.GetStrainVector();
-        const SizeType size = r_strain_vector.size();
-        const SizeType F_size = (size == 6) ?  3 : 2;
-
-        Matrix equivalent_F(F_size, F_size);
-
-        for (IndexType i = 0; i < F_size; ++i) {
-            equivalent_F(i, i) = 1.0 + r_strain_vector[i];
+        Matrix aux_perturbation_matrix = IdentityMatrix(rDeformationGradientGP.size1());
+        if (ComponentI == ComponentJ) {
+            aux_perturbation_matrix(ComponentI, ComponentJ) += Perturbation;
+        } else {
+            aux_perturbation_matrix(ComponentI, ComponentJ) += 0.5 * Perturbation;
+            aux_perturbation_matrix(ComponentJ, ComponentI) += 0.5 * Perturbation;
         }
-
-        for (IndexType i = F_size; i < size; ++i) {
-            const IndexType equivalent_i = (i == F_size) ? 0 : (i == 4) ? 1 : 0;
-            const IndexType equivalent_j = (i == F_size) ? 1 : 2;
-            equivalent_F(equivalent_i, equivalent_j) = 0.5 * r_strain_vector[i];
-            equivalent_F(equivalent_j, equivalent_i) = 0.5 * r_strain_vector[i];
-        }
-
-        return equivalent_F;
+        noalias(rPerturbedDeformationGradient) = prod(aux_perturbation_matrix, rDeformationGradientGP);
     }
 
     /**
@@ -660,13 +570,12 @@ private:
      * @param Component Index of the component to compute
      */
     static IndexType CalculateVoigtIndex(
-        const Vector& rDeltaStress,
+        const SizeType VoigtSize,
         const IndexType ComponentI,
         const IndexType ComponentJ
         )
     {
-        const SizeType voigt_size = rDeltaStress.size();
-        if (voigt_size == 6) {
+        if (VoigtSize == 6) {
             switch(ComponentI) {
                 case 0:
                     switch(ComponentJ) {
