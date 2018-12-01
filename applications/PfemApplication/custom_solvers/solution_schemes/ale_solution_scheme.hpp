@@ -185,6 +185,7 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
 
     this->UpdateDofs(rModelPart,rDofSet,rDx);
 
+    // TODO: should'nt we rotate and recover mesh_velocity too?
     this->UpdateMeshVelocity(rModelPart,rDx);
 
     mRotationTool.RecoverVelocities(rModelPart);
@@ -273,6 +274,8 @@ class AleSolutionScheme : public DynamicScheme<TSparseSpace, TDenseSpace>
     KRATOS_TRY;
 
     this->PredictVariables(rModelPart);
+
+    // TODO: should'nt we set mesh_velocity = velocity here?
 
     this->MoveMesh(rModelPart);
 
