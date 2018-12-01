@@ -106,7 +106,8 @@ public:
         ConstitutiveLaw::Parameters& rValues,
         ConstitutiveLaw* pConstitutiveLaw,
         const ConstitutiveLaw::StressMeasure& rStressMeasure = ConstitutiveLaw::StressMeasure_Cauchy,
-        const bool ConsiderPertubationThreshold = true
+        const bool ConsiderPertubationThreshold = true,
+        const IndexType ApproximationOrder = 2
         )
     {
         // Ensure the proper flag
@@ -114,9 +115,9 @@ public:
         const bool use_element_provided_strain = cl_options.Is(ConstitutiveLaw::USE_ELEMENT_PROVIDED_STRAIN);
 
         if (use_element_provided_strain) {
-            CalculateTangentTensorSmallDeformationProvidedStrain(rValues, pConstitutiveLaw, rStressMeasure, ConsiderPertubationThreshold);
+            CalculateTangentTensorSmallDeformationProvidedStrain(rValues, pConstitutiveLaw, rStressMeasure, ConsiderPertubationThreshold, ApproximationOrder);
         } else {
-            CalculateTangentTensorSmallDeformationNotProvidedStrain(rValues, pConstitutiveLaw, rStressMeasure, ConsiderPertubationThreshold);
+            CalculateTangentTensorSmallDeformationNotProvidedStrain(rValues, pConstitutiveLaw, rStressMeasure, ConsiderPertubationThreshold, ApproximationOrder);
         }
     }
 
@@ -130,7 +131,8 @@ public:
         ConstitutiveLaw::Parameters& rValues,
         ConstitutiveLaw *pConstitutiveLaw,
         const ConstitutiveLaw::StressMeasure& rStressMeasure = ConstitutiveLaw::StressMeasure_Cauchy,
-        const bool ConsiderPertubationThreshold = true
+        const bool ConsiderPertubationThreshold = true,
+        const IndexType ApproximationOrder = 2
         )
     {
         // Converged values to be storaged
@@ -160,15 +162,44 @@ public:
         Vector& r_perturbed_strain = rValues.GetStrainVector();
         Vector& r_perturbed_integrated_stress = rValues.GetStressVector();
         for (IndexType i_component = 0; i_component < num_components; ++i_component) {
-            // Apply the perturbation
-            PerturbateStrainVector(r_perturbed_strain, unperturbed_strain_vector_gp, pertubation, i_component);
+            if (ApproximationOrder == 1) {
+                // Apply the perturbation
+                PerturbateStrainVector(r_perturbed_strain, unperturbed_strain_vector_gp, pertubation, i_component);
 
-            // We continue with the calculations
-            IntegratePerturbedStrain(rValues, pConstitutiveLaw, rStressMeasure);
+                // We continue with the calculations
+                IntegratePerturbedStrain(rValues, pConstitutiveLaw, rStressMeasure);
 
-            // Compute tangent moduli
-            const Vector& delta_stress = r_perturbed_integrated_stress - unperturbed_stress_vector_gp;
-            CalculateComponentsToTangentTensor(auxiliar_tensor, delta_stress, pertubation, i_component);
+                // Compute tangent moduli
+                const Vector delta_stress = r_perturbed_integrated_stress - unperturbed_stress_vector_gp;
+                CalculateComponentsToTangentTensorFirstOrder(auxiliar_tensor, r_perturbed_strain, delta_stress, i_component);
+            } else {
+                // Apply the perturbation (positive)
+                PerturbateStrainVector(r_perturbed_strain, unperturbed_strain_vector_gp, pertubation, i_component);
+
+                // We continue with the calculations
+                IntegratePerturbedStrain(rValues, pConstitutiveLaw, rStressMeasure);
+
+                // Compute stress (plus)
+                const Vector strain_plus = r_perturbed_strain;
+                const Vector stress_plus = r_perturbed_integrated_stress;
+
+                // Reset the values to the initial ones
+                noalias(r_perturbed_strain) = unperturbed_strain_vector_gp;
+                noalias(r_perturbed_integrated_stress) = unperturbed_stress_vector_gp;
+
+                // Apply the perturbation (negative)
+                PerturbateStrainVector(r_perturbed_strain, unperturbed_strain_vector_gp, - pertubation, i_component);
+
+                // We continue with the calculations
+                IntegratePerturbedStrain(rValues, pConstitutiveLaw, rStressMeasure);
+
+                // Compute stress (minus)
+                const Vector strain_minus = r_perturbed_strain;
+                const Vector stress_minus = r_perturbed_integrated_stress;
+
+                // Finally we compute the components
+                CalculateComponentsToTangentTensorSecondOrder(auxiliar_tensor, strain_plus, strain_minus, stress_plus, stress_minus, i_component);
+            }
 
             // Reset the values to the initial ones
             noalias(r_perturbed_strain) = unperturbed_strain_vector_gp;
@@ -187,7 +218,8 @@ public:
         ConstitutiveLaw::Parameters& rValues,
         ConstitutiveLaw *pConstitutiveLaw,
         const ConstitutiveLaw::StressMeasure& rStressMeasure = ConstitutiveLaw::StressMeasure_Cauchy,
-        const bool ConsiderPertubationThreshold = true
+        const bool ConsiderPertubationThreshold = true,
+        const IndexType ApproximationOrder = 2
         )
     {
         // Converged values to be storaged
@@ -209,6 +241,8 @@ public:
         const std::size_t size1 = unperturbed_deformation_gradient_gp.size1();
         const std::size_t size2 = unperturbed_deformation_gradient_gp.size2();
 
+        KRATOS_ERROR_IF_NOT(ApproximationOrder == 1 || ApproximationOrder == 2) << "The approximation order for the perturbation is " << ApproximationOrder << ". Options are 1 and 2" << std::endl;
+
         // Calculate the perturbation
         double pertubation;
         for (IndexType i_component = 0; i_component < num_components; ++i_component) {
@@ -220,23 +254,55 @@ public:
         if (ConsiderPertubationThreshold && pertubation < PerturbationThreshold) pertubation = PerturbationThreshold;
       
         // Loop over components of the strain
+        Vector& r_perturbed_strain = rValues.GetStrainVector();
         Vector& r_perturbed_integrated_stress = rValues.GetStressVector();
         Matrix& r_perturbed_deformation_gradient = const_cast<Matrix&>(rValues.GetDeformationGradientF());
         double& r_perturbed_det_deformation_gradient = const_cast<double&>(rValues.GetDeterminantF());
         for (IndexType i_component = 0; i_component < size1; ++i_component) {
             for (IndexType j_component = i_component; j_component < size2; ++j_component) {
-                // Apply the perturbation
-                PerturbateDeformationGradient(r_perturbed_deformation_gradient, unperturbed_deformation_gradient_gp, pertubation, i_component, j_component);
+                if (ApproximationOrder == 1) {
+                    // Apply the perturbation
+                    PerturbateDeformationGradient(r_perturbed_deformation_gradient, unperturbed_deformation_gradient_gp, pertubation, i_component, j_component);
 
-                // We continue with the calculations
-                IntegratePerturbedStrain(rValues, pConstitutiveLaw, rStressMeasure);
+                    // We continue with the calculations
+                    IntegratePerturbedStrain(rValues, pConstitutiveLaw, rStressMeasure);
 
-                // Compute delta stress
-                const Vector& delta_stress = r_perturbed_integrated_stress - unperturbed_stress_vector_gp;
+                    // Compute delta stress
+                    const Vector delta_stress = r_perturbed_integrated_stress - unperturbed_stress_vector_gp;
 
-                // Finally we compute the components
-                const IndexType voigt_index = CalculateVoigtIndex(delta_stress.size(), i_component, j_component);
-                CalculateComponentsToTangentTensor(auxiliar_tensor, delta_stress, pertubation, voigt_index);
+                    // Finally we compute the components
+                    const IndexType voigt_index = CalculateVoigtIndex(delta_stress.size(), i_component, j_component);
+                    CalculateComponentsToTangentTensorFirstOrder(auxiliar_tensor, r_perturbed_strain, delta_stress, voigt_index);
+                } else if (ApproximationOrder == 2) {
+                    // Apply the perturbation (positive)
+                    PerturbateDeformationGradient(r_perturbed_deformation_gradient, unperturbed_deformation_gradient_gp, pertubation, i_component, j_component);
+
+                    // We continue with the calculations
+                    IntegratePerturbedStrain(rValues, pConstitutiveLaw, rStressMeasure);
+
+                    // Compute stress (plus)
+                    const Vector strain_plus = r_perturbed_strain;
+                    const Vector stress_plus = r_perturbed_integrated_stress;
+
+                    // Reset the values to the initial ones
+                    noalias(r_perturbed_integrated_stress) = unperturbed_stress_vector_gp;
+                    noalias(r_perturbed_deformation_gradient) = unperturbed_deformation_gradient_gp;
+                    r_perturbed_det_deformation_gradient = det_unperturbed_deformation_gradient_gp;
+
+                    // Apply the perturbation (negative)
+                    PerturbateDeformationGradient(r_perturbed_deformation_gradient, unperturbed_deformation_gradient_gp, - pertubation, i_component, j_component);
+
+                    // We continue with the calculations
+                    IntegratePerturbedStrain(rValues, pConstitutiveLaw, rStressMeasure);
+
+                    // Compute stress (minus)
+                    const Vector strain_minus = r_perturbed_strain;
+                    const Vector stress_minus = r_perturbed_integrated_stress;
+
+                    // Finally we compute the components
+                    const IndexType voigt_index = CalculateVoigtIndex(stress_plus.size(), i_component, j_component);
+                    CalculateComponentsToTangentTensorSecondOrder(auxiliar_tensor, strain_plus, strain_minus, stress_plus, stress_minus, voigt_index);
+                }
 
                 // Reset the values to the initial ones
                 noalias(r_perturbed_integrated_stress) = unperturbed_stress_vector_gp;
@@ -257,10 +323,11 @@ public:
         ConstitutiveLaw::Parameters& rValues,
         ConstitutiveLaw* pConstitutiveLaw,
         const ConstitutiveLaw::StressMeasure& rStressMeasure = ConstitutiveLaw::StressMeasure_PK2,
-        const bool ConsiderPertubationThreshold = true
+        const bool ConsiderPertubationThreshold = true,
+        const IndexType ApproximationOrder = 2
         )
     {
-        CalculateTangentTensorSmallDeformationNotProvidedStrain(rValues, pConstitutiveLaw, rStressMeasure, ConsiderPertubationThreshold);
+        CalculateTangentTensorSmallDeformationNotProvidedStrain(rValues, pConstitutiveLaw, rStressMeasure, ConsiderPertubationThreshold, ApproximationOrder);
     }
 
 protected:
@@ -546,20 +613,46 @@ private:
     /**
      * @brief This calculates the values to the tangent tensor
      * @param rTangentTensor The desired tangent tensor
+     * @param rVectorStrain The perturbated strain considered
      * @param rDeltaStress The increment of stress
-     * @param Perturbation The pertubation considered
      * @param Component Index of the component to compute
      */
-    static void CalculateComponentsToTangentTensor(
+    static void CalculateComponentsToTangentTensorFirstOrder(
         Matrix& rTangentTensor,
+        const Vector& rVectorStrain,
         const Vector& rDeltaStress,
-        const double Perturbation,
         const IndexType Component
         )
     {
+        const double perturbation = rVectorStrain[Component];
         const SizeType voigt_size = rDeltaStress.size();
         for (IndexType row = 0; row < voigt_size; ++row) {
-            rTangentTensor(row, Component) = rDeltaStress[row] / Perturbation;
+            rTangentTensor(row, Component) = rDeltaStress[row] / perturbation;
+        }
+    }
+
+    /**
+     * @brief This calculates the values to the tangent tensor
+     * @param rTangentTensor The desired tangent tensor
+     * @param rVectorStrainPlus The positive perturbated strain considered
+     * @param rVectorStrainMinus The negative perturbated strain considered
+     * @param rStressPlus The stress with positive perturbation
+     * @param rStressMinus The stress with negative perturbation
+     * @param Component Index of the component to compute
+     */
+    static void CalculateComponentsToTangentTensorSecondOrder(
+        Matrix& rTangentTensor,
+        const Vector& rVectorStrainPlus,
+        const Vector& rVectorStrainMinus,
+        const Vector& rStressPlus,
+        const Vector& rStressMinus,
+        const IndexType Component
+        )
+    {
+        const double perturbation = (rVectorStrainPlus[Component] - rVectorStrainMinus[Component]);
+        const SizeType voigt_size = rStressPlus.size();
+        for (IndexType row = 0; row < voigt_size; ++row) {
+            rTangentTensor(row, Component) = (rStressPlus[row] - rStressMinus[row]) / perturbation;
         }
     }
 
