@@ -138,7 +138,7 @@ public:
         const Vector unperturbed_stress_vector_gp = Vector(rValues.GetStressVector());
 
         // The number of components
-        const SizeType num_components = stress_vector_gp.size();
+        const SizeType num_components = unperturbed_stress_vector_gp.size();
 
         // The tangent tensor
         Matrix& r_tangent_tensor = rValues.GetConstitutiveMatrix();
@@ -168,7 +168,7 @@ public:
 
             // Compute tangent moduli
             const Vector& delta_stress = r_perturbed_integrated_stress - unperturbed_stress_vector_gp;
-            ComputeComponentsToTangentTensor(auxiliar_tensor, delta_stress, pertubation, i_component);
+            CalculateComponentsToTangentTensor(auxiliar_tensor, delta_stress, pertubation, i_component);
 
             // Reset the values to the initial ones
             noalias(r_perturbed_strain) = unperturbed_strain_vector_gp;
@@ -191,10 +191,11 @@ public:
         )
     {
         // Converged values to be storaged
-        const Vector stress_vector_gp = rValues.GetStressVector();
+        const Vector unperturbed_strain_vector_gp = Vector(rValues.GetStrainVector());
+        const Vector unperturbed_stress_vector_gp = Vector(rValues.GetStressVector());
 
         // The number of components
-        const SizeType num_components = stress_vector_gp.size();
+        const SizeType num_components = unperturbed_stress_vector_gp.size();
 
         // Converged values to be storaged (only used in case of elements that not provide the strain)
         const Matrix unperturbed_deformation_gradient_gp = Matrix(rValues.GetDeformationGradientF());
@@ -231,14 +232,14 @@ public:
                 IntegratePerturbedStrain(rValues, pConstitutiveLaw, rStressMeasure);
 
                 // Compute delta stress
-                const Vector& delta_stress = r_perturbed_integrated_stress - stress_vector_gp;
+                const Vector& delta_stress = r_perturbed_integrated_stress - unperturbed_stress_vector_gp;
 
                 // Finally we compute the components
                 const IndexType voigt_index = CalculateVoigtIndex(delta_stress, i_component, j_component);
                 CalculateComponentsToTangentTensor(auxiliar_tensor, delta_stress, pertubation, voigt_index);
 
                 // Reset the values to the initial ones
-                noalias(r_perturbed_integrated_stress) = stress_vector_gp;
+                noalias(r_perturbed_integrated_stress) = unperturbed_stress_vector_gp;
                 noalias(r_perturbed_deformation_gradient) = unperturbed_deformation_gradient_gp;
                 r_perturbed_det_deformation_gradient = det_unperturbed_deformation_gradient_gp;
             }
@@ -259,6 +260,9 @@ public:
         const bool ConsiderPertubationThreshold = true
         )
     {
+        // The stress variable
+        const Variable<Vector> stress_variable = rStressMeasure == ConstitutiveLaw::StressMeasure_PK2 ? PK2_STRESS_VECTOR : CAUCHY_STRESS_VECTOR;
+
         // Converged values to be storaged
         const Vector unperturbed_stress_vector_gp = Vector(rValues.GetStressVector());
 
@@ -270,12 +274,8 @@ public:
         const SizeType size1 = unperturbed_deformation_gradient_gp.size1();
         const SizeType size2 = unperturbed_deformation_gradient_gp.size2();
 
-        const Vector stress_vector_gp = rValues.GetStressVector();
-        const Matrix unperturbed_deformation_gradient_gp = Matrix(rValues.GetDeformationGradientF());
-        const double det_unperturbed_deformation_gradient_gp = double(rValues.GetDeterminantF());
-
         // The number of components
-        const SizeType num_components = stress_vector_gp.size();
+        const SizeType num_components = unperturbed_stress_vector_gp.size();
 
         double aux_det;
         Matrix inverse_perturbed_deformation_gradient(size1, size2);
@@ -317,14 +317,14 @@ public:
                 rValues.SetDeterminantF(MathUtils<double>::DetMat(deformation_gradient_increment));
                 rValues.SetDeformationGradientF(deformation_gradient_increment);
                 Vector delta_stress;
-                pConstitutiveLaw->CalculateValue(rValues, r_stress_variable, delta_stress);
+                pConstitutiveLaw->CalculateValue(rValues, stress_variable, delta_stress);
 
                 // Finally we compute the components
                 const IndexType voigt_index = CalculateVoigtIndex(delta_stress, i_component, j_component);
                 CalculateComponentsToTangentTensor(auxiliar_tensor, delta_stress, pertubation, voigt_index);
 
                 // Reset the values to the initial ones
-                noalias(r_perturbed_integrated_stress) = stress_vector_gp;
+                noalias(r_perturbed_integrated_stress) = unperturbed_stress_vector_gp;
                 noalias(r_perturbed_deformation_gradient) = unperturbed_deformation_gradient_gp;
                 r_perturbed_det_deformation_gradient = det_unperturbed_deformation_gradient_gp;
             }
